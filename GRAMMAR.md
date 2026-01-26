@@ -796,7 +796,70 @@ else:
     return FEET or INCHES
 ```
 
-### 9. Whitespace Significance
+### 9. AM/PM Time Indicators vs. Unit Abbreviations
+
+**Rule**: Context-dependent disambiguation between time indicators and SI unit abbreviations
+
+**Problem**: am/pm/AM/PM conflict with attometers (am), picometers (pm), and petameters (PM)
+
+**Disambiguation algorithm**:
+```python
+if previous_token == NUMBER:
+    number_string = previous_token.raw_text  # Original string from input (whitespace trimmed)
+
+    # Only these exact string values are treated as time indicators:
+    # '1','2','3','4','5','6','7','8','9','01','02','03','04','05','06','07','08','09','10','11','12'
+    # Regex: /^(0?[1-9]|1[0-2])$/
+    import re
+    is_time_hour = re.match(r'^(0?[1-9]|1[0-2])$', number_string) is not None
+
+    if current_token in ['am', 'AM', 'pm', 'PM']:
+        if is_time_hour:
+            # Exact match for time hour: treat as time indicator
+            return DATETIME
+        else:
+            # Any other number format: treat as unit
+            # am/AM → attometers, pm → picometers, PM → petameters
+            return UNIT
+```
+
+**Examples**:
+```
+Exact time hour strings (DATETIME):
+  1 am, 2 am, ..., 9 am     → DATETIME (time indicator)
+  01 am, 02 am, ..., 09 am  → DATETIME (time indicator)
+  10 am, 11 am, 12 am       → DATETIME (time indicator)
+  10 pm                     → DATETIME (22:00:00)
+  10 PM                     → DATETIME (22:00:00)
+
+Decimal number (always UNIT):
+  10.0 am             → 10.0 UNIT(attometers)
+  1.0 pm              → 1.0 UNIT(picometers)
+  10.0 PM             → 10.0 UNIT(petameters)
+
+Integer outside 1-12 range (always UNIT):
+  0 am                → 0 UNIT(attometers)
+  13 am               → 13 UNIT(attometers)
+  22 pm               → 22 UNIT(picometers)
+  33 PM               → 33 UNIT(petameters)
+  100 am              → 100 UNIT(attometers)
+
+Leading zeros beyond 2 digits (always UNIT):
+  010 am              → 010 UNIT(attometers)    [doesn't match regex]
+  001 pm              → 001 UNIT(picometers)    [doesn't match regex]
+
+Full spelling (always UNIT):
+  10 attometers       → 10 UNIT(attometers)
+  10 picometers       → 10 UNIT(picometers)
+  10 petameters       → 10 UNIT(petameters)
+```
+
+**Workaround for edge cases**:
+To explicitly use attometers/picometers/petameters for values 1-12:
+- Add decimal part: `10.0 am` instead of `10 am`
+- Use full spelling: `10 attometers` instead of `10 am`
+
+### 10. Whitespace Significance
 
 **Rule**: Whitespace significance depends on context
 

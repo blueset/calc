@@ -173,6 +173,20 @@ phi # (case insensitive) ⎙ 1.618033988749895
 1 km ⎙ 1 km
 1 kilometer ⎙ 1 km
 Support meters with all SI prefixes, spelt out or abbreviated.
+Note: abbreviations of attometers, picometers, petameters conflict with am, pm respectively. am/AM/PM of number written exactly as /(0?[1-9]|1[0-2])/ are treated as time indicators only. To use attometers, picometers, petameters, add a decimal part or use the full spelling for these 12 values.
+
+10 am # plain time ⎙ 10:00:00
+10.0 am ⎙ 10 attometers
+10 attometers ⎙ 10 am
+13 am # 13 attometers ⎙ 13 am
+10 pm # plain time ⎙ 22:00:00
+10.0 pm ⎙ 10 picometers
+10 picometers ⎙ 10 pm
+22 pm # 22 picometers ⎙ 22 pm
+10 PM # plain time ⎙ 22:00:00
+10.0 PM ⎙ 10 Pm
+10 petameters ⎙ 10 Pm
+33 PM # 33 petameters ⎙ 33 Pm
 
 10 inch ⎙ 10 in
 10 inches ⎙ 10 in

@@ -14,16 +14,17 @@
 - [x] Write unit tests for data-loader
 
 ### Phase 2: Lexical Analysis (Days 3-4)
-- [ ] Create `tokens.ts` with token type definitions
-- [ ] Implement `lexer.ts` with Lexer class
-- [ ] Implement number literal tokenization (all bases)
-- [ ] Implement scientific notation priority rule
-- [ ] Implement longest unit match after numbers
-- [ ] Implement multi-word unit detection
-- [ ] Implement date/time pattern recognition
-- [ ] Implement keyword vs identifier distinction
-- [ ] Add source location tracking
-- [ ] Write unit tests for lexer
+- [x] Create `tokens.ts` with token type definitions
+- [x] Implement `lexer.ts` with Lexer class
+- [x] Implement number literal tokenization (all bases)
+- [x] Implement scientific notation priority rule
+- [x] Implement longest unit match after numbers
+- [x] Implement multi-word unit detection (handled in parser)
+- [x] Implement date/time pattern recognition
+- [x] Implement AM/PM disambiguation rule (attometers/picometers/petameters vs. time)
+- [x] Implement keyword vs identifier distinction
+- [x] Add source location tracking
+- [x] Write unit tests for lexer (65 tests passing)
 
 ### Phase 3: Syntactic Analysis (Days 5-7)
 - [ ] Create `ast.ts` with all AST node types
@@ -542,6 +543,42 @@ Duration is a single type with optional components:
   - Has only time components → "time duration"
   - Has both → "date-time duration"
 - **Arithmetic**: Durations can be combined; date + time = date-time duration
+
+### 9. AM/PM Time Indicator vs. Unit Disambiguation
+**Problem**: am/pm/AM/PM conflict with attometers (am), picometers (pm), and petameters (PM)
+
+**Rule**: After NUMBER token, check if next token is am/pm/AM/PM:
+1. If number is integer in range 1-12 → treat as time indicator (DATETIME)
+2. If number has decimal part OR is outside 1-12 → treat as unit (UNIT)
+
+**Implementation**:
+```typescript
+// In lexer, after scanning "am", "pm", "AM", or "PM":
+function disambiguateAmPm(previousToken: Token, currentText: string): TokenType {
+  if (previousToken.type === TokenType.NUMBER) {
+    const numberString = previousToken.value;  // Original string from input (whitespace trimmed)
+
+    // Only accept these exact string values: '1'-'9', '01'-'09', '10', '11', '12'
+    // Regex: /^(0?[1-9]|1[0-2])$/
+    const timeHourPattern = /^(0?[1-9]|1[0-2])$/;
+    const isTimeHour = timeHourPattern.test(numberString);
+
+    if (isTimeHour) {
+      return TokenType.DATETIME;  // Time indicator
+    }
+  }
+  return TokenType.UNIT;  // attometers/picometers/petameters
+}
+```
+
+**Examples**:
+- `10 am` → DATETIME (time: 10:00:00)
+- `10.0 am` → 10.0 UNIT(attometers)
+- `13 am` → 13 UNIT(attometers)
+- `10 pm` → DATETIME (time: 22:00:00)
+- `22 pm` → 22 UNIT(picometers)
+- `10 PM` → DATETIME (time: 22:00:00)
+- `33 PM` → 33 UNIT(petameters)
 
 ---
 

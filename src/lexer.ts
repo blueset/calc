@@ -25,6 +25,7 @@ export class Lexer {
   private line: number = 1;
   private column: number = 1;
   private dataLoader: DataLoader;
+  private lastToken: Token | null = null;
 
   constructor(input: string, dataLoader: DataLoader) {
     this.input = input;
@@ -41,6 +42,7 @@ export class Lexer {
       const token = this.nextToken();
       if (token) {
         tokens.push(token);
+        this.lastToken = token;
       }
     }
 
@@ -237,24 +239,12 @@ export class Lexer {
       }
     }
 
-    // Try to match a unit after the number using longest match
-    const unitMatch = this.dataLoader.findLongestUnitMatch(this.input, this.position);
-
-    if (unitMatch) {
-      // Consume the unit characters
-      for (let i = 0; i < unitMatch.length; i++) {
-        this.advance();
-      }
-
-      // Return a number-with-unit token (we'll represent this as NUMBER with the full text)
-      return this.createToken(TokenType.NUMBER, value + this.input.substring(this.position - unitMatch.length, this.position), start, this.currentLocation());
-    }
-
+    // Return the NUMBER token (units will be handled separately in next token)
     return this.createToken(TokenType.NUMBER, value, start, this.currentLocation());
   }
 
   /**
-   * Scan an identifier, keyword, boolean, or date/time literal
+   * Scan an identifier, keyword, unit, boolean, or date/time literal
    */
   private scanIdentifierOrDateTime(start: SourceLocation): Token {
     let value = '';
@@ -264,10 +254,23 @@ export class Lexer {
       value += this.advance();
     }
 
-    // Check if it's a keyword
+    // Check if it's a keyword (highest priority)
     if (isKeyword(value)) {
       const type = getKeywordType(value);
       return this.createToken(type, value, start, this.currentLocation());
+    }
+
+    // Check for AM/PM disambiguation (before general date/time check)
+    // am/pm/AM/PM can be either time indicators OR units (attometers/picometers/petameters)
+    if (value === 'am' || value === 'pm' || value === 'AM' || value === 'PM') {
+      const tokenType = this.disambiguateAmPm(value);
+      return this.createToken(tokenType, value, start, this.currentLocation());
+    }
+
+    // Check for date/time patterns early (before units)
+    // This is a simplified check - full date/time parsing happens in the parser
+    if (this.looksLikeDateTime(value)) {
+      return this.createToken(TokenType.DATETIME, value, start, this.currentLocation());
     }
 
     // Check if it's a constant
@@ -275,14 +278,67 @@ export class Lexer {
       return this.createToken(TokenType.IDENTIFIER, value, start, this.currentLocation());
     }
 
-    // Check for date/time patterns
-    // This is a simplified check - full date/time parsing happens in the parser
-    // Common patterns: "2024", "Jan", "January", "Monday", etc.
-    if (this.looksLikeDateTime(value)) {
-      return this.createToken(TokenType.DATETIME, value, start, this.currentLocation());
+    // Check if it's a unit
+    // Try case-sensitive first, then case-insensitive
+    const unitCaseSensitive = this.dataLoader.getUnitByName(value);
+    if (unitCaseSensitive) {
+      return this.createToken(TokenType.UNIT, value, start, this.currentLocation());
+    }
+
+    const unitsCaseInsensitive = this.dataLoader.getUnitsByCaseInsensitiveName(value);
+    if (unitsCaseInsensitive.length > 0) {
+      return this.createToken(TokenType.UNIT, value, start, this.currentLocation());
+    }
+
+    // Check if it's a currency
+    const currency = this.dataLoader.getCurrencyByCode(value);
+    if (currency) {
+      return this.createToken(TokenType.UNIT, value, start, this.currentLocation());
+    }
+
+    const currencies = this.dataLoader.getCurrenciesByName(value);
+    if (currencies.length > 0) {
+      return this.createToken(TokenType.UNIT, value, start, this.currentLocation());
+    }
+
+    // Check if it could be a timezone name
+    const timezone = this.dataLoader.resolveTimezone(value);
+    if (timezone) {
+      return this.createToken(TokenType.IDENTIFIER, value, start, this.currentLocation());
     }
 
     return this.createToken(TokenType.IDENTIFIER, value, start, this.currentLocation());
+  }
+
+  /**
+   * Disambiguate am/pm/AM/PM between time indicators and units
+   *
+   * Rule: am/pm/AM/PM after NUMBER token
+   * - If previous NUMBER matches /^(0?[1-9]|1[0-2])$/ → DATETIME (time indicator)
+   * - Otherwise → UNIT (attometers/picometers/petameters)
+   *
+   * Examples:
+   * - "10 am" → DATETIME (10:00:00)
+   * - "10.0 am" → 10.0 UNIT(attometers)
+   * - "13 am" → 13 UNIT(attometers)
+   */
+  private disambiguateAmPm(value: string): TokenType {
+    // Check if previous token was a NUMBER
+    if (this.lastToken && this.lastToken.type === TokenType.NUMBER) {
+      const numberString = this.lastToken.value;
+
+      // Only these exact string values are time indicators:
+      // '1'-'9', '01'-'09', '10', '11', '12'
+      // Regex: /^(0?[1-9]|1[0-2])$/
+      const timeHourPattern = /^(0?[1-9]|1[0-2])$/;
+
+      if (timeHourPattern.test(numberString)) {
+        return TokenType.DATETIME;  // Time indicator
+      }
+    }
+
+    // Not preceded by valid time hour, treat as unit
+    return TokenType.UNIT;  // attometers/picometers/petameters
   }
 
   /**
