@@ -1,0 +1,23 @@
+{
+  "name": "calc",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "cldr": "^8.0.0",
+    "fast-xml-parser": "^5.3.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "tzdata": "^1.0.47"
+  },
+  "dependencies": {
+    "icu": "^2.1.0"
+  }
+}

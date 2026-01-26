@@ -148,15 +148,6 @@ phi # (case insensitive) ⎙ 1.618033988749895
 # Units
 
 ## Dimension-less units
-### SI prefixes
-2k # kilo (10^3) ⎙ 2000
-3M # mega (10^6) ⎙ 3000000
-4G # giga (10^9) ⎙ 4000000000
-5m # milli (10^-3) ⎙ 0.005
-6μ # micro (10^-6) ⎙ 0.000006
-Support all prefixes from quetta (10^30) to quecto (10^-30).
-When conflicting with unit symbols, prefer the unit symbol.
-
 ### English number units
 5 dozen ⎙ 60
 3 gross ⎙ 432
@@ -586,7 +577,7 @@ User defined units can also be used in derived units.
 5 person/km^2 ⎙ 5 person/km²
 150 USD per person per day ⎙ 150 USD person⁻¹ day⁻¹
 
-Dimensinoless units can also be used in derived units.
+Dimensionless units can also be used in derived units.
 12 million km ⎙ 1.2e7 km
 50 percent per year ⎙ 0.5 /yr
 

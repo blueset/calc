@@ -1,0 +1,7737 @@
+{
+  "dimensions": [
+    {
+      "id": "dimensionless",
+      "name": "Dimensionless",
+      "baseUnit": "unity"
+    },
+    {
+      "id": "length",
+      "name": "Length",
+      "baseUnit": "meter"
+    },
+    {
+      "id": "mass",
+      "name": "Mass",
+      "baseUnit": "gram"
+    },
+    {
+      "id": "area",
+      "name": "Area",
+      "baseUnit": "square_meter",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "length",
+            "exponent": 2
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    },
+    {
+      "id": "volume",
+      "name": "Volume",
+      "baseUnit": "cubic_meter",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "length",
+            "exponent": 3
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    },
+    {
+      "id": "temperature",
+      "name": "Temperature",
+      "baseUnit": "kelvin"
+    },
+    {
+      "id": "time",
+      "name": "Time",
+      "baseUnit": "second"
+    },
+    {
+      "id": "speed",
+      "name": "Speed",
+      "baseUnit": "meter_per_second",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "length",
+            "exponent": 1
+          }
+        ],
+        "denominator": [
+          {
+            "dimension": "time",
+            "exponent": 1
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    },
+    {
+      "id": "energy",
+      "name": "Energy",
+      "baseUnit": "joule",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "mass",
+            "exponent": 1
+          },
+          {
+            "dimension": "length",
+            "exponent": 2
+          }
+        ],
+        "denominator": [
+          {
+            "dimension": "time",
+            "exponent": 2
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    },
+    {
+      "id": "power",
+      "name": "Power",
+      "baseUnit": "watt",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "energy",
+            "exponent": 1
+          }
+        ],
+        "denominator": [
+          {
+            "dimension": "time",
+            "exponent": 1
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    },
+    {
+      "id": "data",
+      "name": "Data",
+      "baseUnit": "bit"
+    },
+    {
+      "id": "pressure",
+      "name": "Pressure",
+      "baseUnit": "pascal",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "force",
+            "exponent": 1
+          }
+        ],
+        "denominator": [
+          {
+            "dimension": "length",
+            "exponent": 2
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    },
+    {
+      "id": "force",
+      "name": "Force",
+      "baseUnit": "newton",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "mass",
+            "exponent": 1
+          },
+          {
+            "dimension": "length",
+            "exponent": 1
+          }
+        ],
+        "denominator": [
+          {
+            "dimension": "time",
+            "exponent": 2
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    },
+    {
+      "id": "angle",
+      "name": "Angle",
+      "baseUnit": "radian"
+    },
+    {
+      "id": "cycle",
+      "name": "Cycle",
+      "baseUnit": "cycle"
+    },
+    {
+      "id": "frequency",
+      "name": "Frequency",
+      "baseUnit": "hertz",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "cycle",
+            "exponent": 1
+          }
+        ],
+        "denominator": [
+          {
+            "dimension": "time",
+            "exponent": 1
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    },
+    {
+      "id": "current",
+      "name": "Electric Current",
+      "baseUnit": "ampere"
+    },
+    {
+      "id": "luminous_intensity",
+      "name": "Luminous Intensity",
+      "baseUnit": "candela"
+    },
+    {
+      "id": "printing",
+      "name": "Printing/Display",
+      "baseUnit": "dot"
+    },
+    {
+      "id": "operation",
+      "name": "Operation",
+      "baseUnit": "operation"
+    },
+    {
+      "id": "operation_rate",
+      "name": "Operation Rate",
+      "baseUnit": "flops",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "operation",
+            "exponent": 1
+          }
+        ],
+        "denominator": [
+          {
+            "dimension": "time",
+            "exponent": 1
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    },
+    {
+      "id": "beat",
+      "name": "Beat",
+      "baseUnit": "beat"
+    },
+    {
+      "id": "beat_rate",
+      "name": "Beat Rate",
+      "baseUnit": "bpm",
+      "derivedFrom": {
+        "numerator": [
+          {
+            "dimension": "beat",
+            "exponent": 1
+          }
+        ],
+        "denominator": [
+          {
+            "dimension": "time",
+            "exponent": 1
+          }
+        ]
+      },
+      "hasNamedUnits": true
+    }
+  ],
+  "units": [
+    {
+      "id": "unity",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "",
+        "singular": "",
+        "plural": ""
+      },
+      "names": [],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "percent",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "%",
+        "singular": "percent",
+        "plural": "percent"
+      },
+      "names": [
+        "%",
+        "percent",
+        "pct"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "permille",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "‰",
+        "singular": "per mille",
+        "plural": "per mille"
+      },
+      "names": [
+        "‰",
+        "per mille",
+        "per thousand",
+        "permille",
+        "permil"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "mol",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "mol",
+        "singular": "mole",
+        "plural": "moles"
+      },
+      "names": [
+        "mol",
+        "mole",
+        "moles"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 6.02214076e+23
+      }
+    },
+    {
+      "id": "dozen",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "doz",
+        "singular": "dozen",
+        "plural": "dozen"
+      },
+      "names": [
+        "doz",
+        "dozen",
+        "dozens"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 12
+      }
+    },
+    {
+      "id": "gross",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "gr",
+        "singular": "gross",
+        "plural": "gross"
+      },
+      "names": [
+        "gross"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 144
+      }
+    },
+    {
+      "id": "score",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "score",
+        "singular": "score",
+        "plural": "score"
+      },
+      "names": [
+        "score",
+        "scores"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 20
+      }
+    },
+    {
+      "id": "thousand",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "thousand",
+        "singular": "thousand",
+        "plural": "thousand"
+      },
+      "names": [
+        "thousand",
+        "thousands"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "million",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "mn",
+        "singular": "million",
+        "plural": "million"
+      },
+      "names": [
+        "million",
+        "millions",
+        "mn"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "billion",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "bn",
+        "singular": "billion",
+        "plural": "billion"
+      },
+      "names": [
+        "billion",
+        "billions",
+        "bn"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "trillion",
+      "dimension": "dimensionless",
+      "displayName": {
+        "symbol": "tn",
+        "singular": "trillion",
+        "plural": "trillion"
+      },
+      "names": [
+        "trillion",
+        "trillions",
+        "tn"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "inch",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "in",
+        "singular": "inch",
+        "plural": "inches"
+      },
+      "names": [
+        "in",
+        "inch",
+        "inches",
+        "″",
+        "''",
+        "\""
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.0254
+      }
+    },
+    {
+      "id": "foot",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "ft",
+        "singular": "foot",
+        "plural": "feet"
+      },
+      "names": [
+        "ft",
+        "foot",
+        "feet",
+        "′",
+        "'"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.3048
+      }
+    },
+    {
+      "id": "yard",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "yd",
+        "singular": "yard",
+        "plural": "yards"
+      },
+      "names": [
+        "yd",
+        "yard",
+        "yards"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.9144
+      }
+    },
+    {
+      "id": "mile",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "mi",
+        "singular": "mile",
+        "plural": "miles"
+      },
+      "names": [
+        "mi",
+        "mile",
+        "miles"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1609.344
+      }
+    },
+    {
+      "id": "angstrom",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Å",
+        "singular": "angstrom",
+        "plural": "angstroms"
+      },
+      "names": [
+        "Å",
+        "angstrom",
+        "angstroms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-10
+      }
+    },
+    {
+      "id": "nautical_mile",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "nmi",
+        "singular": "nautical mile",
+        "plural": "nautical miles"
+      },
+      "names": [
+        "nmi",
+        "nautical mile",
+        "nautical miles",
+        "NM"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1852
+      }
+    },
+    {
+      "id": "astronomical_unit",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "au",
+        "singular": "astronomical unit",
+        "plural": "astronomical units"
+      },
+      "names": [
+        "au",
+        "AU",
+        "astronomical unit",
+        "astronomical units"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 149597870700
+      }
+    },
+    {
+      "id": "lightyear",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "ly",
+        "singular": "lightyear",
+        "plural": "lightyears"
+      },
+      "names": [
+        "ly",
+        "lightyear",
+        "lightyears",
+        "light year",
+        "light years",
+        "light-year",
+        "light-years"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9460730472580800
+      }
+    },
+    {
+      "id": "tonne",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "t",
+        "singular": "tonne",
+        "plural": "tonnes"
+      },
+      "names": [
+        "t",
+        "tonne",
+        "tonnes",
+        "ton",
+        "tons",
+        "metric ton",
+        "metric tons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "carat",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "ct",
+        "singular": "carat",
+        "plural": "carats"
+      },
+      "names": [
+        "ct",
+        "carat",
+        "carats"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.2
+      }
+    },
+    {
+      "id": "ounce",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "oz",
+        "singular": "ounce",
+        "plural": "ounces"
+      },
+      "names": [
+        "oz",
+        "ounce",
+        "ounces"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 28.349523125
+      }
+    },
+    {
+      "id": "pound",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "lb",
+        "singular": "pound",
+        "plural": "pounds"
+      },
+      "names": [
+        "lb",
+        "lbs",
+        "pound",
+        "pounds"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 453.59237
+      }
+    },
+    {
+      "id": "stone",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "st",
+        "singular": "stone",
+        "plural": "stones"
+      },
+      "names": [
+        "st",
+        "stone",
+        "stones"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 6350.29318
+      }
+    },
+    {
+      "id": "short_ton",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "sh tn",
+        "singular": "short ton",
+        "plural": "short tons"
+      },
+      "names": [
+        "short ton",
+        "short tons",
+        "sh tn",
+        "US ton",
+        "US tons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 907184.74
+      }
+    },
+    {
+      "id": "long_ton",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "lg tn",
+        "singular": "long ton",
+        "plural": "long tons"
+      },
+      "names": [
+        "long ton",
+        "long tons",
+        "lg tn",
+        "UK ton",
+        "UK tons",
+        "imperial ton",
+        "imperial tons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1016046.9088
+      }
+    },
+    {
+      "id": "square_meter",
+      "dimension": "area",
+      "displayName": {
+        "symbol": "m²",
+        "singular": "square meter",
+        "plural": "square meters"
+      },
+      "names": [
+        "m²",
+        "m^2",
+        "square meter",
+        "square meters",
+        "meter squared",
+        "meters squared",
+        "sq m"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "hectare",
+      "dimension": "area",
+      "displayName": {
+        "symbol": "ha",
+        "singular": "hectare",
+        "plural": "hectares"
+      },
+      "names": [
+        "ha",
+        "hectare",
+        "hectares"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10000
+      }
+    },
+    {
+      "id": "acre",
+      "dimension": "area",
+      "displayName": {
+        "symbol": "acre",
+        "singular": "acre",
+        "plural": "acres"
+      },
+      "names": [
+        "acre",
+        "acres",
+        "ac"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 4046.8564224
+      }
+    },
+    {
+      "id": "square_foot",
+      "dimension": "area",
+      "displayName": {
+        "symbol": "ft²",
+        "singular": "square foot",
+        "plural": "square feet"
+      },
+      "names": [
+        "ft²",
+        "ft^2",
+        "square foot",
+        "square feet",
+        "sq ft"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.09290304
+      }
+    },
+    {
+      "id": "square_inch",
+      "dimension": "area",
+      "displayName": {
+        "symbol": "in²",
+        "singular": "square inch",
+        "plural": "square inches"
+      },
+      "names": [
+        "in²",
+        "in^2",
+        "square inch",
+        "square inches",
+        "sq in"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.00064516
+      }
+    },
+    {
+      "id": "square_mile",
+      "dimension": "area",
+      "displayName": {
+        "symbol": "mi²",
+        "singular": "square mile",
+        "plural": "square miles"
+      },
+      "names": [
+        "mi²",
+        "mi^2",
+        "square mile",
+        "square miles",
+        "sq mi"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 2589988.110336
+      }
+    },
+    {
+      "id": "square_kilometer",
+      "dimension": "area",
+      "displayName": {
+        "symbol": "km²",
+        "singular": "square kilometer",
+        "plural": "square kilometers"
+      },
+      "names": [
+        "km²",
+        "km^2",
+        "square kilometer",
+        "square kilometers",
+        "sq km"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "square_centimeter",
+      "dimension": "area",
+      "displayName": {
+        "symbol": "cm²",
+        "singular": "square centimeter",
+        "plural": "square centimeters"
+      },
+      "names": [
+        "cm²",
+        "cm^2",
+        "square centimeter",
+        "square centimeters",
+        "sq cm"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.0001
+      }
+    },
+    {
+      "id": "cubic_meter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "m³",
+        "singular": "cubic meter",
+        "plural": "cubic meters"
+      },
+      "names": [
+        "m³",
+        "m^3",
+        "cubic meter",
+        "cubic meters",
+        "meter cubed",
+        "meters cubed"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "cubic_centimeter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "cm³",
+        "singular": "cubic centimeter",
+        "plural": "cubic centimeters"
+      },
+      "names": [
+        "cm³",
+        "cm^3",
+        "cubic centimeter",
+        "cubic centimeters",
+        "cc"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "cubic_foot",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "ft³",
+        "singular": "cubic foot",
+        "plural": "cubic feet"
+      },
+      "names": [
+        "ft³",
+        "ft^3",
+        "cubic foot",
+        "cubic feet"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.028316846592
+      }
+    },
+    {
+      "id": "cubic_inch",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "in³",
+        "singular": "cubic inch",
+        "plural": "cubic inches"
+      },
+      "names": [
+        "in³",
+        "in^3",
+        "cubic inch",
+        "cubic inches"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000016387064
+      }
+    },
+    {
+      "id": "teaspoon",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "tsp",
+        "singular": "teaspoon",
+        "plural": "teaspoons"
+      },
+      "names": [
+        "tsp",
+        "teaspoon",
+        "teaspoons"
+      ],
+      "conversion": {
+        "type": "variant",
+        "variants": {
+          "us": {
+            "type": "linear",
+            "factor": 0.00000492892159375
+          },
+          "uk": {
+            "type": "linear",
+            "factor": 0.00000591938802083
+          }
+        }
+      }
+    },
+    {
+      "id": "tablespoon",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "tbsp",
+        "singular": "tablespoon",
+        "plural": "tablespoons"
+      },
+      "names": [
+        "tbsp",
+        "tablespoon",
+        "tablespoons",
+        "Tbsp"
+      ],
+      "conversion": {
+        "type": "variant",
+        "variants": {
+          "us": {
+            "type": "linear",
+            "factor": 0.0000147867647813
+          },
+          "uk": {
+            "type": "linear",
+            "factor": 0.0000177581640625
+          }
+        }
+      }
+    },
+    {
+      "id": "cup",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "cup",
+        "singular": "cup",
+        "plural": "cups"
+      },
+      "names": [
+        "cup",
+        "cups",
+        "c"
+      ],
+      "conversion": {
+        "type": "variant",
+        "variants": {
+          "us": {
+            "type": "linear",
+            "factor": 0.0002365882365
+          },
+          "uk": {
+            "type": "linear",
+            "factor": 0.000284130625
+          }
+        }
+      }
+    },
+    {
+      "id": "fluid_ounce",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "fl oz",
+        "singular": "fluid ounce",
+        "plural": "fluid ounces"
+      },
+      "names": [
+        "fl oz",
+        "fluid ounce",
+        "fluid ounces",
+        "floz"
+      ],
+      "conversion": {
+        "type": "variant",
+        "variants": {
+          "us": {
+            "type": "linear",
+            "factor": 0.0000295735295625
+          },
+          "uk": {
+            "type": "linear",
+            "factor": 0.0000284130625
+          }
+        }
+      }
+    },
+    {
+      "id": "pint",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "pt",
+        "singular": "pint",
+        "plural": "pints"
+      },
+      "names": [
+        "pt",
+        "pint",
+        "pints"
+      ],
+      "conversion": {
+        "type": "variant",
+        "variants": {
+          "us": {
+            "type": "linear",
+            "factor": 0.000473176473
+          },
+          "uk": {
+            "type": "linear",
+            "factor": 0.00056826125
+          }
+        }
+      }
+    },
+    {
+      "id": "quart",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "qt",
+        "singular": "quart",
+        "plural": "quarts"
+      },
+      "names": [
+        "qt",
+        "quart",
+        "quarts"
+      ],
+      "conversion": {
+        "type": "variant",
+        "variants": {
+          "us": {
+            "type": "linear",
+            "factor": 0.000946352946
+          },
+          "uk": {
+            "type": "linear",
+            "factor": 0.0011365225
+          }
+        }
+      }
+    },
+    {
+      "id": "gallon",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "gal",
+        "singular": "gallon",
+        "plural": "gallons"
+      },
+      "names": [
+        "gal",
+        "gallon",
+        "gallons"
+      ],
+      "conversion": {
+        "type": "variant",
+        "variants": {
+          "us": {
+            "type": "linear",
+            "factor": 0.003785411784
+          },
+          "uk": {
+            "type": "linear",
+            "factor": 0.00454609
+          }
+        }
+      }
+    },
+    {
+      "id": "kelvin",
+      "dimension": "temperature",
+      "displayName": {
+        "symbol": "K",
+        "singular": "kelvin",
+        "plural": "kelvins"
+      },
+      "names": [
+        "K",
+        "kelvin",
+        "kelvins"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "celsius",
+      "dimension": "temperature",
+      "displayName": {
+        "symbol": "°C",
+        "singular": "degree Celsius",
+        "plural": "degrees Celsius"
+      },
+      "names": [
+        "°C",
+        "C",
+        "celsius",
+        "Celsius",
+        "deg C",
+        "degree Celsius",
+        "degrees Celsius"
+      ],
+      "conversion": {
+        "type": "affine",
+        "offset": 273.15,
+        "factor": 1
+      }
+    },
+    {
+      "id": "fahrenheit",
+      "dimension": "temperature",
+      "displayName": {
+        "symbol": "°F",
+        "singular": "degree Fahrenheit",
+        "plural": "degrees Fahrenheit"
+      },
+      "names": [
+        "°F",
+        "F",
+        "fahrenheit",
+        "Fahrenheit",
+        "deg F",
+        "degree Fahrenheit",
+        "degrees Fahrenheit"
+      ],
+      "conversion": {
+        "type": "affine",
+        "offset": 459.67,
+        "factor": 0.5555555555555556
+      }
+    },
+    {
+      "id": "second",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "s",
+        "singular": "second",
+        "plural": "seconds"
+      },
+      "names": [
+        "s",
+        "sec",
+        "second",
+        "seconds",
+        "secs"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "millisecond",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "ms",
+        "singular": "millisecond",
+        "plural": "milliseconds"
+      },
+      "names": [
+        "ms",
+        "millisecond",
+        "milliseconds",
+        "msec",
+        "msecs"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "microsecond",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "μs",
+        "singular": "microsecond",
+        "plural": "microseconds"
+      },
+      "names": [
+        "μs",
+        "us",
+        "microsecond",
+        "microseconds"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanosecond",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "ns",
+        "singular": "nanosecond",
+        "plural": "nanoseconds"
+      },
+      "names": [
+        "ns",
+        "nanosecond",
+        "nanoseconds"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "minute",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "min",
+        "singular": "minute",
+        "plural": "minutes"
+      },
+      "names": [
+        "min",
+        "minute",
+        "minutes",
+        "mins"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 60
+      }
+    },
+    {
+      "id": "hour",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "h",
+        "singular": "hour",
+        "plural": "hours"
+      },
+      "names": [
+        "h",
+        "hr",
+        "hrs",
+        "hour",
+        "hours"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 3600
+      }
+    },
+    {
+      "id": "day",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "day",
+        "singular": "day",
+        "plural": "days"
+      },
+      "names": [
+        "day",
+        "days",
+        "d"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 86400
+      }
+    },
+    {
+      "id": "week",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "wk",
+        "singular": "week",
+        "plural": "weeks"
+      },
+      "names": [
+        "wk",
+        "week",
+        "weeks",
+        "wks"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 604800
+      }
+    },
+    {
+      "id": "month",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "mo",
+        "singular": "month",
+        "plural": "months"
+      },
+      "names": [
+        "mo",
+        "mth",
+        "month",
+        "months",
+        "mths"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 2629746
+      }
+    },
+    {
+      "id": "year",
+      "dimension": "time",
+      "displayName": {
+        "symbol": "yr",
+        "singular": "year",
+        "plural": "years"
+      },
+      "names": [
+        "yr",
+        "yrs",
+        "year",
+        "years"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 31556952
+      }
+    },
+    {
+      "id": "small_calorie",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "gcal",
+        "singular": "small calorie",
+        "plural": "small calories"
+      },
+      "names": [
+        "gcal",
+        "small calorie",
+        "small calories",
+        "sm cal",
+        "gram calorie",
+        "gram calories"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 4.184
+      }
+    },
+    {
+      "id": "kilocalorie",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "kcal",
+        "singular": "kilocalorie",
+        "plural": "kilocalories"
+      },
+      "names": [
+        "kcal",
+        "kilocalorie",
+        "kilocalories",
+        "Cal",
+        "calorie",
+        "calories",
+        "cal",
+        "food calorie",
+        "food calories"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 4184
+      }
+    },
+    {
+      "id": "btu",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "BTU",
+        "singular": "BTU",
+        "plural": "BTUs"
+      },
+      "names": [
+        "BTU",
+        "BTUs",
+        "Btu",
+        "British thermal unit",
+        "British thermal units"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1055.06
+      }
+    },
+    {
+      "id": "meter_per_second",
+      "dimension": "speed",
+      "displayName": {
+        "symbol": "m/s",
+        "singular": "meter per second",
+        "plural": "meters per second"
+      },
+      "names": [
+        "m/s",
+        "meter per second",
+        "meters per second",
+        "mps"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "knot",
+      "dimension": "speed",
+      "displayName": {
+        "symbol": "kn",
+        "singular": "knot",
+        "plural": "knots"
+      },
+      "names": [
+        "kn",
+        "kt",
+        "knot",
+        "knots"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.514444
+      }
+    },
+    {
+      "id": "mach",
+      "dimension": "speed",
+      "displayName": {
+        "symbol": "mach",
+        "singular": "mach",
+        "plural": "mach"
+      },
+      "names": [
+        "mach",
+        "Mach"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 343
+      }
+    },
+    {
+      "id": "horsepower",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "HP",
+        "singular": "horsepower",
+        "plural": "horsepower"
+      },
+      "names": [
+        "HP",
+        "hp",
+        "horsepower"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 745.7
+      }
+    },
+    {
+      "id": "atmosphere",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "atm",
+        "singular": "atmosphere",
+        "plural": "atmospheres"
+      },
+      "names": [
+        "atm",
+        "atmosphere",
+        "atmospheres"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 101325
+      }
+    },
+    {
+      "id": "bar",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "bar",
+        "singular": "bar",
+        "plural": "bars"
+      },
+      "names": [
+        "bar",
+        "bars"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100000
+      }
+    },
+    {
+      "id": "mmhg",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "mmHg",
+        "singular": "millimeter of mercury",
+        "plural": "millimeters of mercury"
+      },
+      "names": [
+        "mmHg",
+        "millimeter of mercury",
+        "millimeters of mercury",
+        "mm Hg"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 133.322
+      }
+    },
+    {
+      "id": "inhg",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "inHg",
+        "singular": "inch of mercury",
+        "plural": "inches of mercury"
+      },
+      "names": [
+        "inHg",
+        "inch of mercury",
+        "inches of mercury",
+        "in Hg"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 3386.39
+      }
+    },
+    {
+      "id": "pound_force",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "lbf",
+        "singular": "pound-force",
+        "plural": "pounds-force"
+      },
+      "names": [
+        "lbf",
+        "pound-force",
+        "pounds-force",
+        "pound force",
+        "pounds force"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 4.44822
+      }
+    },
+    {
+      "id": "kilogram_force",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "kgf",
+        "singular": "kilogram-force",
+        "plural": "kilograms-force"
+      },
+      "names": [
+        "kgf",
+        "kilogram-force",
+        "kilograms-force",
+        "kilogram force",
+        "kilograms force"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9.80665
+      }
+    },
+    {
+      "id": "radian",
+      "dimension": "angle",
+      "displayName": {
+        "symbol": "rad",
+        "singular": "radian",
+        "plural": "radians"
+      },
+      "names": [
+        "rad",
+        "radian",
+        "radians"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "degree",
+      "dimension": "angle",
+      "displayName": {
+        "symbol": "°",
+        "singular": "degree",
+        "plural": "degrees"
+      },
+      "names": [
+        "°",
+        "deg",
+        "degree",
+        "degrees"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.017453292519943295
+      }
+    },
+    {
+      "id": "arcminute",
+      "dimension": "angle",
+      "displayName": {
+        "symbol": "′",
+        "singular": "arcminute",
+        "plural": "arcminutes"
+      },
+      "names": [
+        "′",
+        "arcminute",
+        "arcminutes",
+        "arcmin",
+        "arc minute",
+        "arc minutes",
+        "'"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.0002908882086657216
+      }
+    },
+    {
+      "id": "arcsecond",
+      "dimension": "angle",
+      "displayName": {
+        "symbol": "″",
+        "singular": "arcsecond",
+        "plural": "arcseconds"
+      },
+      "names": [
+        "″",
+        "arcsecond",
+        "arcseconds",
+        "arcsec",
+        "arc second",
+        "arc seconds",
+        "''",
+        "\""
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.00000484813681109536
+      }
+    },
+    {
+      "id": "cycle",
+      "dimension": "cycle",
+      "displayName": {
+        "symbol": "cycle",
+        "singular": "cycle",
+        "plural": "cycles"
+      },
+      "names": [
+        "cycle",
+        "cycles"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "operation",
+      "dimension": "operation",
+      "displayName": {
+        "symbol": "ops",
+        "singular": "operation",
+        "plural": "operations"
+      },
+      "names": [
+        "op",
+        "ops",
+        "operation",
+        "operations"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "beat",
+      "dimension": "beat",
+      "displayName": {
+        "symbol": "beat",
+        "singular": "beat",
+        "plural": "beats"
+      },
+      "names": [
+        "beat",
+        "beats"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "bpm",
+      "dimension": "beat_rate",
+      "displayName": {
+        "symbol": "BPM",
+        "singular": "BPM",
+        "plural": "BPM"
+      },
+      "names": [
+        "BPM",
+        "bpm",
+        "beats per minute"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "dot",
+      "dimension": "printing",
+      "displayName": {
+        "symbol": "dot",
+        "singular": "dot",
+        "plural": "dots"
+      },
+      "names": [
+        "dot",
+        "dots"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "quettameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Qm",
+        "singular": "quettameter",
+        "plural": "quettameters"
+      },
+      "names": [
+        "Qm",
+        "quettameter",
+        "quettameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Rm",
+        "singular": "ronnameter",
+        "plural": "ronnameters"
+      },
+      "names": [
+        "Rm",
+        "ronnameter",
+        "ronnameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Ym",
+        "singular": "yottameter",
+        "plural": "yottameters"
+      },
+      "names": [
+        "Ym",
+        "yottameter",
+        "yottameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Zm",
+        "singular": "zettameter",
+        "plural": "zettameters"
+      },
+      "names": [
+        "Zm",
+        "zettameter",
+        "zettameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Em",
+        "singular": "exameter",
+        "plural": "exameters"
+      },
+      "names": [
+        "Em",
+        "exameter",
+        "exameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Pm",
+        "singular": "petameter",
+        "plural": "petameters"
+      },
+      "names": [
+        "Pm",
+        "petameter",
+        "petameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "terameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Tm",
+        "singular": "terameter",
+        "plural": "terameters"
+      },
+      "names": [
+        "Tm",
+        "terameter",
+        "terameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Gm",
+        "singular": "gigameter",
+        "plural": "gigameters"
+      },
+      "names": [
+        "Gm",
+        "gigameter",
+        "gigameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "Mm",
+        "singular": "megameter",
+        "plural": "megameters"
+      },
+      "names": [
+        "Mm",
+        "megameter",
+        "megameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "km",
+        "singular": "kilometer",
+        "plural": "kilometers"
+      },
+      "names": [
+        "km",
+        "kilometer",
+        "kilometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "hm",
+        "singular": "hectometer",
+        "plural": "hectometers"
+      },
+      "names": [
+        "hm",
+        "hectometer",
+        "hectometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekameter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "dam",
+        "singular": "dekameter",
+        "plural": "dekameters"
+      },
+      "names": [
+        "dam",
+        "dekameter",
+        "dekameters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "meter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "m",
+        "singular": "meter",
+        "plural": "meters"
+      },
+      "names": [
+        "m",
+        "meter",
+        "meters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "decimeter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "dm",
+        "singular": "decimeter",
+        "plural": "decimeters"
+      },
+      "names": [
+        "dm",
+        "decimeter",
+        "decimeters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centimeter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "cm",
+        "singular": "centimeter",
+        "plural": "centimeters"
+      },
+      "names": [
+        "cm",
+        "centimeter",
+        "centimeters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "millimeter",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "mm",
+        "singular": "millimeter",
+        "plural": "millimeters"
+      },
+      "names": [
+        "mm",
+        "millimeter",
+        "millimeters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "micrometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "μm",
+        "singular": "micrometer",
+        "plural": "micrometers"
+      },
+      "names": [
+        "μm",
+        "micrometer",
+        "micrometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "nm",
+        "singular": "nanometer",
+        "plural": "nanometers"
+      },
+      "names": [
+        "nm",
+        "nanometer",
+        "nanometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "pm",
+        "singular": "picometer",
+        "plural": "picometers"
+      },
+      "names": [
+        "pm",
+        "picometer",
+        "picometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "fm",
+        "singular": "femtometer",
+        "plural": "femtometers"
+      },
+      "names": [
+        "fm",
+        "femtometer",
+        "femtometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "am",
+        "singular": "attometer",
+        "plural": "attometers"
+      },
+      "names": [
+        "am",
+        "attometer",
+        "attometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "zm",
+        "singular": "zeptometer",
+        "plural": "zeptometers"
+      },
+      "names": [
+        "zm",
+        "zeptometer",
+        "zeptometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "ym",
+        "singular": "yoctometer",
+        "plural": "yoctometers"
+      },
+      "names": [
+        "ym",
+        "yoctometer",
+        "yoctometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "rm",
+        "singular": "rontometer",
+        "plural": "rontometers"
+      },
+      "names": [
+        "rm",
+        "rontometer",
+        "rontometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectometer",
+      "dimension": "length",
+      "displayName": {
+        "symbol": "qm",
+        "singular": "quectometer",
+        "plural": "quectometers"
+      },
+      "names": [
+        "qm",
+        "quectometer",
+        "quectometers"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettagram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "Qg",
+        "singular": "quettagram",
+        "plural": "quettagrams"
+      },
+      "names": [
+        "Qg",
+        "quettagram",
+        "quettagrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnagram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "Rg",
+        "singular": "ronnagram",
+        "plural": "ronnagrams"
+      },
+      "names": [
+        "Rg",
+        "ronnagram",
+        "ronnagrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottagram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "Yg",
+        "singular": "yottagram",
+        "plural": "yottagrams"
+      },
+      "names": [
+        "Yg",
+        "yottagram",
+        "yottagrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettagram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "Zg",
+        "singular": "zettagram",
+        "plural": "zettagrams"
+      },
+      "names": [
+        "Zg",
+        "zettagram",
+        "zettagrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exagram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "Eg",
+        "singular": "exagram",
+        "plural": "exagrams"
+      },
+      "names": [
+        "Eg",
+        "exagram",
+        "exagrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petagram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "Pg",
+        "singular": "petagram",
+        "plural": "petagrams"
+      },
+      "names": [
+        "Pg",
+        "petagram",
+        "petagrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "teragram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "Tg",
+        "singular": "teragram",
+        "plural": "teragrams"
+      },
+      "names": [
+        "Tg",
+        "teragram",
+        "teragrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigagram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "Gg",
+        "singular": "gigagram",
+        "plural": "gigagrams"
+      },
+      "names": [
+        "Gg",
+        "gigagram",
+        "gigagrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megagram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "Mg",
+        "singular": "megagram",
+        "plural": "megagrams"
+      },
+      "names": [
+        "Mg",
+        "megagram",
+        "megagrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "kg",
+        "singular": "kilogram",
+        "plural": "kilograms"
+      },
+      "names": [
+        "kg",
+        "kilogram",
+        "kilograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "hg",
+        "singular": "hectogram",
+        "plural": "hectograms"
+      },
+      "names": [
+        "hg",
+        "hectogram",
+        "hectograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekagram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "dag",
+        "singular": "dekagram",
+        "plural": "dekagrams"
+      },
+      "names": [
+        "dag",
+        "dekagram",
+        "dekagrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "gram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "g",
+        "singular": "gram",
+        "plural": "grams"
+      },
+      "names": [
+        "g",
+        "gram",
+        "grams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "decigram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "dg",
+        "singular": "decigram",
+        "plural": "decigrams"
+      },
+      "names": [
+        "dg",
+        "decigram",
+        "decigrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centigram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "cg",
+        "singular": "centigram",
+        "plural": "centigrams"
+      },
+      "names": [
+        "cg",
+        "centigram",
+        "centigrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "milligram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "mg",
+        "singular": "milligram",
+        "plural": "milligrams"
+      },
+      "names": [
+        "mg",
+        "milligram",
+        "milligrams"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "microgram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "μg",
+        "singular": "microgram",
+        "plural": "micrograms"
+      },
+      "names": [
+        "μg",
+        "microgram",
+        "micrograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "ng",
+        "singular": "nanogram",
+        "plural": "nanograms"
+      },
+      "names": [
+        "ng",
+        "nanogram",
+        "nanograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "pg",
+        "singular": "picogram",
+        "plural": "picograms"
+      },
+      "names": [
+        "pg",
+        "picogram",
+        "picograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "fg",
+        "singular": "femtogram",
+        "plural": "femtograms"
+      },
+      "names": [
+        "fg",
+        "femtogram",
+        "femtograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "ag",
+        "singular": "attogram",
+        "plural": "attograms"
+      },
+      "names": [
+        "ag",
+        "attogram",
+        "attograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "zg",
+        "singular": "zeptogram",
+        "plural": "zeptograms"
+      },
+      "names": [
+        "zg",
+        "zeptogram",
+        "zeptograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "yg",
+        "singular": "yoctogram",
+        "plural": "yoctograms"
+      },
+      "names": [
+        "yg",
+        "yoctogram",
+        "yoctograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "rg",
+        "singular": "rontogram",
+        "plural": "rontograms"
+      },
+      "names": [
+        "rg",
+        "rontogram",
+        "rontograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectogram",
+      "dimension": "mass",
+      "displayName": {
+        "symbol": "qg",
+        "singular": "quectogram",
+        "plural": "quectograms"
+      },
+      "names": [
+        "qg",
+        "quectogram",
+        "quectograms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettaampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "QA",
+        "singular": "quettaampere",
+        "plural": "quettaamperes"
+      },
+      "names": [
+        "QA",
+        "quettaampere",
+        "quettaamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnaampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "RA",
+        "singular": "ronnaampere",
+        "plural": "ronnaamperes"
+      },
+      "names": [
+        "RA",
+        "ronnaampere",
+        "ronnaamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottaampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "YA",
+        "singular": "yottaampere",
+        "plural": "yottaamperes"
+      },
+      "names": [
+        "YA",
+        "yottaampere",
+        "yottaamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettaampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "ZA",
+        "singular": "zettaampere",
+        "plural": "zettaamperes"
+      },
+      "names": [
+        "ZA",
+        "zettaampere",
+        "zettaamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exaampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "EA",
+        "singular": "exaampere",
+        "plural": "exaamperes"
+      },
+      "names": [
+        "EA",
+        "exaampere",
+        "exaamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petaampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "PA",
+        "singular": "petaampere",
+        "plural": "petaamperes"
+      },
+      "names": [
+        "PA",
+        "petaampere",
+        "petaamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "teraampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "TA",
+        "singular": "teraampere",
+        "plural": "teraamperes"
+      },
+      "names": [
+        "TA",
+        "teraampere",
+        "teraamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigaampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "GA",
+        "singular": "gigaampere",
+        "plural": "gigaamperes"
+      },
+      "names": [
+        "GA",
+        "gigaampere",
+        "gigaamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megaampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "MA",
+        "singular": "megaampere",
+        "plural": "megaamperes"
+      },
+      "names": [
+        "MA",
+        "megaampere",
+        "megaamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kiloampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "kA",
+        "singular": "kiloampere",
+        "plural": "kiloamperes"
+      },
+      "names": [
+        "kA",
+        "kiloampere",
+        "kiloamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectoampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "hA",
+        "singular": "hectoampere",
+        "plural": "hectoamperes"
+      },
+      "names": [
+        "hA",
+        "hectoampere",
+        "hectoamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekaampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "daA",
+        "singular": "dekaampere",
+        "plural": "dekaamperes"
+      },
+      "names": [
+        "daA",
+        "dekaampere",
+        "dekaamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "ampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "A",
+        "singular": "ampere",
+        "plural": "amperes"
+      },
+      "names": [
+        "A",
+        "ampere",
+        "amperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "deciampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "dA",
+        "singular": "deciampere",
+        "plural": "deciamperes"
+      },
+      "names": [
+        "dA",
+        "deciampere",
+        "deciamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centiampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "cA",
+        "singular": "centiampere",
+        "plural": "centiamperes"
+      },
+      "names": [
+        "cA",
+        "centiampere",
+        "centiamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "milliampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "mA",
+        "singular": "milliampere",
+        "plural": "milliamperes"
+      },
+      "names": [
+        "mA",
+        "milliampere",
+        "milliamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "microampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "μA",
+        "singular": "microampere",
+        "plural": "microamperes"
+      },
+      "names": [
+        "μA",
+        "microampere",
+        "microamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanoampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "nA",
+        "singular": "nanoampere",
+        "plural": "nanoamperes"
+      },
+      "names": [
+        "nA",
+        "nanoampere",
+        "nanoamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picoampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "pA",
+        "singular": "picoampere",
+        "plural": "picoamperes"
+      },
+      "names": [
+        "pA",
+        "picoampere",
+        "picoamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtoampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "fA",
+        "singular": "femtoampere",
+        "plural": "femtoamperes"
+      },
+      "names": [
+        "fA",
+        "femtoampere",
+        "femtoamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attoampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "aA",
+        "singular": "attoampere",
+        "plural": "attoamperes"
+      },
+      "names": [
+        "aA",
+        "attoampere",
+        "attoamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptoampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "zA",
+        "singular": "zeptoampere",
+        "plural": "zeptoamperes"
+      },
+      "names": [
+        "zA",
+        "zeptoampere",
+        "zeptoamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctoampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "yA",
+        "singular": "yoctoampere",
+        "plural": "yoctoamperes"
+      },
+      "names": [
+        "yA",
+        "yoctoampere",
+        "yoctoamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontoampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "rA",
+        "singular": "rontoampere",
+        "plural": "rontoamperes"
+      },
+      "names": [
+        "rA",
+        "rontoampere",
+        "rontoamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectoampere",
+      "dimension": "current",
+      "displayName": {
+        "symbol": "qA",
+        "singular": "quectoampere",
+        "plural": "quectoamperes"
+      },
+      "names": [
+        "qA",
+        "quectoampere",
+        "quectoamperes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "QHz",
+        "singular": "quettahertz",
+        "plural": "quettahertz"
+      },
+      "names": [
+        "QHz",
+        "quettahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "RHz",
+        "singular": "ronnahertz",
+        "plural": "ronnahertz"
+      },
+      "names": [
+        "RHz",
+        "ronnahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "YHz",
+        "singular": "yottahertz",
+        "plural": "yottahertz"
+      },
+      "names": [
+        "YHz",
+        "yottahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "ZHz",
+        "singular": "zettahertz",
+        "plural": "zettahertz"
+      },
+      "names": [
+        "ZHz",
+        "zettahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "EHz",
+        "singular": "exahertz",
+        "plural": "exahertz"
+      },
+      "names": [
+        "EHz",
+        "exahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "PHz",
+        "singular": "petahertz",
+        "plural": "petahertz"
+      },
+      "names": [
+        "PHz",
+        "petahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "terahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "THz",
+        "singular": "terahertz",
+        "plural": "terahertz"
+      },
+      "names": [
+        "THz",
+        "terahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "GHz",
+        "singular": "gigahertz",
+        "plural": "gigahertz"
+      },
+      "names": [
+        "GHz",
+        "gigahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "MHz",
+        "singular": "megahertz",
+        "plural": "megahertz"
+      },
+      "names": [
+        "MHz",
+        "megahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "kHz",
+        "singular": "kilohertz",
+        "plural": "kilohertz"
+      },
+      "names": [
+        "kHz",
+        "kilohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "hHz",
+        "singular": "hectohertz",
+        "plural": "hectohertz"
+      },
+      "names": [
+        "hHz",
+        "hectohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekahertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "daHz",
+        "singular": "dekahertz",
+        "plural": "dekahertz"
+      },
+      "names": [
+        "daHz",
+        "dekahertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "hertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "Hz",
+        "singular": "hertz",
+        "plural": "hertz"
+      },
+      "names": [
+        "Hz",
+        "hertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "decihertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "dHz",
+        "singular": "decihertz",
+        "plural": "decihertz"
+      },
+      "names": [
+        "dHz",
+        "decihertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centihertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "cHz",
+        "singular": "centihertz",
+        "plural": "centihertz"
+      },
+      "names": [
+        "cHz",
+        "centihertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "millihertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "mHz",
+        "singular": "millihertz",
+        "plural": "millihertz"
+      },
+      "names": [
+        "mHz",
+        "millihertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "microhertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "μHz",
+        "singular": "microhertz",
+        "plural": "microhertz"
+      },
+      "names": [
+        "μHz",
+        "microhertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "nHz",
+        "singular": "nanohertz",
+        "plural": "nanohertz"
+      },
+      "names": [
+        "nHz",
+        "nanohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "pHz",
+        "singular": "picohertz",
+        "plural": "picohertz"
+      },
+      "names": [
+        "pHz",
+        "picohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "fHz",
+        "singular": "femtohertz",
+        "plural": "femtohertz"
+      },
+      "names": [
+        "fHz",
+        "femtohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "aHz",
+        "singular": "attohertz",
+        "plural": "attohertz"
+      },
+      "names": [
+        "aHz",
+        "attohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "zHz",
+        "singular": "zeptohertz",
+        "plural": "zeptohertz"
+      },
+      "names": [
+        "zHz",
+        "zeptohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "yHz",
+        "singular": "yoctohertz",
+        "plural": "yoctohertz"
+      },
+      "names": [
+        "yHz",
+        "yoctohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "rHz",
+        "singular": "rontohertz",
+        "plural": "rontohertz"
+      },
+      "names": [
+        "rHz",
+        "rontohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectohertz",
+      "dimension": "frequency",
+      "displayName": {
+        "symbol": "qHz",
+        "singular": "quectohertz",
+        "plural": "quectohertz"
+      },
+      "names": [
+        "qHz",
+        "quectohertz"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "QPa",
+        "singular": "quettapascal",
+        "plural": "quettapascals"
+      },
+      "names": [
+        "QPa",
+        "quettapascal",
+        "quettapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "RPa",
+        "singular": "ronnapascal",
+        "plural": "ronnapascals"
+      },
+      "names": [
+        "RPa",
+        "ronnapascal",
+        "ronnapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "YPa",
+        "singular": "yottapascal",
+        "plural": "yottapascals"
+      },
+      "names": [
+        "YPa",
+        "yottapascal",
+        "yottapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "ZPa",
+        "singular": "zettapascal",
+        "plural": "zettapascals"
+      },
+      "names": [
+        "ZPa",
+        "zettapascal",
+        "zettapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "EPa",
+        "singular": "exapascal",
+        "plural": "exapascals"
+      },
+      "names": [
+        "EPa",
+        "exapascal",
+        "exapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "PPa",
+        "singular": "petapascal",
+        "plural": "petapascals"
+      },
+      "names": [
+        "PPa",
+        "petapascal",
+        "petapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "terapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "TPa",
+        "singular": "terapascal",
+        "plural": "terapascals"
+      },
+      "names": [
+        "TPa",
+        "terapascal",
+        "terapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "GPa",
+        "singular": "gigapascal",
+        "plural": "gigapascals"
+      },
+      "names": [
+        "GPa",
+        "gigapascal",
+        "gigapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "MPa",
+        "singular": "megapascal",
+        "plural": "megapascals"
+      },
+      "names": [
+        "MPa",
+        "megapascal",
+        "megapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "kPa",
+        "singular": "kilopascal",
+        "plural": "kilopascals"
+      },
+      "names": [
+        "kPa",
+        "kilopascal",
+        "kilopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "hPa",
+        "singular": "hectopascal",
+        "plural": "hectopascals"
+      },
+      "names": [
+        "hPa",
+        "hectopascal",
+        "hectopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekapascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "daPa",
+        "singular": "dekapascal",
+        "plural": "dekapascals"
+      },
+      "names": [
+        "daPa",
+        "dekapascal",
+        "dekapascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "pascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "Pa",
+        "singular": "pascal",
+        "plural": "pascals"
+      },
+      "names": [
+        "Pa",
+        "pascal",
+        "pascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "decipascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "dPa",
+        "singular": "decipascal",
+        "plural": "decipascals"
+      },
+      "names": [
+        "dPa",
+        "decipascal",
+        "decipascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centipascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "cPa",
+        "singular": "centipascal",
+        "plural": "centipascals"
+      },
+      "names": [
+        "cPa",
+        "centipascal",
+        "centipascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "millipascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "mPa",
+        "singular": "millipascal",
+        "plural": "millipascals"
+      },
+      "names": [
+        "mPa",
+        "millipascal",
+        "millipascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "micropascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "μPa",
+        "singular": "micropascal",
+        "plural": "micropascals"
+      },
+      "names": [
+        "μPa",
+        "micropascal",
+        "micropascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "nPa",
+        "singular": "nanopascal",
+        "plural": "nanopascals"
+      },
+      "names": [
+        "nPa",
+        "nanopascal",
+        "nanopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "pPa",
+        "singular": "picopascal",
+        "plural": "picopascals"
+      },
+      "names": [
+        "pPa",
+        "picopascal",
+        "picopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "fPa",
+        "singular": "femtopascal",
+        "plural": "femtopascals"
+      },
+      "names": [
+        "fPa",
+        "femtopascal",
+        "femtopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "aPa",
+        "singular": "attopascal",
+        "plural": "attopascals"
+      },
+      "names": [
+        "aPa",
+        "attopascal",
+        "attopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "zPa",
+        "singular": "zeptopascal",
+        "plural": "zeptopascals"
+      },
+      "names": [
+        "zPa",
+        "zeptopascal",
+        "zeptopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "yPa",
+        "singular": "yoctopascal",
+        "plural": "yoctopascals"
+      },
+      "names": [
+        "yPa",
+        "yoctopascal",
+        "yoctopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "rPa",
+        "singular": "rontopascal",
+        "plural": "rontopascals"
+      },
+      "names": [
+        "rPa",
+        "rontopascal",
+        "rontopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectopascal",
+      "dimension": "pressure",
+      "displayName": {
+        "symbol": "qPa",
+        "singular": "quectopascal",
+        "plural": "quectopascals"
+      },
+      "names": [
+        "qPa",
+        "quectopascal",
+        "quectopascals"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "QJ",
+        "singular": "quettajoule",
+        "plural": "quettajoules"
+      },
+      "names": [
+        "QJ",
+        "quettajoule",
+        "quettajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "RJ",
+        "singular": "ronnajoule",
+        "plural": "ronnajoules"
+      },
+      "names": [
+        "RJ",
+        "ronnajoule",
+        "ronnajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "YJ",
+        "singular": "yottajoule",
+        "plural": "yottajoules"
+      },
+      "names": [
+        "YJ",
+        "yottajoule",
+        "yottajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "ZJ",
+        "singular": "zettajoule",
+        "plural": "zettajoules"
+      },
+      "names": [
+        "ZJ",
+        "zettajoule",
+        "zettajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "EJ",
+        "singular": "exajoule",
+        "plural": "exajoules"
+      },
+      "names": [
+        "EJ",
+        "exajoule",
+        "exajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "PJ",
+        "singular": "petajoule",
+        "plural": "petajoules"
+      },
+      "names": [
+        "PJ",
+        "petajoule",
+        "petajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "terajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "TJ",
+        "singular": "terajoule",
+        "plural": "terajoules"
+      },
+      "names": [
+        "TJ",
+        "terajoule",
+        "terajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "GJ",
+        "singular": "gigajoule",
+        "plural": "gigajoules"
+      },
+      "names": [
+        "GJ",
+        "gigajoule",
+        "gigajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "MJ",
+        "singular": "megajoule",
+        "plural": "megajoules"
+      },
+      "names": [
+        "MJ",
+        "megajoule",
+        "megajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "kJ",
+        "singular": "kilojoule",
+        "plural": "kilojoules"
+      },
+      "names": [
+        "kJ",
+        "kilojoule",
+        "kilojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "hJ",
+        "singular": "hectojoule",
+        "plural": "hectojoules"
+      },
+      "names": [
+        "hJ",
+        "hectojoule",
+        "hectojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekajoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "daJ",
+        "singular": "dekajoule",
+        "plural": "dekajoules"
+      },
+      "names": [
+        "daJ",
+        "dekajoule",
+        "dekajoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "joule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "J",
+        "singular": "joule",
+        "plural": "joules"
+      },
+      "names": [
+        "J",
+        "joule",
+        "joules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "decijoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "dJ",
+        "singular": "decijoule",
+        "plural": "decijoules"
+      },
+      "names": [
+        "dJ",
+        "decijoule",
+        "decijoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centijoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "cJ",
+        "singular": "centijoule",
+        "plural": "centijoules"
+      },
+      "names": [
+        "cJ",
+        "centijoule",
+        "centijoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "millijoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "mJ",
+        "singular": "millijoule",
+        "plural": "millijoules"
+      },
+      "names": [
+        "mJ",
+        "millijoule",
+        "millijoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "microjoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "μJ",
+        "singular": "microjoule",
+        "plural": "microjoules"
+      },
+      "names": [
+        "μJ",
+        "microjoule",
+        "microjoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "nJ",
+        "singular": "nanojoule",
+        "plural": "nanojoules"
+      },
+      "names": [
+        "nJ",
+        "nanojoule",
+        "nanojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "pJ",
+        "singular": "picojoule",
+        "plural": "picojoules"
+      },
+      "names": [
+        "pJ",
+        "picojoule",
+        "picojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "fJ",
+        "singular": "femtojoule",
+        "plural": "femtojoules"
+      },
+      "names": [
+        "fJ",
+        "femtojoule",
+        "femtojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "aJ",
+        "singular": "attojoule",
+        "plural": "attojoules"
+      },
+      "names": [
+        "aJ",
+        "attojoule",
+        "attojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "zJ",
+        "singular": "zeptojoule",
+        "plural": "zeptojoules"
+      },
+      "names": [
+        "zJ",
+        "zeptojoule",
+        "zeptojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "yJ",
+        "singular": "yoctojoule",
+        "plural": "yoctojoules"
+      },
+      "names": [
+        "yJ",
+        "yoctojoule",
+        "yoctojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "rJ",
+        "singular": "rontojoule",
+        "plural": "rontojoules"
+      },
+      "names": [
+        "rJ",
+        "rontojoule",
+        "rontojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectojoule",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "qJ",
+        "singular": "quectojoule",
+        "plural": "quectojoules"
+      },
+      "names": [
+        "qJ",
+        "quectojoule",
+        "quectojoules"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "QW",
+        "singular": "quettawatt",
+        "plural": "quettawatts"
+      },
+      "names": [
+        "QW",
+        "quettawatt",
+        "quettawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "RW",
+        "singular": "ronnawatt",
+        "plural": "ronnawatts"
+      },
+      "names": [
+        "RW",
+        "ronnawatt",
+        "ronnawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "YW",
+        "singular": "yottawatt",
+        "plural": "yottawatts"
+      },
+      "names": [
+        "YW",
+        "yottawatt",
+        "yottawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "ZW",
+        "singular": "zettawatt",
+        "plural": "zettawatts"
+      },
+      "names": [
+        "ZW",
+        "zettawatt",
+        "zettawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "EW",
+        "singular": "exawatt",
+        "plural": "exawatts"
+      },
+      "names": [
+        "EW",
+        "exawatt",
+        "exawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "PW",
+        "singular": "petawatt",
+        "plural": "petawatts"
+      },
+      "names": [
+        "PW",
+        "petawatt",
+        "petawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "terawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "TW",
+        "singular": "terawatt",
+        "plural": "terawatts"
+      },
+      "names": [
+        "TW",
+        "terawatt",
+        "terawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "GW",
+        "singular": "gigawatt",
+        "plural": "gigawatts"
+      },
+      "names": [
+        "GW",
+        "gigawatt",
+        "gigawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "MW",
+        "singular": "megawatt",
+        "plural": "megawatts"
+      },
+      "names": [
+        "MW",
+        "megawatt",
+        "megawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "kW",
+        "singular": "kilowatt",
+        "plural": "kilowatts"
+      },
+      "names": [
+        "kW",
+        "kilowatt",
+        "kilowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "hW",
+        "singular": "hectowatt",
+        "plural": "hectowatts"
+      },
+      "names": [
+        "hW",
+        "hectowatt",
+        "hectowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekawatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "daW",
+        "singular": "dekawatt",
+        "plural": "dekawatts"
+      },
+      "names": [
+        "daW",
+        "dekawatt",
+        "dekawatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "watt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "W",
+        "singular": "watt",
+        "plural": "watts"
+      },
+      "names": [
+        "W",
+        "watt",
+        "watts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "deciwatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "dW",
+        "singular": "deciwatt",
+        "plural": "deciwatts"
+      },
+      "names": [
+        "dW",
+        "deciwatt",
+        "deciwatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centiwatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "cW",
+        "singular": "centiwatt",
+        "plural": "centiwatts"
+      },
+      "names": [
+        "cW",
+        "centiwatt",
+        "centiwatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "milliwatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "mW",
+        "singular": "milliwatt",
+        "plural": "milliwatts"
+      },
+      "names": [
+        "mW",
+        "milliwatt",
+        "milliwatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "microwatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "μW",
+        "singular": "microwatt",
+        "plural": "microwatts"
+      },
+      "names": [
+        "μW",
+        "microwatt",
+        "microwatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "nW",
+        "singular": "nanowatt",
+        "plural": "nanowatts"
+      },
+      "names": [
+        "nW",
+        "nanowatt",
+        "nanowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "pW",
+        "singular": "picowatt",
+        "plural": "picowatts"
+      },
+      "names": [
+        "pW",
+        "picowatt",
+        "picowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "fW",
+        "singular": "femtowatt",
+        "plural": "femtowatts"
+      },
+      "names": [
+        "fW",
+        "femtowatt",
+        "femtowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "aW",
+        "singular": "attowatt",
+        "plural": "attowatts"
+      },
+      "names": [
+        "aW",
+        "attowatt",
+        "attowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "zW",
+        "singular": "zeptowatt",
+        "plural": "zeptowatts"
+      },
+      "names": [
+        "zW",
+        "zeptowatt",
+        "zeptowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "yW",
+        "singular": "yoctowatt",
+        "plural": "yoctowatts"
+      },
+      "names": [
+        "yW",
+        "yoctowatt",
+        "yoctowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "rW",
+        "singular": "rontowatt",
+        "plural": "rontowatts"
+      },
+      "names": [
+        "rW",
+        "rontowatt",
+        "rontowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectowatt",
+      "dimension": "power",
+      "displayName": {
+        "symbol": "qW",
+        "singular": "quectowatt",
+        "plural": "quectowatts"
+      },
+      "names": [
+        "qW",
+        "quectowatt",
+        "quectowatts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettaliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "QL",
+        "singular": "quettaliter",
+        "plural": "quettaliters"
+      },
+      "names": [
+        "QL",
+        "quettaliter",
+        "quettaliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "ronnaliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "RL",
+        "singular": "ronnaliter",
+        "plural": "ronnaliters"
+      },
+      "names": [
+        "RL",
+        "ronnaliter",
+        "ronnaliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "yottaliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "YL",
+        "singular": "yottaliter",
+        "plural": "yottaliters"
+      },
+      "names": [
+        "YL",
+        "yottaliter",
+        "yottaliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "zettaliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "ZL",
+        "singular": "zettaliter",
+        "plural": "zettaliters"
+      },
+      "names": [
+        "ZL",
+        "zettaliter",
+        "zettaliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "exaliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "EL",
+        "singular": "exaliter",
+        "plural": "exaliters"
+      },
+      "names": [
+        "EL",
+        "exaliter",
+        "exaliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "petaliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "PL",
+        "singular": "petaliter",
+        "plural": "petaliters"
+      },
+      "names": [
+        "PL",
+        "petaliter",
+        "petaliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "teraliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "TL",
+        "singular": "teraliter",
+        "plural": "teraliters"
+      },
+      "names": [
+        "TL",
+        "teraliter",
+        "teraliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "gigaliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "GL",
+        "singular": "gigaliter",
+        "plural": "gigaliters"
+      },
+      "names": [
+        "GL",
+        "gigaliter",
+        "gigaliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "megaliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "ML",
+        "singular": "megaliter",
+        "plural": "megaliters"
+      },
+      "names": [
+        "ML",
+        "megaliter",
+        "megaliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "kiloliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "kL",
+        "singular": "kiloliter",
+        "plural": "kiloliters"
+      },
+      "names": [
+        "kL",
+        "kiloliter",
+        "kiloliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      }
+    },
+    {
+      "id": "hectoliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "hL",
+        "singular": "hectoliter",
+        "plural": "hectoliters"
+      },
+      "names": [
+        "hL",
+        "hectoliter",
+        "hectoliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "dekaliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "daL",
+        "singular": "dekaliter",
+        "plural": "dekaliters"
+      },
+      "names": [
+        "daL",
+        "dekaliter",
+        "dekaliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "liter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "L",
+        "singular": "liter",
+        "plural": "liters"
+      },
+      "names": [
+        "L",
+        "liter",
+        "liters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "deciliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "dL",
+        "singular": "deciliter",
+        "plural": "deciliters"
+      },
+      "names": [
+        "dL",
+        "deciliter",
+        "deciliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.0001
+      }
+    },
+    {
+      "id": "centiliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "cL",
+        "singular": "centiliter",
+        "plural": "centiliters"
+      },
+      "names": [
+        "cL",
+        "centiliter",
+        "centiliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.00001
+      }
+    },
+    {
+      "id": "milliliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "mL",
+        "singular": "milliliter",
+        "plural": "milliliters"
+      },
+      "names": [
+        "mL",
+        "milliliter",
+        "milliliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "microliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "μL",
+        "singular": "microliter",
+        "plural": "microliters"
+      },
+      "names": [
+        "μL",
+        "microliter",
+        "microliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "nanoliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "nL",
+        "singular": "nanoliter",
+        "plural": "nanoliters"
+      },
+      "names": [
+        "nL",
+        "nanoliter",
+        "nanoliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.0000000000000002e-12
+      }
+    },
+    {
+      "id": "picoliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "pL",
+        "singular": "picoliter",
+        "plural": "picoliters"
+      },
+      "names": [
+        "pL",
+        "picoliter",
+        "picoliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "femtoliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "fL",
+        "singular": "femtoliter",
+        "plural": "femtoliters"
+      },
+      "names": [
+        "fL",
+        "femtoliter",
+        "femtoliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "attoliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "aL",
+        "singular": "attoliter",
+        "plural": "attoliters"
+      },
+      "names": [
+        "aL",
+        "attoliter",
+        "attoliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.0000000000000001e-21
+      }
+    },
+    {
+      "id": "zeptoliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "zL",
+        "singular": "zeptoliter",
+        "plural": "zeptoliters"
+      },
+      "names": [
+        "zL",
+        "zeptoliter",
+        "zeptoliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "yoctoliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "yL",
+        "singular": "yoctoliter",
+        "plural": "yoctoliters"
+      },
+      "names": [
+        "yL",
+        "yoctoliter",
+        "yoctoliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9.999999999999999e-28
+      }
+    },
+    {
+      "id": "rontoliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "rL",
+        "singular": "rontoliter",
+        "plural": "rontoliters"
+      },
+      "names": [
+        "rL",
+        "rontoliter",
+        "rontoliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quectoliter",
+      "dimension": "volume",
+      "displayName": {
+        "symbol": "qL",
+        "singular": "quectoliter",
+        "plural": "quectoliters"
+      },
+      "names": [
+        "qL",
+        "quectoliter",
+        "quectoliters"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-33
+      }
+    },
+    {
+      "id": "quettaelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "QeV",
+        "singular": "quettaelectronvolt",
+        "plural": "quettaelectronvolts"
+      },
+      "names": [
+        "QeV",
+        "quettaelectronvolt",
+        "quettaelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 160217663400
+      }
+    },
+    {
+      "id": "ronnaelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "ReV",
+        "singular": "ronnaelectronvolt",
+        "plural": "ronnaelectronvolts"
+      },
+      "names": [
+        "ReV",
+        "ronnaelectronvolt",
+        "ronnaelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 160217663.4
+      }
+    },
+    {
+      "id": "yottaelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "YeV",
+        "singular": "yottaelectronvolt",
+        "plural": "yottaelectronvolts"
+      },
+      "names": [
+        "YeV",
+        "yottaelectronvolt",
+        "yottaelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 160217.6634
+      }
+    },
+    {
+      "id": "zettaelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "ZeV",
+        "singular": "zettaelectronvolt",
+        "plural": "zettaelectronvolts"
+      },
+      "names": [
+        "ZeV",
+        "zettaelectronvolt",
+        "zettaelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 160.2176634
+      }
+    },
+    {
+      "id": "exaelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "EeV",
+        "singular": "exaelectronvolt",
+        "plural": "exaelectronvolts"
+      },
+      "names": [
+        "EeV",
+        "exaelectronvolt",
+        "exaelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1602176634
+      }
+    },
+    {
+      "id": "petaelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "PeV",
+        "singular": "petaelectronvolt",
+        "plural": "petaelectronvolts"
+      },
+      "names": [
+        "PeV",
+        "petaelectronvolt",
+        "petaelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.0001602176634
+      }
+    },
+    {
+      "id": "teraelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "TeV",
+        "singular": "teraelectronvolt",
+        "plural": "teraelectronvolts"
+      },
+      "names": [
+        "TeV",
+        "teraelectronvolt",
+        "teraelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-7
+      }
+    },
+    {
+      "id": "gigaelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "GeV",
+        "singular": "gigaelectronvolt",
+        "plural": "gigaelectronvolts"
+      },
+      "names": [
+        "GeV",
+        "gigaelectronvolt",
+        "gigaelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.6021766339999998e-10
+      }
+    },
+    {
+      "id": "megaelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "MeV",
+        "singular": "megaelectronvolt",
+        "plural": "megaelectronvolts"
+      },
+      "names": [
+        "MeV",
+        "megaelectronvolt",
+        "megaelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.6021766339999998e-13
+      }
+    },
+    {
+      "id": "kiloelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "keV",
+        "singular": "kiloelectronvolt",
+        "plural": "kiloelectronvolts"
+      },
+      "names": [
+        "keV",
+        "kiloelectronvolt",
+        "kiloelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-16
+      }
+    },
+    {
+      "id": "hectoelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "heV",
+        "singular": "hectoelectronvolt",
+        "plural": "hectoelectronvolts"
+      },
+      "names": [
+        "heV",
+        "hectoelectronvolt",
+        "hectoelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-17
+      }
+    },
+    {
+      "id": "dekaelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "daeV",
+        "singular": "dekaelectronvolt",
+        "plural": "dekaelectronvolts"
+      },
+      "names": [
+        "daeV",
+        "dekaelectronvolt",
+        "dekaelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-18
+      }
+    },
+    {
+      "id": "electronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "eV",
+        "singular": "electronvolt",
+        "plural": "electronvolts"
+      },
+      "names": [
+        "eV",
+        "electronvolt",
+        "electronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-19
+      }
+    },
+    {
+      "id": "decielectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "deV",
+        "singular": "decielectronvolt",
+        "plural": "decielectronvolts"
+      },
+      "names": [
+        "deV",
+        "decielectronvolt",
+        "decielectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-20
+      }
+    },
+    {
+      "id": "centielectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "ceV",
+        "singular": "centielectronvolt",
+        "plural": "centielectronvolts"
+      },
+      "names": [
+        "ceV",
+        "centielectronvolt",
+        "centielectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.6021766339999998e-21
+      }
+    },
+    {
+      "id": "millielectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "meV",
+        "singular": "millielectronvolt",
+        "plural": "millielectronvolts"
+      },
+      "names": [
+        "meV",
+        "millielectronvolt",
+        "millielectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.6021766339999998e-22
+      }
+    },
+    {
+      "id": "microelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "μeV",
+        "singular": "microelectronvolt",
+        "plural": "microelectronvolts"
+      },
+      "names": [
+        "μeV",
+        "microelectronvolt",
+        "microelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-25
+      }
+    },
+    {
+      "id": "nanoelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "neV",
+        "singular": "nanoelectronvolt",
+        "plural": "nanoelectronvolts"
+      },
+      "names": [
+        "neV",
+        "nanoelectronvolt",
+        "nanoelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-28
+      }
+    },
+    {
+      "id": "picoelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "peV",
+        "singular": "picoelectronvolt",
+        "plural": "picoelectronvolts"
+      },
+      "names": [
+        "peV",
+        "picoelectronvolt",
+        "picoelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.6021766339999998e-31
+      }
+    },
+    {
+      "id": "femtoelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "feV",
+        "singular": "femtoelectronvolt",
+        "plural": "femtoelectronvolts"
+      },
+      "names": [
+        "feV",
+        "femtoelectronvolt",
+        "femtoelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-34
+      }
+    },
+    {
+      "id": "attoelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "aeV",
+        "singular": "attoelectronvolt",
+        "plural": "attoelectronvolts"
+      },
+      "names": [
+        "aeV",
+        "attoelectronvolt",
+        "attoelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-37
+      }
+    },
+    {
+      "id": "zeptoelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "zeV",
+        "singular": "zeptoelectronvolt",
+        "plural": "zeptoelectronvolts"
+      },
+      "names": [
+        "zeV",
+        "zeptoelectronvolt",
+        "zeptoelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.6021766339999997e-40
+      }
+    },
+    {
+      "id": "yoctoelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "yeV",
+        "singular": "yoctoelectronvolt",
+        "plural": "yoctoelectronvolts"
+      },
+      "names": [
+        "yeV",
+        "yoctoelectronvolt",
+        "yoctoelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.6021766339999999e-43
+      }
+    },
+    {
+      "id": "rontoelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "reV",
+        "singular": "rontoelectronvolt",
+        "plural": "rontoelectronvolts"
+      },
+      "names": [
+        "reV",
+        "rontoelectronvolt",
+        "rontoelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.6021766339999999e-46
+      }
+    },
+    {
+      "id": "quectoelectronvolt",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "qeV",
+        "singular": "quectoelectronvolt",
+        "plural": "quectoelectronvolts"
+      },
+      "names": [
+        "qeV",
+        "quectoelectronvolt",
+        "quectoelectronvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.602176634e-49
+      }
+    },
+    {
+      "id": "quettanewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "QN",
+        "singular": "quettanewton",
+        "plural": "quettanewtons"
+      },
+      "names": [
+        "QN",
+        "quettanewton",
+        "quettanewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnanewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "RN",
+        "singular": "ronnanewton",
+        "plural": "ronnanewtons"
+      },
+      "names": [
+        "RN",
+        "ronnanewton",
+        "ronnanewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottanewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "YN",
+        "singular": "yottanewton",
+        "plural": "yottanewtons"
+      },
+      "names": [
+        "YN",
+        "yottanewton",
+        "yottanewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettanewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "ZN",
+        "singular": "zettanewton",
+        "plural": "zettanewtons"
+      },
+      "names": [
+        "ZN",
+        "zettanewton",
+        "zettanewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exanewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "EN",
+        "singular": "exanewton",
+        "plural": "exanewtons"
+      },
+      "names": [
+        "EN",
+        "exanewton",
+        "exanewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petanewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "PN",
+        "singular": "petanewton",
+        "plural": "petanewtons"
+      },
+      "names": [
+        "PN",
+        "petanewton",
+        "petanewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "teranewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "TN",
+        "singular": "teranewton",
+        "plural": "teranewtons"
+      },
+      "names": [
+        "TN",
+        "teranewton",
+        "teranewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "giganewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "GN",
+        "singular": "giganewton",
+        "plural": "giganewtons"
+      },
+      "names": [
+        "GN",
+        "giganewton",
+        "giganewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "meganewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "MN",
+        "singular": "meganewton",
+        "plural": "meganewtons"
+      },
+      "names": [
+        "MN",
+        "meganewton",
+        "meganewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilonewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "kN",
+        "singular": "kilonewton",
+        "plural": "kilonewtons"
+      },
+      "names": [
+        "kN",
+        "kilonewton",
+        "kilonewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectonewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "hN",
+        "singular": "hectonewton",
+        "plural": "hectonewtons"
+      },
+      "names": [
+        "hN",
+        "hectonewton",
+        "hectonewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekanewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "daN",
+        "singular": "dekanewton",
+        "plural": "dekanewtons"
+      },
+      "names": [
+        "daN",
+        "dekanewton",
+        "dekanewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "newton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "N",
+        "singular": "newton",
+        "plural": "newtons"
+      },
+      "names": [
+        "N",
+        "newton",
+        "newtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "decinewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "dN",
+        "singular": "decinewton",
+        "plural": "decinewtons"
+      },
+      "names": [
+        "dN",
+        "decinewton",
+        "decinewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centinewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "cN",
+        "singular": "centinewton",
+        "plural": "centinewtons"
+      },
+      "names": [
+        "cN",
+        "centinewton",
+        "centinewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "millinewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "mN",
+        "singular": "millinewton",
+        "plural": "millinewtons"
+      },
+      "names": [
+        "mN",
+        "millinewton",
+        "millinewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "micronewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "μN",
+        "singular": "micronewton",
+        "plural": "micronewtons"
+      },
+      "names": [
+        "μN",
+        "micronewton",
+        "micronewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanonewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "nN",
+        "singular": "nanonewton",
+        "plural": "nanonewtons"
+      },
+      "names": [
+        "nN",
+        "nanonewton",
+        "nanonewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "piconewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "pN",
+        "singular": "piconewton",
+        "plural": "piconewtons"
+      },
+      "names": [
+        "pN",
+        "piconewton",
+        "piconewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtonewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "fN",
+        "singular": "femtonewton",
+        "plural": "femtonewtons"
+      },
+      "names": [
+        "fN",
+        "femtonewton",
+        "femtonewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attonewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "aN",
+        "singular": "attonewton",
+        "plural": "attonewtons"
+      },
+      "names": [
+        "aN",
+        "attonewton",
+        "attonewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptonewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "zN",
+        "singular": "zeptonewton",
+        "plural": "zeptonewtons"
+      },
+      "names": [
+        "zN",
+        "zeptonewton",
+        "zeptonewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctonewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "yN",
+        "singular": "yoctonewton",
+        "plural": "yoctonewtons"
+      },
+      "names": [
+        "yN",
+        "yoctonewton",
+        "yoctonewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontonewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "rN",
+        "singular": "rontonewton",
+        "plural": "rontonewtons"
+      },
+      "names": [
+        "rN",
+        "rontonewton",
+        "rontonewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectonewton",
+      "dimension": "force",
+      "displayName": {
+        "symbol": "qN",
+        "singular": "quectonewton",
+        "plural": "quectonewtons"
+      },
+      "names": [
+        "qN",
+        "quectonewton",
+        "quectonewtons"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettacandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "Qcd",
+        "singular": "quettacandela",
+        "plural": "quettacandelas"
+      },
+      "names": [
+        "Qcd",
+        "quettacandela",
+        "quettacandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnacandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "Rcd",
+        "singular": "ronnacandela",
+        "plural": "ronnacandelas"
+      },
+      "names": [
+        "Rcd",
+        "ronnacandela",
+        "ronnacandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottacandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "Ycd",
+        "singular": "yottacandela",
+        "plural": "yottacandelas"
+      },
+      "names": [
+        "Ycd",
+        "yottacandela",
+        "yottacandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettacandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "Zcd",
+        "singular": "zettacandela",
+        "plural": "zettacandelas"
+      },
+      "names": [
+        "Zcd",
+        "zettacandela",
+        "zettacandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exacandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "Ecd",
+        "singular": "exacandela",
+        "plural": "exacandelas"
+      },
+      "names": [
+        "Ecd",
+        "exacandela",
+        "exacandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petacandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "Pcd",
+        "singular": "petacandela",
+        "plural": "petacandelas"
+      },
+      "names": [
+        "Pcd",
+        "petacandela",
+        "petacandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "teracandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "Tcd",
+        "singular": "teracandela",
+        "plural": "teracandelas"
+      },
+      "names": [
+        "Tcd",
+        "teracandela",
+        "teracandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigacandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "Gcd",
+        "singular": "gigacandela",
+        "plural": "gigacandelas"
+      },
+      "names": [
+        "Gcd",
+        "gigacandela",
+        "gigacandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megacandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "Mcd",
+        "singular": "megacandela",
+        "plural": "megacandelas"
+      },
+      "names": [
+        "Mcd",
+        "megacandela",
+        "megacandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "kcd",
+        "singular": "kilocandela",
+        "plural": "kilocandelas"
+      },
+      "names": [
+        "kcd",
+        "kilocandela",
+        "kilocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "hcd",
+        "singular": "hectocandela",
+        "plural": "hectocandelas"
+      },
+      "names": [
+        "hcd",
+        "hectocandela",
+        "hectocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekacandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "dacd",
+        "singular": "dekacandela",
+        "plural": "dekacandelas"
+      },
+      "names": [
+        "dacd",
+        "dekacandela",
+        "dekacandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "candela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "cd",
+        "singular": "candela",
+        "plural": "candelas"
+      },
+      "names": [
+        "cd",
+        "candela",
+        "candelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "decicandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "dcd",
+        "singular": "decicandela",
+        "plural": "decicandelas"
+      },
+      "names": [
+        "dcd",
+        "decicandela",
+        "decicandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centicandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "ccd",
+        "singular": "centicandela",
+        "plural": "centicandelas"
+      },
+      "names": [
+        "ccd",
+        "centicandela",
+        "centicandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "millicandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "mcd",
+        "singular": "millicandela",
+        "plural": "millicandelas"
+      },
+      "names": [
+        "mcd",
+        "millicandela",
+        "millicandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "microcandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "μcd",
+        "singular": "microcandela",
+        "plural": "microcandelas"
+      },
+      "names": [
+        "μcd",
+        "microcandela",
+        "microcandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "ncd",
+        "singular": "nanocandela",
+        "plural": "nanocandelas"
+      },
+      "names": [
+        "ncd",
+        "nanocandela",
+        "nanocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "pcd",
+        "singular": "picocandela",
+        "plural": "picocandelas"
+      },
+      "names": [
+        "pcd",
+        "picocandela",
+        "picocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "fcd",
+        "singular": "femtocandela",
+        "plural": "femtocandelas"
+      },
+      "names": [
+        "fcd",
+        "femtocandela",
+        "femtocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "acd",
+        "singular": "attocandela",
+        "plural": "attocandelas"
+      },
+      "names": [
+        "acd",
+        "attocandela",
+        "attocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "zcd",
+        "singular": "zeptocandela",
+        "plural": "zeptocandelas"
+      },
+      "names": [
+        "zcd",
+        "zeptocandela",
+        "zeptocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "ycd",
+        "singular": "yoctocandela",
+        "plural": "yoctocandelas"
+      },
+      "names": [
+        "ycd",
+        "yoctocandela",
+        "yoctocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "rcd",
+        "singular": "rontocandela",
+        "plural": "rontocandelas"
+      },
+      "names": [
+        "rcd",
+        "rontocandela",
+        "rontocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectocandela",
+      "dimension": "luminous_intensity",
+      "displayName": {
+        "symbol": "qcd",
+        "singular": "quectocandela",
+        "plural": "quectocandelas"
+      },
+      "names": [
+        "qcd",
+        "quectocandela",
+        "quectocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "bit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "b",
+        "singular": "bit",
+        "plural": "bits"
+      },
+      "names": [
+        "b",
+        "bit",
+        "bits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "quettabit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Qb",
+        "singular": "quettabit",
+        "plural": "quettabits"
+      },
+      "names": [
+        "Qb",
+        "quettabit",
+        "quettabits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnabit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Rb",
+        "singular": "ronnabit",
+        "plural": "ronnabits"
+      },
+      "names": [
+        "Rb",
+        "ronnabit",
+        "ronnabits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottabit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Yb",
+        "singular": "yottabit",
+        "plural": "yottabits"
+      },
+      "names": [
+        "Yb",
+        "yottabit",
+        "yottabits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettabit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Zb",
+        "singular": "zettabit",
+        "plural": "zettabits"
+      },
+      "names": [
+        "Zb",
+        "zettabit",
+        "zettabits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exabit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Eb",
+        "singular": "exabit",
+        "plural": "exabits"
+      },
+      "names": [
+        "Eb",
+        "exabit",
+        "exabits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petabit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Pb",
+        "singular": "petabit",
+        "plural": "petabits"
+      },
+      "names": [
+        "Pb",
+        "petabit",
+        "petabits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "terabit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Tb",
+        "singular": "terabit",
+        "plural": "terabits"
+      },
+      "names": [
+        "Tb",
+        "terabit",
+        "terabits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigabit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Gb",
+        "singular": "gigabit",
+        "plural": "gigabits"
+      },
+      "names": [
+        "Gb",
+        "gigabit",
+        "gigabits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megabit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Mb",
+        "singular": "megabit",
+        "plural": "megabits"
+      },
+      "names": [
+        "Mb",
+        "megabit",
+        "megabits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilobit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "kb",
+        "singular": "kilobit",
+        "plural": "kilobits"
+      },
+      "names": [
+        "kb",
+        "kilobit",
+        "kilobits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "kibibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Kib",
+        "singular": "kibibit",
+        "plural": "kibibits"
+      },
+      "names": [
+        "Kib",
+        "kibibit",
+        "kibibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1024
+      }
+    },
+    {
+      "id": "mebibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Mib",
+        "singular": "mebibit",
+        "plural": "mebibits"
+      },
+      "names": [
+        "Mib",
+        "mebibit",
+        "mebibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1048576
+      }
+    },
+    {
+      "id": "gibibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Gib",
+        "singular": "gibibit",
+        "plural": "gibibits"
+      },
+      "names": [
+        "Gib",
+        "gibibit",
+        "gibibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1073741824
+      }
+    },
+    {
+      "id": "tebibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Tib",
+        "singular": "tebibit",
+        "plural": "tebibits"
+      },
+      "names": [
+        "Tib",
+        "tebibit",
+        "tebibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1099511627776
+      }
+    },
+    {
+      "id": "pebibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Pib",
+        "singular": "pebibit",
+        "plural": "pebibits"
+      },
+      "names": [
+        "Pib",
+        "pebibit",
+        "pebibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1125899906842624
+      }
+    },
+    {
+      "id": "exbibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Eib",
+        "singular": "exbibit",
+        "plural": "exbibits"
+      },
+      "names": [
+        "Eib",
+        "exbibit",
+        "exbibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1152921504606847000
+      }
+    },
+    {
+      "id": "zebibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Zib",
+        "singular": "zebibit",
+        "plural": "zebibits"
+      },
+      "names": [
+        "Zib",
+        "zebibit",
+        "zebibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.1805916207174113e+21
+      }
+    },
+    {
+      "id": "yobibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Yib",
+        "singular": "yobibit",
+        "plural": "yobibits"
+      },
+      "names": [
+        "Yib",
+        "yobibit",
+        "yobibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.2089258196146292e+24
+      }
+    },
+    {
+      "id": "robibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Rib",
+        "singular": "robibit",
+        "plural": "robibits"
+      },
+      "names": [
+        "Rib",
+        "robibit",
+        "robibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.2379400392853803e+27
+      }
+    },
+    {
+      "id": "quebibit",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "Qib",
+        "singular": "quebibit",
+        "plural": "quebibits"
+      },
+      "names": [
+        "Qib",
+        "quebibit",
+        "quebibits"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.2676506002282294e+30
+      }
+    },
+    {
+      "id": "byte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "B",
+        "singular": "byte",
+        "plural": "bytes"
+      },
+      "names": [
+        "B",
+        "byte",
+        "bytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8
+      }
+    },
+    {
+      "id": "quettabyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "QB",
+        "singular": "quettabyte",
+        "plural": "quettabytes"
+      },
+      "names": [
+        "QB",
+        "quettabyte",
+        "quettabytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8e+30
+      }
+    },
+    {
+      "id": "ronnabyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "RB",
+        "singular": "ronnabyte",
+        "plural": "ronnabytes"
+      },
+      "names": [
+        "RB",
+        "ronnabyte",
+        "ronnabytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8e+27
+      }
+    },
+    {
+      "id": "yottabyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "YB",
+        "singular": "yottabyte",
+        "plural": "yottabytes"
+      },
+      "names": [
+        "YB",
+        "yottabyte",
+        "yottabytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8e+24
+      }
+    },
+    {
+      "id": "zettabyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "ZB",
+        "singular": "zettabyte",
+        "plural": "zettabytes"
+      },
+      "names": [
+        "ZB",
+        "zettabyte",
+        "zettabytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8e+21
+      }
+    },
+    {
+      "id": "exabyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "EB",
+        "singular": "exabyte",
+        "plural": "exabytes"
+      },
+      "names": [
+        "EB",
+        "exabyte",
+        "exabytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000000000000000
+      }
+    },
+    {
+      "id": "petabyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "PB",
+        "singular": "petabyte",
+        "plural": "petabytes"
+      },
+      "names": [
+        "PB",
+        "petabyte",
+        "petabytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000000000000
+      }
+    },
+    {
+      "id": "terabyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "TB",
+        "singular": "terabyte",
+        "plural": "terabytes"
+      },
+      "names": [
+        "TB",
+        "terabyte",
+        "terabytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000000000
+      }
+    },
+    {
+      "id": "gigabyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "GB",
+        "singular": "gigabyte",
+        "plural": "gigabytes"
+      },
+      "names": [
+        "GB",
+        "gigabyte",
+        "gigabytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000000
+      }
+    },
+    {
+      "id": "megabyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "MB",
+        "singular": "megabyte",
+        "plural": "megabytes"
+      },
+      "names": [
+        "MB",
+        "megabyte",
+        "megabytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000
+      }
+    },
+    {
+      "id": "kilobyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "kB",
+        "singular": "kilobyte",
+        "plural": "kilobytes"
+      },
+      "names": [
+        "kB",
+        "kilobyte",
+        "kilobytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000
+      }
+    },
+    {
+      "id": "kibibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "KiB",
+        "singular": "kibibyte",
+        "plural": "kibibytes"
+      },
+      "names": [
+        "KiB",
+        "kibibyte",
+        "kibibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8192
+      }
+    },
+    {
+      "id": "mebibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "MiB",
+        "singular": "mebibyte",
+        "plural": "mebibytes"
+      },
+      "names": [
+        "MiB",
+        "mebibyte",
+        "mebibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8388608
+      }
+    },
+    {
+      "id": "gibibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "GiB",
+        "singular": "gibibyte",
+        "plural": "gibibytes"
+      },
+      "names": [
+        "GiB",
+        "gibibyte",
+        "gibibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8589934592
+      }
+    },
+    {
+      "id": "tebibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "TiB",
+        "singular": "tebibyte",
+        "plural": "tebibytes"
+      },
+      "names": [
+        "TiB",
+        "tebibyte",
+        "tebibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8796093022208
+      }
+    },
+    {
+      "id": "pebibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "PiB",
+        "singular": "pebibyte",
+        "plural": "pebibytes"
+      },
+      "names": [
+        "PiB",
+        "pebibyte",
+        "pebibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9007199254740992
+      }
+    },
+    {
+      "id": "exbibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "EiB",
+        "singular": "exbibyte",
+        "plural": "exbibytes"
+      },
+      "names": [
+        "EiB",
+        "exbibyte",
+        "exbibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9223372036854776000
+      }
+    },
+    {
+      "id": "zebibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "ZiB",
+        "singular": "zebibyte",
+        "plural": "zebibytes"
+      },
+      "names": [
+        "ZiB",
+        "zebibyte",
+        "zebibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9.44473296573929e+21
+      }
+    },
+    {
+      "id": "yobibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "YiB",
+        "singular": "yobibyte",
+        "plural": "yobibytes"
+      },
+      "names": [
+        "YiB",
+        "yobibyte",
+        "yobibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9.671406556917033e+24
+      }
+    },
+    {
+      "id": "robibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "RiB",
+        "singular": "robibyte",
+        "plural": "robibytes"
+      },
+      "names": [
+        "RiB",
+        "robibyte",
+        "robibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9.903520314283042e+27
+      }
+    },
+    {
+      "id": "quebibyte",
+      "dimension": "data",
+      "displayName": {
+        "symbol": "QiB",
+        "singular": "quebibyte",
+        "plural": "quebibytes"
+      },
+      "names": [
+        "QiB",
+        "quebibyte",
+        "quebibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.0141204801825835e+31
+      }
+    },
+    {
+      "id": "flops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "FLOPS",
+        "singular": "FLOPS",
+        "plural": "FLOPS"
+      },
+      "names": [
+        "FLOPS",
+        "flops"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "quettaflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "QFLOPS",
+        "singular": "QFLOPS",
+        "plural": "QFLOPS"
+      },
+      "names": [
+        "QFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnaflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "RFLOPS",
+        "singular": "RFLOPS",
+        "plural": "RFLOPS"
+      },
+      "names": [
+        "RFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottaflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "YFLOPS",
+        "singular": "YFLOPS",
+        "plural": "YFLOPS"
+      },
+      "names": [
+        "YFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettaflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "ZFLOPS",
+        "singular": "ZFLOPS",
+        "plural": "ZFLOPS"
+      },
+      "names": [
+        "ZFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exaflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "EFLOPS",
+        "singular": "EFLOPS",
+        "plural": "EFLOPS"
+      },
+      "names": [
+        "EFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petaflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "PFLOPS",
+        "singular": "PFLOPS",
+        "plural": "PFLOPS"
+      },
+      "names": [
+        "PFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "teraflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "TFLOPS",
+        "singular": "TFLOPS",
+        "plural": "TFLOPS"
+      },
+      "names": [
+        "TFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigaflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "GFLOPS",
+        "singular": "GFLOPS",
+        "plural": "GFLOPS"
+      },
+      "names": [
+        "GFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megaflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "MFLOPS",
+        "singular": "MFLOPS",
+        "plural": "MFLOPS"
+      },
+      "names": [
+        "MFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kiloflops",
+      "dimension": "operation_rate",
+      "displayName": {
+        "symbol": "kFLOPS",
+        "singular": "kFLOPS",
+        "plural": "kFLOPS"
+      },
+      "names": [
+        "kFLOPS"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    }
+  ]
+}
