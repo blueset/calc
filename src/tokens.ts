@@ -190,53 +190,54 @@ export function isConversionOperator(type: TokenType): boolean {
 }
 
 /**
- * Get operator precedence (higher number = higher precedence)
+ * Get operator precedence (higher number = tighter binding)
  * Based on GRAMMAR.md operator precedence table
+ *
+ * In operator precedence climbing: operators with higher precedence values
+ * bind more tightly (are parsed deeper in the tree).
  */
 export function getOperatorPrecedence(type: TokenType): number {
   switch (type) {
     case TokenType.ASSIGN:
-      return 15;
-    case TokenType.IF:
-      return 14;
+      return 1;
     case TokenType.TO:
     case TokenType.IN:
     case TokenType.AS:
     case TokenType.ARROW:
-      return 13;
+      return 2;
     case TokenType.OR:
-      return 12;
+      return 3;
     case TokenType.AND:
-      return 11;
+      return 4;
     case TokenType.PIPE:
-      return 10;
+      return 5;
     case TokenType.XOR:
-      return 9;
+      return 6;
     case TokenType.AMPERSAND:
-      return 8;
+      return 7;
     case TokenType.LT:
     case TokenType.LTE:
     case TokenType.GT:
     case TokenType.GTE:
     case TokenType.EQ:
     case TokenType.NEQ:
-      return 7;
+      return 8;
     case TokenType.LSHIFT:
     case TokenType.RSHIFT:
-      return 6;
+      return 9;
     case TokenType.PLUS:
     case TokenType.MINUS:
-      return 5;
+      return 10;
     case TokenType.STAR:
     case TokenType.SLASH:
     case TokenType.PERCENT:
     case TokenType.MOD:
     case TokenType.PER:
-      return 4;
+      return 11;
     case TokenType.CARET:
-      return 2;
+      return 13;
     default:
-      return 0;
+      return 0; // Very low precedence for unknown operators
   }
 }
 

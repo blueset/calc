@@ -401,7 +401,10 @@ export class Lexer {
       value += this.advance();
     }
 
-    return this.createToken(TokenType.HEADING, value.trim(), start, this.currentLocation());
+    // Encode level by prepending it to the value (format: "LEVEL:text")
+    const headingValue = `${level}:${value.trim()}`;
+
+    return this.createToken(TokenType.HEADING, headingValue, start, this.currentLocation());
   }
 
   /**

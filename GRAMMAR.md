@@ -647,9 +647,18 @@ Explicit nesting:  5 km to (m in cm)        (composite unit target)
 **Context determines meaning**:
 ```
 10 in              → 10 inches (unit)
+5 ft 3 in          → 5 feet 3 inches (composite unit)
 10 in in cm        → 10 inches converted to cm (first "in" = unit, second = keyword)
+5 ft 3 in in cm    → 5 feet 3 inches converted to cm (second "in" = keyword)
 x in y             → x converted to y (keyword)
+5 ft 3 in cm       → INVALID (composite unit with different dimensions: 5 feet and 3 inches times centimeters)
+5 in binary        → 0b1010 (5 (dimensionless) converted to binary representation)
+                      // "5 inch binary" is invalid interpretation.
+5 in in binary     → 0b1010 in (5 inches converted to binary representation)
+                      // first "in" = unit, second "in" = keyword
 ```
+
+Lexer/parser must track context to disambiguate "in"
 
 ### 2. Unit Token Matching (including "m")
 

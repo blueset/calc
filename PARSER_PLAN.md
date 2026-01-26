@@ -27,15 +27,15 @@
 - [x] Write unit tests for lexer (65 tests passing)
 
 ### Phase 3: Syntactic Analysis (Days 5-7)
-- [ ] Create `ast.ts` with all AST node types
-- [ ] Implement `parser.ts` with Parser class
-- [ ] Implement recursive descent parsing structure
-- [ ] Implement operator precedence climbing (15 levels)
-- [ ] Implement composite unit detection
-- [ ] Implement "per" operator disambiguation
-- [ ] Implement city/timezone lookup with territory
-- [ ] Implement error recovery (fallback to PlainText)
-- [ ] Write unit tests for parser
+- [x] Create `ast.ts` with all AST node types
+- [x] Implement `parser.ts` with Parser class
+- [x] Implement recursive descent parsing structure
+- [x] Implement operator precedence climbing (15 levels)
+- [x] Implement composite unit detection
+- [x] Implement "per" operator disambiguation
+- [x] Implement "in" keyword ambiguity handling for composite units
+- [x] Implement error recovery (fallback to PlainText)
+- [x] Write unit tests for parser (64 tests passing)
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [ ] Create `type-checker.ts` with type system definitions
@@ -83,14 +83,14 @@
 
 ### Phase 8: Testing & Validation (Days 18-20)
 - [ ] Create test directory structure
-- [ ] Write `tests/lexer.test.ts`
-- [ ] Write `tests/parser.test.ts`
-- [ ] Write `tests/type-checker.test.ts`
-- [ ] Write `tests/evaluator.test.ts`
-- [ ] Write `tests/unit-converter.test.ts`
-- [ ] Write `tests/date-time.test.ts`
-- [ ] Write `tests/integration.test.ts` (all GRAMMAR.md examples)
-- [ ] Write `tests/disambiguation.test.ts`
+- [ ] Ensure test exists for `tests/lexer.test.ts`
+- [ ] Ensure test exists for `tests/parser.test.ts`
+- [ ] Ensure test exists for `tests/type-checker.test.ts`
+- [ ] Ensure test exists for `tests/evaluator.test.ts`
+- [ ] Ensure test exists for `tests/unit-converter.test.ts`
+- [ ] Ensure test exists for `tests/date-time.test.ts`
+- [ ] Ensure test exists for `tests/integration.test.ts` (all GRAMMAR.md examples)
+- [ ] Ensure test exists for `tests/disambiguation.test.ts`
 - [ ] Verify all 200+ examples from SPECS.md
 - [ ] End-to-end verification testing
 
