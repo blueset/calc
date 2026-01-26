@@ -38,24 +38,26 @@
 - [x] Write unit tests for parser (64 tests passing)
 
 ### Phase 4: Semantic Analysis (Days 8-9)
-- [ ] Create `type-checker.ts` with type system definitions
-- [ ] Implement unified Duration type
-- [ ] Implement TypeChecker class
-- [ ] Implement dimension compatibility checking
-- [ ] Implement conversion validation
-- [ ] Implement composite unit validation
-- [ ] Implement variable scoping
-- [ ] Create `error-handling.ts` with error types
-- [ ] Write unit tests for type-checker
+- [x] Create `type-checker.ts` with type system definitions
+- [x] Implement Duration type (semantic, not syntactic - see section 8)
+- [x] Implement TypeChecker class
+- [x] Implement dimension compatibility checking
+- [x] Implement conversion validation
+- [x] Implement composite unit validation
+- [x] Implement variable scoping
+- [x] Create `error-handling.ts` with error types
+- [x] Write unit tests for type-checker (75 tests passing, 3 skipped for date literals)
 
 ### Phase 5: Evaluation Engine (Days 10-14)
+- [ ] Add composite unit conversion target support to parser (for "171 cm to ft in")
+- [ ] Implement date/time literal parsing in parser (DATETIME tokens → AST nodes)
 - [ ] Create `unit-converter.ts` with conversion logic
 - [ ] Implement linear/affine/variant conversions
 - [ ] Implement composite unit conversion
 - [ ] Create `date-time.ts` with Temporal-spec arithmetic
 - [ ] Implement month addition with clamping
 - [ ] Implement timezone conversions with territory
-- [ ] Implement unified Duration representation
+- [ ] Implement Duration representation
 - [ ] Create `currency.ts` with exchange rate handling
 - [ ] Create `functions.ts` with all math functions
 - [ ] Create `evaluator.ts` with Evaluator class
@@ -63,6 +65,7 @@
 - [ ] Implement conversions (unit/date/currency)
 - [ ] Implement variable assignments and lookups
 - [ ] Write unit tests for all evaluation components
+- [ ] Re-enable 3 skipped tests in type-checker.test.ts (date arithmetic tests)
 
 ### Phase 6: Result Formatting (Days 15-16)
 - [ ] Create `settings.ts` with Settings interface
@@ -263,7 +266,7 @@ All files will be created at project root (flat structure):
    - Physical types: Dimensionless, Physical (with dimension), Derived (numerator/denominator dimensions)
    - CompositeUnit type
    - DateTime types: PlainDate, PlainTime, PlainDateTime, Instant, ZonedDateTime
-   - **Duration type** (unified, not separate):
+   - **Duration type** (semantic, not syntactic):
      - Single `Duration` type with optional components:
        - Date components: year, month, week, day
        - Time components: hour, minute, second, millisecond
@@ -327,7 +330,7 @@ All files will be created at project root (flat structure):
    - Handle territory field from timezones.json
 4. Property extraction (year, month, day, hour, etc.)
 5. **Duration representation**:
-   - Single unified Duration type with optional date/time components
+   - Duration type with optional date/time components
    - Combine durations intelligently (date + time = date-time)
 
 #### `currency.ts`:
@@ -534,14 +537,27 @@ When parsing timezone names (after TIME_VALUE):
    - Finds: [UTC (territory: "001")]
    - Returns: "UTC" (universal)
 
-### 8. Unified Duration Type
-Duration is a single type with optional components:
+### 8. Duration Type (Semantic, Not Syntactic)
+
+**IMPORTANT**: Durations are NOT a separate syntactic construct. They are a semantic interpretation:
+- **Parsing**: "3 days" → `NumberWithUnit` (time dimension), "5 ft 3 in" → `CompositeUnitLiteral` (length dimension)
+- **Semantic**: Time-dimensioned values can be implicitly converted to/from `DurationLiteral` as needed
+- **Evaluation**: Conversion happens during evaluation when needed for date/time arithmetic
+
+Duration components (when materialized):
 - **Date components**: year, month, week, day (any combination)
 - **Time components**: hour, minute, second, millisecond (any combination)
 - **Classification**:
   - Has only date components → "date duration"
   - Has only time components → "time duration"
   - Has both → "date-time duration"
+
+**Conversion rules**:
+- `DurationLiteral` (1 component) ↔ `NumberWithUnit` (time dimension)
+- `DurationLiteral` (multiple components) ↔ `CompositeUnitLiteral` (time dimension)
+- `NumberWithUnit`/`CompositeUnitLiteral` → `DurationComponents`:
+  - Try field-by-field conversion to Temporal.Duration
+  - If fails (doesn't satisfy Temporal.Duration), reduce to integer nanoseconds (no fraction), then convert
 - **Arithmetic**: Durations can be combined; date + time = date-time duration
 
 ### 9. AM/PM Time Indicator vs. Unit Disambiguation

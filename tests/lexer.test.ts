@@ -260,13 +260,13 @@ describe('Lexer', () => {
     it('should tokenize headings at start of line', () => {
       const tokens = tokenize('# Heading');
       expect(tokens[0].type).toBe(TokenType.HEADING);
-      expect(tokens[0].value).toBe('Heading');
+      expect(tokens[0].value).toBe('1:Heading');
     });
 
     it('should tokenize multiple-hash headings', () => {
       const tokens = tokenize('## Level 2 Heading');
       expect(tokens[0].type).toBe(TokenType.HEADING);
-      expect(tokens[0].value).toBe('Level 2 Heading');
+      expect(tokens[0].value).toBe('2:Level 2 Heading');
     });
 
     it('should distinguish heading from comment', () => {

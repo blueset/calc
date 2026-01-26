@@ -586,6 +586,10 @@ DateTimeDuration    Duration with both date and time components
 Boolean             true or false
 ```
 
+**Note on Durations**: Durations are not a separate syntactic construct. Time-dimensioned values (e.g., "3 days", "2 hours") are parsed as `NumberWithUnit` or `CompositeUnitLiteral` and can be implicitly converted to/from `DurationLiteral` as needed during evaluation. This allows seamless use in both arithmetic contexts ("5 months + 3 days" is valid as arithmetic) and date/time contexts ("2024 Jan 1 + 3 days" produces a date).
+
+```
+
 ### Type Compatibility
 
 #### Unit Arithmetic

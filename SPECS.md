@@ -826,12 +826,12 @@ Addition and subtraction between a “plain date time”/“plain time”/“ins
 14:30 + 2 hours 15 minutes ⎙ 16:45:00
 
 Special rules for addition and subtraction of durations to dates and times:
-- If a duration has integers in all of its units, the duration in each units are added or subtracted based on the calendar values, and shall not be converted to smaller units first.
+- If a duration satisfies Temporal.Duration requirements, the duration in each units are added or subtracted based on the calendar values, and shall not be converted to smaller units first.
 
 1970 Feb 1 + 1 month 2 days ⎙ 1970-03-03 Sun
 1970 Feb 1 + 33 days ⎙ 1970-03-06 Fri
 
-- If a duration has fractional parts in any of its units, the entire duration is first converted to the smallest unit (seconds), then added or subtracted.
+- If a duration does not satisfy Temporal.Duration requirements, the entire duration is first reduce to integer nanoseconds (no fraction), then added or subtracted.
 1970 Feb 1 + 1 month 15 days ⎙ 1970-03-16 Wed
 1970 Feb 1 + 1.5 months ⎙ 1970-03-18 Wed 15:00:00
 1970 Feb 1 + 45 days 15 hours ⎙ 1970-03-18 Wed 15:00:00
