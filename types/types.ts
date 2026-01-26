@@ -1,13 +1,13 @@
-/**                                                                                                                                                                                                                                             
- * Units database - source format                                                                                                                                                                                                               
+/**
+ * Units database - source format
  * At build time, this can be expanded to include all SI-prefixed variants
  */
-interface UnitsDatabase {
+export interface UnitsDatabase {
   dimensions: Dimension[];
   units: Unit[];
 }
 
-interface Dimension {
+export interface Dimension {
   id: string; // e.g., "length", "mass", "time", "dimensionless"
   name: string;
   baseUnit: string; // reference to unit ID that's the base
@@ -22,7 +22,7 @@ interface Dimension {
   hasNamedUnits?: boolean;
 }
 
-interface Unit {
+export interface Unit {
   id: string; // unique identifier, e.g., "meter", "foot", "celsius"
   dimension: string; // reference to dimension ID
 
@@ -39,24 +39,24 @@ interface Unit {
   isBaseUnit?: boolean; // true for the base unit of the dimension
 }
 
-interface DisplayName {
+export interface DisplayName {
   symbol: string; // e.g., "m", "ft", "°C"
   singular: string; // e.g., "meter", "foot", "degree Celsius"
   plural?: string; // e.g., "meters", "feet", "degrees Celsius"
 }
 
-type UnitConversion =
+export type UnitConversion =
   | LinearConversion
   | AffineConversion
   | VariantConversion;
 
-interface LinearConversion {
+export interface LinearConversion {
   type: "linear";
   factor: number; // base_value = input_value * factor
   // e.g., 1 km = 1000 m, so factor = 1000
 }
 
-interface AffineConversion {
+export interface AffineConversion {
   type: "affine";
   // base_value = (input_value + offset) * factor
   offset: number; // add before scaling (for temperature: shift to absolute zero)
@@ -66,7 +66,7 @@ interface AffineConversion {
   // Fahrenheit to Kelvin: offset=459.67, factor=5/9
 }
 
-interface VariantConversion {
+export interface VariantConversion {
   type: "variant";
   variants: {
     us: LinearConversion | AffineConversion;
@@ -75,12 +75,12 @@ interface VariantConversion {
   // e.g., US gallon vs UK gallon
 }
 
-interface CurrenciesDatabase {
+export interface CurrenciesDatabase {
   unambiguous: UnambiguousCurrency[];
   ambiguous: AmbiguousCurrency[];
 }
 
-interface UnambiguousCurrency {
+export interface UnambiguousCurrency {
   code: string; // ISO 4217 code, e.g., "USD", "EUR", "JPY"
   minorUnits: number; // decimal places, e.g., 2 for USD, 0 for JPY, 3 for KWD
 
@@ -89,42 +89,42 @@ interface UnambiguousCurrency {
   names: string[];
 }
 
-interface AmbiguousCurrency {
+export interface AmbiguousCurrency {
   // These are treated as user-defined units (non-convertible)
   symbol: string; // e.g., "$", "¢", "¥", "¤"
   dimension: string; // unique dimension ID for this ambiguous currency
 }
 
-interface TimezonesDatabase {
+export interface TimezonesDatabase {
   timezones: Timezone[];
 }
 
-interface Timezone {
+export interface Timezone {
   iana: string; // IANA timezone name, e.g., "America/New_York"
 
   // All ways to refer to this timezone
   names: TimezoneName[];
 }
 
-interface TimezoneName {
+export interface TimezoneName {
   name: string;
   territory?: string; // e.g., "US", "GB", "001"
 }
 
-interface ExchangeRatesDatabase {
+export interface ExchangeRatesDatabase {
   baseCurrency: string; // e.g., "USD"
   timestamp: string; // ISO 8601 timestamp of last update
   rates: ExchangeRate[];
 }
 
-interface ExchangeRate {
+export interface ExchangeRate {
   from: string; // ISO 4217 currency code
   to: string; // ISO 4217 currency code
   rate: number; // exchange rate
 }
 
 // Alternative flat structure for faster lookup:
-interface ExchangeRatesDatabaseFlat {
+export interface ExchangeRatesDatabaseFlat {
   baseCurrency: string;
   timestamp: string;
 
