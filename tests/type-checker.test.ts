@@ -337,8 +337,7 @@ describe('TypeChecker', () => {
       expect(type?.kind).toBe('error');
     });
 
-    // TODO: Parser doesn't support composite unit targets yet
-    it.skip('should allow composite unit conversion', () => {
+    it('should allow composite unit conversion', () => {
       const type = parseAndCheck('171 cm to ft in');
       expect(type).toMatchObject({ kind: 'composite', dimension: 'length' });
     });
@@ -498,10 +497,7 @@ x + y`;
   });
 
   describe('Date/Time Arithmetic', () => {
-    // NOTE: Date literals are not fully implemented in parser yet (Phase 5)
-    // These tests will be enabled when date-time.ts is implemented
-
-    it.skip('should allow adding duration to date', () => {
+    it('should allow adding duration to date', () => {
       const input = `date = 2024 Jan 1
 date + 3 days`;
       const lexer = new Lexer(input, dataLoader);
@@ -516,7 +512,7 @@ date + 3 days`;
       expect(secondType?.kind).toBe('plainDate');
     });
 
-    it.skip('should allow subtracting dates to get duration', () => {
+    it('should allow subtracting dates to get duration', () => {
       const input = `date1 = 2024 Jan 10
 date2 = 2024 Jan 1
 date1 - date2`;

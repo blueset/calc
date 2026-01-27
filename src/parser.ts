@@ -41,6 +41,14 @@ import {
   createSimpleUnit,
   createDerivedUnit,
   createUnitTarget,
+  createCompositeUnitTarget,
+  createPlainDateLiteral,
+  createPlainTimeLiteral,
+  createPlainDateTimeLiteral,
+  createZonedDateTimeLiteral,
+  createInstantLiteral,
+  PlainDateLiteral,
+  PlainTimeLiteral,
   CompositeUnitLiteral,
   PresentationTarget,
   PropertyTarget,
@@ -386,6 +394,29 @@ export class Parser {
     const value = parseFloat(numberToken.value);
     const start = numberToken.start;
 
+    // Check for date pattern: YYYY MONTH D (e.g., "2024 Jan 15")
+    if (this.check(TokenType.DATETIME)) {
+      const monthToken = this.currentToken();
+      const monthNum = this.parseMonthName(monthToken.value.toLowerCase());
+      if (monthNum !== null) {
+        // This looks like a date pattern
+        this.advance(); // consume month token
+
+        // Check for day number
+        if (this.check(TokenType.NUMBER)) {
+          const dayToken = this.currentToken();
+          this.advance();
+          const year = parseInt(numberToken.value);
+          const day = parseInt(dayToken.value);
+          const end = this.previous().end;
+          return createPlainDateLiteral(year, monthNum, day, start, end);
+        }
+
+        // No day, backtrack
+        this.current--;
+      }
+    }
+
     // Check for unit after number
     if (this.check(TokenType.UNIT)) {
       // Check if this might be a composite unit (multiple value-unit pairs)
@@ -563,10 +594,36 @@ export class Parser {
       // TODO: Implement timezone lookup with territory resolution
     }
 
-    // Otherwise, parse as unit target
-    const unit = this.parseUnit();
+    // Otherwise, parse as unit target (single or composite)
+    const firstUnit = this.parseUnit();
+
+    // Check if there are more units (for composite unit like "ft in")
+    const units: UnitExpression[] = [firstUnit];
+
+    while (this.check(TokenType.UNIT) || this.check(TokenType.IN) || this.check(TokenType.IDENTIFIER)) {
+      // Stop if we hit a keyword or operator
+      if (this.check(TokenType.IDENTIFIER)) {
+        const name = this.currentToken().value.toLowerCase();
+        // Check if this is a presentation format or property (not a unit)
+        const presentationFormats = ['binary', 'octal', 'hex', 'fraction', 'scientific', 'ordinal'];
+        const properties = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'dayOfWeek', 'dayOfYear', 'weekOfYear'];
+        if (presentationFormats.includes(name) || properties.includes(name)) {
+          break;
+        }
+      }
+
+      units.push(this.parseUnit());
+    }
+
     const end = this.previous().end;
-    return createUnitTarget(unit, start, end);
+
+    // If we have multiple units, create a composite target
+    if (units.length > 1) {
+      return createCompositeUnitTarget(units, start, end);
+    }
+
+    // Otherwise, single unit target
+    return createUnitTarget(firstUnit, start, end);
   }
 
   /**
@@ -622,21 +679,122 @@ export class Parser {
    */
   private parseDateTimeLiteral(token: Token): Expression {
     const start = token.start;
-    const end = token.end;
     const value = token.value.toLowerCase();
 
-    // For now, create a constant-like identifier for date/time components
-    // This allows the parser to not crash while we implement full date/time support
-    // Full implementation will handle:
-    // - Plain dates (YYYY.M.D, YYYY Month D, etc.)
-    // - Plain times (H:MM:SS, H AM/PM)
-    // - Plain datetimes (date + time)
-    // - Zoned datetimes (datetime + timezone)
-    // - Durations
-    // - Relative dates (today, yesterday, tomorrow)
+    // Try to parse as time (H AM/PM pattern or H:MM pattern)
+    const timeResult = this.tryParseTime(token);
+    if (timeResult) {
+      return timeResult;
+    }
 
-    // For phase 3, just treat as an identifier that will be handled in evaluation
-    return createIdentifier(token.value, start, end);
+    // Try to parse as date (month name, day name, etc.)
+    const dateResult = this.tryParseDate(token);
+    if (dateResult) {
+      return dateResult;
+    }
+
+    // Fallback: treat as identifier for relative dates (today, yesterday, etc.)
+    return createIdentifier(token.value, start, token.end);
+  }
+
+  /**
+   * Try to parse time patterns:
+   * - H AM/PM: "10 am", "3 pm"
+   * - H:MM: "10:30"
+   * - H:MM:SS: "10:30:45"
+   * - H:MM AM/PM: "10:30 am"
+   */
+  private tryParseTime(token: Token): Expression | null {
+    const start = token.start;
+    const value = token.value.toLowerCase();
+
+    // Check for AM/PM
+    if (value === 'am' || value === 'pm') {
+      // Previous token should be a number (hour) or time (H:MM)
+      // For now, this is handled by looking back at numbers
+      // This case handles standalone "am"/"pm" which shouldn't happen
+      return null;
+    }
+
+    // Check for time with colon (H:MM or H:MM:SS)
+    // This would need to be tokenized as a single DATETIME token
+    // For now, we handle simple cases
+    return null;
+  }
+
+  /**
+   * Try to parse date patterns:
+   * - MONTH_NAME: "Jan", "January"
+   * - YYYY MONTH D: "2024 Jan 15"
+   * - D MONTH YYYY: "15 Jan 2024"
+   * - MONTH D YYYY: "Jan 15 2024"
+   */
+  private tryParseDate(token: Token): Expression | null {
+    const start = token.start;
+    const value = token.value.toLowerCase();
+
+    // Check if this is a month name
+    const monthNum = this.parseMonthName(value);
+    if (monthNum !== null) {
+      // Look ahead for date pattern
+      // Pattern: MONTH D YYYY or just MONTH (partial)
+      return this.parseDateWithMonth(monthNum, start);
+    }
+
+    return null;
+  }
+
+  /**
+   * Parse a date starting with a month name
+   * Handles: MONTH D YYYY pattern
+   */
+  private parseDateWithMonth(month: number, start: SourceLocation): Expression | null {
+    // Check if next token is a number (day)
+    if (!this.check(TokenType.NUMBER)) {
+      // Just a month name, treat as identifier
+      return null;
+    }
+
+    const dayToken = this.currentToken();
+    this.advance();
+    const day = parseInt(dayToken.value);
+
+    // Check if next token is a number (year)
+    if (!this.check(TokenType.NUMBER)) {
+      // No year, backtrack
+      this.current--;
+      return null;
+    }
+
+    const yearToken = this.currentToken();
+    this.advance();
+    const year = parseInt(yearToken.value);
+
+    const end = this.previous().end;
+    return createPlainDateLiteral(year, month, day, start, end);
+  }
+
+  /**
+   * Parse month name to month number (1-12)
+   * Returns null if not a valid month name
+   */
+  private parseMonthName(name: string): number | null {
+    const months: { [key: string]: number } = {
+      'jan': 1, 'january': 1,
+      'feb': 2, 'february': 2,
+      'mar': 3, 'march': 3,
+      'apr': 4, 'april': 4,
+      'may': 5,
+      'jun': 6, 'june': 6,
+      'jul': 7, 'july': 7,
+      'aug': 8, 'august': 8,
+      'sep': 9, 'september': 9,
+      'oct': 10, 'october': 10,
+      'nov': 11, 'november': 11,
+      'dec': 12, 'december': 12
+    };
+
+    return months[name] ?? null;
   }
 
   /**

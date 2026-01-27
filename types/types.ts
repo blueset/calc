@@ -112,23 +112,10 @@ export interface TimezoneName {
 }
 
 export interface ExchangeRatesDatabase {
-  baseCurrency: string; // e.g., "USD"
-  timestamp: string; // ISO 8601 timestamp of last update
-  rates: ExchangeRate[];
+  date: string; // ISO 8601 timestamp of last update
+  [baseCurrency: string]: string | ExchangeRate; // e.g. "usd" → rates, or "date" → timestamp
 }
 
 export interface ExchangeRate {
-  from: string; // ISO 4217 currency code
-  to: string; // ISO 4217 currency code
-  rate: number; // exchange rate
-}
-
-// Alternative flat structure for faster lookup:
-export interface ExchangeRatesDatabaseFlat {
-  baseCurrency: string;
-  timestamp: string;
-
-  // Map of "FROM_TO" → rate
-  // e.g., "USD_EUR" → 0.858
-  rates: Record<string, number>;
+  [targetCurrency: string]: number; // e.g. "eur": 0.84571093
 }

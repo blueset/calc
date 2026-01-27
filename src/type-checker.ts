@@ -312,7 +312,7 @@ export class TypeChecker {
     switch (expr.operator) {
       case '+':
       case '-':
-        return this.checkAdditionSubtraction(leftType, rightType, expr);
+        return this.checkAdditionSubtraction(leftType, rightType, expr.left, expr.right, expr);
 
       case '*':
       case '/':
@@ -357,11 +357,13 @@ export class TypeChecker {
   private checkAdditionSubtraction(
     leftType: ValueType,
     rightType: ValueType,
+    leftExpr: AST.Expression,
+    rightExpr: AST.Expression,
     expr: AST.BinaryExpression
   ): ValueType {
     // Date/Time arithmetic
     if (this.isDateTimeType(leftType) || this.isDateTimeType(rightType)) {
-      return this.checkDateTimeArithmetic(leftType, rightType, expr);
+      return this.checkDateTimeArithmetic(leftType, rightType, leftExpr, rightExpr, expr);
     }
 
     // Physical arithmetic - must have compatible dimensions
@@ -473,15 +475,120 @@ export class TypeChecker {
   /**
    * Check date/time arithmetic
    * Based on SPECS.md lines 834-943
+   *
+   * Note: Time-dimensioned values (NumberWithUnit, CompositeUnit) are implicitly
+   * treated as durations in date/time arithmetic contexts.
    */
-  private checkDateTimeArithmetic(leftType: ValueType, rightType: ValueType, expr: AST.BinaryExpression): ValueType {
+  private checkDateTimeArithmetic(
+    leftType: ValueType,
+    rightType: ValueType,
+    leftExpr: AST.Expression,
+    rightExpr: AST.Expression,
+    expr: AST.BinaryExpression
+  ): ValueType {
+    // Convert time-dimensioned physical types to duration types
+    const leftDurType = this.tryConvertToDuration(leftType, leftExpr);
+    const rightDurType = this.tryConvertToDuration(rightType, rightExpr);
+
     if (expr.operator === '+') {
-      return this.checkDateTimeAddition(leftType, rightType, expr);
+      return this.checkDateTimeAddition(leftDurType, rightDurType, expr);
     } else if (expr.operator === '-') {
-      return this.checkDateTimeSubtraction(leftType, rightType, expr);
+      return this.checkDateTimeSubtraction(leftDurType, rightDurType, expr);
     }
 
     return this.createError('Invalid date/time arithmetic', expr);
+  }
+
+  /**
+   * Try to convert a time-dimensioned physical type to a duration type.
+   * Returns the original type if it's not time-dimensioned or already a duration.
+   */
+  private tryConvertToDuration(type: ValueType, expr: AST.Expression): ValueType {
+    // Already a duration
+    if (type.kind === 'duration') {
+      return type;
+    }
+
+    // Check if it's a time-dimensioned physical type
+    if (this.isPhysicalType(type)) {
+      const physicalType = type as PhysicalType;
+
+      // Simple physical with time dimension
+      if (physicalType.kind === 'physical' && physicalType.dimension === 'time') {
+        // Check the actual unit to determine if it's date or time component
+        const isDateComponent = this.isDateComponentUnit(expr);
+        return {
+          kind: 'duration',
+          hasDateComponents: isDateComponent,
+          hasTimeComponents: !isDateComponent
+        };
+      }
+
+      // Composite unit with time dimension
+      if (physicalType.kind === 'composite' && physicalType.dimension === 'time') {
+        // Check if any component is a date or time component
+        const hasDate = this.hasDateComponentUnit(expr);
+        const hasTime = this.hasTimeComponentUnit(expr);
+        return {
+          kind: 'duration',
+          hasDateComponents: hasDate,
+          hasTimeComponents: hasTime
+        };
+      }
+    }
+
+    // Not convertible, return as-is
+    return type;
+  }
+
+  /**
+   * Check if a unit expression represents a date component (year, month, week, day)
+   */
+  private isDateComponentUnit(expr: AST.Expression): boolean {
+    if (expr.type === 'NumberWithUnit') {
+      const unitId = this.getUnitId(expr.unit);
+      const dateUnits = ['year', 'month', 'week', 'day', 'yr', 'mo', 'wk', 'd'];
+      return dateUnits.some(u => unitId.includes(u));
+    }
+    return false;
+  }
+
+  /**
+   * Check if a composite unit has any date component units
+   */
+  private hasDateComponentUnit(expr: AST.Expression): boolean {
+    if (expr.type === 'CompositeUnitLiteral') {
+      return expr.components.some(comp => {
+        const unitId = this.getUnitId(comp.unit);
+        const dateUnits = ['year', 'month', 'week', 'day', 'yr', 'mo', 'wk', 'd'];
+        return dateUnits.some(u => unitId.includes(u));
+      });
+    }
+    return false;
+  }
+
+  /**
+   * Check if a composite unit has any time component units
+   */
+  private hasTimeComponentUnit(expr: AST.Expression): boolean {
+    if (expr.type === 'CompositeUnitLiteral') {
+      return expr.components.some(comp => {
+        const unitId = this.getUnitId(comp.unit);
+        const timeUnits = ['hour', 'minute', 'second', 'millisecond', 'hr', 'min', 'sec', 'ms', 'h', 'm', 's'];
+        return timeUnits.some(u => unitId.includes(u));
+      });
+    }
+    return false;
+  }
+
+  /**
+   * Get the unit ID from a unit expression
+   */
+  private getUnitId(unit: AST.UnitExpression): string {
+    if (unit.type === 'SimpleUnit') {
+      return unit.unitId.toLowerCase();
+    }
+    return '';
   }
 
   /**

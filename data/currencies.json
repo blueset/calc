@@ -561,7 +561,7 @@
     },
     {
       "code": "EUR",
-      "minorUnits": 0,
+      "minorUnits": 2,
       "displayName": {
         "singular": "euro",
         "plural": "euros"

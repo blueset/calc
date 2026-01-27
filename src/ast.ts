@@ -404,6 +404,53 @@ export function createConstantLiteral(name: string, start: SourceLocation, end: 
   return { type: 'ConstantLiteral', name, start, end };
 }
 
+export function createPlainDateLiteral(
+  year: number,
+  month: number,
+  day: number,
+  start: SourceLocation,
+  end: SourceLocation
+): PlainDateLiteral {
+  return { type: 'PlainDateLiteral', year, month, day, start, end };
+}
+
+export function createPlainTimeLiteral(
+  hour: number,
+  minute: number,
+  second: number,
+  millisecond: number | undefined,
+  start: SourceLocation,
+  end: SourceLocation
+): PlainTimeLiteral {
+  return { type: 'PlainTimeLiteral', hour, minute, second, millisecond, start, end };
+}
+
+export function createPlainDateTimeLiteral(
+  date: PlainDateLiteral,
+  time: PlainTimeLiteral,
+  start: SourceLocation,
+  end: SourceLocation
+): PlainDateTimeLiteral {
+  return { type: 'PlainDateTimeLiteral', date, time, start, end };
+}
+
+export function createZonedDateTimeLiteral(
+  dateTime: PlainDateTimeLiteral,
+  timezone: string,
+  start: SourceLocation,
+  end: SourceLocation
+): ZonedDateTimeLiteral {
+  return { type: 'ZonedDateTimeLiteral', dateTime, timezone, start, end };
+}
+
+export function createInstantLiteral(
+  timestamp: number,
+  start: SourceLocation,
+  end: SourceLocation
+): InstantLiteral {
+  return { type: 'InstantLiteral', timestamp, start, end };
+}
+
 export function createFunctionCall(
   name: string,
   args: Expression[],
@@ -452,4 +499,8 @@ export function createDerivedUnit(
 
 export function createUnitTarget(unit: UnitExpression, start: SourceLocation, end: SourceLocation): UnitTarget {
   return { type: 'UnitTarget', unit, start, end };
+}
+
+export function createCompositeUnitTarget(units: UnitExpression[], start: SourceLocation, end: SourceLocation): CompositeUnitTarget {
+  return { type: 'CompositeUnitTarget', units, start, end };
 }

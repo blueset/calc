@@ -446,6 +446,18 @@ describe('Parser', () => {
       expect(outerConv.operator).toBe('to');
       expect((outerConv.expression as ConversionExpression).operator).toBe('to');
     });
+
+    it('should parse composite unit conversion target', () => {
+      const expr = parseExpression('171 cm to ft in');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.operator).toBe('to');
+      expect(convExpr.target.type).toBe('CompositeUnitTarget');
+      const compositeTarget = convExpr.target as any;
+      expect(compositeTarget.units).toHaveLength(2);
+      expect(compositeTarget.units[0].type).toBe('SimpleUnit');
+      expect(compositeTarget.units[1].type).toBe('SimpleUnit');
+    });
   });
 
   describe('Conditional Expressions', () => {
@@ -545,6 +557,26 @@ describe('Parser', () => {
       const funcCall = expr as FunctionCall;
       expect(funcCall.name).toBe('sqrt');
       expect((funcCall.arguments[0] as BinaryExpression).operator).toBe('^');
+    });
+  });
+
+  describe('Date/Time Literals', () => {
+    it('should parse date with month name (MONTH D YYYY)', () => {
+      const expr = parseExpression('Jan 15 2024');
+      expect(expr.type).toBe('PlainDateLiteral');
+      const date = expr as any;
+      expect(date.year).toBe(2024);
+      expect(date.month).toBe(1);
+      expect(date.day).toBe(15);
+    });
+
+    it('should parse date with long month name', () => {
+      const expr = parseExpression('February 28 2024');
+      expect(expr.type).toBe('PlainDateLiteral');
+      const date = expr as any;
+      expect(date.year).toBe(2024);
+      expect(date.month).toBe(2);
+      expect(date.day).toBe(28);
     });
   });
 });

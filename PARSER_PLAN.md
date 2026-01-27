@@ -26,6 +26,20 @@
 - [x] Add source location tracking
 - [x] Write unit tests for lexer (65 tests passing)
 
+**Note**: Time literal tokenization (H:MM, H:MM:SS patterns) deferred to Phase 2.5 - see below
+
+### Phase 2.5: Time Literal Tokenization (Optional Enhancement)
+**Status**: Deferred - requires lexer architectural changes
+
+- [ ] Enhance lexer to recognize colon patterns (H:MM, H:MM:SS)
+- [ ] Tokenize time literals as single DATETIME tokens
+- [ ] Update parser's `tryParseTime()` to handle tokenized time literals
+- [ ] Add tests for time literal parsing
+
+**Current limitation**: Time patterns like "10:30" and "3:45 pm" are not parsed. Parser stub returns null. Date literals work fine.
+
+**Reason for deferral**: Requires significant lexer changes. Time literals less common in examples. Can be added when needed.
+
 ### Phase 3: Syntactic Analysis (Days 5-7)
 - [x] Create `ast.ts` with all AST node types
 - [x] Implement `parser.ts` with Parser class
@@ -49,23 +63,25 @@
 - [x] Write unit tests for type-checker (75 tests passing, 3 skipped for date literals)
 
 ### Phase 5: Evaluation Engine (Days 10-14)
-- [ ] Add composite unit conversion target support to parser (for "171 cm to ft in")
-- [ ] Implement date/time literal parsing in parser (DATETIME tokens → AST nodes)
-- [ ] Create `unit-converter.ts` with conversion logic
-- [ ] Implement linear/affine/variant conversions
-- [ ] Implement composite unit conversion
-- [ ] Create `date-time.ts` with Temporal-spec arithmetic
-- [ ] Implement month addition with clamping
-- [ ] Implement timezone conversions with territory
-- [ ] Implement Duration representation
-- [ ] Create `currency.ts` with exchange rate handling
-- [ ] Create `functions.ts` with all math functions
+- [x] Add composite unit conversion target support to parser (for "171 cm to ft in")
+- [x] Implement date/time literal parsing in parser (DATETIME tokens → AST nodes)
+- [x] Re-enable 3 skipped tests in type-checker.test.ts (date arithmetic tests)
+- [x] Create `unit-converter.ts` with conversion logic (19 tests passing)
+- [x] Implement linear/affine/variant conversions
+- [x] Implement composite unit conversion
+- [x] Create `date-time.ts` with Temporal-spec arithmetic (37 tests passing)
+- [x] Implement month addition with clamping
+- [x] Implement timezone name resolution with territory (via DataLoader)
+- [x] Implement Duration representation
+- [x] Create `currency.ts` with exchange rate handling (29 tests passing)
+- [x] Create `functions.ts` with all math functions (50 tests passing)
 - [ ] Create `evaluator.ts` with Evaluator class
 - [ ] Implement binary operations with unit handling
 - [ ] Implement conversions (unit/date/currency)
 - [ ] Implement variable assignments and lookups
 - [ ] Write unit tests for all evaluation components
-- [ ] Re-enable 3 skipped tests in type-checker.test.ts (date arithmetic tests)
+
+**Note**: Timezone offset conversions (not just name resolution) deferred to Phase 6.5 - requires Temporal polyfill
 
 ### Phase 6: Result Formatting (Days 15-16)
 - [ ] Create `settings.ts` with Settings interface
@@ -76,6 +92,16 @@
 - [ ] Implement composite unit formatting
 - [ ] Implement presentation target formatting (binary, hex, etc.)
 - [ ] Write unit tests for formatter
+
+### Phase 6.5: Temporal API Integration (Optional Enhancement)
+**Status**: Deferred - requires external dependency
+
+- [ ] Add `@js-temporal/polyfill` dependency
+- [ ] Implement timezone offset-aware conversions in `date-time.ts`
+- [ ] Implement timezone conversion targets in parser
+- [ ] Update tests for timezone-aware behavior
+
+**Current limitation**: All timezones treated as UTC. Timezone names are resolved (EST→America/New_York) but offset calculations not performed.
 
 ### Phase 7: Integration & Main Orchestrator (Day 17)
 - [ ] Create `calculator.ts` with Calculator class
@@ -96,6 +122,18 @@
 - [ ] Ensure test exists for `tests/disambiguation.test.ts`
 - [ ] Verify all 200+ examples from SPECS.md
 - [ ] End-to-end verification testing
+
+### Post-MVP Enhancements
+**Status**: Optional quality-of-life improvements
+
+#### Type System Enhancements
+- [ ] Unit-aware function type checking (e.g., `sqrt(4 m²)` → `2 m` type)
+- [ ] Function signature database with input/output dimension rules
+- [ ] Better error messages for dimension mismatches in function calls
+
+**Current limitation**: All math functions return `dimensionless` type. Evaluation handles units correctly, but type checker doesn't validate function dimensions.
+
+**Reason for deferral**: Non-critical enhancement. Core evaluation works. Type checking is already functional, this just improves error messages.
 
 ---
 
