@@ -145,13 +145,14 @@ export class Parser {
       const lineStart = this.current;
 
       // Try to parse as variable definition: IDENTIFIER = Expression
-      if (this.check(TokenType.IDENTIFIER)) {
+      // Note: Also accept UNIT tokens as identifiers (handles single-letter names like "a", "b")
+      if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.UNIT)) {
         const identifierToken = this.peek();
         const nextToken = this.peekAhead(1);
 
         if (nextToken && nextToken.type === TokenType.ASSIGN) {
           // It's a variable definition
-          this.advance(); // consume identifier
+          this.advance(); // consume identifier/unit token
           const name = identifierToken.value;
           this.advance(); // consume =
           const value = this.parseExpression();

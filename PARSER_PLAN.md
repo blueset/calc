@@ -77,23 +77,80 @@
 - [x] Implement Duration representation
 - [x] Create `currency.ts` with exchange rate handling (29 tests passing)
 - [x] Create `functions.ts` with all math functions (50 tests passing)
-- [ ] Create `evaluator.ts` with Evaluator class
-- [ ] Implement binary operations with unit handling
-- [ ] Implement conversions (unit/date/currency)
-- [ ] Implement variable assignments and lookups
-- [ ] Write unit tests for all evaluation components
+- [x] Create `evaluator.ts` with Evaluator class
+- [x] Implement binary operations with unit handling
+- [x] Implement conversions (unit/date/currency)
+- [x] Implement variable assignments and lookups
+- [x] Write unit tests for all evaluation components (71/71 tests passing - 100%)
+- [x] Fix single-letter variable name issue (parser now accepts UNIT tokens as identifiers in assignment context)
+
+**Known Issues**:
+- Derived unit arithmetic simplified
+  - Multiplying/dividing different units keeps left unit instead of creating derived units
+  - Example: `5 m * 3 s` returns `15 m` instead of expected `15 m s`
+  - Full derived unit support moved to Phase 5.5
 
 **Note**: Timezone offset conversions (not just name resolution) deferred to Phase 6.5 - requires Temporal polyfill
+
+### Phase 5.5: Derived Unit Support
+**Status**: Required for core functionality - implement before Phase 6
+
+Derived units are essential for common calculations like speed (km/h), acceleration (m/s²), force (N = kg⋅m/s²), energy (J = kg⋅m²/s²), density (kg/m³), etc. The parser and type checker already support derived units; this phase completes the implementation in the evaluator.
+
+**Why now instead of later**:
+- Formatter (Phase 6) not yet implemented - can design it correctly from the start
+- No code depends on simplified behavior yet - no refactoring needed
+- Fresh context - full understanding of evaluator, type system, AST
+- Lower engineering risk than retrofitting later
+
+**Tasks**:
+- [ ] Update evaluator binary multiplication to create derived units
+  - When multiplying values with different dimensions, create DerivedUnit with both units
+  - Example: `5 m * 3 s` → `15 m s` (DerivedUnit with numerator: [m, s])
+  - Handle dimensionless × unit → keep unit (not derived)
+  - Handle unit × same unit → exponentiate (e.g., `m * m` → `m²`)
+  - Remove TODO comment at evaluator.ts:580-581
+- [ ] Update evaluator binary division to create derived units
+  - When dividing values with different dimensions, create DerivedUnit
+  - Example: `100 km / 2 h` → `50 km/h` (DerivedUnit with numerator: [km], denominator: [h])
+  - Handle dimensionless / unit → reciprocal unit (e.g., `1 / s` → `s⁻¹` or `1/s`)
+  - Handle unit / same unit → dimensionless (e.g., `m / m` → 1)
+  - Remove TODO comment at evaluator.ts:604-605
+- [ ] Implement resolveUnit helper for DerivedUnit
+  - Currently only handles SimpleUnit (evaluator.ts:983)
+  - Add support for resolving DerivedUnit from AST to Unit objects
+  - Needed for composite unit conversions involving derived units
+  - Remove TODO comment at evaluator.ts:983
+- [ ] Add comprehensive tests for derived unit creation
+  - Test multiplication creating derived units (m * s, kg * m/s²)
+  - Test division creating derived units (km / h, m / s²)
+  - Test simplification (m * m → m², m / m → 1)
+  - Test mixed operations (5 m * 3 s / 2 h)
+  - Test conversions involving derived units (100 km/h to m/s)
+- [ ] Update existing tests with correct derived unit expectations
+  - Review tests that multiply/divide different units
+  - Update expected results from simplified to derived units
+
+**Dependencies**:
+- Parser with DerivedUnit AST nodes (✅ complete in Phase 3)
+- Type checker with dimension derivation (✅ complete in Phase 4)
+- Unit converter (✅ complete in Phase 5)
+
+**Blocks**:
+- Phase 6 (Formatter) - should be designed with derived unit support
 
 ### Phase 6: Result Formatting (Days 15-16)
 - [ ] Create `settings.ts` with Settings interface
 - [ ] Create `formatter.ts` with Formatter class
 - [ ] Implement number formatting (precision, separators, grouping)
-- [ ] Implement unit formatting (display names)
+- [ ] Implement unit formatting (display names for simple units)
+- [ ] Implement derived unit formatting (e.g., "km/h", "m²", "kg m/s²")
 - [ ] Implement date/time formatting
 - [ ] Implement composite unit formatting
 - [ ] Implement presentation target formatting (binary, hex, etc.)
 - [ ] Write unit tests for formatter
+
+**Note**: Requires Phase 5.5 completion - formatter must handle DerivedUnit values
 
 ### Phase 6.5: Temporal API Integration (Optional Enhancement)
 **Status**: Deferred - requires external dependency
