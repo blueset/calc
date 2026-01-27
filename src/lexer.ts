@@ -190,6 +190,7 @@ export class Lexer {
 
   /**
    * Scan a number literal (integer, decimal, scientific notation, or special bases)
+   * Also handles time literals (H:MM, H:MM:SS)
    */
   private scanNumber(start: SourceLocation): Token {
     let value = '';
@@ -213,6 +214,37 @@ export class Lexer {
     // Regular number
     while (!this.isAtEnd() && this.isDigit(this.peek())) {
       value += this.advance();
+    }
+
+    // Check for time literal pattern (H:MM or H:MM:SS)
+    // Must check BEFORE decimal point to avoid confusion with decimal numbers
+    if (this.peek() === ':' && this.isDigit(this.peekNext())) {
+      // This looks like a time literal
+      value += this.advance(); // ':'
+
+      // Scan minutes (should be exactly 2 digits, but we'll validate in parser)
+      if (this.isDigit(this.peek())) {
+        value += this.advance();
+      }
+      if (this.isDigit(this.peek())) {
+        value += this.advance();
+      }
+
+      // Check for seconds (optional :SS)
+      if (this.peek() === ':' && this.isDigit(this.peekNext())) {
+        value += this.advance(); // ':'
+
+        // Scan seconds (should be exactly 2 digits, but we'll validate in parser)
+        if (this.isDigit(this.peek())) {
+          value += this.advance();
+        }
+        if (this.isDigit(this.peek())) {
+          value += this.advance();
+        }
+      }
+
+      // Return DATETIME token for time literal
+      return this.createToken(TokenType.DATETIME, value, start, this.currentLocation());
     }
 
     // Decimal part
@@ -313,12 +345,14 @@ export class Lexer {
   /**
    * Disambiguate am/pm/AM/PM between time indicators and units
    *
-   * Rule: am/pm/AM/PM after NUMBER token
+   * Rule: am/pm/AM/PM after NUMBER or DATETIME token
    * - If previous NUMBER matches /^(0?[1-9]|1[0-2])$/ → DATETIME (time indicator)
+   * - If previous DATETIME is time literal (H:MM pattern) → DATETIME (time indicator)
    * - Otherwise → UNIT (attometers/picometers/petameters)
    *
    * Examples:
    * - "10 am" → DATETIME (10:00:00)
+   * - "10:30 am" → DATETIME (10:30:00)
    * - "10.0 am" → 10.0 UNIT(attometers)
    * - "13 am" → 13 UNIT(attometers)
    */
@@ -337,7 +371,16 @@ export class Lexer {
       }
     }
 
-    // Not preceded by valid time hour, treat as unit
+    // Check if previous token was a DATETIME (time literal like "10:30")
+    if (this.lastToken && this.lastToken.type === TokenType.DATETIME) {
+      // Check if it's a time pattern (H:MM or H:MM:SS)
+      const timePattern = /^\d{1,2}:\d{1,2}(:\d{1,2})?$/;
+      if (timePattern.test(this.lastToken.value)) {
+        return TokenType.DATETIME;  // Time indicator for time literal
+      }
+    }
+
+    // Not preceded by valid time hour or time literal, treat as unit
     return TokenType.UNIT;  // attometers/picometers/petameters
   }
 

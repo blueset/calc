@@ -24,21 +24,23 @@
 - [x] Implement AM/PM disambiguation rule (attometers/picometers/petameters vs. time)
 - [x] Implement keyword vs identifier distinction
 - [x] Add source location tracking
-- [x] Write unit tests for lexer (65 tests passing)
-
-**Note**: Time literal tokenization (H:MM, H:MM:SS patterns) deferred to Phase 2.5 - see below
+- [x] Write unit tests for lexer (84 tests passing - includes Phase 2.5 time literal tests)
 
 ### Phase 2.5: Time Literal Tokenization (Optional Enhancement)
-**Status**: Deferred - requires lexer architectural changes
+**Status**: ✅ COMPLETED
 
-- [ ] Enhance lexer to recognize colon patterns (H:MM, H:MM:SS)
-- [ ] Tokenize time literals as single DATETIME tokens
-- [ ] Update parser's `tryParseTime()` to handle tokenized time literals
-- [ ] Add tests for time literal parsing
+- [x] Enhance lexer to recognize colon patterns (H:MM, H:MM:SS)
+- [x] Tokenize time literals as single DATETIME tokens
+- [x] Update parser's `tryParseTime()` to handle tokenized time literals
+- [x] Add tests for time literal parsing
 
-**Current limitation**: Time patterns like "10:30" and "3:45 pm" are not parsed. Parser stub returns null. Date literals work fine.
-
-**Reason for deferral**: Requires significant lexer changes. Time literals less common in examples. Can be added when needed.
+**Implementation summary**:
+- Extended `scanNumber()` to detect `:` after number and continue scanning for time pattern
+- Time literals (H:MM, H:MM:SS) now tokenized as single DATETIME tokens
+- Updated `disambiguateAmPm()` to recognize AM/PM after time literals
+- Parser's `tryParseTime()` validates hour/minute/second ranges and converts 12-hour to 24-hour format
+- Added 32 comprehensive tests (lexer + parser) covering all time formats and edge cases
+- All 454 tests passing
 
 ### Phase 3: Syntactic Analysis (Days 5-7)
 - [x] Create `ast.ts` with all AST node types
@@ -49,7 +51,7 @@
 - [x] Implement "per" operator disambiguation
 - [x] Implement "in" keyword ambiguity handling for composite units
 - [x] Implement error recovery (fallback to PlainText)
-- [x] Write unit tests for parser (64 tests passing)
+- [x] Write unit tests for parser (80 tests passing - includes Phase 2.5 time literal parsing tests)
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions

@@ -578,5 +578,197 @@ describe('Parser', () => {
       expect(date.month).toBe(2);
       expect(date.day).toBe(28);
     });
+
+    describe('Time Literals (Phase 2.5)', () => {
+      it('should parse H:MM as PlainTimeLiteral', () => {
+        const expr = parseExpression('10:30');
+        expect(expr.type).toBe('PlainTimeLiteral');
+        const time = expr as any;
+        expect(time.hour).toBe(10);
+        expect(time.minute).toBe(30);
+        expect(time.second).toBe(0);
+      });
+
+      it('should parse H:MM:SS as PlainTimeLiteral', () => {
+        const expr = parseExpression('10:30:45');
+        expect(expr.type).toBe('PlainTimeLiteral');
+        const time = expr as any;
+        expect(time.hour).toBe(10);
+        expect(time.minute).toBe(30);
+        expect(time.second).toBe(45);
+      });
+
+      it('should parse single-digit hours', () => {
+        const expr = parseExpression('3:45');
+        expect(expr.type).toBe('PlainTimeLiteral');
+        const time = expr as any;
+        expect(time.hour).toBe(3);
+        expect(time.minute).toBe(45);
+        expect(time.second).toBe(0);
+      });
+
+      it('should parse midnight and noon', () => {
+        const midnight = parseExpression('0:00');
+        expect(midnight.type).toBe('PlainTimeLiteral');
+        expect((midnight as any).hour).toBe(0);
+
+        const noon = parseExpression('12:00');
+        expect(noon.type).toBe('PlainTimeLiteral');
+        expect((noon as any).hour).toBe(12);
+      });
+
+      it('should parse 24-hour format times', () => {
+        const time14 = parseExpression('14:30');
+        expect(time14.type).toBe('PlainTimeLiteral');
+        expect((time14 as any).hour).toBe(14);
+
+        const time23 = parseExpression('23:59');
+        expect(time23.type).toBe('PlainTimeLiteral');
+        expect((time23 as any).hour).toBe(23);
+        expect((time23 as any).minute).toBe(59);
+      });
+
+      it('should parse H:MM AM/PM (12-hour format)', () => {
+        const am = parseExpression('10:30 am');
+        expect(am.type).toBe('PlainTimeLiteral');
+        expect((am as any).hour).toBe(10);
+        expect((am as any).minute).toBe(30);
+
+        const pm = parseExpression('2:30 pm');
+        expect(pm.type).toBe('PlainTimeLiteral');
+        expect((pm as any).hour).toBe(14); // Converted to 24-hour
+        expect((pm as any).minute).toBe(30);
+      });
+
+      it('should parse H:MM:SS with AM/PM', () => {
+        const am = parseExpression('10:30:45 am');
+        expect(am.type).toBe('PlainTimeLiteral');
+        expect((am as any).hour).toBe(10);
+        expect((am as any).minute).toBe(30);
+        expect((am as any).second).toBe(45);
+
+        const pm = parseExpression('3:15:20 pm');
+        expect(pm.type).toBe('PlainTimeLiteral');
+        expect((pm as any).hour).toBe(15); // Converted to 24-hour
+        expect((pm as any).minute).toBe(15);
+        expect((pm as any).second).toBe(20);
+      });
+
+      it('should handle 12 AM (midnight)', () => {
+        const expr = parseExpression('12:00 am');
+        expect(expr.type).toBe('PlainTimeLiteral');
+        const time = expr as any;
+        expect(time.hour).toBe(0); // 12 AM = 00:00
+        expect(time.minute).toBe(0);
+      });
+
+      it('should handle 12 PM (noon)', () => {
+        const expr = parseExpression('12:00 pm');
+        expect(expr.type).toBe('PlainTimeLiteral');
+        const time = expr as any;
+        expect(time.hour).toBe(12); // 12 PM = 12:00
+        expect(time.minute).toBe(0);
+      });
+
+      it('should handle uppercase AM/PM', () => {
+        const am = parseExpression('10:30 AM');
+        expect(am.type).toBe('PlainTimeLiteral');
+        expect((am as any).hour).toBe(10);
+
+        const pm = parseExpression('2:45 PM');
+        expect(pm.type).toBe('PlainTimeLiteral');
+        expect((pm as any).hour).toBe(14);
+      });
+
+      it('should reject invalid hour ranges', () => {
+        // These should return null from tryParseTime
+        const expr24 = parseExpression('24:00');
+        expect(expr24.type).not.toBe('PlainTimeLiteral');
+
+        const expr25 = parseExpression('25:30');
+        expect(expr25.type).not.toBe('PlainTimeLiteral');
+      });
+
+      it('should reject invalid minute ranges', () => {
+        const expr = parseExpression('10:60');
+        expect(expr.type).not.toBe('PlainTimeLiteral');
+
+        const expr99 = parseExpression('10:99');
+        expect(expr99.type).not.toBe('PlainTimeLiteral');
+      });
+
+      it('should reject invalid second ranges', () => {
+        const expr = parseExpression('10:30:60');
+        expect(expr.type).not.toBe('PlainTimeLiteral');
+
+        const expr99 = parseExpression('10:30:99');
+        expect(expr99.type).not.toBe('PlainTimeLiteral');
+      });
+
+      describe('Unconventional 12-hour times (strict validation)', () => {
+        it('should reject 13:00 am (hour out of 1-12 range)', () => {
+          const expr = parseExpression('13:00 am');
+          expect(expr.type).not.toBe('PlainTimeLiteral');
+          // Should not be parsed as time literal
+        });
+
+        it('should reject 14:20:05 pm (hour out of 1-12 range)', () => {
+          const expr = parseExpression('14:20:05 pm');
+          expect(expr.type).not.toBe('PlainTimeLiteral');
+        });
+
+        it('should reject 0:00 am (hour 0 invalid in 12-hour format)', () => {
+          const expr = parseExpression('0:00 am');
+          expect(expr.type).not.toBe('PlainTimeLiteral');
+          // Midnight must be written as "12:00 am"
+        });
+
+        it('should reject 00:15 am (hour 0 invalid in 12-hour format)', () => {
+          const expr = parseExpression('00:15 am');
+          expect(expr.type).not.toBe('PlainTimeLiteral');
+        });
+
+        it('should reject 0:30 pm (hour 0 invalid in 12-hour format)', () => {
+          const expr = parseExpression('0:30 pm');
+          expect(expr.type).not.toBe('PlainTimeLiteral');
+        });
+
+        it('should reject 23:59 pm (hour out of 1-12 range)', () => {
+          const expr = parseExpression('23:59 pm');
+          expect(expr.type).not.toBe('PlainTimeLiteral');
+        });
+
+        it('should reject 15:00 am (hour out of 1-12 range)', () => {
+          const expr = parseExpression('15:00 am');
+          expect(expr.type).not.toBe('PlainTimeLiteral');
+        });
+
+        it('should accept valid 12-hour times (1-12 with AM/PM)', () => {
+          // All valid 12-hour hours should work
+          for (let hour = 1; hour <= 12; hour++) {
+            const amExpr = parseExpression(`${hour}:00 am`);
+            expect(amExpr.type).toBe('PlainTimeLiteral');
+
+            const pmExpr = parseExpression(`${hour}:00 pm`);
+            expect(pmExpr.type).toBe('PlainTimeLiteral');
+          }
+        });
+
+        it('should accept 24-hour times without AM/PM (including 0:00 and 13-23)', () => {
+          // Without AM/PM, all 0-23 hours are valid
+          const midnight = parseExpression('0:00');
+          expect(midnight.type).toBe('PlainTimeLiteral');
+          expect((midnight as any).hour).toBe(0);
+
+          const afternoon = parseExpression('13:00');
+          expect(afternoon.type).toBe('PlainTimeLiteral');
+          expect((afternoon as any).hour).toBe(13);
+
+          const evening = parseExpression('23:59');
+          expect(evening.type).toBe('PlainTimeLiteral');
+          expect((evening as any).hour).toBe(23);
+        });
+      });
+    });
   });
 });

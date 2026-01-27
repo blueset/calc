@@ -554,4 +554,160 @@ describe('Lexer', () => {
       });
     });
   });
+
+  describe('Time Literal Tokenization (Phase 2.5)', () => {
+    describe('H:MM pattern', () => {
+      it('should tokenize H:MM as single DATETIME token', () => {
+        const tokens = tokenize('10:30');
+        expect(tokens.length).toBe(2); // DATETIME + EOF
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:30');
+      });
+
+      it('should handle single-digit hours', () => {
+        const tokens = tokenize('3:45');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('3:45');
+      });
+
+      it('should handle zero-padded hours', () => {
+        const tokens = tokenize('03:45');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('03:45');
+      });
+
+      it('should handle zero-padded minutes', () => {
+        const tokens = tokenize('10:05');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:05');
+      });
+
+      it('should handle midnight and noon', () => {
+        const tokensMidnight = tokenize('0:00');
+        expect(tokensMidnight[0].type).toBe(TokenType.DATETIME);
+        expect(tokensMidnight[0].value).toBe('0:00');
+
+        const tokensNoon = tokenize('12:00');
+        expect(tokensNoon[0].type).toBe(TokenType.DATETIME);
+        expect(tokensNoon[0].value).toBe('12:00');
+      });
+
+      it('should handle 24-hour format times', () => {
+        const tokens14 = tokenize('14:30');
+        expect(tokens14[0].type).toBe(TokenType.DATETIME);
+        expect(tokens14[0].value).toBe('14:30');
+
+        const tokens23 = tokenize('23:59');
+        expect(tokens23[0].type).toBe(TokenType.DATETIME);
+        expect(tokens23[0].value).toBe('23:59');
+      });
+    });
+
+    describe('H:MM:SS pattern', () => {
+      it('should tokenize H:MM:SS as single DATETIME token', () => {
+        const tokens = tokenize('10:30:45');
+        expect(tokens.length).toBe(2); // DATETIME + EOF
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:30:45');
+      });
+
+      it('should handle single-digit seconds', () => {
+        const tokens = tokenize('10:30:5');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:30:5');
+      });
+
+      it('should handle zero-padded seconds', () => {
+        const tokens = tokenize('10:30:05');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:30:05');
+      });
+
+      it('should handle midnight with seconds', () => {
+        const tokens = tokenize('0:00:00');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('0:00:00');
+      });
+    });
+
+    describe('Time with AM/PM', () => {
+      it('should tokenize H:MM followed by AM/PM as two tokens', () => {
+        const tokens = tokenize('10:30 am');
+        expect(tokens.length).toBe(3); // DATETIME + DATETIME + EOF
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:30');
+        expect(tokens[1].type).toBe(TokenType.DATETIME);
+        expect(tokens[1].value).toBe('am');
+      });
+
+      it('should handle H:MM:SS with AM/PM', () => {
+        const tokens = tokenize('2:30:45 pm');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('2:30:45');
+        expect(tokens[1].type).toBe(TokenType.DATETIME);
+        expect(tokens[1].value).toBe('pm');
+      });
+
+      it('should handle uppercase AM/PM', () => {
+        const tokens = tokenize('10:30 PM');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:30');
+        expect(tokens[1].type).toBe(TokenType.DATETIME);
+        expect(tokens[1].value).toBe('PM');
+      });
+    });
+
+    describe('Multiple time literals', () => {
+      it('should handle multiple times on same line', () => {
+        const tokens = tokenize('10:30 14:45');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:30');
+        expect(tokens[1].type).toBe(TokenType.DATETIME);
+        expect(tokens[1].value).toBe('14:45');
+      });
+
+      it('should handle time in expression context', () => {
+        const tokens = tokenize('10:30 + 5');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:30');
+        expect(tokens[1].type).toBe(TokenType.PLUS);
+        expect(tokens[2].type).toBe(TokenType.NUMBER);
+      });
+    });
+
+    describe('Edge cases and non-time patterns', () => {
+      it('should not confuse decimal numbers with time', () => {
+        const tokens = tokenize('10.30');
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('10.30');
+      });
+
+      it('should handle colon without valid minutes', () => {
+        // If colon is not followed by digit, it shouldn't match time pattern
+        // This would be a syntax error, but lexer should handle gracefully
+        const tokens = tokenize('10:');
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('10');
+        // The ':' would be unrecognized and skipped
+      });
+
+      it('should handle invalid hour ranges (validated in parser)', () => {
+        // Lexer accepts these, parser validates
+        const tokens25 = tokenize('25:30');
+        expect(tokens25[0].type).toBe(TokenType.DATETIME);
+        expect(tokens25[0].value).toBe('25:30');
+
+        const tokens100 = tokenize('100:00');
+        expect(tokens100[0].type).toBe(TokenType.DATETIME);
+        expect(tokens100[0].value).toBe('100:00');
+      });
+
+      it('should handle invalid minute/second ranges (validated in parser)', () => {
+        // Lexer accepts these, parser validates
+        const tokens = tokenize('10:99');
+        expect(tokens[0].type).toBe(TokenType.DATETIME);
+        expect(tokens[0].value).toBe('10:99');
+      });
+    });
+  });
 });

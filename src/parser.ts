@@ -699,26 +699,87 @@ export class Parser {
 
   /**
    * Try to parse time patterns:
-   * - H AM/PM: "10 am", "3 pm"
-   * - H:MM: "10:30"
-   * - H:MM:SS: "10:30:45"
-   * - H:MM AM/PM: "10:30 am"
+   * - H AM/PM: "10 am", "3 pm" (H must be 1-12)
+   * - H:MM: "10:30" (H: 0-23, MM: 0-59)
+   * - H:MM:SS: "10:30:45" (H: 0-23, MM: 0-59, SS: 0-59)
+   * - H:MM AM/PM: "10:30 am" (H must be 1-12)
+   *
+   * 12-hour format (with AM/PM):
+   * - Hour range: 1-12 (inclusive)
+   * - 0 is NOT valid (midnight is "12 AM", not "0 AM")
+   * - Rejects "13:00 am", "00:15 am", "14:20 pm", etc.
+   *
+   * 24-hour format (without AM/PM):
+   * - Hour range: 0-23 (inclusive)
+   * - "0:00" is valid (midnight)
    */
   private tryParseTime(token: Token): Expression | null {
     const start = token.start;
     const value = token.value.toLowerCase();
 
-    // Check for AM/PM
+    // Check for AM/PM time indicators (handled by lexer's AM/PM disambiguation)
     if (value === 'am' || value === 'pm') {
       // Previous token should be a number (hour) or time (H:MM)
-      // For now, this is handled by looking back at numbers
-      // This case handles standalone "am"/"pm" which shouldn't happen
+      // This is already handled by the lexer's disambiguateAmPm logic
+      // If we reach here, it's a standalone "am"/"pm" which is invalid
       return null;
     }
 
     // Check for time with colon (H:MM or H:MM:SS)
-    // This would need to be tokenized as a single DATETIME token
-    // For now, we handle simple cases
+    // Lexer now tokenizes these as single DATETIME tokens
+    const colonMatch = value.match(/^(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/);
+    if (colonMatch) {
+      const hour = parseInt(colonMatch[1], 10);
+      const minute = parseInt(colonMatch[2], 10);
+      const second = colonMatch[3] ? parseInt(colonMatch[3], 10) : 0;
+
+      // Validate ranges (0-23 for hour, 0-59 for minute/second)
+      if (hour < 0 || hour > 23) {
+        // Invalid hour - let this fall through to parser error
+        return null;
+      }
+      if (minute < 0 || minute > 59) {
+        // Invalid minute
+        return null;
+      }
+      if (second < 0 || second > 59) {
+        // Invalid second
+        return null;
+      }
+
+      // Check if next token is AM/PM (for 12-hour format)
+      let finalHour = hour;
+      const end = token.end;
+
+      if (this.check(TokenType.DATETIME)) {
+        const nextToken = this.currentToken();
+        const nextValue = nextToken.value.toLowerCase();
+
+        if (nextValue === 'am' || nextValue === 'pm') {
+          // With AM/PM, enforce 12-hour format: hour must be 1-12 (inclusive)
+          // 0 is NOT valid (midnight is "12 AM", not "0 AM")
+          if (hour < 1 || hour > 12) {
+            // Reject: invalid 12-hour format (e.g., "13:00 am", "00:15 am")
+            return null;
+          }
+
+          this.advance(); // consume AM/PM token
+
+          // Convert 12-hour to 24-hour
+          if (nextValue === 'pm' && hour !== 12) {
+            finalHour = hour + 12;
+          } else if (nextValue === 'am' && hour === 12) {
+            finalHour = 0;
+          }
+
+          return createPlainTimeLiteral(finalHour, minute, second, start, nextToken.end);
+        }
+      }
+
+      // 24-hour format (no AM/PM)
+      return createPlainTimeLiteral(finalHour, minute, second, start, end);
+    }
+
     return null;
   }
 
