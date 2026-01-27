@@ -52,6 +52,11 @@
 - [x] Implement "in" keyword ambiguity handling for composite units
 - [x] Implement error recovery (fallback to PlainText)
 - [x] Write unit tests for parser (80 tests passing - includes Phase 2.5 time literal parsing tests)
+- [ ] Parse derived unit expressions in conversion targets (deferred from Phase 5.5)
+  - Recognize unit expressions like "m/s", "kg m/s²" in conversion targets
+  - Create DerivedUnit AST nodes instead of requiring runtime creation
+  - Update resolveUnit() in evaluator to handle DerivedUnit AST nodes
+  - Prerequisite for derived unit conversions
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
@@ -83,6 +88,18 @@
 - [x] Implement variable assignments and lookups
 - [x] Write unit tests for all evaluation components (71/71 tests passing - 100%)
 - [x] Fix single-letter variable name issue (parser now accepts UNIT tokens as identifiers in assignment context)
+- [ ] Implement derived unit conversions (deferred from Phase 5.5)
+  - Requires Phase 3 task (parser DerivedUnit AST nodes) as prerequisite
+  - Calculate conversion factors between derived dimensions
+  - Example: `100 km/h to m/s` → convert km→m (×1000), h→s (÷3600) → `27.78 m/s`
+  - Update unit-converter.ts to handle DerivedUnitValue conversions
+  - Add tests for derived unit conversions
+- [ ] Implement exponentiation of units and derived units (deferred from Phase 5.5)
+  - Update power operator (^) in evaluator to handle units
+  - Multiply term exponents: `(5 m)^2` → `25 m²` (exponent 1 → 2)
+  - Handle derived units: `(3 m/s)^2` → `9 m²/s²` (m: 1→2, s: -1→-2)
+  - Support fractional powers: `(4 m²)^0.5` → `2 m`
+  - Add tests for unit exponentiation
 
 **Known Issues**:
 - Derived unit arithmetic simplified
@@ -93,7 +110,7 @@
 **Note**: Timezone offset conversions (not just name resolution) deferred to Phase 6.5 - requires Temporal polyfill
 
 ### Phase 5.5: Derived Unit Support
-**Status**: Required for core functionality - implement before Phase 6
+**Status**: ✅ **COMPLETED**
 
 Derived units are essential for common calculations like speed (km/h), acceleration (m/s²), force (N = kg⋅m/s²), energy (J = kg⋅m²/s²), density (kg/m³), etc. The parser and type checker already support derived units; this phase completes the implementation in the evaluator.
 
@@ -104,32 +121,40 @@ Derived units are essential for common calculations like speed (km/h), accelerat
 - Lower engineering risk than retrofitting later
 
 **Tasks**:
-- [ ] Update evaluator binary multiplication to create derived units
-  - When multiplying values with different dimensions, create DerivedUnit with both units
-  - Example: `5 m * 3 s` → `15 m s` (DerivedUnit with numerator: [m, s])
-  - Handle dimensionless × unit → keep unit (not derived)
-  - Handle unit × same unit → exponentiate (e.g., `m * m` → `m²`)
-  - Remove TODO comment at evaluator.ts:580-581
-- [ ] Update evaluator binary division to create derived units
-  - When dividing values with different dimensions, create DerivedUnit
-  - Example: `100 km / 2 h` → `50 km/h` (DerivedUnit with numerator: [km], denominator: [h])
-  - Handle dimensionless / unit → reciprocal unit (e.g., `1 / s` → `s⁻¹` or `1/s`)
-  - Handle unit / same unit → dimensionless (e.g., `m / m` → 1)
-  - Remove TODO comment at evaluator.ts:604-605
-- [ ] Implement resolveUnit helper for DerivedUnit
-  - Currently only handles SimpleUnit (evaluator.ts:983)
-  - Add support for resolving DerivedUnit from AST to Unit objects
-  - Needed for composite unit conversions involving derived units
-  - Remove TODO comment at evaluator.ts:983
-- [ ] Add comprehensive tests for derived unit creation
-  - Test multiplication creating derived units (m * s, kg * m/s²)
-  - Test division creating derived units (km / h, m / s²)
-  - Test simplification (m * m → m², m / m → 1)
-  - Test mixed operations (5 m * 3 s / 2 h)
-  - Test conversions involving derived units (100 km/h to m/s)
-- [ ] Update existing tests with correct derived unit expectations
-  - Review tests that multiply/divide different units
-  - Update expected results from simplified to derived units
+- [x] Refactored architecture to use signed exponents instead of numerator/denominator
+  - Updated types/types.ts, src/ast.ts, src/type-checker.ts, src/evaluator.ts
+  - Regenerated units.json with new dimension structure
+  - All 526 tests passing after refactor
+- [x] Update evaluator binary multiplication to create derived units
+  - Handles all 9 combinations: number/unit/derived × number/unit/derived
+  - Example: `5 m * 3 s` → `15 m s` (DerivedUnitValue with terms: [{unit: m, exponent: 1}, {unit: s, exponent: 1}])
+  - Dimensionless × unit → keep unit (not derived)
+  - Unit × same unit → exponentiate (e.g., `m * m` → `m²`)
+  - Removed TODO comments
+- [x] Update evaluator binary division to create derived units
+  - Handles all 9 combinations: number/unit/derived / number/unit/derived
+  - Example: `100 km / 2 h` → `50 km/h` (DerivedUnitValue with terms: [{unit: km, exponent: 1}, {unit: h, exponent: -1}])
+  - Dimensionless / unit → reciprocal unit (e.g., `1 / s` → `s⁻¹`)
+  - Unit / same unit → dimensionless (e.g., `m / m` → 1)
+  - Removed TODO comments
+- [x] Implement comprehensive term combination logic
+  - extractTerms(), combineTerms(), createValueFromTerms()
+  - Handles chained operations: `10 kg * 5 m / 2 s` creates combined derived unit
+  - Simplifies terms with same unit (combines exponents)
+- [x] Document resolveUnit limitation
+  - Parser doesn't create DerivedUnit AST nodes yet (only created during evaluation)
+  - Updated comment explaining deferral reason
+- [x] Add comprehensive tests for derived unit creation (8 new tests, 534 total passing)
+  - Multiplication creating derived units (different units, same units)
+  - Division creating derived units (different units, same units, reciprocals)
+  - Simplification (m²,  m / m → dimensionless)
+  - Mixed operations (kg * m / s)
+  - Dimensionless multiplier/divisor handling
+
+**Deferred** (moved to appropriate phases):
+- Derived unit conversions → Added to Phase 5 (requires Phase 3 prerequisite)
+- Exponentiation of units/derived units → Added to Phase 5 (independent task)
+- Parser creation of DerivedUnit AST nodes → Added to Phase 3 (prerequisite for conversions)
 
 **Dependencies**:
 - Parser with DerivedUnit AST nodes (✅ complete in Phase 3)
@@ -360,7 +385,7 @@ All files will be created at project root (flat structure):
 
 **Tasks**:
 1. Define value type system:
-   - Physical types: Dimensionless, Physical (with dimension), Derived (numerator/denominator dimensions)
+   - Physical types: Dimensionless, Physical (with dimension), Derived
    - CompositeUnit type
    - DateTime types: PlainDate, PlainTime, PlainDateTime, Instant, ZonedDateTime
    - **Duration type** (semantic, not syntactic):

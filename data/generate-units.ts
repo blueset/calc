@@ -18,10 +18,7 @@ interface Dimension {
   id: string;
   name: string;
   baseUnit: string;
-  derivedFrom?: {
-    numerator: Array<{ dimension: string; exponent: number }>;
-    denominator?: Array<{ dimension: string; exponent: number }>;
-  };
+  derivedFrom?: Array<{ dimension: string; exponent: number }>;
   hasNamedUnits?: boolean;
 }
 
@@ -137,14 +134,14 @@ const dimensions: Dimension[] = [
     id: "area",
     name: "Area",
     baseUnit: "square_meter",
-    derivedFrom: { numerator: [{ dimension: "length", exponent: 2 }] },
+    derivedFrom: [{ dimension: "length", exponent: 2 }],
     hasNamedUnits: true,
   },
   {
     id: "volume",
     name: "Volume",
     baseUnit: "cubic_meter",
-    derivedFrom: { numerator: [{ dimension: "length", exponent: 3 }] },
+    derivedFrom: [{ dimension: "length", exponent: 3 }],
     hasNamedUnits: true,
   },
   { id: "temperature", name: "Temperature", baseUnit: "kelvin" },
@@ -153,33 +150,31 @@ const dimensions: Dimension[] = [
     id: "speed",
     name: "Speed",
     baseUnit: "meter_per_second",
-    derivedFrom: {
-      numerator: [{ dimension: "length", exponent: 1 }],
-      denominator: [{ dimension: "time", exponent: 1 }],
-    },
+    derivedFrom: [
+      { dimension: "length", exponent: 1 },
+      { dimension: "time", exponent: -1 },
+    ],
     hasNamedUnits: true,
   },
   {
     id: "energy",
     name: "Energy",
     baseUnit: "joule",
-    derivedFrom: {
-      numerator: [
-        { dimension: "mass", exponent: 1 },
-        { dimension: "length", exponent: 2 },
-      ],
-      denominator: [{ dimension: "time", exponent: 2 }],
-    },
+    derivedFrom: [
+      { dimension: "mass", exponent: 1 },
+      { dimension: "length", exponent: 2 },
+      { dimension: "time", exponent: -2 },
+    ],
     hasNamedUnits: true,
   },
   {
     id: "power",
     name: "Power",
     baseUnit: "watt",
-    derivedFrom: {
-      numerator: [{ dimension: "energy", exponent: 1 }],
-      denominator: [{ dimension: "time", exponent: 1 }],
-    },
+    derivedFrom: [
+      { dimension: "energy", exponent: 1 },
+      { dimension: "time", exponent: -1 },
+    ],
     hasNamedUnits: true,
   },
   { id: "data", name: "Data", baseUnit: "bit" },
@@ -187,23 +182,21 @@ const dimensions: Dimension[] = [
     id: "pressure",
     name: "Pressure",
     baseUnit: "pascal",
-    derivedFrom: {
-      numerator: [{ dimension: "force", exponent: 1 }],
-      denominator: [{ dimension: "length", exponent: 2 }],
-    },
+    derivedFrom: [
+      { dimension: "force", exponent: 1 },
+      { dimension: "length", exponent: -2 },
+    ],
     hasNamedUnits: true,
   },
   {
     id: "force",
     name: "Force",
     baseUnit: "newton",
-    derivedFrom: {
-      numerator: [
-        { dimension: "mass", exponent: 1 },
-        { dimension: "length", exponent: 1 },
-      ],
-      denominator: [{ dimension: "time", exponent: 2 }],
-    },
+    derivedFrom: [
+      { dimension: "mass", exponent: 1 },
+      { dimension: "length", exponent: 1 },
+      { dimension: "time", exponent: -2 },
+    ],
     hasNamedUnits: true,
   },
   { id: "angle", name: "Angle", baseUnit: "radian" },
@@ -212,10 +205,10 @@ const dimensions: Dimension[] = [
     id: "frequency",
     name: "Frequency",
     baseUnit: "hertz",
-    derivedFrom: {
-      numerator: [{ dimension: "cycle", exponent: 1 }],
-      denominator: [{ dimension: "time", exponent: 1 }],
-    },
+    derivedFrom: [
+      { dimension: "cycle", exponent: 1 },
+      { dimension: "time", exponent: -1 },
+    ],
     hasNamedUnits: true,
   },
   { id: "current", name: "Electric Current", baseUnit: "ampere" },
@@ -226,10 +219,10 @@ const dimensions: Dimension[] = [
     id: "operation_rate",
     name: "Operation Rate",
     baseUnit: "flops",
-    derivedFrom: {
-      numerator: [{ dimension: "operation", exponent: 1 }],
-      denominator: [{ dimension: "time", exponent: 1 }],
-    },
+    derivedFrom: [
+      { dimension: "operation", exponent: 1 },
+      { dimension: "time", exponent: -1 },
+    ],
     hasNamedUnits: true,
   },
   { id: "beat", name: "Beat", baseUnit: "beat" },
@@ -237,10 +230,10 @@ const dimensions: Dimension[] = [
     id: "beat_rate",
     name: "Beat Rate",
     baseUnit: "bpm",
-    derivedFrom: {
-      numerator: [{ dimension: "beat", exponent: 1 }],
-      denominator: [{ dimension: "time", exponent: 1 }],
-    },
+    derivedFrom: [
+      { dimension: "beat", exponent: 1 },
+      { dimension: "time", exponent: -1 },
+    ],
     hasNamedUnits: true,
   },
 ];

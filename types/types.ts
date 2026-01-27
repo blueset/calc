@@ -13,10 +13,9 @@ export interface Dimension {
   baseUnit: string; // reference to unit ID that's the base
 
   // For derived dimensions (e.g., volume = length³, speed = length/time)
-  derivedFrom?: {
-    numerator: Array<{ dimension: string; exponent: number }>;
-    denominator?: Array<{ dimension: string; exponent: number }>;
-  };
+  // Uses signed exponents: positive for numerator, negative for denominator
+  // Example: speed (length/time) = [{dimension: "length", exponent: 1}, {dimension: "time", exponent: -1}]
+  derivedFrom?: Array<{ dimension: string; exponent: number }>;
 
   // Some dimensions also have named units (e.g., "liter" for volume)
   hasNamedUnits?: boolean;

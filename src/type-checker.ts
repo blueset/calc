@@ -30,8 +30,9 @@ export interface SimplePhysicalType {
 
 export interface DerivedPhysicalType {
   kind: 'derived';
-  numerator: Array<{ dimension: string; exponent: number }>;
-  denominator: Array<{ dimension: string; exponent: number }>;
+  // Uses signed exponents: positive for numerator, negative for denominator
+  // Example: speed (length/time) = [{dimension: "length", exponent: 1}, {dimension: "time", exponent: -1}]
+  terms: Array<{ dimension: string; exponent: number }>;
 }
 
 /**
@@ -1064,7 +1065,7 @@ export class TypeChecker {
     }
 
     // DerivedUnit
-    const numerator = unit.numerator.map(term => {
+    const terms = unit.terms.map(term => {
       const unitData = this.dataLoader.getUnitByName(term.unit.name);
       return {
         dimension: unitData?.dimension || 'dimensionless',
@@ -1072,16 +1073,7 @@ export class TypeChecker {
       };
     });
 
-    const denominator =
-      unit.denominator?.map(term => {
-        const unitData = this.dataLoader.getUnitByName(term.unit.name);
-        return {
-          dimension: unitData?.dimension || 'dimensionless',
-          exponent: term.exponent,
-        };
-      }) || [];
-
-    return { kind: 'derived', numerator, denominator };
+    return { kind: 'derived', terms };
   }
 
   /**
@@ -1141,54 +1133,55 @@ export class TypeChecker {
    * Helper: Derive dimension from multiplication/division
    */
   private deriveDimension(type1: PhysicalType, type2: PhysicalType, operation: 'multiply' | 'divide'): PhysicalType {
-    // Convert types to derived form
-    const deriv1 = this.toDerivable(type1);
-    const deriv2 = this.toDerivable(type2);
+    // Convert types to term arrays
+    const terms1 = this.toTerms(type1);
+    let terms2 = this.toTerms(type2);
 
-    // Multiply or divide exponents
-    const numerator = [...deriv1.numerator];
-    const denominator = [...deriv1.denominator];
-
-    if (operation === 'multiply') {
-      numerator.push(...deriv2.numerator);
-      denominator.push(...deriv2.denominator);
-    } else {
-      // Division: swap numerator and denominator of type2
-      numerator.push(...deriv2.denominator);
-      denominator.push(...deriv2.numerator);
+    // For division, negate all exponents in type2
+    if (operation === 'divide') {
+      terms2 = terms2.map(t => ({ dimension: t.dimension, exponent: -t.exponent }));
     }
 
-    // Simplify if result is dimensionless or simple
-    if (numerator.length === 0 && denominator.length === 0) {
+    // Combine terms
+    const combinedTerms = [...terms1, ...terms2];
+
+    // Simplify by combining like dimensions
+    const dimensionMap = new Map<string, number>();
+    for (const term of combinedTerms) {
+      const current = dimensionMap.get(term.dimension) || 0;
+      dimensionMap.set(term.dimension, current + term.exponent);
+    }
+
+    // Remove zero exponents
+    const simplifiedTerms = Array.from(dimensionMap.entries())
+      .filter(([_, exp]) => exp !== 0)
+      .map(([dim, exp]) => ({ dimension: dim, exponent: exp }));
+
+    // Return appropriate type
+    if (simplifiedTerms.length === 0) {
       return { kind: 'dimensionless' };
     }
 
-    if (numerator.length === 1 && numerator[0].exponent === 1 && denominator.length === 0) {
-      return { kind: 'physical', dimension: numerator[0].dimension };
+    if (simplifiedTerms.length === 1 && simplifiedTerms[0].exponent === 1) {
+      return { kind: 'physical', dimension: simplifiedTerms[0].dimension };
     }
 
-    return { kind: 'derived', numerator, denominator };
+    return { kind: 'derived', terms: simplifiedTerms };
   }
 
   /**
-   * Helper: Convert physical type to derivable form
+   * Helper: Convert physical type to terms array
    */
-  private toDerivable(type: PhysicalType): { numerator: any[]; denominator: any[] } {
+  private toTerms(type: PhysicalType): Array<{ dimension: string; exponent: number }> {
     if (type.kind === 'dimensionless') {
-      return { numerator: [], denominator: [] };
+      return [];
     }
 
     if (type.kind === 'physical') {
-      return {
-        numerator: [{ dimension: type.dimension, exponent: 1 }],
-        denominator: [],
-      };
+      return [{ dimension: type.dimension, exponent: 1 }];
     }
 
-    return {
-      numerator: type.numerator,
-      denominator: type.denominator,
-    };
+    return type.terms;
   }
 
   /**

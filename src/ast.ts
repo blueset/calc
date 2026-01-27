@@ -250,13 +250,14 @@ export interface SimpleUnit extends ASTNode {
 
 export interface DerivedUnit extends ASTNode {
   type: 'DerivedUnit';
-  numerator: UnitTerm[];
-  denominator?: UnitTerm[];
+  // Uses signed exponents: positive for numerator, negative for denominator
+  // Example: m/s = [{unit: meter, exponent: 1}, {unit: second, exponent: -1}]
+  terms: UnitTerm[];
 }
 
 export interface UnitTerm {
   unit: SimpleUnit;
-  exponent: number;
+  exponent: number; // positive or negative
 }
 
 /**
@@ -489,12 +490,11 @@ export function createSimpleUnit(unitId: string, name: string, start: SourceLoca
 }
 
 export function createDerivedUnit(
-  numerator: UnitTerm[],
-  denominator: UnitTerm[] | undefined,
+  terms: UnitTerm[],
   start: SourceLocation,
   end: SourceLocation
 ): DerivedUnit {
-  return { type: 'DerivedUnit', numerator, denominator, start, end };
+  return { type: 'DerivedUnit', terms, start, end };
 }
 
 export function createUnitTarget(unit: UnitExpression, start: SourceLocation, end: SourceLocation): UnitTarget {

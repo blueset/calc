@@ -111,9 +111,9 @@ describe('TypeChecker', () => {
       const type = parseAndCheck('5 m * 3 m');
       expect(type?.kind).toBe('derived');
       if (type?.kind === 'derived') {
-        expect(type.numerator).toHaveLength(2);
-        expect(type.numerator[0].dimension).toBe('length');
-        expect(type.numerator[1].dimension).toBe('length');
+        expect(type.terms).toHaveLength(1);
+        expect(type.terms[0].dimension).toBe('length');
+        expect(type.terms[0].exponent).toBe(2);
       }
     });
 
@@ -121,17 +121,18 @@ describe('TypeChecker', () => {
       const type = parseAndCheck('100 m / 10 s');
       expect(type?.kind).toBe('derived');
       if (type?.kind === 'derived') {
-        expect(type.numerator).toHaveLength(1);
-        expect(type.denominator).toHaveLength(1);
-        expect(type.numerator[0].dimension).toBe('length');
-        expect(type.denominator[0].dimension).toBe('time');
+        expect(type.terms).toHaveLength(2);
+        expect(type.terms[0].dimension).toBe('length');
+        expect(type.terms[0].exponent).toBe(1);
+        expect(type.terms[1].dimension).toBe('time');
+        expect(type.terms[1].exponent).toBe(-1);
       }
     });
 
     it('should allow division resulting in dimensionless', () => {
       const type = parseAndCheck('10 m / 5 m');
-      // Should simplify to dimensionless or derived with both in numerator and denominator
-      expect(type?.kind).toBe('derived');
+      // Should simplify to dimensionless when dimensions cancel out
+      expect(type?.kind).toBe('dimensionless');
     });
 
     it('should allow multiplication of dimensionless values', () => {

@@ -554,4 +554,91 @@ describe('Evaluator', () => {
       expect(result.unit?.id).toBe('meter');
     });
   });
+
+  describe('Derived Units', () => {
+    it('should create derived unit when multiplying different units', () => {
+      const result = evaluate('5 m * 3 s');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        expect(result.value).toBe(15);
+        expect(result.terms).toHaveLength(2);
+        expect(result.terms[0].unit.id).toBe('meter');
+        expect(result.terms[0].exponent).toBe(1);
+        expect(result.terms[1].unit.id).toBe('second');
+        expect(result.terms[1].exponent).toBe(1);
+      }
+    });
+
+    it('should create m² when multiplying meters by meters', () => {
+      const result = evaluate('3 m * 4 m');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        expect(result.value).toBe(12);
+        expect(result.terms).toHaveLength(1);
+        expect(result.terms[0].unit.id).toBe('meter');
+        expect(result.terms[0].exponent).toBe(2);
+      }
+    });
+
+    it('should create derived unit when dividing different units', () => {
+      const result = evaluate('100 km / 2 h');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        expect(result.value).toBe(50);
+        expect(result.terms).toHaveLength(2);
+        expect(result.terms[0].unit.id).toBe('kilometer');
+        expect(result.terms[0].exponent).toBe(1);
+        expect(result.terms[1].unit.id).toBe('hour');
+        expect(result.terms[1].exponent).toBe(-1);
+      }
+    });
+
+    it('should simplify to dimensionless when dividing same units', () => {
+      const result = evaluate('10 m / 5 m');
+      expect(result.kind).toBe('number');
+      if (result.kind === 'number') {
+        expect(result.value).toBe(2);
+        expect(result.unit).toBeUndefined();
+      }
+    });
+
+    it('should create reciprocal unit when dividing dimensionless by unit', () => {
+      const result = evaluate('10 / 2 s');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        expect(result.value).toBe(5);
+        expect(result.terms).toHaveLength(1);
+        expect(result.terms[0].unit.id).toBe('second');
+        expect(result.terms[0].exponent).toBe(-1);
+      }
+    });
+
+    it('should handle mixed operations creating complex derived units', () => {
+      const result = evaluate('10 kg * 5 m / 2 s');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        expect(result.value).toBe(25);
+        // Result should have kg, m, and s with appropriate exponents
+        expect(result.terms.length).toBeGreaterThanOrEqual(2);
+      }
+    });
+
+    it('should preserve dimensionless multiplier', () => {
+      const result = evaluate('5 m * 3');
+      expect(result.kind).toBe('number');
+      if (result.kind === 'number') {
+        expect(result.value).toBe(15);
+        expect(result.unit?.id).toBe('meter');
+      }
+    });
+
+    it('should preserve unit when dividing by dimensionless', () => {
+      const result = evaluate('10 m / 2');
+      expect(result.kind).toBe('number');
+      if (result.kind === 'number') {
+        expect(result.value).toBe(5);
+        expect(result.unit?.id).toBe('meter');
+      }
+    });
+  });
 });

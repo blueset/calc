@@ -15,6 +15,7 @@ import { getConstant } from './constants';
 
 export type Value =
   | NumberValue
+  | DerivedUnitValue
   | CompositeUnitValue
   | DateTimeValue
   | BooleanValue
@@ -27,6 +28,16 @@ export interface NumberValue {
   kind: 'number';
   value: number;
   unit?: Unit; // undefined = dimensionless
+}
+
+/**
+ * Derived unit value (e.g., "50 km/h", "9.8 m/s²")
+ * Uses signed exponents: positive for numerator, negative for denominator
+ */
+export interface DerivedUnitValue {
+  kind: 'derivedUnit';
+  value: number;
+  terms: Array<{ unit: Unit; exponent: number }>;
 }
 
 /**
@@ -522,35 +533,42 @@ export class Evaluator {
       return this.evaluateDateTimeArithmetic(op, left, right);
     }
 
-    // Handle number arithmetic
-    if (left.kind === 'number' && right.kind === 'number') {
-      return this.evaluateNumberArithmetic(op, left, right);
+    // Handle number and derived unit arithmetic
+    const isNumeric = (v: Value) => v.kind === 'number' || v.kind === 'derivedUnit';
+    if (isNumeric(left) && isNumeric(right)) {
+      return this.evaluateNumberArithmetic(op, left as NumberValue | DerivedUnitValue, right as NumberValue | DerivedUnitValue);
     }
 
     return this.createError(`Cannot perform ${op} on ${left.kind} and ${right.kind}`);
   }
 
   /**
-   * Evaluate arithmetic on numbers (with units)
+   * Evaluate arithmetic on numbers (with units or derived units)
    */
   private evaluateNumberArithmetic(
     op: '+' | '-' | '*' | '/' | '%' | 'mod' | 'per' | '^',
-    left: NumberValue,
-    right: NumberValue
+    left: NumberValue | DerivedUnitValue,
+    right: NumberValue | DerivedUnitValue
   ): Value {
     const leftValue = left.value;
     const rightValue = right.value;
 
+    // Extract unit information
+    const leftUnit = left.kind === 'number' ? left.unit : undefined;
+    const rightUnit = right.kind === 'number' ? right.unit : undefined;
+    const leftIsDerived = left.kind === 'derivedUnit';
+    const rightIsDerived = right.kind === 'derivedUnit';
+
     // Addition and subtraction require same dimension
     if (op === '+' || op === '-') {
-      // Both dimensionless
-      if (!left.unit && !right.unit) {
+      // Both dimensionless numbers
+      if (left.kind === 'number' && !left.unit && right.kind === 'number' && !right.unit) {
         const result = op === '+' ? leftValue + rightValue : leftValue - rightValue;
         return { kind: 'number', value: result };
       }
 
-      // Both have units - must be same dimension
-      if (left.unit && right.unit) {
+      // Both simple units - must be same dimension
+      if (left.kind === 'number' && left.unit && right.kind === 'number' && right.unit) {
         if (left.unit.dimension !== right.unit.dimension) {
           return this.createError(`Cannot ${op === '+' ? 'add' : 'subtract'} values with different dimensions`);
         }
@@ -565,63 +583,43 @@ export class Evaluator {
         }
       }
 
-      // One has unit, other doesn't
-      return this.createError(`Cannot ${op === '+' ? 'add' : 'subtract'} dimensioned and dimensionless values`);
+      // Derived units or mixed - not supported for addition/subtraction
+      return this.createError(`Cannot ${op === '+' ? 'add' : 'subtract'} values with incompatible types`);
     }
 
     // Multiplication - combine units
     if (op === '*') {
-      // Both dimensionless
-      if (!left.unit && !right.unit) {
-        return { kind: 'number', value: leftValue * rightValue };
-      }
-
-      // One or both have units - result is product
-      // TODO: For now, keep left unit (simplified)
-      // Full implementation would create derived unit
       const result = leftValue * rightValue;
-      if (left.unit && right.unit) {
-        // Both have units - would need to create derived unit
-        // For now, simplified: keep left unit (this is incomplete)
-        return { kind: 'number', value: result, unit: left.unit };
-      } else {
-        // One has unit
-        return { kind: 'number', value: result, unit: left.unit || right.unit };
-      }
+      return this.multiplyValues(result, left, right);
     }
 
     // Division
     if (op === '/' || op === 'per') {
-      // Both dimensionless
-      if (!left.unit && !right.unit) {
-        if (rightValue === 0) {
-          return this.createError('Division by zero');
-        }
-        return { kind: 'number', value: leftValue / rightValue };
-      }
-
-      // Division with units
-      // TODO: Full implementation would create derived units
-      // For now, simplified version
       if (rightValue === 0) {
         return this.createError('Division by zero');
       }
 
       const result = leftValue / rightValue;
 
-      // If both same dimension, result is dimensionless
-      if (left.unit && right.unit && left.unit.dimension === right.unit.dimension) {
-        const convertedRight = this.unitConverter.convert(rightValue, right.unit, left.unit);
-        return { kind: 'number', value: leftValue / convertedRight };
+      // Special case: same dimension with simple units - try to convert and simplify
+      if (left.kind === 'number' && right.kind === 'number' &&
+          left.unit && right.unit &&
+          left.unit.dimension === right.unit.dimension) {
+        try {
+          const convertedRight = this.unitConverter.convert(rightValue, right.unit, left.unit);
+          return { kind: 'number', value: leftValue / convertedRight };
+        } catch (e) {
+          // Conversion failed, fall through to general case
+        }
       }
 
-      // Otherwise keep left unit (simplified)
-      return { kind: 'number', value: result, unit: left.unit };
+      // General case: use term combination
+      return this.divideValues(result, left, right);
     }
 
     // Modulo
     if (op === '%' || op === 'mod') {
-      if (!left.unit && !right.unit) {
+      if (left.kind === 'number' && !left.unit && right.kind === 'number' && !right.unit) {
         if (rightValue === 0) {
           return this.createError('Modulo by zero');
         }
@@ -632,9 +630,15 @@ export class Evaluator {
 
     // Power
     if (op === '^') {
-      if (!right.unit) {
+      if (right.kind === 'number' && !right.unit) {
         const result = Math.pow(leftValue, rightValue);
-        return { kind: 'number', value: result, unit: left.unit };
+        // TODO: Handle exponentiation of units (e.g., (5 m)^2 → 25 m²)
+        // For now, only dimensionless base or return as-is
+        if (left.kind === 'number') {
+          return { kind: 'number', value: result, unit: left.unit };
+        }
+        // Derived unit base - would need to multiply all exponents
+        return this.createError('Exponentiation of derived units not yet supported');
       }
       return this.createError('Exponent must be dimensionless');
     }
@@ -974,13 +978,107 @@ export class Evaluator {
   // Helper methods
 
   /**
+   * Extract terms from a numeric value (number, NumberValue, or DerivedUnitValue)
+   */
+  private extractTerms(value: NumberValue | DerivedUnitValue): Array<{ unit: Unit; exponent: number }> {
+    if (value.kind === 'number') {
+      return value.unit ? [{ unit: value.unit, exponent: 1 }] : [];
+    }
+    return value.terms;
+  }
+
+  /**
+   * Combine terms from multiplication or division operations
+   * For division, negate exponents of right side before calling
+   */
+  private combineTerms(
+    leftTerms: Array<{ unit: Unit; exponent: number }>,
+    rightTerms: Array<{ unit: Unit; exponent: number }>
+  ): Array<{ unit: Unit; exponent: number }> {
+    // Create map to combine exponents for same unit IDs
+    const termMap = new Map<string, { unit: Unit; exponent: number }>();
+
+    // Add left terms
+    for (const term of leftTerms) {
+      const existing = termMap.get(term.unit.id);
+      if (existing) {
+        existing.exponent += term.exponent;
+      } else {
+        termMap.set(term.unit.id, { unit: term.unit, exponent: term.exponent });
+      }
+    }
+
+    // Add right terms
+    for (const term of rightTerms) {
+      const existing = termMap.get(term.unit.id);
+      if (existing) {
+        existing.exponent += term.exponent;
+      } else {
+        termMap.set(term.unit.id, { unit: term.unit, exponent: term.exponent });
+      }
+    }
+
+    // Filter out zero exponents and return
+    return Array.from(termMap.values()).filter(t => t.exponent !== 0);
+  }
+
+  /**
+   * Create result value from combined terms
+   */
+  private createValueFromTerms(value: number, terms: Array<{ unit: Unit; exponent: number }>): NumberValue | DerivedUnitValue {
+    // No terms - dimensionless
+    if (terms.length === 0) {
+      return { kind: 'number', value };
+    }
+
+    // Single term with exponent 1 - simple unit
+    if (terms.length === 1 && terms[0].exponent === 1) {
+      return { kind: 'number', value, unit: terms[0].unit };
+    }
+
+    // Multiple terms or non-unit exponent - derived unit
+    return { kind: 'derivedUnit', value, terms };
+  }
+
+  /**
+   * Multiply two numeric values (handles all combinations of number/unit/derived)
+   */
+  private multiplyValues(
+    value: number,
+    left: NumberValue | DerivedUnitValue,
+    right: NumberValue | DerivedUnitValue
+  ): NumberValue | DerivedUnitValue {
+    const leftTerms = this.extractTerms(left);
+    const rightTerms = this.extractTerms(right);
+    const combinedTerms = this.combineTerms(leftTerms, rightTerms);
+    return this.createValueFromTerms(value, combinedTerms);
+  }
+
+  /**
+   * Divide two numeric values (handles all combinations of number/unit/derived)
+   */
+  private divideValues(
+    value: number,
+    left: NumberValue | DerivedUnitValue,
+    right: NumberValue | DerivedUnitValue
+  ): NumberValue | DerivedUnitValue {
+    const leftTerms = this.extractTerms(left);
+    const rightTerms = this.extractTerms(right).map(t => ({ unit: t.unit, exponent: -t.exponent }));
+    const combinedTerms = this.combineTerms(leftTerms, rightTerms);
+    return this.createValueFromTerms(value, combinedTerms);
+  }
+
+  /**
    * Resolve a unit expression to a Unit object
+   * Note: Currently only handles SimpleUnit because parser doesn't create DerivedUnit AST nodes yet.
+   * Derived units are created during evaluation, not parsing.
    */
   private resolveUnit(unitExpr: AST.UnitExpression): Unit | null {
     if (unitExpr.type === 'SimpleUnit') {
       return this.dataLoader.getUnitById(unitExpr.unitId) || null;
     }
-    // TODO: Handle DerivedUnit
+    // DerivedUnit handling deferred: Parser doesn't create DerivedUnit AST nodes yet.
+    // When implemented, would need to resolve each term's unit and return structured data.
     return null;
   }
 
