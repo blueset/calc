@@ -13,7 +13,7 @@
     {
       "id": "mass",
       "name": "Mass",
-      "baseUnit": "gram"
+      "baseUnit": "kilogram"
     },
     {
       "id": "area",
@@ -91,12 +91,16 @@
       "baseUnit": "watt",
       "derivedFrom": [
         {
-          "dimension": "energy",
+          "dimension": "mass",
           "exponent": 1
         },
         {
+          "dimension": "length",
+          "exponent": 2
+        },
+        {
           "dimension": "time",
-          "exponent": -1
+          "exponent": -3
         }
       ],
       "hasNamedUnits": true
@@ -112,11 +116,15 @@
       "baseUnit": "pascal",
       "derivedFrom": [
         {
-          "dimension": "force",
+          "dimension": "mass",
           "exponent": 1
         },
         {
           "dimension": "length",
+          "exponent": -1
+        },
+        {
+          "dimension": "time",
           "exponent": -2
         }
       ],
@@ -212,7 +220,7 @@
     {
       "id": "beat_rate",
       "name": "Beat Rate",
-      "baseUnit": "bpm",
+      "baseUnit": "beat_per_second",
       "derivedFrom": [
         {
           "dimension": "beat",
@@ -593,7 +601,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1000000
+        "factor": 1000
       }
     },
     {
@@ -611,7 +619,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 0.2
+        "factor": 0.0002
       }
     },
     {
@@ -629,7 +637,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 28.349523125
+        "factor": 0.028349523125
       }
     },
     {
@@ -648,7 +656,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 453.59237
+        "factor": 0.45359237
       }
     },
     {
@@ -666,7 +674,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 6350.29318
+        "factor": 6.35029318
       }
     },
     {
@@ -686,7 +694,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 907184.74
+        "factor": 907.18474
       }
     },
     {
@@ -708,7 +716,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1016046.9088
+        "factor": 1016.0469088
       }
     },
     {
@@ -1484,6 +1492,47 @@
       "isBaseUnit": true
     },
     {
+      "id": "miles_per_hour",
+      "dimension": "speed",
+      "displayName": {
+        "symbol": "mph",
+        "singular": "mile per hour",
+        "plural": "miles per hour"
+      },
+      "names": [
+        "mph",
+        "MPH",
+        "mi/h",
+        "mile per hour",
+        "miles per hour"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.44704
+      }
+    },
+    {
+      "id": "kilometers_per_hour",
+      "dimension": "speed",
+      "displayName": {
+        "symbol": "km/h",
+        "singular": "kilometer per hour",
+        "plural": "kilometers per hour"
+      },
+      "names": [
+        "km/h",
+        "kmh",
+        "kph",
+        "KPH",
+        "kilometer per hour",
+        "kilometers per hour"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.277778
+      }
+    },
+    {
       "id": "knot",
       "dimension": "speed",
       "displayName": {
@@ -1790,6 +1839,26 @@
       "isBaseUnit": true
     },
     {
+      "id": "beat_per_second",
+      "dimension": "beat_rate",
+      "displayName": {
+        "symbol": "beat/s",
+        "singular": "beat per second",
+        "plural": "beats per second"
+      },
+      "names": [
+        "beat/s",
+        "beat per second",
+        "beats per second",
+        "bps"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
       "id": "bpm",
       "dimension": "beat_rate",
       "displayName": {
@@ -1804,9 +1873,8 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1
-      },
-      "isBaseUnit": true
+        "factor": 0.016666666666666666
+      }
     },
     {
       "id": "dot",
@@ -2292,7 +2360,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e+30
+        "factor": 1e+27
       }
     },
     {
@@ -2310,7 +2378,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e+27
+        "factor": 1e+24
       }
     },
     {
@@ -2328,7 +2396,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e+24
+        "factor": 1e+21
       }
     },
     {
@@ -2346,7 +2414,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e+21
+        "factor": 1000000000000000000
       }
     },
     {
@@ -2364,7 +2432,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1000000000000000000
+        "factor": 1000000000000000
       }
     },
     {
@@ -2382,7 +2450,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1000000000000000
+        "factor": 1000000000000
       }
     },
     {
@@ -2400,7 +2468,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1000000000000
+        "factor": 1000000000
       }
     },
     {
@@ -2418,7 +2486,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1000000000
+        "factor": 1000000
       }
     },
     {
@@ -2436,7 +2504,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1000000
+        "factor": 1000
       }
     },
     {
@@ -2454,8 +2522,9 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1000
-      }
+        "factor": 1
+      },
+      "isBaseUnit": true
     },
     {
       "id": "hectogram",
@@ -2472,7 +2541,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 100
+        "factor": 0.1
       }
     },
     {
@@ -2490,7 +2559,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 10
+        "factor": 0.01
       }
     },
     {
@@ -2508,9 +2577,8 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1
-      },
-      "isBaseUnit": true
+        "factor": 0.001
+      }
     },
     {
       "id": "decigram",
@@ -2527,7 +2595,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 0.1
+        "factor": 0.0001
       }
     },
     {
@@ -2545,7 +2613,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 0.01
+        "factor": 0.00001
       }
     },
     {
@@ -2563,7 +2631,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 0.001
+        "factor": 0.000001
       }
     },
     {
@@ -2581,7 +2649,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 0.000001
+        "factor": 1e-9
       }
     },
     {
@@ -2599,7 +2667,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e-9
+        "factor": 1.0000000000000002e-12
       }
     },
     {
@@ -2617,7 +2685,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e-12
+        "factor": 1e-15
       }
     },
     {
@@ -2635,7 +2703,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e-15
+        "factor": 1e-18
       }
     },
     {
@@ -2653,7 +2721,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e-18
+        "factor": 1.0000000000000001e-21
       }
     },
     {
@@ -2671,7 +2739,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e-21
+        "factor": 1e-24
       }
     },
     {
@@ -2689,7 +2757,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e-24
+        "factor": 9.999999999999999e-28
       }
     },
     {
@@ -2707,7 +2775,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e-27
+        "factor": 1e-30
       }
     },
     {
@@ -2725,7 +2793,7 @@
       ],
       "conversion": {
         "type": "linear",
-        "factor": 1e-30
+        "factor": 1e-33
       }
     },
     {

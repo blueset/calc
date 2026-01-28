@@ -144,7 +144,14 @@ parseDocument(): DocumentResult {
   - Create DerivedUnit AST nodes instead of requiring runtime creation
   - Update resolveUnit() in evaluator to handle DerivedUnit AST nodes
   - Prerequisite for derived unit conversions
-  - **Note**: Both ASCII notation (m^2) and Unicode superscripts (m²) are fully supported (Unicode added in Phase 2.6)
+  - **Note**: Both ASCII notation (m^2) and Unicode superscripts (m²) are fully supported in conversion targets (Unicode added in Phase 2.6)
+- [ ] Issue: Parse ASCII exponent notation in unit literals (deferred from Phase 5)
+  - Currently: `16 m²` (Unicode) parses as literal with unit square_meter ✅
+  - Currently: `16 m^2` (ASCII) parses as operation `(16 m)^2` ❌
+  - Goal: Both `16 m²` and `16 m^2` should parse with same semantic meaning
+  - Can parse as either `16[meter:2]` or `16[square_meter:1]` (equivalent)
+  - Update parser to recognize ASCII exponent notation after units in literals
+  - Add tests for ASCII exponent notation in unit literals
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
@@ -174,26 +181,27 @@ parseDocument(): DocumentResult {
 - [x] Implement binary operations with unit handling
 - [x] Implement conversions (unit/date/currency)
 - [x] Implement variable assignments and lookups
-- [x] Write unit tests for all evaluation components (71/71 tests passing - 100%)
+- [x] Write unit tests for all evaluation components (95/95 tests passing - 100%)
 - [x] Fix single-letter variable name issue (parser now accepts UNIT tokens as identifiers in assignment context)
-- [ ] Implement derived unit conversions (deferred from Phase 5.5)
-  - Requires Phase 3 task (parser DerivedUnit AST nodes) as prerequisite
-  - Calculate conversion factors between derived dimensions
-  - Example: `100 km/h to m/s` → convert km→m (×1000), h→s (÷3600) → `27.78 m/s`
-  - Update unit-converter.ts to handle DerivedUnitValue conversions
-  - Add tests for derived unit conversions
-- [ ] Implement exponentiation of units and derived units (deferred from Phase 5.5)
-  - Update power operator (^) in evaluator to handle units
-  - Multiply term exponents: `(5 m)^2` → `25 m²` (exponent 1 → 2)
-  - Handle derived units: `(3 m/s)^2` → `9 m²/s²` (m: 1→2, s: -1→-2)
-  - Support fractional powers: `(4 m²)^0.5` → `2 m`
-  - Add tests for unit exponentiation
+- [x] Implement derived unit conversions (completed)
+  - Implemented convertToDerivedUnit() method in evaluator
+  - Added computeDimension() and areDimensionsCompatible() helper methods
+  - Converts through base units using exponential factors
+  - Example: `100 km/h to m/s` → `27.78 m/s`
+  - Added 8 comprehensive tests for derived unit conversions
+- [x] Implement exponentiation of units and derived units (completed)
+  - Updated power operator (^) in evaluator to handle units and derived units
+  - Expands derived dimensions (e.g., area → length²) before applying exponent
+  - Simple units: `(5 m)^2` → `25 m²` (exponent 1 → 2)
+  - Derived units: `(3 m/s)^2` → `9 m²/s²` (m: 1→2, s: -1→-2)
+  - Fractional powers: `(16 m²)^0.5` → `4 m` (expands area to length²)
+  - Added 8 comprehensive tests for unit exponentiation
 
 **Known Issues**:
-- Derived unit arithmetic simplified
-  - Multiplying/dividing different units keeps left unit instead of creating derived units
-  - Example: `5 m * 3 s` returns `15 m` instead of expected `15 m s`
-  - Full derived unit support moved to Phase 5.5
+- ~~Derived unit arithmetic simplified~~ ✅ FIXED in Phase 5.5
+  - ~~Multiplying/dividing different units keeps left unit instead of creating derived units~~
+  - ~~Example: `5 m * 3 s` returns `15 m` instead of expected `15 m s`~~
+  - Derived unit creation now fully implemented
 
 **Note**: Timezone offset conversions (not just name resolution) deferred to Phase 6.5 - requires Temporal polyfill
 

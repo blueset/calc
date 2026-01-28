@@ -129,7 +129,7 @@ const BINARY_PREFIXES: BinaryPrefix[] = [
 const dimensions: Dimension[] = [
   { id: "dimensionless", name: "Dimensionless", baseUnit: "unity" },
   { id: "length", name: "Length", baseUnit: "meter" },
-  { id: "mass", name: "Mass", baseUnit: "gram" },
+  { id: "mass", name: "Mass", baseUnit: "kilogram" },
   {
     id: "area",
     name: "Area",
@@ -172,8 +172,9 @@ const dimensions: Dimension[] = [
     name: "Power",
     baseUnit: "watt",
     derivedFrom: [
-      { dimension: "energy", exponent: 1 },
-      { dimension: "time", exponent: -1 },
+      { dimension: "mass", exponent: 1 },
+      { dimension: "length", exponent: 2 },
+      { dimension: "time", exponent: -3 },
     ],
     hasNamedUnits: true,
   },
@@ -183,8 +184,9 @@ const dimensions: Dimension[] = [
     name: "Pressure",
     baseUnit: "pascal",
     derivedFrom: [
-      { dimension: "force", exponent: 1 },
-      { dimension: "length", exponent: -2 },
+      { dimension: "mass", exponent: 1 },
+      { dimension: "length", exponent: -1 },
+      { dimension: "time", exponent: -2 },
     ],
     hasNamedUnits: true,
   },
@@ -229,7 +231,7 @@ const dimensions: Dimension[] = [
   {
     id: "beat_rate",
     name: "Beat Rate",
-    baseUnit: "bpm",
+    baseUnit: "beat_per_second",
     derivedFrom: [
       { dimension: "beat", exponent: 1 },
       { dimension: "time", exponent: -1 },
@@ -264,13 +266,16 @@ function generateSIPrefixedUnits(
 
     const names: string[] = [symbol, singular, plural];
 
+    // Special case: kilogram is the base unit for mass dimension (factor 1)
+    const isDimensionBaseUnit = (id === "kilogram" && dimension === "mass") || (isBase && baseFactorToSI === 1);
+
     units.push({
       id,
       dimension,
       displayName: { symbol, singular, plural },
       names: [...new Set(names)],
       conversion: { type: "linear", factor },
-      isBaseUnit: isBase && baseFactorToSI === 1 ? true : undefined,
+      isBaseUnit: isDimensionBaseUnit ? true : undefined,
     });
   }
 
@@ -513,49 +518,49 @@ const staticUnits: Unit[] = [
     dimension: "mass",
     displayName: { symbol: "t", singular: "tonne", plural: "tonnes" },
     names: ["t", "tonne", "tonnes", "ton", "tons", "metric ton", "metric tons"],
-    conversion: { type: "linear", factor: 1e6 }, // 1 tonne = 1e6 grams
+    conversion: { type: "linear", factor: 1000 }, // 1 tonne = 1000 kilograms
   },
   {
     id: "carat",
     dimension: "mass",
     displayName: { symbol: "ct", singular: "carat", plural: "carats" },
     names: ["ct", "carat", "carats"],
-    conversion: { type: "linear", factor: 0.2 }, // 1 carat = 0.2 grams
+    conversion: { type: "linear", factor: 0.0002 }, // 1 carat = 0.2 grams = 0.0002 kilograms
   },
   {
     id: "ounce",
     dimension: "mass",
     displayName: { symbol: "oz", singular: "ounce", plural: "ounces" },
     names: ["oz", "ounce", "ounces"],
-    conversion: { type: "linear", factor: 28.349523125 }, // grams
+    conversion: { type: "linear", factor: 0.028349523125 }, // kilograms
   },
   {
     id: "pound",
     dimension: "mass",
     displayName: { symbol: "lb", singular: "pound", plural: "pounds" },
     names: ["lb", "lbs", "pound", "pounds"],
-    conversion: { type: "linear", factor: 453.59237 }, // grams
+    conversion: { type: "linear", factor: 0.45359237 }, // kilograms
   },
   {
     id: "stone",
     dimension: "mass",
     displayName: { symbol: "st", singular: "stone", plural: "stones" },
     names: ["st", "stone", "stones"],
-    conversion: { type: "linear", factor: 6350.29318 }, // grams
+    conversion: { type: "linear", factor: 6.35029318 }, // kilograms
   },
   {
     id: "short_ton",
     dimension: "mass",
     displayName: { symbol: "sh tn", singular: "short ton", plural: "short tons" },
     names: ["short ton", "short tons", "sh tn", "US ton", "US tons"],
-    conversion: { type: "linear", factor: 907184.74 }, // grams (2000 lb)
+    conversion: { type: "linear", factor: 907.18474 }, // kilograms (2000 lb)
   },
   {
     id: "long_ton",
     dimension: "mass",
     displayName: { symbol: "lg tn", singular: "long ton", plural: "long tons" },
     names: ["long ton", "long tons", "lg tn", "UK ton", "UK tons", "imperial ton", "imperial tons"],
-    conversion: { type: "linear", factor: 1016046.9088 }, // grams (2240 lb)
+    conversion: { type: "linear", factor: 1016.0469088 }, // kilograms (2240 lb)
   },
 
   // ---- Area ----
@@ -869,6 +874,20 @@ const staticUnits: Unit[] = [
     isBaseUnit: true,
   },
   {
+    id: "miles_per_hour",
+    dimension: "speed",
+    displayName: { symbol: "mph", singular: "mile per hour", plural: "miles per hour" },
+    names: ["mph", "MPH", "mi/h", "mile per hour", "miles per hour"],
+    conversion: { type: "linear", factor: 0.44704 }, // m/s (1 mile = 1609.344 m, 1 hour = 3600 s)
+  },
+  {
+    id: "kilometers_per_hour",
+    dimension: "speed",
+    displayName: { symbol: "km/h", singular: "kilometer per hour", plural: "kilometers per hour" },
+    names: ["km/h", "kmh", "kph", "KPH", "kilometer per hour", "kilometers per hour"],
+    conversion: { type: "linear", factor: 0.277778 }, // m/s (1 km = 1000 m, 1 hour = 3600 s)
+  },
+  {
     id: "knot",
     dimension: "speed",
     displayName: { symbol: "kn", singular: "knot", plural: "knots" },
@@ -1001,12 +1020,23 @@ const staticUnits: Unit[] = [
 
   // ---- Beat Rate ----
   {
+    id: "beat_per_second",
+    dimension: "beat_rate",
+    displayName: {
+      symbol: "beat/s",
+      singular: "beat per second",
+      plural: "beats per second",
+    },
+    names: ["beat/s", "beat per second", "beats per second", "bps"],
+    conversion: { type: "linear", factor: 1 }, // Base unit for beat_rate
+    isBaseUnit: true,
+  },
+  {
     id: "bpm",
     dimension: "beat_rate",
     displayName: { symbol: "BPM", singular: "BPM", plural: "BPM" },
     names: ["BPM", "bpm", "beats per minute"],
-    conversion: { type: "linear", factor: 1 }, // 1 BPM = 1 beat/minute (base unit for beat_rate)
-    isBaseUnit: true,
+    conversion: { type: "linear", factor: 1 / 60 }, // 1 BPM = 1 beat/minute = (1/60) beat/second
   },
 
   // ---- Printing ----
@@ -1032,9 +1062,9 @@ function generateAllUnits(): Unit[] {
     ...generateSIPrefixedUnits("meter", "m", "meter", "meters", "length", 1)
   );
 
-  // Gram with all SI prefixes (base unit for mass)
+  // Gram with all SI prefixes (kilogram is base unit for mass, gram is 0.001 kg)
   units.push(
-    ...generateSIPrefixedUnits("gram", "g", "gram", "grams", "mass", 1)
+    ...generateSIPrefixedUnits("gram", "g", "gram", "grams", "mass", 0.001)
   );
 
   // Ampere with all SI prefixes

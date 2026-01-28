@@ -632,13 +632,86 @@ export class Evaluator {
     if (op === '^') {
       if (right.kind === 'number' && !right.unit) {
         const result = Math.pow(leftValue, rightValue);
-        // TODO: Handle exponentiation of units (e.g., (5 m)^2 → 25 m²)
-        // For now, only dimensionless base or return as-is
-        if (left.kind === 'number') {
-          return { kind: 'number', value: result, unit: left.unit };
+
+        // Handle exponentiation of units
+        if (left.kind === 'number' && left.unit) {
+          // (5 m)^2 → 25 m²
+          // (16 m²)^0.5 → 4 m (need to expand derived dimensions)
+
+          // Check if this unit's dimension is derived
+          const dimension = this.dataLoader.getDimensionById(left.unit.dimension);
+          if (dimension && dimension.derivedFrom && dimension.derivedFrom.length > 0) {
+            // Expand the derived dimension and apply the exponent
+            const expandedTerms: Array<{ unit: Unit; exponent: number }> = [];
+            for (const baseDim of dimension.derivedFrom) {
+              const baseDimension = this.dataLoader.getDimensionById(baseDim.dimension);
+              if (!baseDimension) {
+                return this.createError(`Unknown base dimension: ${baseDim.dimension}`);
+              }
+              // Find the base unit for this dimension
+              const baseUnit = this.dataLoader.getUnitById(baseDimension.baseUnit);
+              if (!baseUnit) {
+                return this.createError(`No base unit for dimension: ${baseDim.dimension}`);
+              }
+              // Apply the exponent: (dimension^baseDim.exponent)^rightValue
+              expandedTerms.push({ unit: baseUnit, exponent: baseDim.exponent * rightValue });
+            }
+            return {
+              kind: 'derivedUnit',
+              value: result,
+              terms: expandedTerms
+            };
+          } else {
+            // Simple base dimension unit
+            return {
+              kind: 'derivedUnit',
+              value: result,
+              terms: [{ unit: left.unit, exponent: rightValue }]
+            };
+          }
         }
-        // Derived unit base - would need to multiply all exponents
-        return this.createError('Exponentiation of derived units not yet supported');
+
+        if (left.kind === 'derivedUnit') {
+          // (3 m/s)^2 → 9 m²/s²
+          // Multiply all term exponents by the power
+          // Also need to expand any derived dimensions in the terms
+          const newTerms: Array<{ unit: Unit; exponent: number }> = [];
+
+          for (const term of left.terms) {
+            const dimension = this.dataLoader.getDimensionById(term.unit.dimension);
+            if (dimension && dimension.derivedFrom && dimension.derivedFrom.length > 0) {
+              // Expand derived dimension
+              for (const baseDim of dimension.derivedFrom) {
+                const baseDimension = this.dataLoader.getDimensionById(baseDim.dimension);
+                if (!baseDimension) {
+                  return this.createError(`Unknown base dimension: ${baseDim.dimension}`);
+                }
+                const baseUnit = this.dataLoader.getUnitById(baseDimension.baseUnit);
+                if (!baseUnit) {
+                  return this.createError(`No base unit for dimension: ${baseDim.dimension}`);
+                }
+                // (term^term.exponent)^rightValue, where term has baseDim.exponent
+                newTerms.push({ unit: baseUnit, exponent: baseDim.exponent * term.exponent * rightValue });
+              }
+            } else {
+              // Simple base dimension
+              newTerms.push({ unit: term.unit, exponent: term.exponent * rightValue });
+            }
+          }
+
+          return {
+            kind: 'derivedUnit',
+            value: result,
+            terms: newTerms
+          };
+        }
+
+        // Dimensionless number
+        if (left.kind === 'number') {
+          return { kind: 'number', value: result };
+        }
+
+        return this.createError('Cannot exponentiate this type');
       }
       return this.createError('Exponent must be dimensionless');
     }
@@ -848,14 +921,25 @@ export class Evaluator {
   }
 
   /**
-   * Evaluate an identifier (variable lookup)
+   * Evaluate an identifier (variable lookup or implicit unit)
    */
   private evaluateIdentifier(expr: AST.Identifier, context: EvaluationContext): Value {
+    // First, try to look up as a variable
     const value = context.variables.get(expr.name);
-    if (value === undefined) {
-      return this.createError(`Undefined variable: ${expr.name}`);
+    if (value !== undefined) {
+      return value;
     }
-    return value;
+
+    // If not found as variable, check if it's a unit name
+    // This handles cases like "100 km / h" where "h" is parsed as an identifier
+    const unit = this.dataLoader.getUnitByName(expr.name);
+    if (unit) {
+      // Treat as implicit "1 [unit]"
+      return { kind: 'number', value: 1, unit };
+    }
+
+    // Not a variable or unit - error
+    return this.createError(`Undefined variable: ${expr.name}`);
   }
 
   /**
@@ -900,16 +984,70 @@ export class Evaluator {
   /**
    * Convert value to derived unit (e.g., "100 km/h to m/s")
    *
-   * TODO: This is a placeholder implementation for Phase 5 task.
-   * Full implementation requires:
-   * - Expanding source and target to base units
-   * - Computing conversion factors between dimensions
-   * - Applying conversion and reconstructing derived unit
+   * Algorithm:
+   * 1. Extract source terms (convert NumberValue to single term if needed)
+   * 2. Resolve target terms (SimpleUnit → Unit)
+   * 3. Check dimensional compatibility
+   * 4. Convert source value to base units using term-by-term conversion
+   * 5. Convert from base units to target units
+   * 6. Return new DerivedUnitValue with target units
    */
   private convertToDerivedUnit(value: Value, targetExpr: AST.DerivedUnit): Value {
-    // For now, return an error indicating this is not yet implemented
-    // This will be implemented in Phase 5 (deferred task)
-    return this.createError('Derived unit conversions not yet implemented (Phase 5 task)');
+    // Step 1: Extract source terms
+    let sourceValue: number;
+    let sourceTerms: Array<{ unit: Unit; exponent: number }>;
+
+    if (value.kind === 'number') {
+      if (!value.unit) {
+        return this.createError('Cannot convert dimensionless value to derived unit');
+      }
+      sourceValue = value.value;
+      sourceTerms = [{ unit: value.unit, exponent: 1 }];
+    } else if (value.kind === 'derivedUnit') {
+      sourceValue = value.value;
+      sourceTerms = value.terms;
+    } else {
+      return this.createError(`Cannot convert ${value.kind} to derived unit`);
+    }
+
+    // Step 2: Resolve target terms
+    const targetTerms: Array<{ unit: Unit; exponent: number }> = [];
+    for (const targetTerm of targetExpr.terms) {
+      const resolvedUnit = this.resolveUnit(targetTerm.unit);
+      if (!resolvedUnit) {
+        return this.createError('Unknown unit in target');
+      }
+      targetTerms.push({ unit: resolvedUnit, exponent: targetTerm.exponent });
+    }
+
+    // Step 3: Check dimensional compatibility
+    const sourceDimension = this.computeDimension(sourceTerms);
+    const targetDimension = this.computeDimension(targetTerms);
+
+    if (!this.areDimensionsCompatible(sourceDimension, targetDimension)) {
+      return this.createError('Cannot convert between different dimensions');
+    }
+
+    // Step 4: Convert source to base units
+    let valueInBase = sourceValue;
+    for (const term of sourceTerms) {
+      const factorToBase = this.unitConverter.toBaseUnit(1, term.unit);
+      valueInBase *= Math.pow(factorToBase, term.exponent);
+    }
+
+    // Step 5: Convert from base units to target units
+    let result = valueInBase;
+    for (const term of targetTerms) {
+      const factorFromBase = this.unitConverter.fromBaseUnit(1, term.unit);
+      result *= Math.pow(factorFromBase, term.exponent);
+    }
+
+    // Step 6: Return new DerivedUnitValue
+    return {
+      kind: 'derivedUnit',
+      value: result,
+      terms: targetTerms
+    };
   }
 
   /**
@@ -1180,5 +1318,67 @@ export class Evaluator {
         message
       }
     };
+  }
+
+  /**
+   * Compute dimension from derived unit terms
+   *
+   * Returns a map of base dimension ID → total exponent
+   * Example: km/h → {length: 1, time: -1}
+   */
+  private computeDimension(terms: Array<{ unit: Unit; exponent: number }>): Map<string, number> {
+    const dimensionMap = new Map<string, number>();
+
+    for (const term of terms) {
+      // Get the dimension of this unit
+      const dimension = this.dataLoader.getDimensionById(term.unit.dimension);
+      if (!dimension) {
+        throw new Error(`Unknown dimension: ${term.unit.dimension}`);
+      }
+
+      // If it's a base dimension, add directly
+      if (!dimension.derivedFrom || dimension.derivedFrom.length === 0) {
+        const currentExp = dimensionMap.get(dimension.id) || 0;
+        dimensionMap.set(dimension.id, currentExp + term.exponent);
+      } else {
+        // If it's a derived dimension, expand it
+        for (const baseDim of dimension.derivedFrom) {
+          const currentExp = dimensionMap.get(baseDim.dimension) || 0;
+          // Multiply exponents: term.exponent * baseDim.exponent
+          dimensionMap.set(baseDim.dimension, currentExp + term.exponent * baseDim.exponent);
+        }
+      }
+    }
+
+    // Remove zero exponents
+    for (const [key, value] of dimensionMap.entries()) {
+      if (value === 0) {
+        dimensionMap.delete(key);
+      }
+    }
+
+    return dimensionMap;
+  }
+
+  /**
+   * Check if two dimension maps are compatible
+   *
+   * Two dimensions are compatible if they have the same base dimensions with the same exponents
+   */
+  private areDimensionsCompatible(dim1: Map<string, number>, dim2: Map<string, number>): boolean {
+    // Check same number of dimensions
+    if (dim1.size !== dim2.size) {
+      return false;
+    }
+
+    // Check each dimension in dim1 exists in dim2 with same exponent
+    for (const [dimId, exp1] of dim1.entries()) {
+      const exp2 = dim2.get(dimId);
+      if (exp2 === undefined || exp1 !== exp2) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

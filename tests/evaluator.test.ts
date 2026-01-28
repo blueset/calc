@@ -376,6 +376,217 @@ describe('Evaluator', () => {
     });
   });
 
+  describe('Derived Unit Conversions', () => {
+    it('should convert km/h to m/s', () => {
+      const result = evaluate('100 km/h to m/s');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        expect(result.value).toBeCloseTo(27.778, 2);
+        expect(result.terms).toHaveLength(2);
+        // Should have meter with exponent 1 and second with exponent -1
+        const meterTerm = result.terms.find(t => t.unit.id === 'meter');
+        const secondTerm = result.terms.find(t => t.unit.id === 'second');
+        expect(meterTerm).toBeDefined();
+        expect(secondTerm).toBeDefined();
+        expect(meterTerm?.exponent).toBe(1);
+        expect(secondTerm?.exponent).toBe(-1);
+      }
+    });
+
+    it('should convert m/s to km/h', () => {
+      const result = evaluate('10 m/s to km/h');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        expect(result.value).toBeCloseTo(36, 2);
+        const kmTerm = result.terms.find(t => t.unit.id === 'kilometer');
+        const hourTerm = result.terms.find(t => t.unit.id === 'hour');
+        expect(kmTerm).toBeDefined();
+        expect(hourTerm).toBeDefined();
+        expect(kmTerm?.exponent).toBe(1);
+        expect(hourTerm?.exponent).toBe(-1);
+      }
+    });
+
+    it('should convert between named speed units (mph to km/h)', () => {
+      const result = evaluate('60 mph to km/h');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // 60 mph ≈ 96.56 km/h (60 * 1.60934 = 96.56)
+        expect(result.value).toBeCloseTo(96.56, 1);
+        const kmTerm = result.terms.find(t => t.unit.id === 'kilometer');
+        const hourTerm = result.terms.find(t => t.unit.id === 'hour');
+        expect(kmTerm).toBeDefined();
+        expect(hourTerm).toBeDefined();
+        expect(kmTerm?.exponent).toBe(1);
+        expect(hourTerm?.exponent).toBe(-1);
+      }
+    });
+
+    it('should convert mph to m/s', () => {
+      const result = evaluate('60 mph to m/s');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // 60 mph ≈ 26.82 m/s
+        expect(result.value).toBeCloseTo(26.82, 1);
+        const meterTerm = result.terms.find(t => t.unit.id === 'meter');
+        const secondTerm = result.terms.find(t => t.unit.id === 'second');
+        expect(meterTerm).toBeDefined();
+        expect(secondTerm).toBeDefined();
+        expect(meterTerm?.exponent).toBe(1);
+        expect(secondTerm?.exponent).toBe(-1);
+      }
+    });
+
+    it('should handle simple unit to derived unit conversion error', () => {
+      const result = evaluate('1000 m to km/h');
+      expect(result.kind).toBe('error');
+      // This should error because 1000 m is length dimension, but km/h is speed (length/time)
+    });
+
+    it('should reject conversion between incompatible derived dimensions', () => {
+      const result = evaluate('100 km/h to kg/s');
+      expect(result.kind).toBe('error');
+      // km/h is speed (length/time), kg/s is mass/time - different dimensions
+    });
+
+    it('should convert power density units', () => {
+      const result = evaluate('100 W/m to kW/km');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // 100 W/m = 100000 W/km = 100 kW/km
+        expect(result.value).toBeCloseTo(100, 1);
+        const kWTerm = result.terms.find(t => t.unit.id === 'kilowatt');
+        const kmTerm = result.terms.find(t => t.unit.id === 'kilometer');
+        expect(kWTerm).toBeDefined();
+        expect(kmTerm).toBeDefined();
+        expect(kWTerm?.exponent).toBe(1);
+        expect(kmTerm?.exponent).toBe(-1);
+      }
+    });
+
+    it('should convert fuel efficiency units', () => {
+      const result = evaluate('10 km/L to m/L');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // 10 km/L = 10000 m/L
+        expect(result.value).toBeCloseTo(10000, 0);
+        const mTerm = result.terms.find(t => t.unit.id === 'meter');
+        const LTerm = result.terms.find(t => t.unit.id === 'liter');
+        expect(mTerm).toBeDefined();
+        expect(LTerm).toBeDefined();
+        expect(mTerm?.exponent).toBe(1);
+        expect(LTerm?.exponent).toBe(-1);
+      }
+    });
+  });
+
+  describe('Unit Exponentiation', () => {
+    it('should exponentiate simple units with integer power', () => {
+      const result = evaluate('(5 m)^2');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // (5 m)^2 = 25 m²
+        expect(result.value).toBeCloseTo(25, 5);
+        expect(result.terms).toHaveLength(1);
+        expect(result.terms[0].unit.id).toBe('meter');
+        expect(result.terms[0].exponent).toBe(2);
+      }
+    });
+
+    it('should exponentiate derived units with integer power', () => {
+      const result = evaluate('(3 m/s)^2');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // (3 m/s)^2 = 9 m²/s²
+        expect(result.value).toBeCloseTo(9, 5);
+        expect(result.terms).toHaveLength(2);
+        const mTerm = result.terms.find(t => t.unit.id === 'meter');
+        const sTerm = result.terms.find(t => t.unit.id === 'second');
+        expect(mTerm).toBeDefined();
+        expect(sTerm).toBeDefined();
+        expect(mTerm?.exponent).toBe(2);
+        expect(sTerm?.exponent).toBe(-2);
+      }
+    });
+
+    it('should handle fractional powers (square root) with Unicode notation', () => {
+      // Test that (16 m²)^0.5 = 4 m
+      // where m² is parsed as a unit literal (square meter), not an operation
+      const result = evaluate('(16 m²)^0.5');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // (16 m²)^0.5 = 4 m
+        expect(result.value).toBeCloseTo(4, 5);
+        expect(result.terms).toHaveLength(1);
+        expect(result.terms[0].unit.id).toBe('meter');
+        expect(result.terms[0].exponent).toBeCloseTo(1, 5);
+      }
+    });
+
+    it('should handle zero exponent', () => {
+      const result = evaluate('(5 m)^0');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // (5 m)^0 = 1 (dimensionless)
+        expect(result.value).toBeCloseTo(1, 5);
+        expect(result.terms).toHaveLength(1);
+        expect(result.terms[0].unit.id).toBe('meter');
+        expect(result.terms[0].exponent).toBe(0);
+      }
+    });
+
+    it('should handle negative exponent', () => {
+      const result = evaluate('(2 m)^-1');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // (2 m)^-1 = 0.5 m⁻¹
+        expect(result.value).toBeCloseTo(0.5, 5);
+        expect(result.terms).toHaveLength(1);
+        expect(result.terms[0].unit.id).toBe('meter');
+        expect(result.terms[0].exponent).toBe(-1);
+      }
+    });
+
+    it('should exponentiate complex derived units', () => {
+      const result = evaluate('(2 kg * m / s^2)^3');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // (2 kg⋅m/s²)^3 = 8 kg³⋅m³/s⁶
+        expect(result.value).toBeCloseTo(8, 5);
+        expect(result.terms).toHaveLength(3);
+        const kgTerm = result.terms.find(t => t.unit.id === 'kilogram');
+        const mTerm = result.terms.find(t => t.unit.id === 'meter');
+        const sTerm = result.terms.find(t => t.unit.id === 'second');
+        expect(kgTerm).toBeDefined();
+        expect(mTerm).toBeDefined();
+        expect(sTerm).toBeDefined();
+        expect(kgTerm?.exponent).toBe(3);
+        expect(mTerm?.exponent).toBe(3);
+        expect(sTerm?.exponent).toBe(-6);
+      }
+    });
+
+    it('should allow conversion of exponentiated units', () => {
+      const result = evaluate('(10 m/s)^2 to ft^2/s^2');
+      expect(result.kind).toBe('derivedUnit');
+      if (result.kind === 'derivedUnit') {
+        // (10 m/s)^2 = 100 m²/s² ≈ 1076.39 ft²/s²
+        expect(result.value).toBeCloseTo(1076.39, 1);
+        const ftTerm = result.terms.find(t => t.unit.id === 'foot');
+        const sTerm = result.terms.find(t => t.unit.id === 'second');
+        expect(ftTerm).toBeDefined();
+        expect(sTerm).toBeDefined();
+        expect(ftTerm?.exponent).toBe(2);
+        expect(sTerm?.exponent).toBe(-2);
+      }
+    });
+
+    it('should reject non-dimensionless exponent', () => {
+      const result = evaluate('(5 m)^(2 s)');
+      expect(result.kind).toBe('error');
+    });
+  });
+
   describe('Conditional Expressions', () => {
     it('should evaluate true branch', () => {
       const result = evaluate('if true then 10 else 20') as NumberValue;
