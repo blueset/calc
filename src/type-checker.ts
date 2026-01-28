@@ -510,6 +510,21 @@ export class TypeChecker {
       return type;
     }
 
+    // Composite unit with time dimension
+    if (type.kind === 'composite') {
+      const compositeType = type as CompositeUnitType;
+      if (compositeType.dimension === 'time') {
+        // Check if any component is a date or time component
+        const hasDate = this.hasDateComponentUnit(expr);
+        const hasTime = this.hasTimeComponentUnit(expr);
+        return {
+          kind: 'duration',
+          hasDateComponents: hasDate,
+          hasTimeComponents: hasTime
+        };
+      }
+    }
+
     // Check if it's a time-dimensioned physical type
     if (this.isPhysicalType(type)) {
       const physicalType = type as PhysicalType;
@@ -522,18 +537,6 @@ export class TypeChecker {
           kind: 'duration',
           hasDateComponents: isDateComponent,
           hasTimeComponents: !isDateComponent
-        };
-      }
-
-      // Composite unit with time dimension
-      if (physicalType.kind === 'composite' && physicalType.dimension === 'time') {
-        // Check if any component is a date or time component
-        const hasDate = this.hasDateComponentUnit(expr);
-        const hasTime = this.hasTimeComponentUnit(expr);
-        return {
-          kind: 'duration',
-          hasDateComponents: hasDate,
-          hasTimeComponents: hasTime
         };
       }
     }

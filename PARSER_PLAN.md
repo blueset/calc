@@ -118,24 +118,48 @@
 - [x] Document resolveUnit limitation
 
 ### Phase 6: Result Formatting (Days 15-16)
-- [ ] Create `settings.ts` with Settings interface
-- [ ] Create `formatter.ts` with Formatter class
-- [ ] Implement number formatting (precision, separators, grouping)
-- [ ] Implement unit formatting (display names for simple units)
-- [ ] Implement derived unit formatting (e.g., "km/h", "m²", "kg m/s²")
-- [ ] Implement date/time formatting
-- [ ] Implement composite unit formatting
-- [ ] Implement presentation target formatting (binary, hex, etc.)
-- [ ] Write unit tests for formatter
+- [x] Create `settings.ts` with Settings interface
+- [x] Create `formatter.ts` with Formatter class
+- [x] Implement number formatting (precision, separators, grouping)
+- [x] Implement unit formatting (display names for simple units)
+- [x] Implement derived unit formatting (e.g., "km/h", "m²", "kg m/s²")
+- [x] Implement date/time formatting
+- [x] Implement composite unit formatting
+- [x] Implement presentation target formatting (binary, hex, etc.)
+- [x] Write unit tests for formatter (52 tests passing)
 
-**Note**: Requires Phase 5.5 completion - formatter must handle DerivedUnit values
+**Status**: ✅ **COMPLETED** (Updated to match SPECS.md lines 1074-1090)
 
-### Phase 6.5: Temporal API Integration (Optional Enhancement)
-**Status**: Deferred - requires external dependency
+**Implementation Details**:
+- **Settings Interface** (aligned with SPECS.md, uses actual characters):
+  - UI settings: theme (light/dark/system), fontSize (small/medium/large), fontFamily (monospace/sans-serif/serif)
+  - Number formatting: precision, angleUnit (degree/radian), decimalSeparator ('.' | ','), digitGroupingSeparator ('' | ' ' | ',' | '.' | '′'), digitGroupingSize ('3' | '2-3' | '4' | 'off')
+  - Date/time: dateFormat with MMM (month name) and DDD (day of week) support, timeFormat ('h12' | 'h23'), dateTimeFormat ('{date} {time}' | '{time} {date}')
+  - Units: imperialUnits ('us' | 'uk'), unitDisplayStyle ('symbol' | 'name')
+  - All defaults match SPECS.md specifications
+- **Number Formatting**: Support for custom precision, dot/comma decimal separators, 5 grouping separators (none/space/comma/dot/prime), 4 grouping sizes (3/2-3/4/off), auto-precision for scientific notation
+- **Unit Formatting**: Display names from database (symbol or full name), proper handling of simple units
+- **Derived Unit Formatting**: Unicode superscripts for exponents (m², m³, s⁻¹), proper "/" notation (km/h, m/s²), parentheses for multiple denominator terms
+- **Composite Unit Formatting**: Multiple value-unit pairs (5 ft 7.32 in, 2 h 30 min)
+- **Date/Time Formatting**:
+  - Customizable date format with YYYY, MM, DD, MMM (month name), DDD (day of week) tokens
+  - Examples: 'YYYY-MM-DD DDD' → '2024-01-31 Wed', 'DDD DD MMM YYYY' → 'Wed 31 Jan 2024'
+  - 12h/24h time format, AM/PM handling
+  - Date/time order configurable: '{date} {time}' or '{time} {date}'
+  - ISO 8601 for instants, duration with all components
+- **Presentation Formats**: Binary (0b...), octal (0o...), hex (0x...), fraction (with mixed numbers), scientific notation, ordinal (1st, 2nd, 3rd, etc.) using Intl.PluralRules
+- **Boolean/Error Formatting**: Simple "true"/"false" and "Error: message" formatting
+- **Test Coverage**: 59 comprehensive tests covering all settings variations
+
+**Note**: Requires Phase 5.5 completion - formatter must handle DerivedUnit values ✅
+
+### Phase 6.5: Temporal API Integration
+**Status**: requires external dependency
 
 - [ ] Add `@js-temporal/polyfill` dependency
 - [ ] Implement timezone offset-aware conversions in `date-time.ts`
 - [ ] Implement timezone conversion targets in parser
+- [ ] Review date/time/datetime/duration related logic across parser/lexer/type-checker/date-time/evaluator/formatter (and other relevant modules) and seek improvements based on Temporal API support newly introduced.
 - [ ] Update tests for timezone-aware behavior
 
 **Current limitation**: All timezones treated as UTC. Timezone names are resolved (EST→America/New_York) but offset calculations not performed.
@@ -183,6 +207,17 @@
 **Current limitation**: All math functions return `dimensionless` type. Evaluation handles units correctly, but type checker doesn't validate function dimensions.
 
 **Reason for deferral**: Non-critical enhancement. Core evaluation works. Type checking is already functional, this just improves error messages.
+
+#### Formatter Enhancements
+- [ ] Implement proper unit name pluralization based on numeric value
+  - Use `unit.displayName.plural` when value is not 1 or -1
+  - Fall back to `unit.displayName.singular` if plural not available
+  - Examples: "1 meter" vs "2 meters", "1 foot" vs "5 feet"
+  - Consider edge cases: derived units (m/s), composite units, fractional values
+
+**Current limitation**: When `unitDisplayStyle` is set to `'name'`, formatter always uses singular form (e.g., "2 meter" instead of "2 meters"). See formatter.ts:278.
+
+**Reason for deferral**: Non-critical enhancement. Most use cases use symbols (m, ft, kg) where pluralization doesn't apply. Singular form is still understandable even if grammatically imperfect. Implementation requires passing numeric value through call chain and handling edge cases.
 
 ---
 

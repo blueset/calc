@@ -57,7 +57,7 @@ import {
   PresentationFormat
 } from './ast';
 import { DataLoader } from './data-loader';
-import { isConstant, getConstantValue } from './constants';
+import { isConstant, getConstant } from './constants';
 import { ParserError, LineError, DocumentResult } from './error-handling';
 
 /**
@@ -1074,12 +1074,12 @@ export class Parser {
             finalHour = 0;
           }
 
-          return createPlainTimeLiteral(finalHour, minute, second, start, nextToken.end);
+          return createPlainTimeLiteral(finalHour, minute, second, 0, start, nextToken.end);
         }
       }
 
       // 24-hour format (no AM/PM)
-      return createPlainTimeLiteral(finalHour, minute, second, start, end);
+      return createPlainTimeLiteral(finalHour, minute, second, 0, start, end);
     }
 
     return null;
