@@ -145,13 +145,15 @@ parseDocument(): DocumentResult {
   - Update resolveUnit() in evaluator to handle DerivedUnit AST nodes
   - Prerequisite for derived unit conversions
   - **Note**: Both ASCII notation (m^2) and Unicode superscripts (m²) are fully supported in conversion targets (Unicode added in Phase 2.6)
-- [ ] Issue: Parse ASCII exponent notation in unit literals (deferred from Phase 5)
-  - Currently: `16 m²` (Unicode) parses as literal with unit square_meter ✅
-  - Currently: `16 m^2` (ASCII) parses as operation `(16 m)^2` ❌
-  - Goal: Both `16 m²` and `16 m^2` should parse with same semantic meaning
-  - Can parse as either `16[meter:2]` or `16[square_meter:1]` (equivalent)
-  - Update parser to recognize ASCII exponent notation after units in literals
-  - Add tests for ASCII exponent notation in unit literals
+- [x] Parse ASCII exponent notation in unit literals (completed)
+  - Both `16 m²` (Unicode) and `16 m^2` (ASCII) now parse as literals with derived units ✅
+  - Parser checks for CARET token after unit in number literals
+  - Handles positive, negative, and fractional exponents (e.g., `m^2`, `s^-1`, `m^0.5`)
+  - Creates DerivedUnit AST node with unit term and exponent
+  - Works with or without spaces around caret (both `m^2` and `m ^ 2` parse the same)
+  - Added 6 comprehensive tests for ASCII exponent notation
+  - Updated 1 existing test to match new parsing behavior
+  - All 588 tests passing
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions

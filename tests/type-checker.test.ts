@@ -164,9 +164,11 @@ describe('TypeChecker', () => {
       expect(type).toMatchObject({ kind: 'dimensionless' });
     });
 
-    it('should preserve base dimension', () => {
+    it('should parse m^2 as derived unit literal', () => {
+      // With ASCII exponent notation, "m ^ 2" (with or without spaces) parses as
+      // a unit literal (square meters), not as an operation
       const type = parseAndCheck('5 m ^ 2');
-      expect(type).toMatchObject({ kind: 'physical', dimension: 'length' });
+      expect(type).toMatchObject({ kind: 'derived' });
     });
 
     it('should reject non-dimensionless exponent', () => {

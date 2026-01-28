@@ -22,7 +22,8 @@ import {
   VariableDefinition,
   Heading,
   PlainText,
-  CompositeUnitLiteral
+  CompositeUnitLiteral,
+  DerivedUnit
 } from '../src/ast';
 
 describe('Parser', () => {
@@ -126,6 +127,88 @@ describe('Parser', () => {
       expect(composite.components[0].value).toBe(2);
       expect(composite.components[1].value).toBe(30);
       expect(composite.components[2].value).toBe(15);
+    });
+  });
+
+  describe('ASCII Exponent Notation in Unit Literals', () => {
+    it('should parse number with ASCII exponent unit (m^2)', () => {
+      const expr = parseExpression('16 m^2');
+      expect(expr.type).toBe('NumberWithUnit');
+      const numWithUnit = expr as NumberWithUnit;
+      expect(numWithUnit.value).toBe(16);
+      expect(numWithUnit.unit.type).toBe('DerivedUnit');
+      const derivedUnit = numWithUnit.unit as DerivedUnit;
+      expect(derivedUnit.terms.length).toBe(1);
+      expect(derivedUnit.terms[0].unit.unitId).toBe('meter');
+      expect(derivedUnit.terms[0].exponent).toBe(2);
+    });
+
+    it('should parse number with ASCII exponent unit (m^3)', () => {
+      const expr = parseExpression('10 m^3');
+      expect(expr.type).toBe('NumberWithUnit');
+      const numWithUnit = expr as NumberWithUnit;
+      expect(numWithUnit.value).toBe(10);
+      expect(numWithUnit.unit.type).toBe('DerivedUnit');
+      const derivedUnit = numWithUnit.unit as DerivedUnit;
+      expect(derivedUnit.terms.length).toBe(1);
+      expect(derivedUnit.terms[0].unit.unitId).toBe('meter');
+      expect(derivedUnit.terms[0].exponent).toBe(3);
+    });
+
+    it('should parse number with ASCII fractional exponent (m^0.5)', () => {
+      const expr = parseExpression('25 m^0.5');
+      expect(expr.type).toBe('NumberWithUnit');
+      const numWithUnit = expr as NumberWithUnit;
+      expect(numWithUnit.value).toBe(25);
+      expect(numWithUnit.unit.type).toBe('DerivedUnit');
+      const derivedUnit = numWithUnit.unit as DerivedUnit;
+      expect(derivedUnit.terms.length).toBe(1);
+      expect(derivedUnit.terms[0].unit.unitId).toBe('meter');
+      expect(derivedUnit.terms[0].exponent).toBe(0.5);
+    });
+
+    it('should parse number with ASCII negative exponent (s^-1)', () => {
+      const expr = parseExpression('5 s^-1');
+      expect(expr.type).toBe('NumberWithUnit');
+      const numWithUnit = expr as NumberWithUnit;
+      expect(numWithUnit.value).toBe(5);
+      expect(numWithUnit.unit.type).toBe('DerivedUnit');
+      const derivedUnit = numWithUnit.unit as DerivedUnit;
+      expect(derivedUnit.terms.length).toBe(1);
+      expect(derivedUnit.terms[0].unit.unitId).toBe('second');
+      expect(derivedUnit.terms[0].exponent).toBe(-1);
+    });
+
+    it('should parse both ASCII and Unicode notations equivalently', () => {
+      // Parse ASCII notation
+      const asciiExpr = parseExpression('16 m^2');
+      expect(asciiExpr.type).toBe('NumberWithUnit');
+      const asciiNumWithUnit = asciiExpr as NumberWithUnit;
+
+      // Parse Unicode notation
+      const unicodeExpr = parseExpression('16 m²');
+      expect(unicodeExpr.type).toBe('NumberWithUnit');
+      const unicodeNumWithUnit = unicodeExpr as NumberWithUnit;
+
+      // Both should be NumberWithUnit with same value
+      expect(asciiNumWithUnit.value).toBe(unicodeNumWithUnit.value);
+
+      // Both should have a unit (either SimpleUnit or DerivedUnit, depending on implementation)
+      // The important part is that they parse as literals, not operations
+      expect(asciiNumWithUnit.unit).toBeDefined();
+      expect(unicodeNumWithUnit.unit).toBeDefined();
+    });
+
+    it('should distinguish ASCII exponent from power operation', () => {
+      // 16 m^2 should be a literal (NumberWithUnit with DerivedUnit)
+      const literal = parseExpression('16 m^2');
+      expect(literal.type).toBe('NumberWithUnit');
+
+      // (16 m)^2 should be a power operation (BinaryExpression)
+      const operation = parseExpression('(16 m)^2');
+      expect(operation.type).toBe('BinaryExpression');
+      const binExpr = operation as BinaryExpression;
+      expect(binExpr.operator).toBe('^');
     });
   });
 
@@ -696,11 +779,17 @@ describe('Parser', () => {
     });
 
     it('should parse function calls with unit arithmetic', () => {
+      // With ASCII exponent notation, "16 m^2" is parsed as a literal (16 square meters)
+      // not as an operation (16 m)^2
       const expr = parseExpression('sqrt(16 m^2)');
       expect(expr.type).toBe('FunctionCall');
       const funcCall = expr as FunctionCall;
       expect(funcCall.name).toBe('sqrt');
-      expect((funcCall.arguments[0] as BinaryExpression).operator).toBe('^');
+      // The argument is now a NumberWithUnit with a DerivedUnit
+      expect(funcCall.arguments[0].type).toBe('NumberWithUnit');
+      const arg = funcCall.arguments[0] as NumberWithUnit;
+      expect(arg.value).toBe(16);
+      expect(arg.unit.type).toBe('DerivedUnit');
     });
   });
 

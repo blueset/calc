@@ -519,7 +519,40 @@ export class Parser {
       const units: Array<{ value: number; unit: UnitExpression }> = [];
 
       // First value-unit pair
-      const firstUnit = this.parseUnit();
+      let firstUnit: UnitExpression = this.parseUnit();
+
+      // Check for ASCII exponent notation (e.g., "m^2" should parse like "m²")
+      // This makes "16 m^2" parse as NumberWithUnit(16, DerivedUnit([{unit: m, exponent: 2}]))
+      // instead of as operation (16 m)^2
+      if (this.check(TokenType.CARET)) {
+        this.advance(); // consume CARET
+
+        // Handle negative exponents (e.g., s^-1)
+        let isNegative = false;
+        if (this.check(TokenType.MINUS)) {
+          isNegative = true;
+          this.advance(); // consume MINUS
+        }
+
+        if (!this.check(TokenType.NUMBER)) {
+          throw new Error(`Expected number after ^ in unit exponent at ${this.currentToken().start.line}:${this.currentToken().start.column}`);
+        }
+        const exponentToken = this.currentToken();
+        this.advance();
+        let exponent = parseFloat(exponentToken.value);
+        if (isNegative) {
+          exponent = -exponent;
+        }
+
+        // Wrap the SimpleUnit in a DerivedUnit with the exponent
+        const derivedUnit = createDerivedUnit(
+          [{ unit: firstUnit as SimpleUnit, exponent: exponent }],
+          firstUnit.start,
+          exponentToken.end
+        );
+        firstUnit = derivedUnit;
+      }
+
       units.push({ value, unit: firstUnit });
 
       // Check for additional value-unit pairs (composite unit)
