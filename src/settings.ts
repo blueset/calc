@@ -25,7 +25,7 @@ export interface Settings {
 
   // Number Formatting Settings
   /**
-   * Number of decimal places to display (default: 2)
+   * Number of decimal places to display (default: -1)
    * Set to -1 for automatic precision based on magnitude
    */
   precision: number;
@@ -114,7 +114,7 @@ export const defaultSettings: Settings = {
   fontFamily: 'monospace',
 
   // Number formatting defaults
-  precision: 2,
+  precision: -1, // Automatic precision
   angleUnit: 'degree',
   decimalSeparator: '.',
   digitGroupingSeparator: ' ',

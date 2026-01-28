@@ -3,6 +3,9 @@ import { Parser } from './parser';
 import { DataLoader } from './data-loader';
 import { LexerError, ParserError, RuntimeError, LineError } from './error-handling';
 import { Document, Line } from './ast';
+import { Evaluator, Value, ErrorValue } from './evaluator';
+import { Formatter } from './formatter';
+import { Settings, defaultSettings } from './settings';
 
 /**
  * Result of a single line calculation
@@ -28,13 +31,20 @@ export interface CalculationResult {
 
 /**
  * Calculator orchestrator
- * Coordinates lexer, parser, and evaluator with comprehensive error collection
+ * Coordinates lexer, parser, evaluator, and formatter with comprehensive error collection
  */
 export class Calculator {
   private dataLoader: DataLoader;
+  private evaluator: Evaluator;
+  private formatter: Formatter;
 
-  constructor(dataLoader: DataLoader) {
+  constructor(dataLoader: DataLoader, settings: Settings = defaultSettings) {
     this.dataLoader = dataLoader;
+    this.evaluator = new Evaluator(dataLoader, {
+      variant: settings.imperialUnits,
+      angleUnit: settings.angleUnit
+    });
+    this.formatter = new Formatter(settings);
   }
 
   /**
@@ -51,19 +61,100 @@ export class Calculator {
     const { ast, errors: parserErrors } = parser.parseDocument();
 
     // Phase 3: Evaluate
-    // TODO (Phase 7): Wire up evaluator.evaluateDocument() and format results
     const results: LineResult[] = [];
     const runtimeErrors: RuntimeError[] = [];
+    let lineValues: Map<Line, Value | null> | null = null;
 
+    try {
+      lineValues = this.evaluator.evaluateDocument(ast);
+    } catch (error) {
+      // Catch any unexpected thrown errors during evaluation
+      // Mark all lines as having errors
+      for (let i = 0; i < ast.lines.length; i++) {
+        const line = ast.lines[i];
+        const lineNumber = i + 1;
+
+        results.push({
+          line: lineNumber,
+          type: line.type as any,
+          result: null,
+          hasError: true
+        });
+
+        // Create a runtime error for the first line
+        if (i === 0) {
+          runtimeErrors.push(
+            new RuntimeError(
+              error instanceof Error ? error.message : String(error),
+              line.start,
+              line.end
+            )
+          );
+        }
+      }
+
+      return {
+        results,
+        errors: {
+          lexer: lexerErrors,
+          parser: parserErrors,
+          runtime: runtimeErrors
+        }
+      };
+    }
+
+    // Phase 4: Format results
     for (let i = 0; i < ast.lines.length; i++) {
       const line = ast.lines[i];
       const lineNumber = i + 1;
+      const value = lineValues.get(line);
+
+      let result: string | null = null;
+      let hasError = false;
+
+      // Check if this line has lexer or parser errors
+      const hasLexerError = lexerErrors.some(e => e.start.line === lineNumber);
+      const hasParserError = parserErrors.some(e => e.line === lineNumber);
+      if (hasLexerError || hasParserError) {
+        hasError = true;
+      }
+
+      // Check if the value is an error
+      if (value && value.kind === 'error') {
+        hasError = true;
+        const errorValue = value as ErrorValue;
+        runtimeErrors.push(
+          new RuntimeError(
+            errorValue.error.message,
+            line.start,
+            line.end
+          )
+        );
+        // Format the error for display
+        result = `Error: ${errorValue.error.message}`;
+      } else if (value !== null && value !== undefined) {
+        // Format the value
+        try {
+          result = this.formatter.format(value);
+        } catch (error) {
+          hasError = true;
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          runtimeErrors.push(
+            new RuntimeError(
+              `Formatting error: ${errorMessage}`,
+              line.start,
+              line.end
+            )
+          );
+          result = `Error: ${errorMessage}`;
+        }
+      }
 
       results.push({
         line: lineNumber,
         type: line.type as any,
-        result: null,  // TODO: Call evaluator and formatter (Phase 7)
-        hasError: false
+        result,
+        hasError
       });
     }
 

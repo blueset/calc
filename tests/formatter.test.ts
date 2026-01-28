@@ -31,7 +31,7 @@ describe('Formatter', () => {
     it('should format simple numbers with default precision', () => {
       const formatter = new Formatter();
       const value: NumberValue = { kind: 'number', value: 123.456789 };
-      expect(formatter.format(value)).toBe('123.46');
+      expect(formatter.format(value)).toBe('123.456789'); // 10 sig figs, trailing zeros stripped
     });
 
     it('should format numbers with custom precision', () => {
@@ -91,7 +91,7 @@ describe('Formatter', () => {
     it('should format zero correctly', () => {
       const formatter = new Formatter();
       const value: NumberValue = { kind: 'number', value: 0 };
-      expect(formatter.format(value)).toBe('0.00');
+      expect(formatter.format(value)).toBe('0'); // Auto-precision returns '0' for zero
     });
 
     it('should format numbers with space grouping separator', () => {
@@ -128,20 +128,20 @@ describe('Formatter', () => {
       const settings = createSettings({ unitDisplayStyle: 'symbol' });
       const formatter = new Formatter(settings);
       const value: NumberValue = { kind: 'number', value: 5, unit: meterUnit };
-      expect(formatter.format(value)).toBe('5.00 m');
+      expect(formatter.format(value)).toBe('5 m');
     });
 
     it('should format number with unit (name style)', () => {
       const settings = createSettings({ unitDisplayStyle: 'name' });
       const formatter = new Formatter(settings);
       const value: NumberValue = { kind: 'number', value: 5, unit: meterUnit };
-      expect(formatter.format(value)).toBe('5.00 meter');
+      expect(formatter.format(value)).toBe('5 meter');
     });
 
     it('should format fractional values with units', () => {
       const formatter = new Formatter();
       const value: NumberValue = { kind: 'number', value: 3.14159, unit: meterUnit };
-      expect(formatter.format(value)).toBe('3.14 m');
+      expect(formatter.format(value)).toBe('3.14159 m');
     });
   });
 
@@ -156,7 +156,7 @@ describe('Formatter', () => {
           { unit: secondUnit, exponent: -1 }
         ]
       };
-      expect(formatter.format(value)).toBe('50.00 m/s');
+      expect(formatter.format(value)).toBe('50 m/s');
     });
 
     it('should format derived unit with exponent > 1 (m²)', () => {
@@ -166,7 +166,7 @@ describe('Formatter', () => {
         value: 25,
         terms: [{ unit: meterUnit, exponent: 2 }]
       };
-      expect(formatter.format(value)).toBe('25.00 m²');
+      expect(formatter.format(value)).toBe('25 m²');
     });
 
     it('should format derived unit with exponent 3 (m³)', () => {
@@ -176,7 +176,7 @@ describe('Formatter', () => {
         value: 8,
         terms: [{ unit: meterUnit, exponent: 3 }]
       };
-      expect(formatter.format(value)).toBe('8.00 m³');
+      expect(formatter.format(value)).toBe('8 m³');
     });
 
     it('should format complex derived unit (kg m/s²)', () => {
@@ -191,7 +191,7 @@ describe('Formatter', () => {
           { unit: secondUnit, exponent: -2 }
         ]
       };
-      expect(formatter.format(value)).toBe('9.80 kg m/s²');
+      expect(formatter.format(value)).toBe('9.8 kg m/s²');
     });
 
     it('should format km/h correctly', () => {
@@ -204,7 +204,7 @@ describe('Formatter', () => {
           { unit: hourUnit, exponent: -1 }
         ]
       };
-      expect(formatter.format(value)).toBe('100.00 km/h');
+      expect(formatter.format(value)).toBe('100 km/h');
     });
 
     it('should format multiple numerator terms', () => {
@@ -218,7 +218,7 @@ describe('Formatter', () => {
           { unit: meterUnit, exponent: 1 }
         ]
       };
-      expect(formatter.format(value)).toBe('50.00 kg m');
+      expect(formatter.format(value)).toBe('50 kg m');
     });
 
     it('should format multiple denominator terms with parentheses', () => {
@@ -232,7 +232,7 @@ describe('Formatter', () => {
           { unit: kilometerUnit, exponent: -1 }
         ]
       };
-      expect(formatter.format(value)).toBe('10.00 m/(s km)');
+      expect(formatter.format(value)).toBe('10 m/(s km)');
     });
   });
 
@@ -246,7 +246,7 @@ describe('Formatter', () => {
           { value: 7.32, unit: inchUnit }
         ]
       };
-      expect(formatter.format(value)).toBe('5.00 ft 7.32 in');
+      expect(formatter.format(value)).toBe('5 ft 7.32 in');
     });
 
     it('should format time composite (2 hr 30 min)', () => {
@@ -261,7 +261,7 @@ describe('Formatter', () => {
         ]
       };
       // Note: hour symbol is 'h', not 'hr'
-      expect(formatter.format(value)).toBe('2.00 h 30.00 min');
+      expect(formatter.format(value)).toBe('2 h 30 min');
     });
 
     it('should format single component composite unit', () => {
@@ -270,7 +270,7 @@ describe('Formatter', () => {
         kind: 'composite',
         components: [{ value: 10, unit: meterUnit }]
       };
-      expect(formatter.format(value)).toBe('10.00 m');
+      expect(formatter.format(value)).toBe('10 m');
     });
   });
 
@@ -569,21 +569,21 @@ describe('Formatter', () => {
       const settings = createSettings({ precision: -1 });
       const formatter = new Formatter(settings);
       const value: NumberValue = { kind: 'number', value: 1234567 };
-      expect(formatter.format(value)).toBe('1.234567e+6');
+      expect(formatter.format(value)).toBe('1 234 567');
     });
 
     it('should use auto precision for small numbers', () => {
       const settings = createSettings({ precision: -1 });
       const formatter = new Formatter(settings);
       const value: NumberValue = { kind: 'number', value: 0.00001 };
-      expect(formatter.format(value)).toBe('1.000000e-5');
+      expect(formatter.format(value)).toBe('0.00001');
     });
 
     it('should use auto precision for normal numbers', () => {
       const settings = createSettings({ precision: -1 });
       const formatter = new Formatter(settings);
       const value: NumberValue = { kind: 'number', value: 123.456 };
-      expect(formatter.format(value)).toBe('123.46');
+      expect(formatter.format(value)).toBe('123.456');
     });
   });
 });

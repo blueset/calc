@@ -159,25 +159,43 @@ export class Formatter {
 
   /**
    * Format number with automatic precision based on magnitude
+   * Uses significant figures approach with trailing zero stripping for clean output
    */
   private formatNumberAutoPrecision(num: number): string {
     const absNum = Math.abs(num);
 
-    // Very large or very small numbers use scientific notation
-    if (absNum >= 1e6 || (absNum > 0 && absNum < 1e-4)) {
-      return num.toExponential(6);
+    // Special case for zero
+    if (absNum === 0) {
+      return '0';
     }
 
-    // For normal range, use appropriate decimal places
-    if (absNum >= 100) {
-      return num.toFixed(2);
-    } else if (absNum >= 1) {
-      return num.toFixed(4);
-    } else if (absNum > 0) {
-      return num.toFixed(6);
+    let formatted: string;
+
+    // Use exponential notation for very large or very small numbers
+    if (absNum >= 1e10 || absNum < 1e-6) {
+      formatted = num.toExponential(8);  // 9 significant figures
+    } else {
+      // Use significant figures for normal range
+      formatted = num.toPrecision(10);  // 10 significant figures
     }
 
-    return '0';
+    // Strip trailing zeros for clean output
+    return this.stripTrailingZeros(formatted);
+  }
+
+  /**
+   * Strip trailing zeros from formatted number string
+   * Uses parseFloat approach to leverage JavaScript's built-in zero stripping
+   */
+  private stripTrailingZeros(numStr: string): string {
+    const parsed = parseFloat(numStr);
+
+    // If original was in exponential notation, preserve that format
+    if (numStr.includes('e')) {
+      return parsed.toExponential();  // Automatically strips trailing zeros
+    } else {
+      return parsed.toString();       // Automatically strips trailing zeros
+    }
   }
 
   /**
