@@ -7,6 +7,7 @@ import type { Settings } from './settings';
 import { defaultSettings } from './settings';
 import type { Unit } from '../types/types';
 import type { PresentationFormat } from './ast';
+import { Temporal } from '@js-temporal/polyfill';
 
 /**
  * Formatter class - formats values according to settings
@@ -374,10 +375,10 @@ export class Formatter {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const mmm = monthNames[month - 1] || '';
 
-    // Day of week (requires creating a Date object)
-    const dayOfWeekNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const date = new Date(year, month - 1, day);
-    const ddd = dayOfWeekNames[date.getDay()];
+    // Day of week using Temporal (Monday=1, Sunday=7)
+    const dayOfWeekNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const temporalDate = Temporal.PlainDate.from({ year, month, day });
+    const ddd = dayOfWeekNames[temporalDate.dayOfWeek - 1];
 
     return format
       .replace('YYYY', yyyy)
@@ -447,10 +448,11 @@ export class Formatter {
 
   /**
    * Format an instant (epoch milliseconds) as ISO 8601
+   * Uses Temporal API for consistent formatting
    */
   private formatInstant(epochMs: number): string {
-    const date = new Date(epochMs);
-    return date.toISOString();
+    const instant = Temporal.Instant.fromEpochMilliseconds(epochMs);
+    return instant.toString(); // ISO 8601 format
   }
 
   /**

@@ -640,35 +640,13 @@ describe('Evaluator', () => {
       const lexer = new Lexer(input, dataLoader);
       const { tokens } = lexer.tokenize();
 
-      // Debug: Check tokens
-      console.log('Tokens:', tokens.map(t => `${t.type}:${t.value}`).join(', '));
-
       const parser = new Parser(tokens, dataLoader, input);
       const { ast: document } = parser.parseDocument();
-
-      // Debug: Check what line types were parsed
-      console.log('Line types:', document.lines.map(l => l.type));
-      for (let i = 0; i < document.lines.length; i++) {
-        const line = document.lines[i];
-        if (line.type === 'PlainText') {
-          console.log(`Line ${i}: PlainText, text="${line.text}"`);
-        }
-        if (line.type === 'ExpressionLine' && line.expression.type === 'BinaryExpression') {
-          console.log(`Line ${i}: ExpressionLine with BinaryExpression, operator=${(line.expression as any).operator}`);
-        }
-        if (line.type === 'VariableDefinition') {
-          console.log(`Line ${i}: VariableDefinition, name=${line.name}`);
-        }
-      }
 
       const results = evaluator.evaluateDocument(document);
 
       const thirdLine = document.lines[2];
       const result = results.get(thirdLine);
-
-      if (result?.kind === 'error') {
-        console.log('Error:', result.error);
-      }
 
       expect(result?.kind).toBe('number');
       if (result?.kind === 'number') {

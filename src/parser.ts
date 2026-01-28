@@ -732,8 +732,18 @@ export class Parser {
         return target;
       }
 
-      // Check for timezone
-      // TODO: Implement timezone lookup with territory resolution
+      // Check for timezone (use DataLoader to resolve timezone names)
+      const resolvedTimezone = this.dataLoader.resolveTimezone(name);
+      if (resolvedTimezone) {
+        this.advance();
+        const target: TimezoneTarget = {
+          type: 'TimezoneTarget',
+          timezone: resolvedTimezone,  // Use resolved IANA timezone
+          start,
+          end: this.previous().end
+        };
+        return target;
+      }
     }
 
     // Parse the first unit (extract superscripts in conversion target context)

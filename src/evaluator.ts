@@ -7,6 +7,7 @@ import { MathFunctions } from './functions';
 import { createErrorResult, ErrorResult } from './error-handling';
 import type { Unit } from '../types/types';
 import { getConstant } from './constants';
+import { Temporal } from '@js-temporal/polyfill';
 
 /**
  * Runtime value types
@@ -1130,12 +1131,50 @@ export class Evaluator {
   }
 
   /**
-   * Convert value to timezone
+   * Convert value to timezone using Temporal polyfill
+   * Plain values (PlainTime, PlainDateTime) are interpreted as being in the system's local timezone
    */
   private convertToTimezone(value: Value, timezone: string): Value {
-    // Timezone conversion requires Temporal polyfill (Phase 6.5)
-    // For now, return as-is
-    return value;
+    // Get system's local timezone using Temporal
+    const systemTimezone = Temporal.Now.timeZoneId();
+
+    // Convert PlainTime to ZonedDateTime
+    // Use today's date in system local timezone
+    if (value.kind === 'plainTime') {
+      const now = Temporal.Now.plainDateTimeISO(systemTimezone);
+      const plainDateTime: PlainDateTime = {
+        date: { year: now.year, month: now.month, day: now.day },
+        time: value.time
+      };
+      // Interpret as system local timezone, then convert to target
+      const instant = this.dateTimeEngine.toInstant(plainDateTime, systemTimezone);
+      const zonedDateTime = this.dateTimeEngine.toZonedDateTime(instant, timezone);
+      return { kind: 'zonedDateTime', zonedDateTime };
+    }
+
+    // Convert PlainDateTime to ZonedDateTime
+    // Interpret as system local timezone
+    if (value.kind === 'plainDateTime') {
+      const instant = this.dateTimeEngine.toInstant(value.dateTime, systemTimezone);
+      const zonedDateTime = this.dateTimeEngine.toZonedDateTime(instant, timezone);
+      return { kind: 'zonedDateTime', zonedDateTime };
+    }
+
+    // Convert Instant to ZonedDateTime in target timezone
+    if (value.kind === 'instant') {
+      const zonedDateTime = this.dateTimeEngine.toZonedDateTime(value.instant, timezone);
+      return { kind: 'zonedDateTime', zonedDateTime };
+    }
+
+    // Convert ZonedDateTime from one timezone to another
+    if (value.kind === 'zonedDateTime') {
+      // Convert to Instant first, then to target timezone
+      const instant = this.dateTimeEngine.toInstant(value.zonedDateTime.dateTime, value.zonedDateTime.timezone);
+      const zonedDateTime = this.dateTimeEngine.toZonedDateTime(instant, timezone);
+      return { kind: 'zonedDateTime', zonedDateTime };
+    }
+
+    return this.createError(`Cannot convert ${value.kind} to timezone`);
   }
 
   // Helper methods

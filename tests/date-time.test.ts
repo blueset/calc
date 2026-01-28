@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { DataLoader } from '../src/data-loader';
-import { DateTimeEngine, type PlainDate, type PlainTime, type PlainDateTime, type Duration } from '../src/date-time';
+import { DateTimeEngine, type PlainDate, type PlainTime, type PlainDateTime, type Duration, type ZonedDateTime } from '../src/date-time';
 import * as path from 'path';
 
 describe('DateTimeEngine', () => {
@@ -158,6 +158,35 @@ describe('DateTimeEngine', () => {
 
       expect(duration.days).toBe(-5);
     });
+
+    it('should subtract dates with year differences', () => {
+      const date1: PlainDate = { year: 2025, month: 6, day: 15 };
+      const date2: PlainDate = { year: 2023, month: 3, day: 10 };
+      const duration = engine.subtractPlainDates(date1, date2);
+
+      expect(duration.years).toBe(2);
+      expect(duration.months).toBe(3);
+      expect(duration.days).toBe(5);
+    });
+
+    it('should subtract dates with month differences', () => {
+      const date1: PlainDate = { year: 2024, month: 5, day: 20 };
+      const date2: PlainDate = { year: 2024, month: 2, day: 15 };
+      const duration = engine.subtractPlainDates(date1, date2);
+
+      expect(duration.months).toBe(3);
+      expect(duration.days).toBe(5);
+    });
+
+    it('should subtract dates across year boundary', () => {
+      const date1: PlainDate = { year: 2025, month: 2, day: 10 };
+      const date2: PlainDate = { year: 2024, month: 11, day: 5 };
+      const duration = engine.subtractPlainDates(date1, date2);
+
+      expect(duration.years).toBe(0);
+      expect(duration.months).toBe(3);
+      expect(duration.days).toBe(5);
+    });
   });
 
   describe('PlainTime Arithmetic', () => {
@@ -271,6 +300,59 @@ describe('DateTimeEngine', () => {
       expect(duration.days).toBe(2);
       expect(duration.hours).toBe(5);
       expect(duration.minutes).toBe(15);
+    });
+
+    it('should subtract datetimes with year differences', () => {
+      const dt1: PlainDateTime = {
+        date: { year: 2025, month: 8, day: 20 },
+        time: { hour: 14, minute: 45, second: 30, millisecond: 0 }
+      };
+      const dt2: PlainDateTime = {
+        date: { year: 2023, month: 5, day: 15 },
+        time: { hour: 10, minute: 30, second: 15, millisecond: 0 }
+      };
+      const duration = engine.subtractPlainDateTimes(dt1, dt2);
+
+      expect(duration.years).toBe(2);
+      expect(duration.months).toBe(3);
+      expect(duration.days).toBe(5);
+      expect(duration.hours).toBe(4);
+      expect(duration.minutes).toBe(15);
+      expect(duration.seconds).toBe(15);
+    });
+
+    it('should subtract datetimes with month differences', () => {
+      const dt1: PlainDateTime = {
+        date: { year: 2024, month: 6, day: 25 },
+        time: { hour: 18, minute: 0, second: 0, millisecond: 0 }
+      };
+      const dt2: PlainDateTime = {
+        date: { year: 2024, month: 3, day: 20 },
+        time: { hour: 12, minute: 30, second: 0, millisecond: 0 }
+      };
+      const duration = engine.subtractPlainDateTimes(dt1, dt2);
+
+      expect(duration.months).toBe(3);
+      expect(duration.days).toBe(5);
+      expect(duration.hours).toBe(5);
+      expect(duration.minutes).toBe(30);
+    });
+
+    it('should subtract datetimes across year boundary', () => {
+      const dt1: PlainDateTime = {
+        date: { year: 2025, month: 1, day: 15 },
+        time: { hour: 10, minute: 0, second: 0, millisecond: 0 }
+      };
+      const dt2: PlainDateTime = {
+        date: { year: 2024, month: 10, day: 10 },
+        time: { hour: 8, minute: 0, second: 0, millisecond: 0 }
+      };
+      const duration = engine.subtractPlainDateTimes(dt1, dt2);
+
+      expect(duration.years).toBe(0);
+      expect(duration.months).toBe(3);
+      expect(duration.days).toBe(5);
+      expect(duration.hours).toBe(2);
     });
 
     it('should combine date and time', () => {
@@ -416,6 +498,138 @@ describe('DateTimeEngine', () => {
       expect(result.year).toBe(2024);
       expect(result.month).toBe(2);
       expect(result.day).toBe(24); // Feb has 29 days in 2024 (leap year)
+    });
+  });
+
+  describe('Timezone Conversions (Temporal API)', () => {
+    it('should convert PlainDateTime to Instant using timezone', () => {
+      const dateTime: PlainDateTime = {
+        date: { year: 2024, month: 1, day: 15 },
+        time: { hour: 12, minute: 30, second: 0, millisecond: 0 }
+      };
+
+      // Convert to UTC
+      const instant = engine.toInstant(dateTime, 'UTC');
+
+      // Should be a valid timestamp
+      expect(instant.timestamp).toBeGreaterThan(0);
+      expect(typeof instant.timestamp).toBe('number');
+    });
+
+    it('should convert PlainDateTime to Instant with different timezones', () => {
+      const dateTime: PlainDateTime = {
+        date: { year: 2024, month: 6, day: 15 },
+        time: { hour: 12, minute: 0, second: 0, millisecond: 0 }
+      };
+
+      // Convert using different timezones
+      const utcInstant = engine.toInstant(dateTime, 'UTC');
+      const nyInstant = engine.toInstant(dateTime, 'America/New_York');
+
+      // New York is UTC-4 during summer (DST), so 12:00 NY = 16:00 UTC
+      // The timestamp should be different by 4 hours (14400000 ms)
+      const diff = utcInstant.timestamp - nyInstant.timestamp;
+      expect(Math.abs(diff)).toBeGreaterThan(0);
+    });
+
+    it('should convert Instant to ZonedDateTime using timezone', () => {
+      // Create an instant for a known time: 2024-01-15 13:00:00 UTC
+      // Using Date.UTC to ensure correct timestamp
+      const timestamp = Date.UTC(2024, 0, 15, 13, 0, 0, 0);
+      const instant = { timestamp };
+
+      // Convert to New York time
+      const zdt = engine.toZonedDateTime(instant, 'America/New_York');
+
+      expect(zdt.timezone).toBe('America/New_York');
+      expect(zdt.dateTime.date.year).toBe(2024);
+      expect(zdt.dateTime.date.month).toBe(1);
+      expect(zdt.dateTime.date.day).toBe(15);
+      // New York is UTC-5 in January (no DST), so 13:00 UTC = 08:00 EST
+      expect(zdt.dateTime.time.hour).toBe(8);
+      expect(zdt.dateTime.time.minute).toBe(0);
+    });
+
+    it('should convert Instant to ZonedDateTime in different timezones', () => {
+      // Create an instant for a known time: 2024-06-15 12:00:00 UTC
+      const timestamp = Date.UTC(2024, 5, 15, 12, 0, 0, 0);
+      const instant = { timestamp };
+
+      // Convert to different timezones
+      const utcZDT = engine.toZonedDateTime(instant, 'UTC');
+      const nyZDT = engine.toZonedDateTime(instant, 'America/New_York');
+      const tokyoZDT = engine.toZonedDateTime(instant, 'Asia/Tokyo');
+
+      // Temporal uses 'Etc/UTC' as the canonical identifier for UTC
+      expect(utcZDT.timezone).toMatch(/^(UTC|Etc\/UTC)$/);
+      expect(utcZDT.dateTime.time.hour).toBe(12);
+
+      expect(nyZDT.timezone).toBe('America/New_York');
+      // New York is UTC-4 in June (DST), so 12:00 UTC = 08:00 EDT
+      expect(nyZDT.dateTime.time.hour).toBe(8);
+
+      expect(tokyoZDT.timezone).toBe('Asia/Tokyo');
+      // Tokyo is UTC+9, so 12:00 UTC = 21:00 JST
+      expect(tokyoZDT.dateTime.time.hour).toBe(21);
+    });
+
+    it('should handle timezone resolution with territory', () => {
+      const dateTime: PlainDateTime = {
+        date: { year: 2024, month: 1, day: 15 },
+        time: { hour: 12, minute: 0, second: 0, millisecond: 0 }
+      };
+
+      // Test timezone name resolution (EST should resolve to America/New_York with US locale)
+      const resolvedTimezone = dataLoader.resolveTimezone('EST');
+      expect(resolvedTimezone).toBe('America/New_York');
+
+      // Use the resolved timezone (assert non-null after checking)
+      const instant = engine.toInstant(dateTime, resolvedTimezone!);
+      expect(instant.timestamp).toBeGreaterThan(0);
+    });
+
+    it('should handle DST transitions correctly', () => {
+      // March 10, 2024 is when DST starts in US (2:00 AM -> 3:00 AM)
+      const beforeDST: PlainDateTime = {
+        date: { year: 2024, month: 3, day: 9 },
+        time: { hour: 12, minute: 0, second: 0, millisecond: 0 }
+      };
+      const afterDST: PlainDateTime = {
+        date: { year: 2024, month: 3, day: 11 },
+        time: { hour: 12, minute: 0, second: 0, millisecond: 0 }
+      };
+
+      const beforeInstant = engine.toInstant(beforeDST, 'America/New_York');
+      const afterInstant = engine.toInstant(afterDST, 'America/New_York');
+
+      // The difference should be 48 hours minus 1 hour for DST = 47 hours
+      const diff = afterInstant.timestamp - beforeInstant.timestamp;
+      const hoursDiff = diff / (1000 * 60 * 60);
+
+      // Should be approximately 47 hours (accounting for DST)
+      expect(Math.abs(hoursDiff - 47)).toBeLessThan(0.1);
+    });
+
+    it('should convert ZonedDateTime between timezones', () => {
+      // Create a ZonedDateTime in New York
+      const nyZDT: ZonedDateTime = {
+        dateTime: {
+          date: { year: 2024, month: 6, day: 15 },
+          time: { hour: 12, minute: 0, second: 0, millisecond: 0 }
+        },
+        timezone: 'America/New_York'
+      };
+
+      // Convert to Instant, then to Tokyo time
+      const instant = engine.toInstant(nyZDT.dateTime, nyZDT.timezone);
+      const tokyoZDT = engine.toZonedDateTime(instant, 'Asia/Tokyo');
+
+      expect(tokyoZDT.timezone).toBe('Asia/Tokyo');
+      expect(tokyoZDT.dateTime.date.year).toBe(2024);
+      expect(tokyoZDT.dateTime.date.month).toBe(6);
+      // NY is UTC-4 in June, Tokyo is UTC+9, so 12:00 NY = 13 hours later = 01:00 next day Tokyo
+      expect(tokyoZDT.dateTime.date.day).toBe(16);
+      expect(tokyoZDT.dateTime.time.hour).toBe(1);
     });
   });
 });

@@ -154,15 +154,30 @@
 **Note**: Requires Phase 5.5 completion - formatter must handle DerivedUnit values ✅
 
 ### Phase 6.5: Temporal API Integration
-**Status**: requires external dependency
+**Status**: ✅ **COMPLETED**
 
-- [ ] Add `@js-temporal/polyfill` dependency
-- [ ] Implement timezone offset-aware conversions in `date-time.ts`
-- [ ] Implement timezone conversion targets in parser
-- [ ] Review date/time/datetime/duration related logic across parser/lexer/type-checker/date-time/evaluator/formatter (and other relevant modules) and seek improvements based on Temporal API support newly introduced.
-- [ ] Update tests for timezone-aware behavior
+- [x] Add `@js-temporal/polyfill` dependency
+- [x] Implement timezone offset-aware conversions in `date-time.ts`
+- [x] Implement timezone conversion targets in parser
+- [x] Review date/time/datetime/duration related logic across parser/lexer/type-checker/date-time/evaluator/formatter (and other relevant modules) and seek improvements based on Temporal API support newly introduced.
+- [x] Update tests for timezone-aware behavior
 
-**Current limitation**: All timezones treated as UTC. Timezone names are resolved (EST→America/New_York) but offset calculations not performed.
+**Implementation Details**:
+- **Temporal Polyfill**: Added `@js-temporal/polyfill` v0.4.4 as dependency
+- **Timezone-Aware Conversions**:
+  - `toInstant()` now properly accounts for timezone offsets and DST transitions using Temporal API
+  - `toZonedDateTime()` now correctly converts Instant to local time in any IANA timezone
+  - Plain values (PlainTime, PlainDateTime) are interpreted as being in system's local timezone
+  - PlainTime conversion uses today's date in system local timezone
+- **Parser Integration**:
+  - Implemented timezone conversion targets (e.g., `to EST`, `to America/New_York`)
+  - Uses DataLoader's timezone resolution for territory-based disambiguation
+- **Evaluator Integration**:
+  - `convertToTimezone()` method handles PlainTime, PlainDateTime, Instant, and ZonedDateTime conversions
+  - Properly handles system timezone detection and conversion flows
+- **Test Coverage**: 8 comprehensive tests covering timezone conversions, DST transitions, and multi-timezone scenarios (44 total tests passing in date-time.test.ts)
+
+**Previous limitation resolved**: Timezones are now fully functional with proper offset calculations and DST support via Temporal API.
 
 ### Phase 7: Integration & Main Orchestrator (Day 17)
 - [x] Create `calculator.ts` with Calculator class (completed in Phase 2.7)

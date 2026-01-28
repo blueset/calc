@@ -14,12 +14,13 @@
     "@types/node": "^25.0.10",
     "cldr": "^8.0.0",
     "fast-xml-parser": "^5.3.3",
+    "icu": "^2.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "tzdata": "^1.0.47",
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "icu": "^2.1.0"
+    "@js-temporal/polyfill": "^0.5.1"
   }
 }

@@ -1,4 +1,5 @@
 import type { DataLoader } from './data-loader';
+import { Temporal } from '@js-temporal/polyfill';
 
 /**
  * Duration representation following Temporal spec
@@ -87,60 +88,23 @@ export class DateTimeEngine {
   /**
    * Add duration to PlainDate
    * Implements month clamping: Jan 31 + 1 month = Feb 28/29
+   * Uses Temporal API for accurate date arithmetic
    */
   addToPlainDate(date: PlainDate, duration: Duration): PlainDate {
-    let year = date.year;
-    let month = date.month;
-    let day = date.day;
+    const temporalDate = Temporal.PlainDate.from({
+      year: date.year,
+      month: date.month,
+      day: date.day
+    });
 
-    // Add years
-    year += duration.years;
+    const result = temporalDate.add({
+      years: duration.years,
+      months: duration.months,
+      weeks: duration.weeks,
+      days: duration.days
+    }, { overflow: 'constrain' });  // Handles month-end clamping automatically
 
-    // Add months
-    month += duration.months;
-    while (month > 12) {
-      month -= 12;
-      year += 1;
-    }
-    while (month < 1) {
-      month += 12;
-      year -= 1;
-    }
-
-    // Clamp day to valid range for the target month
-    const maxDay = this.getDaysInMonth(year, month);
-    if (day > maxDay) {
-      day = maxDay;
-    }
-
-    // Add weeks
-    day += duration.weeks * 7;
-
-    // Add days
-    day += duration.days;
-
-    // Normalize day overflow/underflow
-    while (day > this.getDaysInMonth(year, month)) {
-      day -= this.getDaysInMonth(year, month);
-      month += 1;
-      if (month > 12) {
-        month = 1;
-        year += 1;
-      }
-    }
-    while (day < 1) {
-      month -= 1;
-      if (month < 1) {
-        month = 12;
-        year -= 1;
-      }
-      day += this.getDaysInMonth(year, month);
-    }
-
-    // If there are time components in duration, treat as PlainDateTime (handled by caller)
-    // Here we just return the date part
-
-    return { year, month, day };
+    return { year: result.year, month: result.month, day: result.day };
   }
 
   /**
@@ -154,69 +118,50 @@ export class DateTimeEngine {
 
   /**
    * Add duration to PlainTime
-   * Returns PlainDateTime if the result crosses day boundaries
+   * Returns PlainDateTime if the result crosses day boundaries or has date components
+   * Uses Temporal API for accurate time arithmetic
    */
   addToPlainTime(time: PlainTime, duration: Duration): PlainTime | PlainDateTime {
-    let millisecond = time.millisecond;
-    let second = time.second;
-    let minute = time.minute;
-    let hour = time.hour;
-    let dayOffset = 0;
+    // Check if duration has date components OR if time arithmetic might cross day boundary
+    const hasDateComponents = duration.years !== 0 || duration.months !== 0 ||
+                              duration.weeks !== 0 || duration.days !== 0;
 
-    // Add milliseconds
-    millisecond += duration.milliseconds;
-    second += Math.floor(millisecond / 1000);
-    millisecond = millisecond % 1000;
-    if (millisecond < 0) {
-      millisecond += 1000;
-      second -= 1;
+    // For time-only arithmetic, we need to detect day boundary crossing
+    // Use PlainDateTime arithmetic to detect this
+    if (hasDateComponents || duration.hours !== 0 || duration.minutes !== 0 ||
+        duration.seconds !== 0 || duration.milliseconds !== 0) {
+      const now = Temporal.Now.plainDateTimeISO();
+      const dateTime = Temporal.PlainDateTime.from({
+        year: now.year,
+        month: now.month,
+        day: now.day,
+        hour: time.hour,
+        minute: time.minute,
+        second: time.second,
+        millisecond: time.millisecond
+      });
+
+      const result = dateTime.add(duration, { overflow: 'constrain' });
+
+      // If date changed, return PlainDateTime
+      if (result.year !== now.year || result.month !== now.month || result.day !== now.day) {
+        return {
+          date: { year: result.year, month: result.month, day: result.day },
+          time: { hour: result.hour, minute: result.minute, second: result.second, millisecond: result.millisecond }
+        };
+      }
+
+      // Date didn't change, return just PlainTime
+      return {
+        hour: result.hour,
+        minute: result.minute,
+        second: result.second,
+        millisecond: result.millisecond
+      };
     }
 
-    // Add seconds
-    second += duration.seconds;
-    minute += Math.floor(second / 60);
-    second = second % 60;
-    if (second < 0) {
-      second += 60;
-      minute -= 1;
-    }
-
-    // Add minutes
-    minute += duration.minutes;
-    hour += Math.floor(minute / 60);
-    minute = minute % 60;
-    if (minute < 0) {
-      minute += 60;
-      hour -= 1;
-    }
-
-    // Add hours
-    hour += duration.hours;
-    dayOffset = Math.floor(hour / 24);
-    hour = hour % 24;
-    if (hour < 0) {
-      hour += 24;
-      dayOffset -= 1;
-    }
-
-    // If no day offset and no date components in duration, return PlainTime
-    if (dayOffset === 0 && duration.years === 0 && duration.months === 0 && duration.weeks === 0 && duration.days === 0) {
-      return { hour, minute, second, millisecond };
-    }
-
-    // Otherwise, treat as PlainDateTime (assume today's date + offset)
-    // For type-checking purposes, the caller should handle this case
-    // Here we'll return PlainDateTime with a reference date
-    const today = new Date();
-    const date = this.addToPlainDate(
-      { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() },
-      { ...duration, days: duration.days + dayOffset, hours: 0, minutes: 0, seconds: 0, milliseconds: 0 }
-    );
-
-    return {
-      date,
-      time: { hour, minute, second, millisecond }
-    };
+    // No duration at all, return unchanged time
+    return time;
   }
 
   /**
@@ -229,58 +174,24 @@ export class DateTimeEngine {
 
   /**
    * Add duration to PlainDateTime
+   * Uses Temporal API for accurate datetime arithmetic
    */
   addToPlainDateTime(dateTime: PlainDateTime, duration: Duration): PlainDateTime {
-    // Handle time components and track day overflow
-    let millisecond = dateTime.time.millisecond;
-    let second = dateTime.time.second;
-    let minute = dateTime.time.minute;
-    let hour = dateTime.time.hour;
-    let dayOffset = 0;
+    const temporal = Temporal.PlainDateTime.from({
+      year: dateTime.date.year,
+      month: dateTime.date.month,
+      day: dateTime.date.day,
+      hour: dateTime.time.hour,
+      minute: dateTime.time.minute,
+      second: dateTime.time.second,
+      millisecond: dateTime.time.millisecond
+    });
 
-    // Add milliseconds
-    millisecond += duration.milliseconds;
-    second += Math.floor(millisecond / 1000);
-    millisecond = millisecond % 1000;
-    if (millisecond < 0) {
-      millisecond += 1000;
-      second -= 1;
-    }
-
-    // Add seconds
-    second += duration.seconds;
-    minute += Math.floor(second / 60);
-    second = second % 60;
-    if (second < 0) {
-      second += 60;
-      minute -= 1;
-    }
-
-    // Add minutes
-    minute += duration.minutes;
-    hour += Math.floor(minute / 60);
-    minute = minute % 60;
-    if (minute < 0) {
-      minute += 60;
-      hour -= 1;
-    }
-
-    // Add hours
-    hour += duration.hours;
-    dayOffset = Math.floor(hour / 24);
-    hour = hour % 24;
-    if (hour < 0) {
-      hour += 24;
-      dayOffset -= 1;
-    }
-
-    // Add date components plus day offset
-    const totalDuration = { ...duration, days: duration.days + dayOffset, hours: 0, minutes: 0, seconds: 0, milliseconds: 0 };
-    const newDate = this.addToPlainDate(dateTime.date, totalDuration);
+    const result = temporal.add(duration, { overflow: 'constrain' });
 
     return {
-      date: newDate,
-      time: { hour, minute, second, millisecond }
+      date: { year: result.year, month: result.month, day: result.day },
+      time: { hour: result.hour, minute: result.minute, second: result.second, millisecond: result.millisecond }
     };
   }
 
@@ -294,49 +205,97 @@ export class DateTimeEngine {
 
   /**
    * Subtract two PlainDates to get a duration
+   * Uses Temporal API for accurate date difference calculation
    */
   subtractPlainDates(left: PlainDate, right: PlainDate): Duration {
-    // Convert both dates to day count from a reference point
-    const leftDays = this.dateToDayCount(left);
-    const rightDays = this.dateToDayCount(right);
+    const leftTemporal = Temporal.PlainDate.from({
+      year: left.year,
+      month: left.month,
+      day: left.day
+    });
+    const rightTemporal = Temporal.PlainDate.from({
+      year: right.year,
+      month: right.month,
+      day: right.day
+    });
 
-    const dayDiff = leftDays - rightDays;
+    // since() calculates right to left (left - right), which matches expected semantics
+    const duration = leftTemporal.since(rightTemporal, { largestUnit: 'year' });
 
-    return this.createDuration({ days: dayDiff });
+    return this.createDuration({
+      years: duration.years,
+      months: duration.months,
+      weeks: duration.weeks,
+      days: duration.days
+    });
   }
 
   /**
    * Subtract two PlainTimes to get a duration
+   * Uses Temporal API for accurate time difference calculation
    */
   subtractPlainTimes(left: PlainTime, right: PlainTime): Duration {
-    const leftMs = left.hour * 3600000 + left.minute * 60000 + left.second * 1000 + left.millisecond;
-    const rightMs = right.hour * 3600000 + right.minute * 60000 + right.second * 1000 + right.millisecond;
+    const leftTemporal = Temporal.PlainTime.from({
+      hour: left.hour,
+      minute: left.minute,
+      second: left.second,
+      millisecond: left.millisecond
+    });
+    const rightTemporal = Temporal.PlainTime.from({
+      hour: right.hour,
+      minute: right.minute,
+      second: right.second,
+      millisecond: right.millisecond
+    });
 
-    const diffMs = leftMs - rightMs;
-
-    const hours = Math.floor(Math.abs(diffMs) / 3600000);
-    const minutes = Math.floor((Math.abs(diffMs) % 3600000) / 60000);
-    const seconds = Math.floor((Math.abs(diffMs) % 60000) / 1000);
-    const milliseconds = Math.abs(diffMs) % 1000;
-
-    const sign = diffMs < 0 ? -1 : 1;
+    // since() calculates right to left (left - right), which matches expected semantics
+    const duration = leftTemporal.since(rightTemporal, { largestUnit: 'hour' });
 
     return this.createDuration({
-      hours: sign * hours,
-      minutes: sign * minutes,
-      seconds: sign * seconds,
-      milliseconds: sign * milliseconds
+      hours: duration.hours,
+      minutes: duration.minutes,
+      seconds: duration.seconds,
+      milliseconds: duration.milliseconds
     });
   }
 
   /**
    * Subtract two PlainDateTimes to get a duration
+   * Uses Temporal API for accurate datetime difference calculation
    */
   subtractPlainDateTimes(left: PlainDateTime, right: PlainDateTime): Duration {
-    const dateDur = this.subtractPlainDates(left.date, right.date);
-    const timeDur = this.subtractPlainTimes(left.time, right.time);
+    const leftTemporal = Temporal.PlainDateTime.from({
+      year: left.date.year,
+      month: left.date.month,
+      day: left.date.day,
+      hour: left.time.hour,
+      minute: left.time.minute,
+      second: left.time.second,
+      millisecond: left.time.millisecond
+    });
+    const rightTemporal = Temporal.PlainDateTime.from({
+      year: right.date.year,
+      month: right.date.month,
+      day: right.date.day,
+      hour: right.time.hour,
+      minute: right.time.minute,
+      second: right.time.second,
+      millisecond: right.time.millisecond
+    });
 
-    return this.addDurations(dateDur, timeDur);
+    // since() calculates right to left (left - right), which matches expected semantics
+    const duration = leftTemporal.since(rightTemporal, { largestUnit: 'year' });
+
+    return this.createDuration({
+      years: duration.years,
+      months: duration.months,
+      weeks: duration.weeks,
+      days: duration.days,
+      hours: duration.hours,
+      minutes: duration.minutes,
+      seconds: duration.seconds,
+      milliseconds: duration.milliseconds
+    });
   }
 
   /**
@@ -389,41 +348,28 @@ export class DateTimeEngine {
 
   /**
    * Add duration to Instant
+   * Uses Temporal API for accurate instant arithmetic
    */
   addToInstant(instant: Instant, duration: Duration): Instant {
-    // Convert duration to milliseconds (ignoring month/year components for now)
-    let ms = instant.timestamp;
+    const temporalInstant = Temporal.Instant.fromEpochMilliseconds(instant.timestamp);
 
-    // For years and months, we need to work in calendar space
-    // Convert to Date, add calendar components, then back to timestamp
-    const date = new Date(instant.timestamp);
-
-    // Add years and months using UTC methods
-    let year = date.getUTCFullYear() + duration.years;
-    let month = date.getUTCMonth() + duration.months;
-
-    // Normalize month
-    while (month > 11) {
-      month -= 12;
-      year += 1;
-    }
-    while (month < 0) {
-      month += 12;
-      year -= 1;
+    // For any calendar/day-based operations, work through UTC timezone
+    // This is necessary because Instant doesn't support day-level durations directly
+    if (duration.years !== 0 || duration.months !== 0 || duration.weeks !== 0 || duration.days !== 0) {
+      const zdt = temporalInstant.toZonedDateTimeISO('UTC');
+      const result = zdt.add(duration);
+      return { timestamp: Number(result.toInstant().epochMilliseconds) };
     }
 
-    date.setUTCFullYear(year, month, date.getUTCDate());
+    // For pure time-based addition (hours/minutes/seconds/milliseconds)
+    const result = temporalInstant.add({
+      hours: duration.hours,
+      minutes: duration.minutes,
+      seconds: duration.seconds,
+      milliseconds: duration.milliseconds
+    });
 
-    // Add other components
-    ms = date.getTime();
-    ms += duration.weeks * 7 * 86400000;
-    ms += duration.days * 86400000;
-    ms += duration.hours * 3600000;
-    ms += duration.minutes * 60000;
-    ms += duration.seconds * 1000;
-    ms += duration.milliseconds;
-
-    return { timestamp: ms };
+    return { timestamp: Number(result.epochMilliseconds) };
   }
 
   /**
@@ -436,76 +382,87 @@ export class DateTimeEngine {
 
   /**
    * Subtract two Instants to get a duration
+   * Uses Temporal API for accurate instant difference calculation
    */
   subtractInstants(left: Instant, right: Instant): Duration {
-    const diffMs = left.timestamp - right.timestamp;
+    const leftTemporal = Temporal.Instant.fromEpochMilliseconds(left.timestamp);
+    const rightTemporal = Temporal.Instant.fromEpochMilliseconds(right.timestamp);
 
-    const days = Math.floor(Math.abs(diffMs) / 86400000);
-    const hours = Math.floor((Math.abs(diffMs) % 86400000) / 3600000);
-    const minutes = Math.floor((Math.abs(diffMs) % 3600000) / 60000);
-    const seconds = Math.floor((Math.abs(diffMs) % 60000) / 1000);
-    const milliseconds = Math.abs(diffMs) % 1000;
+    // since() calculates right to left (left - right), which matches expected semantics
+    const duration = leftTemporal.since(rightTemporal, { largestUnit: 'hour' });
 
-    const sign = diffMs < 0 ? -1 : 1;
+    // Convert hours to days + remaining hours
+    const totalHours = duration.hours;
+    const days = Math.floor(totalHours / 24);
+    const remainingHours = totalHours % 24;
 
     return this.createDuration({
-      days: sign * days,
-      hours: sign * hours,
-      minutes: sign * minutes,
-      seconds: sign * seconds,
-      milliseconds: sign * milliseconds
+      days,
+      hours: remainingHours,
+      minutes: duration.minutes,
+      seconds: duration.seconds,
+      milliseconds: duration.milliseconds
     });
   }
 
   /**
    * Convert PlainDateTime to Instant using timezone
-   * Uses DataLoader to resolve timezone names
+   * Uses DataLoader to resolve timezone names and Temporal for timezone offset calculation
    */
   toInstant(dateTime: PlainDateTime, timezone: string): Instant {
     // Resolve timezone using DataLoader
     const ianaTimezone = this.dataLoader.resolveTimezone(timezone) || timezone;
 
-    // Note: This is a simplified implementation. A full implementation would use a library like Temporal.
-    // For now, we assume UTC for all timezones.
-    // Create a timestamp using UTC interpretation
-    const timestamp = Date.UTC(
-      dateTime.date.year,
-      dateTime.date.month - 1, // Month is 0-indexed in Date.UTC
-      dateTime.date.day,
-      dateTime.time.hour,
-      dateTime.time.minute,
-      dateTime.time.second,
-      dateTime.time.millisecond
-    );
+    // Use Temporal API for proper timezone-aware conversion
+    // Create Temporal.PlainDateTime from our internal representation
+    const temporalDateTime = Temporal.PlainDateTime.from({
+      year: dateTime.date.year,
+      month: dateTime.date.month,
+      day: dateTime.date.day,
+      hour: dateTime.time.hour,
+      minute: dateTime.time.minute,
+      second: dateTime.time.second,
+      millisecond: dateTime.time.millisecond
+    });
+
+    // Convert to Temporal.Instant using the specific timezone
+    // This properly accounts for timezone offsets and DST transitions
+    const temporalInstant = temporalDateTime.toZonedDateTime(ianaTimezone).toInstant();
+
+    // Convert Temporal.Instant to our internal Instant representation (Unix timestamp in milliseconds)
+    const timestamp = Number(temporalInstant.epochMilliseconds);
 
     return { timestamp };
   }
 
   /**
-   * Convert Instant to ZonedDateTime
+   * Convert Instant to ZonedDateTime using Temporal for proper timezone conversion
    */
   toZonedDateTime(instant: Instant, timezone: string): ZonedDateTime {
     // Resolve timezone using DataLoader
     const ianaTimezone = this.dataLoader.resolveTimezone(timezone) || timezone;
 
-    const date = new Date(instant.timestamp);
+    // Use Temporal API for proper timezone-aware conversion
+    // Create Temporal.Instant from our internal representation
+    const temporalInstant = Temporal.Instant.fromEpochMilliseconds(instant.timestamp);
 
-    // Use UTC methods to get the date/time components
-    // Note: This is a simplified implementation. A full implementation would
-    // use a proper timezone library to convert to the target timezone.
-    // For now, we assume UTC for all timezones.
+    // Convert to ZonedDateTime in the target timezone
+    // This properly accounts for timezone offsets and DST
+    const temporalZDT = temporalInstant.toZonedDateTimeISO(ianaTimezone);
+
+    // Extract components and convert to our internal representation
     return {
       dateTime: {
         date: {
-          year: date.getUTCFullYear(),
-          month: date.getUTCMonth() + 1,
-          day: date.getUTCDate()
+          year: temporalZDT.year,
+          month: temporalZDT.month,
+          day: temporalZDT.day
         },
         time: {
-          hour: date.getUTCHours(),
-          minute: date.getUTCMinutes(),
-          second: date.getUTCSeconds(),
-          millisecond: date.getUTCMilliseconds()
+          hour: temporalZDT.hour,
+          minute: temporalZDT.minute,
+          second: temporalZDT.second,
+          millisecond: temporalZDT.millisecond
         }
       },
       timezone: ianaTimezone
@@ -546,65 +503,4 @@ export class DateTimeEngine {
     return { date, time };
   }
 
-  // Helper methods
-
-  /**
-   * Get number of days in a month
-   */
-  private getDaysInMonth(year: number, month: number): number {
-    // Month is 1-12
-    if (month === 2) {
-      return this.isLeapYear(year) ? 29 : 28;
-    }
-    if ([4, 6, 9, 11].includes(month)) {
-      return 30;
-    }
-    return 31;
-  }
-
-  /**
-   * Check if a year is a leap year
-   */
-  private isLeapYear(year: number): boolean {
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-  }
-
-  /**
-   * Convert a PlainDate to a day count from year 0
-   * Used for date arithmetic
-   */
-  private dateToDayCount(date: PlainDate): number {
-    let days = 0;
-
-    // Add days for complete years
-    for (let y = 1; y < date.year; y++) {
-      days += this.isLeapYear(y) ? 366 : 365;
-    }
-
-    // Add days for complete months in the current year
-    for (let m = 1; m < date.month; m++) {
-      days += this.getDaysInMonth(date.year, m);
-    }
-
-    // Add remaining days
-    days += date.day;
-
-    return days;
-  }
-
-  /**
-   * Convert PlainDateTime to ISO string (for Date parsing)
-   */
-  private plainDateTimeToISOString(dateTime: PlainDateTime): string {
-    const { date, time } = dateTime;
-    const year = date.year.toString().padStart(4, '0');
-    const month = date.month.toString().padStart(2, '0');
-    const day = date.day.toString().padStart(2, '0');
-    const hour = time.hour.toString().padStart(2, '0');
-    const minute = time.minute.toString().padStart(2, '0');
-    const second = time.second.toString().padStart(2, '0');
-    const ms = time.millisecond.toString().padStart(3, '0');
-
-    return `${year}-${month}-${day}T${hour}:${minute}:${second}.${ms}`;
-  }
 }
