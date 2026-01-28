@@ -52,11 +52,12 @@
 - [x] Implement "in" keyword ambiguity handling for composite units
 - [x] Implement error recovery (fallback to PlainText)
 - [x] Write unit tests for parser (80 tests passing - includes Phase 2.5 time literal parsing tests)
-- [ ] Parse derived unit expressions in conversion targets (deferred from Phase 5.5)
+- [x] Parse derived unit expressions in conversion targets (deferred from Phase 5.5)
   - Recognize unit expressions like "m/s", "kg m/s²" in conversion targets
   - Create DerivedUnit AST nodes instead of requiring runtime creation
   - Update resolveUnit() in evaluator to handle DerivedUnit AST nodes
   - Prerequisite for derived unit conversions
+  - **Note**: ASCII notation (m^2) is fully supported. Unicode superscripts (m²) require lexer enhancements (lexer currently strips Unicode superscripts during tokenization)
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions

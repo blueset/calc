@@ -458,6 +458,87 @@ describe('Parser', () => {
       expect(compositeTarget.units[0].type).toBe('SimpleUnit');
       expect(compositeTarget.units[1].type).toBe('SimpleUnit');
     });
+
+    it('should parse derived unit conversion target (m/s)', () => {
+      const expr = parseExpression('100 km/h to m/s');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.operator).toBe('to');
+      expect(convExpr.target.type).toBe('UnitTarget');
+      const unitTarget = convExpr.target as any;
+      expect(unitTarget.unit.type).toBe('DerivedUnit');
+      const derivedUnit = unitTarget.unit;
+      expect(derivedUnit.terms).toHaveLength(2);
+      expect(derivedUnit.terms[0].unit.type).toBe('SimpleUnit');
+      expect(derivedUnit.terms[0].exponent).toBe(1);
+      expect(derivedUnit.terms[1].unit.type).toBe('SimpleUnit');
+      expect(derivedUnit.terms[1].exponent).toBe(-1);
+    });
+
+    it('should parse derived unit conversion target with exponent (m^2)', () => {
+      const expr = parseExpression('5 cm to m^2');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.target.type).toBe('UnitTarget');
+      const unitTarget = convExpr.target as any;
+      expect(unitTarget.unit.type).toBe('DerivedUnit');
+      const derivedUnit = unitTarget.unit;
+      expect(derivedUnit.terms).toHaveLength(1);
+      expect(derivedUnit.terms[0].exponent).toBe(2);
+    });
+
+    it('should parse derived unit with implicit multiplication (kg m/s^2)', () => {
+      const expr = parseExpression('100 N to kg m/s^2');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.target.type).toBe('UnitTarget');
+      const unitTarget = convExpr.target as any;
+      expect(unitTarget.unit.type).toBe('DerivedUnit');
+      const derivedUnit = unitTarget.unit;
+      expect(derivedUnit.terms).toHaveLength(3);
+      // kg (exponent 1)
+      expect(derivedUnit.terms[0].exponent).toBe(1);
+      // m (exponent 1)
+      expect(derivedUnit.terms[1].exponent).toBe(1);
+      // s (exponent -2, because of / and ^2)
+      expect(derivedUnit.terms[2].exponent).toBe(-2);
+    });
+
+    it('should parse derived unit with exponent before division (m^2/s)', () => {
+      const expr = parseExpression('10 J to m^2/s');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.target.type).toBe('UnitTarget');
+      const unitTarget = convExpr.target as any;
+      expect(unitTarget.unit.type).toBe('DerivedUnit');
+      const derivedUnit = unitTarget.unit;
+      expect(derivedUnit.terms).toHaveLength(2);
+      // m^2 (exponent 2)
+      expect(derivedUnit.terms[0].exponent).toBe(2);
+      // s (exponent -1)
+      expect(derivedUnit.terms[1].exponent).toBe(-1);
+    });
+
+    it('should parse derived unit with explicit multiplication (kg*m/s^2)', () => {
+      const expr = parseExpression('100 N to kg*m/s^2');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.target.type).toBe('UnitTarget');
+      const unitTarget = convExpr.target as any;
+      expect(unitTarget.unit.type).toBe('DerivedUnit');
+      const derivedUnit = unitTarget.unit;
+      expect(derivedUnit.terms).toHaveLength(3);
+      // kg (exponent 1)
+      expect(derivedUnit.terms[0].exponent).toBe(1);
+      // m (exponent 1)
+      expect(derivedUnit.terms[1].exponent).toBe(1);
+      // s (exponent -2)
+      expect(derivedUnit.terms[2].exponent).toBe(-2);
+    });
+
+    // Note: Unicode superscript tests (m², kg m/s²) are skipped because
+    // the lexer currently strips Unicode superscripts during tokenization.
+    // This requires lexer enhancements to support. ASCII notation (m^2) works fine.
   });
 
   describe('Conditional Expressions', () => {

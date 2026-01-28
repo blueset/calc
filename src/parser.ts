@@ -76,9 +76,60 @@ export class Parser {
   private dataLoader: DataLoader;
   private errorRecoveryMode: boolean = false;
 
+  // Unicode superscript to number mapping
+  private static readonly SUPERSCRIPTS: Record<string, string> = {
+    '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+    '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
+    '⁻': '-'
+  };
+
   constructor(tokens: Token[], dataLoader: DataLoader) {
     this.tokens = tokens;
     this.dataLoader = dataLoader;
+  }
+
+  /**
+   * Extract Unicode superscript exponent from unit name
+   * Returns [baseUnit, exponent] where exponent is null if no superscript found
+   *
+   * Examples:
+   *   "m²" → ["m", 2]
+   *   "m³" → ["m", 3]
+   *   "m" → ["m", null]
+   *   "m⁻¹" → ["m", -1]
+   */
+  private extractSuperscript(unitName: string): [string, number | null] {
+    // Find the position where superscripts start
+    let baseEnd = unitName.length;
+    for (let i = 0; i < unitName.length; i++) {
+      if (unitName[i] in Parser.SUPERSCRIPTS) {
+        baseEnd = i;
+        break;
+      }
+    }
+
+    // No superscript found
+    if (baseEnd === unitName.length) {
+      return [unitName, null];
+    }
+
+    // Extract base unit and superscript
+    const baseUnit = unitName.substring(0, baseEnd);
+    const superscriptStr = unitName.substring(baseEnd);
+
+    // Convert superscript to ASCII digits
+    let asciiExponent = '';
+    for (const char of superscriptStr) {
+      if (char in Parser.SUPERSCRIPTS) {
+        asciiExponent += Parser.SUPERSCRIPTS[char];
+      } else {
+        // Invalid superscript character, treat as no superscript
+        return [unitName, null];
+      }
+    }
+
+    const exponent = parseFloat(asciiExponent);
+    return [baseUnit, isNaN(exponent) ? null : exponent];
   }
 
   /**
@@ -468,24 +519,29 @@ export class Parser {
   }
 
   /**
-   * Parse a unit expression
-   *
-   * Handles:
-   * - Simple units: km, meter, hour
-   * - Derived units: m/s, kg m/s², W/m²
-   * - Units with exponents: m^2, km²
+   * Parse a unit, optionally extracting Unicode superscripts in conversion contexts
+   * @param extractSuperscript If true, extract superscripts from unit names (used in conversion targets)
    */
-  private parseUnit(): UnitExpression {
+  private parseUnit(extractSuperscript: boolean = false): SimpleUnit {
     const start = this.currentToken().start;
 
     // Simple case: single unit token
     if (this.match(TokenType.UNIT)) {
       const unitToken = this.previous();
-      const unitData = this.dataLoader.getUnitByName(unitToken.value);
+      let unitName = unitToken.value;
+
+      // In conversion target context, extract superscripts to create derived units
+      // Example: "m²" → base="m", use that for lookup
+      if (extractSuperscript) {
+        const [baseName, _] = this.extractSuperscript(unitName);
+        unitName = baseName;
+      }
+
+      const unitData = this.dataLoader.getUnitByName(unitName);
 
       // Use the unit ID if found, otherwise use the name as-is (user-defined)
-      const unitId = unitData ? unitData.id : unitToken.value;
-      return createSimpleUnit(unitId, unitToken.value, start, unitToken.end);
+      const unitId = unitData ? unitData.id : unitName;
+      return createSimpleUnit(unitId, unitName, start, unitToken.end);
     }
 
     // Special case: IN keyword can be "inches" in unit context (GRAMMAR.md line 649-652)
@@ -501,8 +557,16 @@ export class Parser {
     // Identifier as user-defined unit
     if (this.match(TokenType.IDENTIFIER)) {
       const unitToken = this.previous();
+      let unitName = unitToken.value;
+
+      // In conversion target context, extract superscripts
+      if (extractSuperscript) {
+        const [baseName, _] = this.extractSuperscript(unitName);
+        unitName = baseName;
+      }
+
       // User-defined units use the name as the ID
-      return createSimpleUnit(unitToken.value, unitToken.value, start, unitToken.end);
+      return createSimpleUnit(unitName, unitName, start, unitToken.end);
     }
 
     throw new Error(`Expected unit at ${start.line}:${start.column}`);
@@ -595,8 +659,23 @@ export class Parser {
       // TODO: Implement timezone lookup with territory resolution
     }
 
-    // Otherwise, parse as unit target (single or composite)
-    const firstUnit = this.parseUnit();
+    // Parse the first unit (extract superscripts in conversion target context)
+    const firstUnitToken = this.currentToken();
+    const firstUnitOriginalValue = firstUnitToken.value;
+    const firstUnit = this.parseUnit(true);  // extractSuperscript=true
+
+    // Check if the first unit token had a Unicode superscript (e.g., "m²")
+    const [, firstUnitSuperscript] = this.extractSuperscript(firstUnitOriginalValue);
+    const hasFirstUnitSuperscript = firstUnitSuperscript !== null;
+
+    // Check if this is a derived unit expression by looking ahead
+    // Derived units have operators: *, /, ^, Unicode superscripts, or implicit multiplication followed by /
+    // Examples: "m/s", "m²", "kg m/s²" (implicit * between kg and m)
+    if (hasFirstUnitSuperscript || this.isDerivedUnitExpression()) {
+      // Parse as derived unit expression
+      const derivedUnit = this.parseDerivedUnitExpression(firstUnit, firstUnitOriginalValue, start);
+      return createUnitTarget(derivedUnit, start, derivedUnit.end);
+    }
 
     // Check if there are more units (for composite unit like "ft in")
     const units: UnitExpression[] = [firstUnit];
@@ -625,6 +704,151 @@ export class Parser {
 
     // Otherwise, single unit target
     return createUnitTarget(firstUnit, start, end);
+  }
+
+  /**
+   * Check if the current position indicates a derived unit expression
+   * Derived units have explicit operators (*, /, ^), Unicode superscripts,
+   * or implicit multiplication followed by division/exponentiation
+   *
+   * Examples:
+   *   "m/s" - explicit division
+   *   "m²" or "m^2" - explicit exponentiation
+   *   "kg m/s²" - implicit multiplication (no operator between kg and m) followed by division
+   */
+  private isDerivedUnitExpression(): boolean {
+    // Check for explicit operators immediately after the first unit
+    if (this.check(TokenType.STAR) || this.check(TokenType.SLASH) || this.check(TokenType.CARET)) {
+      return true;
+    }
+
+    // Check for implicit multiplication: unit followed by another unit, then an operator
+    // This handles cases like "kg m/s²" where kg*m is implicit
+    if (this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER)) {
+      // Look ahead to see if there's an operator or superscript after the next unit
+      const savedPosition = this.current;
+
+      // Get the next unit token to check for Unicode superscript
+      const nextToken = this.currentToken();
+      const [, unicodeExponent] = this.extractSuperscript(nextToken.value);
+
+      // Skip the next unit
+      this.advance(); // Skip UNIT or IDENTIFIER
+
+      // Check for Unicode superscript in the unit itself
+      if (unicodeExponent !== null) {
+        this.current = savedPosition;
+        return true;
+      }
+
+      // Check for exponentiation after this unit
+      if (this.check(TokenType.CARET)) {
+        this.current = savedPosition;
+        return true;
+      }
+
+      // Check for multiplication or division operators
+      const hasOperator = this.check(TokenType.STAR) || this.check(TokenType.SLASH);
+
+      // Restore position
+      this.current = savedPosition;
+
+      return hasOperator;
+    }
+
+    return false;
+  }
+
+  /**
+   * Parse a derived unit expression (e.g., "m/s", "kg m/s²", "m²")
+   *
+   * Grammar:
+   *   derived_unit = unit_term (('*' | '/' | implicit_multiply) unit_term)*
+   *   unit_term = simple_unit ('^' number)?
+   *   implicit_multiply = no operator between units
+   *
+   * Examples - "m/s" becomes [{m, 1}, {s, -1}]
+   *            "kg m/s²" becomes [{kg, 1}, {m, 1}, {s, -2}]
+   *            "m²/s" becomes [{m, 2}, {s, -1}]
+   *            "m²" becomes [{m, 2}]
+   *
+   * @param firstUnit The first unit that was already parsed (with superscripts extracted)
+   * @param firstUnitOriginalValue The original token value before extraction (to check for Unicode superscripts)
+   * @param start The start location
+   */
+  private parseDerivedUnitExpression(firstUnit: SimpleUnit, firstUnitOriginalValue: string, start: SourceLocation): DerivedUnit {
+    const terms: UnitTerm[] = [];
+
+    // Parse first unit's optional exponent (ASCII "^2" or Unicode "²")
+    let firstExponent = 1;
+
+    // Check for Unicode superscript in the original token value
+    const [, unicodeExponent] = this.extractSuperscript(firstUnitOriginalValue);
+    if (unicodeExponent !== null) {
+      firstExponent = unicodeExponent;
+    } else if (this.match(TokenType.CARET)) {
+      // ASCII notation "^2"
+      this.consume(TokenType.NUMBER, "Expected number after '^' in unit exponent");
+      const exponentToken = this.previous();
+      firstExponent = parseFloat(exponentToken.value);
+    }
+
+    terms.push({ unit: firstUnit, exponent: firstExponent });
+
+    // Parse remaining terms with explicit (*,/) or implicit multiplication
+    while (this.check(TokenType.STAR) || this.check(TokenType.SLASH) || this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER)) {
+      // Determine the operator
+      let isMultiply = true; // Default for implicit multiplication
+
+      if (this.check(TokenType.STAR) || this.check(TokenType.SLASH)) {
+        const operator = this.advance();
+        isMultiply = operator.type === TokenType.STAR;
+      }
+      // else: implicit multiplication (no operator consumed)
+
+      // Check if this is actually a unit or an identifier that's a unit
+      if (!this.check(TokenType.UNIT) && !this.check(TokenType.IDENTIFIER)) {
+        break; // Not a unit, stop parsing
+      }
+
+      // For identifiers, check if it's actually a unit (not a keyword or presentation format)
+      if (this.check(TokenType.IDENTIFIER)) {
+        const name = this.currentToken().value.toLowerCase();
+        const presentationFormats = ['binary', 'octal', 'hex', 'fraction', 'scientific', 'ordinal'];
+        const properties = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'dayOfWeek', 'dayOfYear', 'weekOfYear'];
+        if (presentationFormats.includes(name) || properties.includes(name)) {
+          break; // Not a unit, stop parsing
+        }
+      }
+
+      // Parse the unit (extract superscripts)
+      const unitToken = this.currentToken();
+      let unit = this.parseUnit(true);  // extractSuperscript=true
+
+      // Parse optional exponent (ASCII "^2" or Unicode "²")
+      let exponent = 1;
+
+      // Check for Unicode superscript in the original unit token
+      const [, unicodeExponent2] = this.extractSuperscript(unitToken.value);
+      if (unicodeExponent2 !== null) {
+        exponent = unicodeExponent2;
+      } else if (this.match(TokenType.CARET)) {
+        // ASCII notation "^2"
+        this.consume(TokenType.NUMBER, "Expected number after '^' in unit exponent");
+        const exponentToken = this.previous();
+        exponent = parseFloat(exponentToken.value);
+      }
+
+      // Apply division by negating exponent
+      if (!isMultiply) {
+        exponent = -exponent;
+      }
+
+      terms.push({ unit, exponent });
+    }
+
+    const end = this.previous().end;
+    return createDerivedUnit(terms, start, end);
   }
 
   /**

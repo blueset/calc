@@ -862,13 +862,23 @@ export class Evaluator {
    * Convert value to unit
    */
   private convertToUnit(value: Value, unitExpr: AST.UnitExpression): Value {
-    if (value.kind !== 'number') {
+    if (value.kind !== 'number' && value.kind !== 'derivedUnit') {
       return this.createError(`Cannot convert ${value.kind} to unit`);
     }
 
+    // Handle derived unit target (e.g., "100 km/h to m/s")
+    if (unitExpr.type === 'DerivedUnit') {
+      return this.convertToDerivedUnit(value, unitExpr);
+    }
+
+    // Handle simple unit target
     const targetUnit = this.resolveUnit(unitExpr);
     if (!targetUnit) {
       return this.createError('Unknown target unit');
+    }
+
+    if (value.kind !== 'number') {
+      return this.createError('Cannot convert derived unit to simple unit (not yet implemented)');
     }
 
     if (!value.unit) {
@@ -885,6 +895,21 @@ export class Evaluator {
     } catch (e) {
       return this.createError(`Conversion error: ${e}`);
     }
+  }
+
+  /**
+   * Convert value to derived unit (e.g., "100 km/h to m/s")
+   *
+   * TODO: This is a placeholder implementation for Phase 5 task.
+   * Full implementation requires:
+   * - Expanding source and target to base units
+   * - Computing conversion factors between dimensions
+   * - Applying conversion and reconstructing derived unit
+   */
+  private convertToDerivedUnit(value: Value, targetExpr: AST.DerivedUnit): Value {
+    // For now, return an error indicating this is not yet implemented
+    // This will be implemented in Phase 5 (deferred task)
+    return this.createError('Derived unit conversions not yet implemented (Phase 5 task)');
   }
 
   /**
@@ -1069,16 +1094,21 @@ export class Evaluator {
   }
 
   /**
-   * Resolve a unit expression to a Unit object
-   * Note: Currently only handles SimpleUnit because parser doesn't create DerivedUnit AST nodes yet.
-   * Derived units are created during evaluation, not parsing.
+   * Resolve a unit expression to a Unit object from the data loader
+   *
+   * Returns:
+   * - For SimpleUnit: the resolved Unit object from data loader
+   * - For DerivedUnit: null (caller should check unitExpr.type and handle separately)
+   *
+   * Note: DerivedUnit AST nodes are now created by the parser in conversion targets.
+   * Callers should check for DerivedUnit type and use convertToDerivedUnit() instead.
    */
   private resolveUnit(unitExpr: AST.UnitExpression): Unit | null {
     if (unitExpr.type === 'SimpleUnit') {
       return this.dataLoader.getUnitById(unitExpr.unitId) || null;
     }
-    // DerivedUnit handling deferred: Parser doesn't create DerivedUnit AST nodes yet.
-    // When implemented, would need to resolve each term's unit and return structured data.
+    // DerivedUnit: return null to indicate this needs special handling
+    // The caller should check unitExpr.type and call convertToDerivedUnit() instead
     return null;
   }
 
