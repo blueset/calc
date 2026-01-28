@@ -28,9 +28,9 @@ beforeAll(async () => {
 // Helper to parse and evaluate an expression string
 function evaluate(input: string): Value {
   const lexer = new Lexer(input, dataLoader);
-  const tokens = lexer.tokenize();
-  const parser = new Parser(tokens, dataLoader);
-  const document = parser.parseDocument();
+  const { tokens } = lexer.tokenize();
+  const parser = new Parser(tokens, dataLoader, input);
+  const { ast: document } = parser.parseDocument();
 
   const results = evaluator.evaluateDocument(document);
 
@@ -410,10 +410,11 @@ describe('Evaluator', () => {
 
   describe('Variable Assignments', () => {
     it('should assign and retrieve variables', () => {
-      const lexer = new Lexer('x = 5\nx + 10', dataLoader);
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader);
-      const document = parser.parseDocument();
+      const input = 'x = 5\nx + 10';
+      const lexer = new Lexer(input, dataLoader);
+      const { tokens } = lexer.tokenize();
+      const parser = new Parser(tokens, dataLoader, input);
+      const { ast: document } = parser.parseDocument();
       const results = evaluator.evaluateDocument(document);
 
       const secondLine = document.lines[1];
@@ -424,14 +425,15 @@ describe('Evaluator', () => {
     });
 
     it('should handle multiple variable assignments', () => {
-      const lexer = new Lexer('a = 10\nb = 20\na + b', dataLoader);
-      const tokens = lexer.tokenize();
+      const input = 'a = 10\nb = 20\na + b';
+      const lexer = new Lexer(input, dataLoader);
+      const { tokens } = lexer.tokenize();
 
       // Debug: Check tokens
       console.log('Tokens:', tokens.map(t => `${t.type}:${t.value}`).join(', '));
 
-      const parser = new Parser(tokens, dataLoader);
-      const document = parser.parseDocument();
+      const parser = new Parser(tokens, dataLoader, input);
+      const { ast: document } = parser.parseDocument();
 
       // Debug: Check what line types were parsed
       console.log('Line types:', document.lines.map(l => l.type));
@@ -464,10 +466,11 @@ describe('Evaluator', () => {
     });
 
     it('should handle variables with units', () => {
-      const lexer = new Lexer('distance = 5 km\ndistance to m', dataLoader);
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader);
-      const document = parser.parseDocument();
+      const input = 'distance = 5 km\ndistance to m';
+      const lexer = new Lexer(input, dataLoader);
+      const { tokens } = lexer.tokenize();
+      const parser = new Parser(tokens, dataLoader, input);
+      const { ast: document } = parser.parseDocument();
       const results = evaluator.evaluateDocument(document);
 
       const secondLine = document.lines[1];

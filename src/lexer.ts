@@ -8,7 +8,7 @@ import {
 } from './tokens';
 import { DataLoader } from './data-loader';
 import { isConstant } from './constants';
-import { LexerError } from './error-handling';
+import { LexerError, TokenizeResult } from './error-handling';
 
 /**
  * Context-sensitive lexer for the Notepad Calculator Language
@@ -27,6 +27,7 @@ export class Lexer {
   private column: number = 1;
   private dataLoader: DataLoader;
   private lastToken: Token | null = null;
+  private errors: LexerError[] = [];  // Collect errors instead of throwing
 
   constructor(input: string, dataLoader: DataLoader) {
     this.input = input;
@@ -35,22 +36,54 @@ export class Lexer {
 
   /**
    * Tokenize the entire input
+   * Returns both tokens and collected errors
    */
-  tokenize(): Token[] {
+  tokenize(): TokenizeResult {
     const tokens: Token[] = [];
+    this.errors = [];  // Reset errors for each tokenize call
 
     while (!this.isAtEnd()) {
-      const token = this.nextToken();
-      if (token) {
-        tokens.push(token);
-        this.lastToken = token;
+      try {
+        const token = this.nextToken();
+        if (token) {
+          tokens.push(token);
+          this.lastToken = token;
+        }
+      } catch (error) {
+        if (error instanceof LexerError) {
+          // Record error instead of propagating
+          this.errors.push(error);
+
+          // Skip to next line to continue processing
+          this.skipToNextLine();
+        } else {
+          // Unexpected error, re-throw
+          throw error;
+        }
       }
     }
 
     // Add EOF token
     tokens.push(this.createToken(TokenType.EOF, '', this.currentLocation(), this.currentLocation()));
 
-    return tokens;
+    return {
+      tokens,
+      errors: this.errors
+    };
+  }
+
+  /**
+   * Skip to the next line after encountering an error
+   * Consumes tokens until newline or EOF
+   */
+  private skipToNextLine(): void {
+    // Consume characters until newline or EOF
+    while (!this.isAtEnd() && this.peek() !== '\n') {
+      this.advance();
+    }
+    if (this.peek() === '\n') {
+      this.advance();  // Consume the newline
+    }
   }
 
   /**

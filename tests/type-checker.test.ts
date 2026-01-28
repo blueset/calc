@@ -17,9 +17,9 @@ describe('TypeChecker', () => {
 
   function parseAndCheck(input: string) {
     const lexer = new Lexer(input, dataLoader);
-    const tokens = lexer.tokenize();
-    const parser = new Parser(tokens, dataLoader);
-    const document = parser.parseDocument();
+    const { tokens } = lexer.tokenize();
+    const parser = new Parser(tokens, dataLoader, input);
+    const { ast: document } = parser.parseDocument();
     const lineTypes = typeChecker.checkDocument(document);
 
     const firstLine = document.lines[0];
@@ -383,9 +383,9 @@ describe('TypeChecker', () => {
       const input = `x = 5
 x`;
       const lexer = new Lexer(input, dataLoader);
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader);
-      const document = parser.parseDocument();
+      const { tokens } = lexer.tokenize();
+      const parser = new Parser(tokens, dataLoader, input);
+      const { ast: document } = parser.parseDocument();
       const lineTypes = typeChecker.checkDocument(document);
 
       const secondLine = document.lines[1];
@@ -397,9 +397,9 @@ x`;
       const input = `distance = 5 m
 distance`;
       const lexer = new Lexer(input, dataLoader);
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader);
-      const document = parser.parseDocument();
+      const { tokens } = lexer.tokenize();
+      const parser = new Parser(tokens, dataLoader, input);
+      const { ast: document } = parser.parseDocument();
       const lineTypes = typeChecker.checkDocument(document);
 
       const secondLine = document.lines[1];
@@ -417,9 +417,9 @@ distance`;
 y = 3 m
 x + y`;
       const lexer = new Lexer(input, dataLoader);
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader);
-      const document = parser.parseDocument();
+      const { tokens } = lexer.tokenize();
+      const parser = new Parser(tokens, dataLoader, input);
+      const { ast: document } = parser.parseDocument();
       const lineTypes = typeChecker.checkDocument(document);
 
       const thirdLine = document.lines[2];
@@ -502,9 +502,9 @@ x + y`;
       const input = `date = 2024 Jan 1
 date + 3 days`;
       const lexer = new Lexer(input, dataLoader);
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader);
-      const document = parser.parseDocument();
+      const { tokens } = lexer.tokenize();
+      const parser = new Parser(tokens, dataLoader, input);
+      const { ast: document } = parser.parseDocument();
       const lineTypes = typeChecker.checkDocument(document);
 
       const secondLine = document.lines[1];
@@ -518,9 +518,9 @@ date + 3 days`;
 date2 = 2024 Jan 1
 date1 - date2`;
       const lexer = new Lexer(input, dataLoader);
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader);
-      const document = parser.parseDocument();
+      const { tokens } = lexer.tokenize();
+      const parser = new Parser(tokens, dataLoader, input);
+      const { ast: document } = parser.parseDocument();
       const lineTypes = typeChecker.checkDocument(document);
 
       const thirdLine = document.lines[2];
@@ -537,9 +537,9 @@ date1 - date2`;
 dur2 = 2 hours
 dur1 + dur2`;
       const lexer = new Lexer(input, dataLoader);
-      const tokens = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader);
-      const document = parser.parseDocument();
+      const { tokens } = lexer.tokenize();
+      const parser = new Parser(tokens, dataLoader, input);
+      const { ast: document } = parser.parseDocument();
       const lineTypes = typeChecker.checkDocument(document);
 
       const thirdLine = document.lines[2];

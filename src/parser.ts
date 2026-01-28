@@ -58,6 +58,7 @@ import {
 } from './ast';
 import { DataLoader } from './data-loader';
 import { isConstant, getConstantValue } from './constants';
+import { ParserError, LineError, DocumentResult } from './error-handling';
 
 /**
  * Parser for the Notepad Calculator Language
@@ -75,6 +76,8 @@ export class Parser {
   private current: number = 0;
   private dataLoader: DataLoader;
   private errorRecoveryMode: boolean = false;
+  private lineErrors: Map<number, ParserError> = new Map();  // Track errors by line
+  private inputLines: string[] = [];  // Store raw input lines for error reporting
 
   // Unicode superscript to number mapping
   private static readonly SUPERSCRIPTS: Record<string, string> = {
@@ -83,9 +86,13 @@ export class Parser {
     '⁻': '-'
   };
 
-  constructor(tokens: Token[], dataLoader: DataLoader) {
+  constructor(tokens: Token[], dataLoader: DataLoader, input?: string) {
     this.tokens = tokens;
     this.dataLoader = dataLoader;
+    // Split input into lines for error reporting
+    if (input) {
+      this.inputLines = input.split('\n');
+    }
   }
 
   /**
@@ -134,10 +141,12 @@ export class Parser {
 
   /**
    * Parse the entire document
+   * Returns both AST and collected errors
    */
-  parseDocument(): Document {
+  parseDocument(): DocumentResult {
     const start = this.currentToken().start;
     const lines: Line[] = [];
+    this.lineErrors.clear();  // Reset errors for each parse
 
     while (!this.isAtEnd()) {
       // Skip newlines
@@ -147,6 +156,7 @@ export class Parser {
 
       if (this.isAtEnd()) break;
 
+      const lineNumber = this.currentToken().start.line;
       const line = this.parseLine();
       lines.push(line);
 
@@ -157,8 +167,31 @@ export class Parser {
       }
     }
 
-    const end = this.previous().end;
-    return createDocument(lines, start, end);
+    // Handle empty document case
+    const end = this.current > 0 ? this.previous().end : start;
+    const ast = createDocument(lines, start, end);
+
+    // Convert lineErrors map to LineError array
+    const errors: LineError[] = Array.from(this.lineErrors.entries()).map(([line, error]) => ({
+      line,
+      error,
+      rawText: this.getRawLineText(line)
+    }));
+
+    return {
+      ast,
+      errors
+    };
+  }
+
+  /**
+   * Get the raw text for a given line number (1-indexed)
+   */
+  private getRawLineText(lineNumber: number): string {
+    if (lineNumber > 0 && lineNumber <= this.inputLines.length) {
+      return this.inputLines[lineNumber - 1];
+    }
+    return '';
   }
 
   /**
@@ -220,6 +253,7 @@ export class Parser {
     } catch (error) {
       // Error recovery: consume tokens until newline and create PlainText
       this.errorRecoveryMode = true;
+      const lineNumber = start.line;
       const textTokens: string[] = [];
 
       while (!this.check(TokenType.NEWLINE) && !this.isAtEnd()) {
@@ -229,6 +263,16 @@ export class Parser {
 
       const text = textTokens.join(' ');
       const end = this.previous().end;
+
+      // Record the error if it's a ParserError
+      if (error instanceof ParserError) {
+        this.lineErrors.set(lineNumber, error);
+      } else if (error instanceof Error) {
+        // Convert generic Error to ParserError
+        const parserError = new ParserError(error.message, start, end);
+        this.lineErrors.set(lineNumber, parserError);
+      }
+
       return createPlainText(text, start, end);
     }
   }

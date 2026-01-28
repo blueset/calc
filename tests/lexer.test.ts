@@ -12,9 +12,13 @@ describe('Lexer', () => {
     await dataLoader.load(path.join(__dirname, '..', 'data'));
   });
 
-  function tokenize(input: string) {
+  function tokenizeWithErrors(input: string) {
     const lexer = new Lexer(input, dataLoader);
     return lexer.tokenize();
+  }
+
+  function tokenize(input: string) {
+    return tokenizeWithErrors(input).tokens;
   }
 
   function getTokenTypes(input: string): TokenType[] {
@@ -414,9 +418,13 @@ describe('Lexer', () => {
       expect(types).toEqual([TokenType.NUMBER, TokenType.PLUS, TokenType.NUMBER]);
     });
 
-    it('should throw error on unknown characters', () => {
-      // Unknown characters should now throw LexerError instead of being silently skipped
-      expect(() => tokenize('5 @ 3')).toThrow('Unexpected character \'@\'');
+    it('should record error on unknown characters', () => {
+      // Unknown characters should be recorded in errors array
+      const result = tokenizeWithErrors('5 @ 3');
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].message).toContain('Unexpected character \'@\'');
+      // Should still tokenize valid tokens before the error
+      expect(result.tokens.length).toBeGreaterThan(0);
     });
   });
 
@@ -680,11 +688,12 @@ describe('Lexer', () => {
         expect(tokens[0].value).toBe('10.30');
       });
 
-      it('should throw error on colon without valid minutes', () => {
+      it('should record error on colon without valid minutes', () => {
         // If colon is not followed by digit, it's an unknown character
-        // Lexer should throw error instead of silently skipping
-        expect(() => tokenize('10:')).toThrow('Unexpected character \':\'');
-        // The ':' would be unrecognized and skipped
+        // Lexer should record error
+        const result = tokenizeWithErrors('10:');
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0].message).toContain('Unexpected character \':\'');
       });
 
       it('should handle invalid hour ranges (validated in parser)', () => {
@@ -749,34 +758,35 @@ describe('Lexer', () => {
   });
 
   describe('Unknown Character Rejection', () => {
-    it('should throw error on various unknown characters', () => {
-      expect(() => tokenize('@')).toThrow('Unexpected character \'@\'');
-      expect(() => tokenize('$')).toThrow('Unexpected character \'$\'');
-      expect(() => tokenize('`')).toThrow('Unexpected character \'`\'');
-      expect(() => tokenize('[')).toThrow('Unexpected character \'[\'');
-      expect(() => tokenize(']')).toThrow('Unexpected character \']\'');
-      expect(() => tokenize('{')).toThrow('Unexpected character \'{\'');
-      expect(() => tokenize('}')).toThrow('Unexpected character \'}\'');
-      expect(() => tokenize('\\')).toThrow('Unexpected character \'\\\'');
-      expect(() => tokenize(';')).toThrow('Unexpected character \';\'');
-      expect(() => tokenize(':')).toThrow('Unexpected character \':\'');
-      expect(() => tokenize('"')).toThrow('Unexpected character \'"\'');
-      expect(() => tokenize("'")).toThrow("Unexpected character '''");
+    it('should record error on various unknown characters', () => {
+      expect(tokenizeWithErrors('@').errors).toHaveLength(1);
+      expect(tokenizeWithErrors('$').errors).toHaveLength(1);
+      expect(tokenizeWithErrors('`').errors).toHaveLength(1);
+      expect(tokenizeWithErrors('[').errors).toHaveLength(1);
+      expect(tokenizeWithErrors(']').errors).toHaveLength(1);
+      expect(tokenizeWithErrors('{').errors).toHaveLength(1);
+      expect(tokenizeWithErrors('}').errors).toHaveLength(1);
+      expect(tokenizeWithErrors('\\').errors).toHaveLength(1);
+      expect(tokenizeWithErrors(';').errors).toHaveLength(1);
+      expect(tokenizeWithErrors(':').errors).toHaveLength(1);
+      expect(tokenizeWithErrors('"').errors).toHaveLength(1);
+      expect(tokenizeWithErrors("'").errors).toHaveLength(1);
     });
 
-    it('should throw error with correct position information', () => {
-      try {
-        tokenize('5 + @ - 3');
-        expect.fail('Should have thrown an error');
-      } catch (error: any) {
-        expect(error.message).toContain('Unexpected character \'@\'');
-        expect(error.start.column).toBe(5); // '@' is at column 5
-      }
+    it('should record error with correct position information', () => {
+      const result = tokenizeWithErrors('5 + @ - 3');
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].message).toContain('Unexpected character \'@\'');
+      expect(result.errors[0].start.column).toBe(5); // '@' is at column 5
     });
 
-    it('should stop tokenizing at first unknown character', () => {
-      // Should process tokens before the unknown character
-      expect(() => tokenize('5 + 3 @ 2')).toThrow('Unexpected character \'@\'');
+    it('should continue tokenizing after unknown character', () => {
+      // Should process tokens before the error and skip to next line
+      const result = tokenizeWithErrors('5 + 3 @ 2');
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].message).toContain('Unexpected character \'@\'');
+      // Should have tokens for "5 + 3" before the error
+      expect(result.tokens.length).toBeGreaterThan(0);
     });
   });
 });

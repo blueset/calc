@@ -33,11 +33,15 @@ describe('Parser', () => {
     await dataLoader.load(path.join(__dirname, '..', 'data'));
   });
 
-  function parse(input: string): Document {
+  function parseWithErrors(input: string) {
     const lexer = new Lexer(input, dataLoader);
-    const tokens = lexer.tokenize();
-    const parser = new Parser(tokens, dataLoader);
+    const { tokens } = lexer.tokenize();
+    const parser = new Parser(tokens, dataLoader, input);
     return parser.parseDocument();
+  }
+
+  function parse(input: string): Document {
+    return parseWithErrors(input).ast;
   }
 
   function parseExpression(input: string): Expression {
@@ -654,9 +658,16 @@ describe('Parser', () => {
   });
 
   describe('Error Recovery', () => {
-    it('should throw LexerError on unknown characters', () => {
-      // Unknown characters now throw errors instead of being silently skipped
-      expect(() => parse('this is just @#$ invalid &^% text')).toThrow('Unexpected character \'@\'');
+    it('should record LexerError on unknown characters', () => {
+      // Unknown characters should be recorded in errors array
+      const result = parseWithErrors('this is just @#$ invalid &^% text');
+      expect(result.errors).toHaveLength(0); // Parser errors, not lexer errors for this input
+      // The lexer will catch the @ character
+      // Let's check lexer errors directly
+      const lexer = new Lexer('this is just @#$ invalid &^% text', dataLoader);
+      const { errors } = lexer.tokenize();
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors[0].message).toContain('Unexpected character \'@\'');
     });
 
     it('should fall back to PlainText on parser errors without lexer errors', () => {

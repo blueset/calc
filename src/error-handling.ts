@@ -79,3 +79,28 @@ export function isErrorResult(value: any): value is ErrorResult {
 export function createErrorResult(error: LanguageError): ErrorResult {
   return { type: 'error', error };
 }
+
+/**
+ * Line error information for error recording
+ */
+export interface LineError {
+  line: number;           // Which line (1-indexed)
+  error: LanguageError;   // The error details
+  rawText: string;        // Original text of the line
+}
+
+/**
+ * Result of tokenization with collected errors
+ */
+export interface TokenizeResult {
+  tokens: import('./tokens').Token[];
+  errors: LexerError[];
+}
+
+/**
+ * Result of parsing with collected errors
+ */
+export interface DocumentResult {
+  ast: import('./ast').Document;
+  errors: LineError[];
+}
