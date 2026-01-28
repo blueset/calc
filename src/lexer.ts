@@ -8,6 +8,7 @@ import {
 } from './tokens';
 import { DataLoader } from './data-loader';
 import { isConstant } from './constants';
+import { LexerError } from './error-handling';
 
 /**
  * Context-sensitive lexer for the Notepad Calculator Language
@@ -183,9 +184,13 @@ export class Lexer {
       return this.scanIdentifierOrDateTime(start);
     }
 
-    // Unknown character - skip it
-    this.advance();
-    return null;
+    // Unknown character - throw error instead of silently skipping
+    const end = this.currentLocation();
+    throw new LexerError(
+      `Unexpected character '${char}'`,
+      start,
+      end
+    );
   }
 
   /**
@@ -281,8 +286,8 @@ export class Lexer {
   private scanIdentifierOrDateTime(start: SourceLocation): Token {
     let value = '';
 
-    // Scan alphanumeric characters and underscores
-    while (!this.isAtEnd() && (this.isAlphaNumeric(this.peek()) || this.peek() === '_')) {
+    // Scan alphanumeric characters, underscores, and Unicode superscripts
+    while (!this.isAtEnd() && (this.isAlphaNumeric(this.peek()) || this.peek() === '_' || this.isSuperscript(this.peek()))) {
       value += this.advance();
     }
 
@@ -320,6 +325,20 @@ export class Lexer {
     const unitsCaseInsensitive = this.dataLoader.getUnitsByCaseInsensitiveName(value);
     if (unitsCaseInsensitive.length > 0) {
       return this.createToken(TokenType.UNIT, value, start, this.currentLocation());
+    }
+
+    // Check if it contains superscripts - if so, check if base is a unit
+    // This handles derived units like "m²", "s⁻¹", "m²s³" which should be UNIT tokens
+    if (this.containsSuperscript(value)) {
+      const baseUnitName = this.extractBaseBeforeSuperscript(value);
+      const baseUnit = this.dataLoader.getUnitByName(baseUnitName);
+      if (baseUnit) {
+        return this.createToken(TokenType.UNIT, value, start, this.currentLocation());
+      }
+      const baseUnits = this.dataLoader.getUnitsByCaseInsensitiveName(baseUnitName);
+      if (baseUnits.length > 0) {
+        return this.createToken(TokenType.UNIT, value, start, this.currentLocation());
+      }
     }
 
     // Check if it's a currency
@@ -541,5 +560,37 @@ export class Lexer {
    */
   private isAlphaNumeric(char: string): boolean {
     return this.isAlpha(char) || this.isDigit(char);
+  }
+
+  /**
+   * Check if character is a Unicode superscript
+   */
+  private isSuperscript(char: string): boolean {
+    return '⁰¹²³⁴⁵⁶⁷⁸⁹⁻'.includes(char);
+  }
+
+  /**
+   * Check if a string contains any Unicode superscripts
+   */
+  private containsSuperscript(str: string): boolean {
+    for (const char of str) {
+      if (this.isSuperscript(char)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Extract the base unit name before the first superscript
+   * For "m²s³" returns "m", for "kg⁻¹" returns "kg"
+   */
+  private extractBaseBeforeSuperscript(str: string): string {
+    for (let i = 0; i < str.length; i++) {
+      if (this.isSuperscript(str[i])) {
+        return str.substring(0, i);
+      }
+    }
+    return str; // No superscript found
   }
 }

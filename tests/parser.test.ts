@@ -536,9 +536,56 @@ describe('Parser', () => {
       expect(derivedUnit.terms[2].exponent).toBe(-2);
     });
 
-    // Note: Unicode superscript tests (m², kg m/s²) are skipped because
-    // the lexer currently strips Unicode superscripts during tokenization.
-    // This requires lexer enhancements to support. ASCII notation (m^2) works fine.
+    it('should parse derived unit with Unicode superscript (m²)', () => {
+      const expr = parseExpression('5 cm to m²');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.target.type).toBe('UnitTarget');
+      const unitTarget = convExpr.target as any;
+      expect(unitTarget.unit.type).toBe('DerivedUnit');
+      const derivedUnit = unitTarget.unit;
+      expect(derivedUnit.terms).toHaveLength(1);
+      expect(derivedUnit.terms[0].exponent).toBe(2);
+    });
+
+    it('should parse derived unit with Unicode superscripts (kg m/s²)', () => {
+      const expr = parseExpression('100 N to kg m/s²');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.target.type).toBe('UnitTarget');
+      const unitTarget = convExpr.target as any;
+      expect(unitTarget.unit.type).toBe('DerivedUnit');
+      const derivedUnit = unitTarget.unit;
+      expect(derivedUnit.terms).toHaveLength(3);
+      expect(derivedUnit.terms[0].exponent).toBe(1);  // kg
+      expect(derivedUnit.terms[1].exponent).toBe(1);  // m
+      expect(derivedUnit.terms[2].exponent).toBe(-2); // s²
+    });
+
+    it('should parse derived unit with negative Unicode superscript (m⁻¹)', () => {
+      const expr = parseExpression('5 to m⁻¹');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.target.type).toBe('UnitTarget');
+      const unitTarget = convExpr.target as any;
+      expect(unitTarget.unit.type).toBe('DerivedUnit');
+      const derivedUnit = unitTarget.unit;
+      expect(derivedUnit.terms).toHaveLength(1);
+      expect(derivedUnit.terms[0].exponent).toBe(-1);
+    });
+
+    it('should parse mixed ASCII and Unicode in same expression (m^2/s³)', () => {
+      const expr = parseExpression('10 to m^2/s³');
+      expect(expr.type).toBe('ConversionExpression');
+      const convExpr = expr as ConversionExpression;
+      expect(convExpr.target.type).toBe('UnitTarget');
+      const unitTarget = convExpr.target as any;
+      expect(unitTarget.unit.type).toBe('DerivedUnit');
+      const derivedUnit = unitTarget.unit;
+      expect(derivedUnit.terms).toHaveLength(2);
+      expect(derivedUnit.terms[0].exponent).toBe(2);  // m^2
+      expect(derivedUnit.terms[1].exponent).toBe(-3); // s³ with division
+    });
   });
 
   describe('Conditional Expressions', () => {
@@ -607,11 +654,16 @@ describe('Parser', () => {
   });
 
   describe('Error Recovery', () => {
-    it('should fall back to PlainText on parse errors', () => {
-      // Invalid syntax should result in PlainText
-      const doc = parse('this is just @#$ invalid &^% text');
+    it('should throw LexerError on unknown characters', () => {
+      // Unknown characters now throw errors instead of being silently skipped
+      expect(() => parse('this is just @#$ invalid &^% text')).toThrow('Unexpected character \'@\'');
+    });
+
+    it('should fall back to PlainText on parser errors without lexer errors', () => {
+      // Valid tokens but invalid syntax should result in PlainText
+      const doc = parse('this is just text without operators');
       expect(doc.type).toBe('Document');
-      // Should have at least one line (even if it's PlainText or error)
+      // Should have at least one line (PlainText or ExpressionLine)
       expect(doc.lines.length).toBeGreaterThan(0);
     });
   });

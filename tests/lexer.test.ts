@@ -414,11 +414,9 @@ describe('Lexer', () => {
       expect(types).toEqual([TokenType.NUMBER, TokenType.PLUS, TokenType.NUMBER]);
     });
 
-    it('should handle unknown characters gracefully', () => {
-      // Unknown characters should be skipped
-      const tokens = tokenize('5 @ 3');
-      // @ should be skipped, leaving NUMBER IDENTIFIER/NUMBER
-      expect(tokens.length).toBeGreaterThan(0);
+    it('should throw error on unknown characters', () => {
+      // Unknown characters should now throw LexerError instead of being silently skipped
+      expect(() => tokenize('5 @ 3')).toThrow('Unexpected character \'@\'');
     });
   });
 
@@ -682,12 +680,10 @@ describe('Lexer', () => {
         expect(tokens[0].value).toBe('10.30');
       });
 
-      it('should handle colon without valid minutes', () => {
-        // If colon is not followed by digit, it shouldn't match time pattern
-        // This would be a syntax error, but lexer should handle gracefully
-        const tokens = tokenize('10:');
-        expect(tokens[0].type).toBe(TokenType.NUMBER);
-        expect(tokens[0].value).toBe('10');
+      it('should throw error on colon without valid minutes', () => {
+        // If colon is not followed by digit, it's an unknown character
+        // Lexer should throw error instead of silently skipping
+        expect(() => tokenize('10:')).toThrow('Unexpected character \':\'');
         // The ':' would be unrecognized and skipped
       });
 
@@ -708,6 +704,79 @@ describe('Lexer', () => {
         expect(tokens[0].type).toBe(TokenType.DATETIME);
         expect(tokens[0].value).toBe('10:99');
       });
+    });
+  });
+
+  describe('Unicode Superscripts', () => {
+    it('should tokenize unit with Unicode superscript (m²)', () => {
+      const tokens = tokenize('5 m²');
+      expect(tokens[0].type).toBe(TokenType.NUMBER);
+      expect(tokens[0].value).toBe('5');
+      expect(tokens[1].type).toBe(TokenType.UNIT);
+      expect(tokens[1].value).toBe('m²');
+    });
+
+    it('should tokenize unit with multiple Unicode superscripts (m²s³)', () => {
+      const tokens = tokenize('m²s³');
+      // m²s³ starts with 'm' which is a unit, so it's tokenized as UNIT
+      // Parser will extract superscripts and create derived unit: [m:2, s:3]
+      expect(tokens[0].type).toBe(TokenType.UNIT);
+      expect(tokens[0].value).toBe('m²s³');
+    });
+
+    it('should tokenize unit with negative superscript (s⁻¹)', () => {
+      const tokens = tokenize('s⁻¹');
+      // s⁻¹ starts with 's' (second) which is a unit, so it's tokenized as UNIT
+      // Parser will extract superscript and create derived unit: [s:-1]
+      expect(tokens[0].type).toBe(TokenType.UNIT);
+      expect(tokens[0].value).toBe('s⁻¹');
+    });
+
+    it('should tokenize all Unicode superscript digits', () => {
+      const tokens = tokenize('x⁰¹²³⁴⁵⁶⁷⁸⁹');
+      expect(tokens[0].type).toBe(TokenType.IDENTIFIER);
+      expect(tokens[0].value).toBe('x⁰¹²³⁴⁵⁶⁷⁸⁹');
+    });
+
+    it('should handle Unicode superscripts in conversion context', () => {
+      const tokens = tokenize('100 km to m²');
+      expect(tokens[0].type).toBe(TokenType.NUMBER);
+      expect(tokens[1].type).toBe(TokenType.UNIT);
+      expect(tokens[2].type).toBe(TokenType.TO);
+      expect(tokens[3].type).toBe(TokenType.UNIT);
+      expect(tokens[3].value).toBe('m²');
+    });
+  });
+
+  describe('Unknown Character Rejection', () => {
+    it('should throw error on various unknown characters', () => {
+      expect(() => tokenize('@')).toThrow('Unexpected character \'@\'');
+      expect(() => tokenize('$')).toThrow('Unexpected character \'$\'');
+      expect(() => tokenize('`')).toThrow('Unexpected character \'`\'');
+      expect(() => tokenize('[')).toThrow('Unexpected character \'[\'');
+      expect(() => tokenize(']')).toThrow('Unexpected character \']\'');
+      expect(() => tokenize('{')).toThrow('Unexpected character \'{\'');
+      expect(() => tokenize('}')).toThrow('Unexpected character \'}\'');
+      expect(() => tokenize('\\')).toThrow('Unexpected character \'\\\'');
+      expect(() => tokenize(';')).toThrow('Unexpected character \';\'');
+      expect(() => tokenize(':')).toThrow('Unexpected character \':\'');
+      expect(() => tokenize('"')).toThrow('Unexpected character \'"\'');
+      expect(() => tokenize("'")).toThrow("Unexpected character '''");
+    });
+
+    it('should throw error with correct position information', () => {
+      try {
+        tokenize('5 + @ - 3');
+        expect.fail('Should have thrown an error');
+      } catch (error: any) {
+        expect(error.message).toContain('Unexpected character \'@\'');
+        expect(error.start.column).toBe(5); // '@' is at column 5
+      }
+    });
+
+    it('should stop tokenizing at first unknown character', () => {
+      // Should process tokens before the unknown character
+      expect(() => tokenize('5 + 3 @ 2')).toThrow('Unexpected character \'@\'');
     });
   });
 });

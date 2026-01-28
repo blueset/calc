@@ -42,6 +42,34 @@
 - Added 32 comprehensive tests (lexer + parser) covering all time formats and edge cases
 - All 454 tests passing
 
+### Phase 2.6: Unicode Superscript Support (Enhancement)
+**Status**: ✅ COMPLETED
+
+- [x] Add `isSuperscript()` method to recognize Unicode superscripts (⁰¹²³⁴⁵⁶⁷⁸⁹⁻)
+- [x] Extend `scanIdentifierOrDateTime()` to include superscripts in token values
+- [x] Add `containsSuperscript()` and `extractBaseBeforeSuperscript()` helpers
+- [x] Modify unit detection to check base unit name when superscripts present
+- [x] Replace silent unknown character skipping with LexerError throwing
+- [x] Add lexer tests for Unicode superscripts (5 tests)
+- [x] Add lexer tests for unknown character rejection (3 tests)
+- [x] Add parser tests for Unicode superscript derived units (4 tests)
+- [x] Update error recovery tests to expect LexerError
+
+**Implementation summary**:
+- Lexer now preserves Unicode superscripts in token values (e.g., `m²`, `s⁻¹`, `m²s³`)
+- Tokens with superscripts recognized as UNIT if base matches unit database
+- Parser's existing `extractSuperscript()` infrastructure now fully functional
+- Unknown characters throw LexerError instead of being silently skipped
+- Both ASCII (`m^2`) and Unicode (`m²`) notations fully supported
+- Added 12 new tests (92 lexer tests, 99 parser tests)
+- All 552 tests passing
+
+**Why now**:
+- User explicitly requested Unicode superscript support
+- Parser infrastructure was already in place, only lexer needed updates
+- Small, focused fix in correct architectural layer
+- Fresh context from Phase 3 derived unit work
+
 ### Phase 3: Syntactic Analysis (Days 5-7)
 - [x] Create `ast.ts` with all AST node types
 - [x] Implement `parser.ts` with Parser class
@@ -57,7 +85,7 @@
   - Create DerivedUnit AST nodes instead of requiring runtime creation
   - Update resolveUnit() in evaluator to handle DerivedUnit AST nodes
   - Prerequisite for derived unit conversions
-  - **Note**: ASCII notation (m^2) is fully supported. Unicode superscripts (m²) require lexer enhancements (lexer currently strips Unicode superscripts during tokenization)
+  - **Note**: Both ASCII notation (m^2) and Unicode superscripts (m²) are fully supported (Unicode added in Phase 2.6)
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
