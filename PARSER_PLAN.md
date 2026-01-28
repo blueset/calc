@@ -34,14 +34,6 @@
 - [x] Update parser's `tryParseTime()` to handle tokenized time literals
 - [x] Add tests for time literal parsing
 
-**Implementation summary**:
-- Extended `scanNumber()` to detect `:` after number and continue scanning for time pattern
-- Time literals (H:MM, H:MM:SS) now tokenized as single DATETIME tokens
-- Updated `disambiguateAmPm()` to recognize AM/PM after time literals
-- Parser's `tryParseTime()` validates hour/minute/second ranges and converts 12-hour to 24-hour format
-- Added 32 comprehensive tests (lexer + parser) covering all time formats and edge cases
-- All 454 tests passing
-
 ### Phase 2.6: Unicode Superscript Support (Enhancement)
 **Status**: ✅ COMPLETED
 
@@ -54,21 +46,6 @@
 - [x] Add lexer tests for unknown character rejection (3 tests)
 - [x] Add parser tests for Unicode superscript derived units (4 tests)
 - [x] Update error recovery tests to expect LexerError
-
-**Implementation summary**:
-- Lexer now preserves Unicode superscripts in token values (e.g., `m²`, `s⁻¹`, `m²s³`)
-- Tokens with superscripts recognized as UNIT if base matches unit database
-- Parser's existing `extractSuperscript()` infrastructure now fully functional
-- Unknown characters throw LexerError instead of being silently skipped
-- Both ASCII (`m^2`) and Unicode (`m²`) notations fully supported
-- Added 12 new tests (92 lexer tests, 99 parser tests)
-- All 552 tests passing
-
-**Why now**:
-- User explicitly requested Unicode superscript support
-- Parser infrastructure was already in place, only lexer needed updates
-- Small, focused fix in correct architectural layer
-- Fresh context from Phase 3 derived unit work
 
 ### Phase 2.7: Error Recording Architecture (Major Enhancement)
 **Status**: ✅ COMPLETED
@@ -84,51 +61,6 @@
 - [x] Update type-checker tests for new API (78 tests)
 - [x] Add integration tests for error recording (14 tests)
 
-**Implementation summary**:
-- **Lexer** now returns `TokenizeResult` containing both tokens and errors array
-- When lexer encounters unknown character, it records error and skips to next line
-- **Parser** now returns `DocumentResult` containing both AST and errors array
-- Parser records errors per line and creates PlainText fallback for invalid syntax
-- **Calculator** orchestrates lexer, parser, and evaluator with full error collection
-- Errors are available for UI display but don't stop document processing
-- All 566 tests passing
-
-**Architecture changes**:
-```typescript
-// Before: Lexer threw errors
-tokenize(): Token[]
-
-// After: Lexer records errors
-tokenize(): TokenizeResult {
-  tokens: Token[];
-  errors: LexerError[];
-}
-
-// Before: Parser threw errors or created AST
-parseDocument(): Document
-
-// After: Parser records errors and creates AST
-parseDocument(): DocumentResult {
-  ast: Document;
-  errors: LineError[];
-}
-```
-
-**Benefits**:
-- Resilient: Entire document processed despite errors
-- Non-intrusive: Errors don't interrupt user workflow
-- Informative: Errors available when user needs them
-- Flexible UI: UI can decide how/when to present errors
-- Batch processing: All valid calculations execute
-- Better UX: User sees results immediately, can investigate errors later
-
-**Why now**:
-- User requested error recording for notepad calculator use case
-- Allows mixed content (calculations and plain text notes) to coexist
-- Provides better user experience than stopping at first error
-- Enables UI to show errors on demand (hover, debug mode, etc.)
-- Foundational for production calculator application
-
 ### Phase 3: Syntactic Analysis (Days 5-7)
 - [x] Create `ast.ts` with all AST node types
 - [x] Implement `parser.ts` with Parser class
@@ -140,20 +72,7 @@ parseDocument(): DocumentResult {
 - [x] Implement error recovery (fallback to PlainText)
 - [x] Write unit tests for parser (80 tests passing - includes Phase 2.5 time literal parsing tests)
 - [x] Parse derived unit expressions in conversion targets (deferred from Phase 5.5)
-  - Recognize unit expressions like "m/s", "kg m/s²" in conversion targets
-  - Create DerivedUnit AST nodes instead of requiring runtime creation
-  - Update resolveUnit() in evaluator to handle DerivedUnit AST nodes
-  - Prerequisite for derived unit conversions
   - **Note**: Both ASCII notation (m^2) and Unicode superscripts (m²) are fully supported in conversion targets (Unicode added in Phase 2.6)
-- [x] Parse ASCII exponent notation in unit literals (completed)
-  - Both `16 m²` (Unicode) and `16 m^2` (ASCII) now parse as literals with derived units ✅
-  - Parser checks for CARET token after unit in number literals
-  - Handles positive, negative, and fractional exponents (e.g., `m^2`, `s^-1`, `m^0.5`)
-  - Creates DerivedUnit AST node with unit term and exponent
-  - Works with or without spaces around caret (both `m^2` and `m ^ 2` parse the same)
-  - Added 6 comprehensive tests for ASCII exponent notation
-  - Updated 1 existing test to match new parsing behavior
-  - All 588 tests passing
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
@@ -186,81 +105,17 @@ parseDocument(): DocumentResult {
 - [x] Write unit tests for all evaluation components (95/95 tests passing - 100%)
 - [x] Fix single-letter variable name issue (parser now accepts UNIT tokens as identifiers in assignment context)
 - [x] Implement derived unit conversions (completed)
-  - Implemented convertToDerivedUnit() method in evaluator
-  - Added computeDimension() and areDimensionsCompatible() helper methods
-  - Converts through base units using exponential factors
-  - Example: `100 km/h to m/s` → `27.78 m/s`
-  - Added 8 comprehensive tests for derived unit conversions
 - [x] Implement exponentiation of units and derived units (completed)
-  - Updated power operator (^) in evaluator to handle units and derived units
-  - Expands derived dimensions (e.g., area → length²) before applying exponent
-  - Simple units: `(5 m)^2` → `25 m²` (exponent 1 → 2)
-  - Derived units: `(3 m/s)^2` → `9 m²/s²` (m: 1→2, s: -1→-2)
-  - Fractional powers: `(16 m²)^0.5` → `4 m` (expands area to length²)
-  - Added 8 comprehensive tests for unit exponentiation
-
-**Known Issues**:
-- ~~Derived unit arithmetic simplified~~ ✅ FIXED in Phase 5.5
-  - ~~Multiplying/dividing different units keeps left unit instead of creating derived units~~
-  - ~~Example: `5 m * 3 s` returns `15 m` instead of expected `15 m s`~~
-  - Derived unit creation now fully implemented
-
-**Note**: Timezone offset conversions (not just name resolution) deferred to Phase 6.5 - requires Temporal polyfill
 
 ### Phase 5.5: Derived Unit Support
 **Status**: ✅ **COMPLETED**
 
-Derived units are essential for common calculations like speed (km/h), acceleration (m/s²), force (N = kg⋅m/s²), energy (J = kg⋅m²/s²), density (kg/m³), etc. The parser and type checker already support derived units; this phase completes the implementation in the evaluator.
-
-**Why now instead of later**:
-- Formatter (Phase 6) not yet implemented - can design it correctly from the start
-- No code depends on simplified behavior yet - no refactoring needed
-- Fresh context - full understanding of evaluator, type system, AST
-- Lower engineering risk than retrofitting later
-
 **Tasks**:
 - [x] Refactored architecture to use signed exponents instead of numerator/denominator
-  - Updated types/types.ts, src/ast.ts, src/type-checker.ts, src/evaluator.ts
-  - Regenerated units.json with new dimension structure
-  - All 526 tests passing after refactor
 - [x] Update evaluator binary multiplication to create derived units
-  - Handles all 9 combinations: number/unit/derived × number/unit/derived
-  - Example: `5 m * 3 s` → `15 m s` (DerivedUnitValue with terms: [{unit: m, exponent: 1}, {unit: s, exponent: 1}])
-  - Dimensionless × unit → keep unit (not derived)
-  - Unit × same unit → exponentiate (e.g., `m * m` → `m²`)
-  - Removed TODO comments
 - [x] Update evaluator binary division to create derived units
-  - Handles all 9 combinations: number/unit/derived / number/unit/derived
-  - Example: `100 km / 2 h` → `50 km/h` (DerivedUnitValue with terms: [{unit: km, exponent: 1}, {unit: h, exponent: -1}])
-  - Dimensionless / unit → reciprocal unit (e.g., `1 / s` → `s⁻¹`)
-  - Unit / same unit → dimensionless (e.g., `m / m` → 1)
-  - Removed TODO comments
 - [x] Implement comprehensive term combination logic
-  - extractTerms(), combineTerms(), createValueFromTerms()
-  - Handles chained operations: `10 kg * 5 m / 2 s` creates combined derived unit
-  - Simplifies terms with same unit (combines exponents)
 - [x] Document resolveUnit limitation
-  - Parser doesn't create DerivedUnit AST nodes yet (only created during evaluation)
-  - Updated comment explaining deferral reason
-- [x] Add comprehensive tests for derived unit creation (8 new tests, 534 total passing)
-  - Multiplication creating derived units (different units, same units)
-  - Division creating derived units (different units, same units, reciprocals)
-  - Simplification (m²,  m / m → dimensionless)
-  - Mixed operations (kg * m / s)
-  - Dimensionless multiplier/divisor handling
-
-**Deferred** (moved to appropriate phases):
-- Derived unit conversions → Added to Phase 5 (requires Phase 3 prerequisite)
-- Exponentiation of units/derived units → Added to Phase 5 (independent task)
-- Parser creation of DerivedUnit AST nodes → Added to Phase 3 (prerequisite for conversions)
-
-**Dependencies**:
-- Parser with DerivedUnit AST nodes (✅ complete in Phase 3)
-- Type checker with dimension derivation (✅ complete in Phase 4)
-- Unit converter (✅ complete in Phase 5)
-
-**Blocks**:
-- Phase 6 (Formatter) - should be designed with derived unit support
 
 ### Phase 6: Result Formatting (Days 15-16)
 - [ ] Create `settings.ts` with Settings interface
@@ -349,7 +204,7 @@ Build a complete parser for the Notepad Calculator Language as specified in GRAM
 
 ## File Structure
 
-All files will be created at project root (flat structure):
+All files will be created at `./src`:
 
 ### Core Parser Components
 - **`tokens.ts`** - Token type definitions and utilities
@@ -799,26 +654,6 @@ Duration components (when materialized):
 1. If number is integer in range 1-12 → treat as time indicator (DATETIME)
 2. If number has decimal part OR is outside 1-12 → treat as unit (UNIT)
 
-**Implementation**:
-```typescript
-// In lexer, after scanning "am", "pm", "AM", or "PM":
-function disambiguateAmPm(previousToken: Token, currentText: string): TokenType {
-  if (previousToken.type === TokenType.NUMBER) {
-    const numberString = previousToken.value;  // Original string from input (whitespace trimmed)
-
-    // Only accept these exact string values: '1'-'9', '01'-'09', '10', '11', '12'
-    // Regex: /^(0?[1-9]|1[0-2])$/
-    const timeHourPattern = /^(0?[1-9]|1[0-2])$/;
-    const isTimeHour = timeHourPattern.test(numberString);
-
-    if (isTimeHour) {
-      return TokenType.DATETIME;  // Time indicator
-    }
-  }
-  return TokenType.UNIT;  // attometers/picometers/petameters
-}
-```
-
 **Examples**:
 - `10 am` → DATETIME (time: 10:00:00)
 - `10.0 am` → 10.0 UNIT(attometers)
@@ -875,31 +710,8 @@ Run examples from GRAMMAR.md:
 6. Run disambiguation tests: verify all 9 disambiguation rules
 
 ### End-to-End Verification
-```bash
-# Create simple test script
-node -e "
-  const Calculator = require('./calculator.ts');
-  const calc = new Calculator();
-  await calc.initialize();
 
-  const results = calc.calculate(`
-    5 km to m
-    (5 ft 3 in) * 2
-    100 USD to EUR
-  `);
-
-  console.log(results);
-"
-```
-
-Expected output:
-```
-[
-  { line: 1, result: '5000 m', error: null },
-  { line: 2, result: '10 ft 6 in', error: null },
-  { line: 3, result: '85.8 EUR', error: null }
-]
-```
+Use unit test to verify full calculation pipeline.
 
 ---
 
