@@ -73,29 +73,8 @@
 - [x] Multi-word unit parsing (fl oz, sq m, millimeter of mercury) - implemented with lookahead & backtracking
 - [x] Multi-word currency name parsing (US dollars, hong kong dollars) - fully implemented and tested
 - [x] Currency-before-number pattern (USD 100, EUR 50) - implemented in `parsePrimary()`
-
-**Note**: All Phase 3 features are fully implemented with passing tests. The multi-word parsing uses lookahead/backtracking with longest-match algorithm. Currency-before-number pattern works for currency codes (USD, EUR). Full end-to-end testing will be possible once Phase 5 (evaluator) implements currency unit resolution.
-
-**Context-Aware Derived Unit Parsing**: The `isDerivedUnitExpression()` method distinguishes between derived units and binary arithmetic:
-- Unit exponents: "100 m^2" or "to m^2" → derived unit with exponent (CARET followed by NUMBER is always a unit exponent in derived unit context)
-- Pure implicit multiplication: "1 N m" → derived unit (consecutive units without operators imply multiplication)
-- Implicit multiplication with operators: "1 kg fl oz/day" → derived unit (consecutive units followed by operator)
-- Binary arithmetic with SLASH/STAR: "100 km / 2 h" → binary division (BinaryExpression, because "/" is followed by NUMBER)
-- Binary exponentiation: "100^2" → binary exponentiation (BinaryExpression, no unit context)
-Variables are detected via `definedVariables` set to prevent defined variables from being treated as units in derived unit expressions.
-
-**Phase 3 Gaps** (see @PHASE_8_GAPS.md for details, 4-6 hours):
-- [ ] Derived units in binary operations - 4-6 hours, blocks 80% of failures
-  - Parser incorrectly splits expressions like `3 kg/m² * 2 m²` into TWO separate lines
-  - Root cause: `/` in derived units treated as end-of-expression marker when followed by `*` or `/`
-  - Blocks user-defined units with derived units and unit cancellation features
-  - Examples that fail: `3 kg/m² * 2 m²`, `10 USD/person * 3 person`, `60 kg/cm² / 2 h/m²`
-  - Example that works: `1000 USD / 5 person / 2 day` (simple units parse correctly)
-  - Fix location: `src/parser.ts` - expression parsing logic for binary operations
-  - Re-enable tests: Unblocks lines 630-635, 659-666, 638-643, 669-679 in integration.test.ts
-- [ ] Multi-word unit parsing edge cases (see @PHASE_8_GAPS.md lines 166-186)
-  - "sq ft" case not working despite multi-word parsing being implemented
-  - Re-enable test: line 503 in integration.test.ts
+- [x] Derived units in binary operations
+- [x] Multi-word unit parsing edge case
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions

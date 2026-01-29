@@ -623,26 +623,20 @@ CA$100
 
     it('should create derived units from multiplication', () => {
       let result = calculator.calculate('5 N * 2 m');
-      expect(result.results[0].result).toContain('10');
-      expect(result.results[0].result).toContain('N');
-      expect(result.results[0].result).toContain('m');
-      //  TODO: Fix multiplication with derived units as left operand (e.g., "3 kg/m² * 2 m²")
-      // Currently works for simple cases but not when left operand is a derived unit
-      /*
+      expect(result.results[0].result).toBe('10 N m');
+
+      // Test multiplication with derived units as left operand (unit cancellation)
       result = calculator.calculate('3 kg/m^2 * 2 m^2');
-      expect(result.results[0].result).toContain('6');
-      expect(result.results[0].result).toContain('kg');
-      */
+      expect(result.results[0].result).toBe('6 kg');
     });
 
-    it.skip('should create derived units from multiplication with user-defined units', () => {
-      // TODO: Fix multiplication with derived units as left operand
+    it('should create derived units from multiplication with user-defined units', () => {
+      // Test multiplication with user-defined derived units (unit cancellation)
       let result = calculator.calculate('10 USD/person * 3 person');
-      expect(result.results[0].result).toContain('30');
-      expect(result.results[0].result).toContain('USD');
+      expect(result.results[0].result).toBe('30 USD');
+
       result = calculator.calculate('1000 click * 0.25 person/click * 0.001 USD/person');
-      expect(result.results[0].result).toContain('0.25');
-      expect(result.results[0].result).toContain('USD');
+      expect(result.results[0].result).toBe('0.25 USD');
     });
 
     it('should divide unit by number', () => {
@@ -656,27 +650,22 @@ CA$100
       expect(result.results[0].result).toContain('km');
       expect(result.results[0].result).toContain('h');
 
-      // TODO: Fix division with derived units as operands (e.g., "60 kg/cm^2 / 2 h/m^2")
-      // Currently works for simple division but not when operands are derived units
-      /*
+      // Test division with derived units as operands
       result = calculator.calculate('60 kg/cm^2 / 2 h/m^2');
-      expect(result.results[0].result).toContain('300 000');
-      expect(result.results[0].result).toContain('kg');
-      expect(result.results[0].result).toContain('h');
-      */
+      // 60 kg/cm² / 2 h/m² = (60/2) * kg/cm² * m²/h = 30 kg·m²/(cm²·h)
+      // With unit conversion: cm² to m² gives factor of 10000
+      // Result: 30 * 10000 = 300000 kg/h
+      expect(result.results[0].result).toBe('300 000 kg/h');
     });
 
-    it.skip('should create derived units from division with user-defined units', () => {
-      // TODO: Fix division with derived units as operands
+    it('should create derived units from division with user-defined units', () => {
+      // Test division creating derived units with user-defined units
       let result = calculator.calculate('1000 USD / 5 person / 2 day');
-      expect(result.results[0].result).toContain('100');
-      expect(result.results[0].result).toContain('USD');
-      expect(result.results[0].result).toContain('person');
-      expect(result.results[0].result).toContain('day');
+      expect(result.results[0].result).toBe('100 USD/(person day)');
+
+      // Test division with user-defined derived units (unit cancellation)
       result = calculator.calculate('500 click/person / 5 USD/person');
-      expect(result.results[0].result).toContain('100');
-      expect(result.results[0].result).toContain('click');
-      expect(result.results[0].result).toContain('USD');
+      expect(result.results[0].result).toBe('100 click/USD');
     });
 
     it('should combine conversion with arithmetic', () => {

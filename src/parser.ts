@@ -1223,6 +1223,15 @@ export class Parser {
       let isMultiply = true; // Default for implicit multiplication
 
       if (this.check(TokenType.STAR) || this.check(TokenType.SLASH)) {
+        // Look ahead to verify a unit follows this operator
+        // If not, this operator belongs to a binary expression at a higher level
+        const nextToken = this.peekAhead(1);
+        if (!nextToken || (nextToken.type !== TokenType.UNIT && nextToken.type !== TokenType.IDENTIFIER)) {
+          // Next token is not a unit - this operator is not part of the derived unit
+          // Break WITHOUT consuming the operator
+          break;
+        }
+
         const operator = this.advance();
         isMultiply = operator.type === TokenType.STAR;
       }
