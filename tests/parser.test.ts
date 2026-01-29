@@ -1194,5 +1194,307 @@ describe('Parser', () => {
         expect(unicodeDerived.terms[0].exponent).toBe(2);
       });
     });
+
+    describe('Multi-Word Units and Currency-Before-Number', () => {
+      it('should parse multi-word currency names (US dollars)', () => {
+        const expr = parseExpression('100 US dollars');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(100);
+        expect(numWithUnit.unit.type).toBe('SimpleUnit');
+        // Should recognize "US dollars" and resolve to USD currency code
+        expect(numWithUnit.unit.unitId).toBe('USD');
+      });
+
+      it('should parse multi-word currency names (hong kong dollars)', () => {
+        const expr = parseExpression('100 hong kong dollars');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(100);
+        expect(numWithUnit.unit.type).toBe('SimpleUnit');
+        expect(numWithUnit.unit.unitId).toBe('HKD');
+      });
+
+      it('should parse currency-before-number pattern (USD 100)', () => {
+        const expr = parseExpression('USD 100');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(100);
+        expect(numWithUnit.unit.type).toBe('SimpleUnit');
+        expect(numWithUnit.unit.unitId).toBe('USD');
+      });
+
+      it('should parse currency-before-number pattern (EUR 50)', () => {
+        const expr = parseExpression('EUR 50');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(50);
+        expect(numWithUnit.unit.type).toBe('SimpleUnit');
+        expect(numWithUnit.unit.unitId).toBe('EUR');
+      });
+
+      it('should not interfere with derived unit implicit multiplication', () => {
+        const expr = parseExpression('100 N to kg m/s^2');
+        expect(expr.type).toBe('ConversionExpression');
+        const convExpr = expr as any;
+        expect(convExpr.target.type).toBe('UnitTarget');
+        expect(convExpr.target.unit.type).toBe('DerivedUnit');
+        // Should have 3 terms: kg (^1), m (^1), s (^-2)
+        expect(convExpr.target.unit.terms).toHaveLength(3);
+      });
+    });
+
+    describe('Multi-Word Units in Derived Units (Conversion Targets)', () => {
+      it('should parse multi-word unit in denominator (to fl oz/kg)', () => {
+        const expr = parseExpression('100 L to fl oz/kg');
+        expect(expr.type).toBe('ConversionExpression');
+        const convExpr = expr as any;
+        expect(convExpr.target.type).toBe('UnitTarget');
+        expect(convExpr.target.unit.type).toBe('DerivedUnit');
+
+        const terms = convExpr.target.unit.terms;
+        expect(terms).toHaveLength(2);
+
+        // First term: fl oz with exponent 1
+        expect(terms[0].unit.unitId).toBe('fluid_ounce');
+        expect(terms[0].exponent).toBe(1);
+
+        // Second term: kg with exponent -1
+        expect(terms[1].unit.unitId).toBe('kilogram');
+        expect(terms[1].exponent).toBe(-1);
+      });
+
+      it('should parse complex derived unit with multiple multi-word units (to fl oz kg/us dollars/day)', () => {
+        const expr = parseExpression('50 L to fl oz kg/us dollars/day');
+        expect(expr.type).toBe('ConversionExpression');
+        const convExpr = expr as any;
+        expect(convExpr.target.type).toBe('UnitTarget');
+        expect(convExpr.target.unit.type).toBe('DerivedUnit');
+
+        const terms = convExpr.target.unit.terms;
+        expect(terms).toHaveLength(4);
+
+        // Numerator: fl oz (^1), kg (^1)
+        expect(terms[0].unit.unitId).toBe('fluid_ounce');
+        expect(terms[0].exponent).toBe(1);
+        expect(terms[1].unit.unitId).toBe('kilogram');
+        expect(terms[1].exponent).toBe(1);
+
+        // Denominator: us dollars (^-1), day (^-1)
+        expect(terms[2].unit.unitId).toBe('USD');
+        expect(terms[2].exponent).toBe(-1);
+        expect(terms[3].unit.unitId).toBe('day');
+        expect(terms[3].exponent).toBe(-1);
+      });
+
+      it('should parse multi-word unit in numerator (to sq m kg/s)', () => {
+        const expr = parseExpression('10 J to sq m kg/s');
+        expect(expr.type).toBe('ConversionExpression');
+        const convExpr = expr as any;
+        expect(convExpr.target.type).toBe('UnitTarget');
+        expect(convExpr.target.unit.type).toBe('DerivedUnit');
+
+        const terms = convExpr.target.unit.terms;
+        expect(terms).toHaveLength(3);
+
+        // sq m is "square meter" - stored as square_meter unit with exponent 1
+        expect(terms[0].unit.unitId).toBe('square_meter');
+        expect(terms[0].exponent).toBe(1);
+        expect(terms[1].unit.unitId).toBe('kilogram');
+        expect(terms[1].exponent).toBe(1);
+        expect(terms[2].unit.unitId).toBe('second');
+        expect(terms[2].exponent).toBe(-1);
+      });
+
+      it('should parse multi-word currency in derived unit (to hong kong dollars/hour)', () => {
+        const expr = parseExpression('25 USD to hong kong dollars/hour');
+        expect(expr.type).toBe('ConversionExpression');
+        const convExpr = expr as any;
+        expect(convExpr.target.type).toBe('UnitTarget');
+        expect(convExpr.target.unit.type).toBe('DerivedUnit');
+
+        const terms = convExpr.target.unit.terms;
+        expect(terms).toHaveLength(2);
+
+        expect(terms[0].unit.unitId).toBe('HKD');
+        expect(terms[0].exponent).toBe(1);
+        expect(terms[1].unit.unitId).toBe('hour');
+        expect(terms[1].exponent).toBe(-1);
+      });
+
+      it('should still parse regular derived units correctly (to kg m/s^2)', () => {
+        const expr = parseExpression('100 N to kg m/s^2');
+        expect(expr.type).toBe('ConversionExpression');
+        const convExpr = expr as any;
+        expect(convExpr.target.type).toBe('UnitTarget');
+        expect(convExpr.target.unit.type).toBe('DerivedUnit');
+
+        const terms = convExpr.target.unit.terms;
+        expect(terms).toHaveLength(3);
+
+        expect(terms[0].unit.unitId).toBe('kilogram');
+        expect(terms[0].exponent).toBe(1);
+        expect(terms[1].unit.unitId).toBe('meter');
+        expect(terms[1].exponent).toBe(1);
+        expect(terms[2].unit.unitId).toBe('second');
+        expect(terms[2].exponent).toBe(-2);
+      });
+    });
+
+    describe('Derived Units in Number-With-Unit Context', () => {
+      it('should parse single-word derived unit (1 kg m/s)', () => {
+        const expr = parseExpression('1 kg m/s');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(1);
+        expect(numWithUnit.unit.type).toBe('DerivedUnit');
+
+        const terms = numWithUnit.unit.terms;
+        expect(terms).toHaveLength(3);
+        expect(terms[0].unit.unitId).toBe('kilogram');
+        expect(terms[0].exponent).toBe(1);
+        expect(terms[1].unit.unitId).toBe('meter');
+        expect(terms[1].exponent).toBe(1);
+        expect(terms[2].unit.unitId).toBe('second');
+        expect(terms[2].exponent).toBe(-1);
+      });
+
+      it('should parse multi-word derived unit (1 kg fl oz/day)', () => {
+        const expr = parseExpression('1 kg fl oz/day');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(1);
+        expect(numWithUnit.unit.type).toBe('DerivedUnit');
+
+        const terms = numWithUnit.unit.terms;
+        expect(terms).toHaveLength(3);
+        expect(terms[0].unit.unitId).toBe('kilogram');
+        expect(terms[0].exponent).toBe(1);
+        expect(terms[1].unit.unitId).toBe('fluid_ounce');
+        expect(terms[1].exponent).toBe(1);
+        expect(terms[2].unit.unitId).toBe('day');
+        expect(terms[2].exponent).toBe(-1);
+      });
+
+      it('should parse user-defined unit in derived unit (1 sq ft/person)', () => {
+        const expr = parseExpression('1 sq ft/person');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(1);
+        expect(numWithUnit.unit.type).toBe('DerivedUnit');
+
+        const terms = numWithUnit.unit.terms;
+        expect(terms).toHaveLength(2);
+        expect(terms[0].unit.unitId).toBe('square_foot');
+        expect(terms[0].exponent).toBe(1);
+        expect(terms[1].unit.unitId).toBe('person'); // user-defined
+        expect(terms[1].exponent).toBe(-1);
+      });
+
+      it('should NOT parse variable as unit - treat as binary division', () => {
+        // Parse document with variable definition
+        const doc = parse('compensation = 100 USD\n50000 HKD/compensation');
+        expect(doc.lines).toHaveLength(2);
+
+        // First line: variable definition
+        const line1 = doc.lines[0] as any;
+        expect(line1.type).toBe('VariableDefinition');
+        expect(line1.name).toBe('compensation');
+
+        // Second line: should be binary division expression, NOT derived unit
+        const line2 = doc.lines[1] as any;
+        expect(line2.type).toBe('ExpressionLine');
+        const expr = line2.expression;
+        expect(expr.type).toBe('BinaryExpression');
+        expect(expr.operator).toBe('/');
+
+        // Left side: 50000 HKD
+        expect(expr.left.type).toBe('NumberWithUnit');
+        expect(expr.left.value).toBe(50000);
+        expect(expr.left.unit.unitId).toBe('HKD');
+
+        // Right side: compensation (variable reference)
+        expect(expr.right.type).toBe('Identifier');
+        expect(expr.right.name).toBe('compensation');
+      });
+
+      it('should parse undefined identifier as user-defined unit', () => {
+        // No variable definition - "foo" is unknown, treat as user-defined unit
+        const expr = parseExpression('100 m/foo');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.unit.type).toBe('DerivedUnit');
+
+        const terms = numWithUnit.unit.terms;
+        expect(terms).toHaveLength(2);
+        expect(terms[0].unit.unitId).toBe('meter');
+        expect(terms[0].exponent).toBe(1);
+        expect(terms[1].unit.unitId).toBe('foo'); // user-defined
+        expect(terms[1].exponent).toBe(-1);
+      });
+
+      it('should parse number with unit exponent (100 m^2)', () => {
+        // "100 m^2" should be NumberWithUnit with derived unit, NOT binary exponentiation
+        const expr = parseExpression('100 m^2');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(100);
+        expect(numWithUnit.unit.type).toBe('DerivedUnit');
+
+        const terms = numWithUnit.unit.terms;
+        expect(terms).toHaveLength(1);
+        expect(terms[0].unit.unitId).toBe('meter');
+        expect(terms[0].exponent).toBe(2);
+      });
+
+      it('should parse pure implicit multiplication (1 N m)', () => {
+        // "1 N m" should be NumberWithUnit with derived unit (newton-meter)
+        // No explicit operator needed - consecutive units imply multiplication
+        const expr = parseExpression('1 N m');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(1);
+        expect(numWithUnit.unit.type).toBe('DerivedUnit');
+
+        const terms = numWithUnit.unit.terms;
+        expect(terms).toHaveLength(2);
+        expect(terms[0].unit.unitId).toBe('newton');
+        expect(terms[0].exponent).toBe(1);
+        expect(terms[1].unit.unitId).toBe('meter');
+        expect(terms[1].exponent).toBe(1);
+      });
+
+      it('should parse implicit multiplication with exponent (1 N^2 m)', () => {
+        // "1 N^2 m" should be NumberWithUnit with derived unit [newton:2, meter:1]
+        const expr = parseExpression('1 N^2 m');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(1);
+        expect(numWithUnit.unit.type).toBe('DerivedUnit');
+
+        const terms = numWithUnit.unit.terms;
+        expect(terms).toHaveLength(2);
+        expect(terms[0].unit.unitId).toBe('newton');
+        expect(terms[0].exponent).toBe(2);
+        expect(terms[1].unit.unitId).toBe('meter');
+        expect(terms[1].exponent).toBe(1);
+      });
+
+      it('should parse implicit multiplication with Unicode superscripts (1 N² m³)', () => {
+        // "1 N² m³" should be NumberWithUnit with derived unit [newton:2, meter:3]
+        const expr = parseExpression('1 N² m³');
+        expect(expr.type).toBe('NumberWithUnit');
+        const numWithUnit = expr as any;
+        expect(numWithUnit.value).toBe(1);
+        expect(numWithUnit.unit.type).toBe('DerivedUnit');
+
+        const terms = numWithUnit.unit.terms;
+        expect(terms).toHaveLength(2);
+        expect(terms[0].unit.unitId).toBe('newton');
+        expect(terms[0].exponent).toBe(2);
+        expect(terms[1].unit.unitId).toBe('meter');
+        expect(terms[1].exponent).toBe(3);
+      });
+    });
   });
 });

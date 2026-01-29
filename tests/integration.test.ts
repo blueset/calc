@@ -222,8 +222,7 @@ describe('Integration Tests - SPECS.md Examples', () => {
       expect(result.results[0].result).toContain('ft²');
     });
 
-    it.skip('should handle named multi-word units', () => {
-      // TODO: Implement multi-word unit parsing
+    it('should handle named multi-word units', () => {
       let result = calculator.calculate('1 sq m');
       expect(result.results[0].result).toContain('m²');
       result = calculator.calculate('1 sq ft');
@@ -262,8 +261,7 @@ describe('Integration Tests - SPECS.md Examples', () => {
       expect(result.results[0].result).toContain('lb³');
     });
 
-    it.skip('should handle multi-word units', () => {
-      // TODO: Implement multi-word unit parsing
+    it('should handle multi-word units', () => {
       let result = calculator.calculate('1 fl oz');
       expect(result.results[0].result).toContain('fl oz');
       result = calculator.calculate('10 fluid ounces');
@@ -330,8 +328,7 @@ describe('Integration Tests - SPECS.md Examples', () => {
       expect(result.results[0].result).toContain('atm');
     });
 
-    it.skip('should handle mmHg', () => {
-      // TODO: Implement multi-word unit parsing
+    it('should handle mmHg', () => {
       let result = calculator.calculate('1 mmHg');
       expect(result.results[0].result).toContain('mmHg');
       result = calculator.calculate('1 millimeter of mercury');
@@ -394,11 +391,25 @@ CA$100
       expect(result.results[0].result).toContain('h');
     });
 
-    it.skip('should handle derived units with space multiplication', () => {
-      // TODO: Space multiplication for derived units may not work in all cases
-      const result = calculator.calculate('1 N m');
+    it('should handle derived units with space multiplication', () => {
+      let result = calculator.calculate('1 N m');
       expect(result.results[0].result).toContain('N');
       expect(result.results[0].result).toContain('m');
+      result = calculator.calculate('1 N^2 m');
+      expect(result.results[0].result).toContain('N²');
+      expect(result.results[0].result).toContain('m');
+      result = calculator.calculate('1 N m^2');
+      expect(result.results[0].result).toContain('N');
+      expect(result.results[0].result).toContain('m²');
+      result = calculator.calculate('1 N^3 m^2');
+      expect(result.results[0].result).toContain('N³');
+      expect(result.results[0].result).toContain('m²');
+      result = calculator.calculate('1 N² m³');
+      expect(result.results[0].result).toContain('N²');
+      expect(result.results[0].result).toContain('m³');
+      result = calculator.calculate('1 N² m^3');
+      expect(result.results[0].result).toContain('N²');
+      expect(result.results[0].result).toContain('m³');
     });
 
     it('should handle derived units with division and exponents', () => {

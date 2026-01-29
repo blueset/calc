@@ -69,12 +69,20 @@
 - [x] Write unit tests for parser
 - [x] Parse derived unit expressions in conversion targets
 - [x] Caret notation for exponents (m^2, m^3) - requires disambiguation from power operator
-- [x] Named square/cubic units (square meter, cubic meter, meter squared, meter cubed)
+- [x] Named square/cubic units (square meter, cubic meter, meter squared, meter cubed)\
+- [x] Multi-word unit parsing (fl oz, sq m, millimeter of mercury) - implemented with lookahead & backtracking
+- [x] Multi-word currency name parsing (US dollars, hong kong dollars) - fully implemented and tested
+- [x] Currency-before-number pattern (USD 100, EUR 50) - implemented in `parsePrimary()`
 
-**Phase 3 Gaps** (see @PHASE_8_GAPS.md for details, 5-7 hours):
-- [ ] Multi-word unit parsing (fl oz, sq m, millimeter of mercury) - lookahead & backtracking
-- [ ] Multi-word currency name parsing (US dollars, hong kong dollars) - same logic as units
-- [ ] Currency-before-number pattern (USD 100, EUR 50) - parse in `parsePrimary()`
+**Note**: All Phase 3 features are fully implemented with passing tests. The multi-word parsing uses lookahead/backtracking with longest-match algorithm. Currency-before-number pattern works for currency codes (USD, EUR). Full end-to-end testing will be possible once Phase 5 (evaluator) implements currency unit resolution.
+
+**Context-Aware Derived Unit Parsing**: The `isDerivedUnitExpression()` method distinguishes between derived units and binary arithmetic:
+- Unit exponents: "100 m^2" or "to m^2" → derived unit with exponent (CARET followed by NUMBER is always a unit exponent in derived unit context)
+- Pure implicit multiplication: "1 N m" → derived unit (consecutive units without operators imply multiplication)
+- Implicit multiplication with operators: "1 kg fl oz/day" → derived unit (consecutive units followed by operator)
+- Binary arithmetic with SLASH/STAR: "100 km / 2 h" → binary division (BinaryExpression, because "/" is followed by NUMBER)
+- Binary exponentiation: "100^2" → binary exponentiation (BinaryExpression, no unit context)
+Variables are detected via `definedVariables` set to prevent defined variables from being treated as units in derived unit expressions.
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions

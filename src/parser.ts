@@ -50,6 +50,7 @@ import {
   PlainDateLiteral,
   PlainTimeLiteral,
   CompositeUnitLiteral,
+  NumberLiteral,
   PresentationTarget,
   PropertyTarget,
   TimezoneTarget,
@@ -78,6 +79,7 @@ export class Parser {
   private errorRecoveryMode: boolean = false;
   private lineErrors: Map<number, ParserError> = new Map();  // Track errors by line
   private inputLines: string[] = [];  // Store raw input lines for error reporting
+  private definedVariables: Set<string> = new Set();  // Track defined variable names for context-aware parsing
 
   // Unicode superscript to number mapping
   private static readonly SUPERSCRIPTS: Record<string, string> = {
@@ -241,6 +243,10 @@ export class Parser {
           this.advance(); // consume =
           const value = this.parseExpression();
           const end = this.previous().end;
+
+          // Track this variable for context-aware derived unit parsing
+          this.definedVariables.add(name);
+
           return createVariableDefinition(name, value, start, end);
         }
       }
@@ -423,6 +429,35 @@ export class Parser {
       return createBooleanLiteral(value, start, this.previous().end);
     }
 
+    // Currency-before-number pattern (USD 100, EUR 50)
+    // Check if current token is a UNIT that represents a currency
+    if (this.check(TokenType.UNIT)) {
+      const unitToken = this.currentToken();
+      // Look ahead for NUMBER token
+      if (this.peekAhead(1)?.type === TokenType.NUMBER) {
+        // Check if this unit is actually a currency code
+        const currency = this.dataLoader.getCurrencyByCode(unitToken.value);
+        if (currency) {
+          // This is a currency-before-number pattern
+          this.advance(); // consume UNIT (currency)
+          const numberToken = this.currentToken();
+          this.advance(); // consume NUMBER
+
+          const value = parseFloat(numberToken.value);
+          const currencyUnit = createSimpleUnit(
+            currency.code,
+            unitToken.value,
+            unitToken.start,
+            unitToken.end
+          );
+          const end = numberToken.end;
+
+          // Return as NumberWithUnit (number after currency)
+          return createNumberWithUnit(value, currencyUnit, numberToken.value, start, end);
+        }
+      }
+    }
+
     // Number (potentially with unit or composite unit)
     if (this.match(TokenType.NUMBER)) {
       return this.parseNumberWithOptionalUnit(this.previous());
@@ -455,36 +490,7 @@ export class Parser {
 
       // Check for base notation with identifier: ABC base 36
       if (this.check(TokenType.BASE)) {
-        this.advance(); // consume 'base' keyword
-
-        if (!this.check(TokenType.NUMBER)) {
-          throw new Error(`Expected base number after 'base' keyword at ${this.currentToken().start.line}:${this.currentToken().start.column}`);
-        }
-
-        const baseToken = this.currentToken();
-        this.advance(); // consume base number
-        const base = parseInt(baseToken.value);
-
-        // Validate base (2-36 are standard)
-        if (base < 2 || base > 36) {
-          throw new Error(`Invalid base ${base}. Base must be between 2 and 36 at ${baseToken.start.line}:${baseToken.start.column}`);
-        }
-
-        // Parse the identifier as a number in the given base
-        const digits = name;
-        let decimalValue: number;
-
-        try {
-          decimalValue = parseInt(digits, base);
-          if (isNaN(decimalValue)) {
-            throw new Error(`Invalid digits for base ${base}`);
-          }
-        } catch (error) {
-          throw new Error(`Failed to parse '${digits}' as base ${base} number at ${identifierToken.start.line}:${identifierToken.start.column}`);
-        }
-
-        const end = this.previous().end;
-        return createNumberLiteral(decimalValue, start, end);
+        return this.parseBaseNotation(name, identifierToken.start, start);
       }
 
       // Check if it's a function call
@@ -535,72 +541,15 @@ export class Parser {
         // This is: NUMBER IDENTIFIER base NUMBER
         // Combine the number and identifier (e.g., "1" + "A2b" = "1A2b")
         this.advance(); // consume identifier
-        this.advance(); // consume 'base' keyword
-
-        if (!this.check(TokenType.NUMBER)) {
-          throw new Error(`Expected base number after 'base' keyword at ${this.currentToken().start.line}:${this.currentToken().start.column}`);
-        }
-
-        const baseToken = this.currentToken();
-        this.advance(); // consume base number
-        const base = parseInt(baseToken.value);
-
-        // Validate base (2-36 are standard)
-        if (base < 2 || base > 36) {
-          throw new Error(`Invalid base ${base}. Base must be between 2 and 36 at ${baseToken.start.line}:${baseToken.start.column}`);
-        }
-
-        // Combine number and identifier for parsing
         const digits = numberToken.value + identifierToken.value;
-        let decimalValue: number;
-
-        try {
-          decimalValue = parseInt(digits, base);
-          if (isNaN(decimalValue)) {
-            throw new Error(`Invalid digits for base ${base}`);
-          }
-        } catch (error) {
-          throw new Error(`Failed to parse '${digits}' as base ${base} number at ${numberToken.start.line}:${numberToken.start.column}`);
-        }
-
-        const end = this.previous().end;
-        return createNumberLiteral(decimalValue, start, end);
+        return this.parseBaseNotation(digits, numberToken.start, start);
       }
     }
 
     // Check for base notation: NUMBER base NUMBER (without identifier)
     // e.g., "1010 base 2"
     if (this.check(TokenType.BASE)) {
-      this.advance(); // consume 'base' keyword
-
-      if (!this.check(TokenType.NUMBER)) {
-        throw new Error(`Expected base number after 'base' keyword at ${this.currentToken().start.line}:${this.currentToken().start.column}`);
-      }
-
-      const baseToken = this.currentToken();
-      this.advance(); // consume base number
-      const base = parseInt(baseToken.value);
-
-      // Validate base (2-36 are standard)
-      if (base < 2 || base > 36) {
-        throw new Error(`Invalid base ${base}. Base must be between 2 and 36 at ${baseToken.start.line}:${baseToken.start.column}`);
-      }
-
-      // Parse the number in the given base
-      const digits = numberToken.value;
-      let decimalValue: number;
-
-      try {
-        decimalValue = parseInt(digits, base);
-        if (isNaN(decimalValue)) {
-          throw new Error(`Invalid digits for base ${base}`);
-        }
-      } catch (error) {
-        throw new Error(`Failed to parse '${digits}' as base ${base} number at ${numberToken.start.line}:${numberToken.start.column}`);
-      }
-
-      const end = this.previous().end;
-      return createNumberLiteral(decimalValue, start, end);
+      return this.parseBaseNotation(numberToken.value, numberToken.start, start);
     }
 
     const value = parseFloat(numberToken.value);
@@ -636,8 +585,35 @@ export class Parser {
       namedExponent = exponentKeyword.type === TokenType.SQUARE ? 2 : 3;
     }
 
-    // Check for unit after number
-    if (this.check(TokenType.UNIT) || namedExponent !== null) {
+    // Check for unit after number (or identifier that might be part of a multi-word unit/currency)
+    if (this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER) || namedExponent !== null) {
+      // Try multi-word unit/currency parsing first for identifiers
+      if (this.check(TokenType.IDENTIFIER)) {
+        const multiWord = this.tryParseMultiWordUnit();
+        if (multiWord) {
+          // Check if this is part of a derived unit expression (e.g., "1 sq ft/person")
+          if (this.isDerivedUnitExpression()) {
+            const derivedUnit = this.parseDerivedUnitExpression(multiWord, multiWord.name, start);
+
+            // If the derived unit has only 1 term, we didn't parse any operators
+            // (stopped early due to variable). Treat as simple unit.
+            if (derivedUnit.terms.length === 1) {
+              // Fall through to return just the multi-word unit
+            } else {
+              const end = this.previous().end;
+              return createNumberWithUnit(value, derivedUnit, numberToken.value, start, end);
+            }
+          }
+
+          // Just a single multi-word unit
+          const end = this.previous().end;
+          return createNumberWithUnit(value, multiWord, numberToken.value, start, end);
+        }
+        // If no multi-word match and it's not a UNIT token, it's a plain number
+        // followed by an identifier (which will be parsed as a separate expression)
+        return createNumberLiteral(value, numberToken.value, start, numberToken.end);
+      }
+
       // Check if this might be a composite unit (multiple value-unit pairs)
       const units: Array<{ value: number; unit: UnitExpression }> = [];
 
@@ -663,7 +639,10 @@ export class Parser {
       }
 
       // Handle Unicode superscript exponent (e.g., "m²" → [meter:2], "lb³" → [pound:3])
-      if (unicodeExponent !== null && firstUnit.type === 'SimpleUnit') {
+      // IMPORTANT: Only handle single-unit Unicode exponents here. If there are more units after
+      // (e.g., "1 N² m³"), let parseDerivedUnitExpression() handle the entire multi-unit expression.
+      const hasMoreUnitsAfterUnicode = this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER);
+      if (unicodeExponent !== null && firstUnit.type === 'SimpleUnit' && !hasMoreUnitsAfterUnicode) {
         const derivedUnit = createDerivedUnit(
           [{ unit: firstUnit as SimpleUnit, exponent: unicodeExponent }],
           firstUnit.start,
@@ -675,7 +654,21 @@ export class Parser {
       // Check for ASCII exponent notation (e.g., "m^2" should parse like "m²")
       // This makes "16 m^2" parse as NumberWithUnit(16, DerivedUnit([{unit: m, exponent: 2}]))
       // instead of as operation (16 m)^2
+      // IMPORTANT: Only handle single-unit exponents here. If there are more units after the exponent
+      // (e.g., "1 N^2 m"), let parseDerivedUnitExpression() handle the entire multi-unit expression.
+      let hasMoreUnitsAfterExponent = false;
       if (this.check(TokenType.CARET)) {
+        // Look ahead past the exponent to see if there are more units
+        const savedPos = this.current;
+        this.advance(); // skip ^
+        if (this.check(TokenType.MINUS)) this.advance(); // skip optional minus
+        if (this.check(TokenType.NUMBER)) this.advance(); // skip exponent number
+        // Check if there are more units after the exponent
+        hasMoreUnitsAfterExponent = this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER);
+        this.current = savedPos; // restore position
+      }
+
+      if (this.check(TokenType.CARET) && !hasMoreUnitsAfterExponent) {
         this.advance(); // consume CARET
 
         // Handle negative exponents (e.g., s^-1)
@@ -717,6 +710,24 @@ export class Parser {
           exponentKeyword.end
         );
         firstUnit = derivedUnit;
+      }
+
+      // Check if this is a derived unit expression with operators (*, /, implicit multiplication)
+      // Examples: "100 m/s", "100 kg m/s^2", "100 fl oz/kg"
+      const hasFirstUnitSuperscript = unicodeExponent !== null;
+      if (hasFirstUnitSuperscript || this.isDerivedUnitExpression()) {
+        // Parse as derived unit expression
+        const derivedUnit = this.parseDerivedUnitExpression(firstUnit as SimpleUnit, unitOriginalValue, start);
+
+        // If the derived unit has only 1 term, it means we didn't actually parse any operators
+        // (e.g., we stopped early because we hit a variable). Return the single unit normally.
+        if (derivedUnit.terms.length === 1) {
+          const end = this.previous().end;
+          return createNumberWithUnit(value, firstUnit, numberToken.value, start, end);
+        } else {
+          const end = this.previous().end;
+          return createNumberWithUnit(value, derivedUnit, numberToken.value, start, end);
+        }
       }
 
       units.push({ value, unit: firstUnit });
@@ -768,6 +779,14 @@ export class Parser {
   private parseUnit(extractSuperscript: boolean = false): SimpleUnit {
     const start = this.currentToken().start;
 
+    // Try multi-word unit parsing first (e.g., "fl oz", "sq m", "millimeter of mercury")
+    // This works correctly even in derived units like "fl oz/kg" because tryParseMultiWordUnit()
+    // only collects UNIT/IDENTIFIER tokens and stops at operators (/, *, ^)
+    const multiWord = this.tryParseMultiWordUnit();
+    if (multiWord) {
+      return multiWord;
+    }
+
     // Simple case: single unit token
     if (this.match(TokenType.UNIT)) {
       const unitToken = this.previous();
@@ -813,6 +832,127 @@ export class Parser {
     }
 
     throw new Error(`Expected unit at ${start.line}:${start.column}`);
+  }
+
+  /**
+   * Try to parse multi-word units like "fl oz", "sq m", "millimeter of mercury", "US dollars"
+   *
+   * Algorithm:
+   * 1. Collect up to 4 tokens (UNIT or IDENTIFIER)
+   * 2. Try longest match first, then progressively shorter
+   * 3. Check both unit database and currency database
+   * 4. If match found, consume tokens and return SimpleUnit
+   * 5. If no match, return null (no tokens consumed)
+   *
+   * @returns SimpleUnit if multi-word unit found, null otherwise
+   */
+  private tryParseMultiWordUnit(): SimpleUnit | null {
+    const start = this.currentToken().start;
+    const savedPosition = this.current;
+
+    // Collect potential tokens (up to 4 words)
+    const tokens: Token[] = [];
+    const maxTokens = 4;
+
+    for (let i = 0; i < maxTokens && !this.isAtEnd(); i++) {
+      const currentToken = this.currentToken();
+
+      // Only collect UNIT or IDENTIFIER tokens
+      if (currentToken.type === TokenType.UNIT ||
+          currentToken.type === TokenType.IDENTIFIER) {
+        tokens.push(currentToken);
+        this.advance();
+      } else {
+        break;
+      }
+    }
+
+    // If we collected less than 2 tokens, this isn't a multi-word unit
+    if (tokens.length < 2) {
+      this.current = savedPosition;
+      return null;
+    }
+
+    // Try longest match first, then progressively shorter
+    for (let len = tokens.length; len >= 2; len--) {
+      const candidateTokens = tokens.slice(0, len);
+      const combinedName = candidateTokens.map(t => t.value).join(' ');
+
+      // Check unit database (case-insensitive)
+      const unitMatches = this.dataLoader.getUnitsByCaseInsensitiveName(combinedName);
+      if (unitMatches.length > 0) {
+        // Found a match! Use first match
+        const unit = unitMatches[0];
+        const end = candidateTokens[candidateTokens.length - 1].end;
+
+        // Backtrack to consume only the matched tokens
+        this.current = savedPosition + len;
+
+        return createSimpleUnit(unit.id, combinedName, start, end);
+      }
+
+      // Check currency database (case-insensitive)
+      const currencyMatches = this.dataLoader.getCurrenciesByName(combinedName);
+      if (currencyMatches.length > 0) {
+        // Found a currency match! Use first match
+        const currency = currencyMatches[0];
+        const end = candidateTokens[candidateTokens.length - 1].end;
+
+        // Backtrack to consume only the matched tokens
+        this.current = savedPosition + len;
+
+        // Return as a SimpleUnit with currency code as unit ID
+        return createSimpleUnit(currency.code, combinedName, start, end);
+      }
+    }
+
+    // No match found, backtrack completely
+    this.current = savedPosition;
+    return null;
+  }
+
+  /**
+   * Parse base notation: digits base N
+   *
+   * Expects current token to be BASE keyword
+   * Consumes BASE and the following NUMBER token
+   *
+   * @param digits - The digit string to parse in the given base
+   * @param digitsStart - Source location of the digits (for error messages)
+   * @param start - Start location of the entire expression
+   * @returns NumberLiteral with parsed value
+   */
+  private parseBaseNotation(digits: string, digitsStart: SourceLocation, start: SourceLocation): NumberLiteral {
+    this.advance(); // consume 'base' keyword
+
+    if (!this.check(TokenType.NUMBER)) {
+      throw new Error(`Expected base number after 'base' keyword at ${this.currentToken().start.line}:${this.currentToken().start.column}`);
+    }
+
+    const baseToken = this.currentToken();
+    this.advance(); // consume base number
+    const base = parseInt(baseToken.value);
+
+    // Validate base (2-36 are standard)
+    if (base < 2 || base > 36) {
+      throw new Error(`Invalid base ${base}. Base must be between 2 and 36 at ${baseToken.start.line}:${baseToken.start.column}`);
+    }
+
+    // Parse the digits in the given base
+    let decimalValue: number;
+
+    try {
+      decimalValue = parseInt(digits, base);
+      if (isNaN(decimalValue)) {
+        throw new Error(`Invalid digits for base ${base}`);
+      }
+    } catch (error) {
+      throw new Error(`Failed to parse '${digits}' as base ${base} number at ${digitsStart.line}:${digitsStart.column}`);
+    }
+
+    const end = this.previous().end;
+    const raw = `${digits} base ${base}`;
+    return createNumberLiteral(decimalValue, raw, start, end);
   }
 
   /**
@@ -972,41 +1112,70 @@ export class Parser {
   private isDerivedUnitExpression(): boolean {
     // Check for explicit operators immediately after the first unit
     if (this.check(TokenType.STAR) || this.check(TokenType.SLASH) || this.check(TokenType.CARET)) {
+      // Look ahead to see what follows the operator
+      const savedPosition = this.current;
+      const operator = this.currentToken().type;
+      this.advance(); // skip operator
+
+      // If followed by NUMBER:
+      // - For CARET: "m^2" or "100 m^2" is always a unit exponent (derived unit)
+      // - For STAR/SLASH: "km / 2" or "km * 2" is always binary arithmetic
+      if (this.check(TokenType.NUMBER)) {
+        if (operator === TokenType.CARET) {
+          // "^" followed by NUMBER is always a unit exponent in derived unit context
+          this.current = savedPosition;
+          return true;
+        }
+        // For STAR/SLASH followed by NUMBER, it's binary arithmetic
+        this.current = savedPosition;
+        return false;
+      }
+
+      // If followed by a defined variable, this is binary division, not derived unit
+      if (this.check(TokenType.IDENTIFIER)) {
+        const identifierName = this.currentToken().value;
+        if (this.definedVariables.has(identifierName)) {
+          // It's a variable - this is binary division, not derived unit
+          this.current = savedPosition;
+          return false;
+        }
+      }
+
+      this.current = savedPosition;
       return true;
     }
 
-    // Check for implicit multiplication: unit followed by another unit, then an operator
-    // This handles cases like "kg m/s²" where kg*m is implicit
+    // Check for implicit multiplication: unit followed by another unit
+    // This handles cases like "kg m/s²", "kg fl oz/day", or "N m" where units are implicitly multiplied
     if (this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER)) {
-      // Look ahead to see if there's an operator or superscript after the next unit
       const savedPosition = this.current;
+      let scannedAtLeastOneUnit = false;
 
-      // Get the next unit token to check for Unicode superscript
-      const nextToken = this.currentToken();
-      const [, unicodeExponent] = this.extractSuperscript(nextToken.value);
+      // Scan through consecutive UNIT/IDENTIFIER tokens looking for operators or superscripts
+      while (this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER)) {
+        const token = this.currentToken();
+        const [, unicodeExponent] = this.extractSuperscript(token.value);
 
-      // Skip the next unit
-      this.advance(); // Skip UNIT or IDENTIFIER
+        // Check for Unicode superscript in the unit itself
+        if (unicodeExponent !== null) {
+          this.current = savedPosition;
+          return true;
+        }
 
-      // Check for Unicode superscript in the unit itself
-      if (unicodeExponent !== null) {
-        this.current = savedPosition;
-        return true;
+        scannedAtLeastOneUnit = true;
+        this.advance(); // Move past this UNIT/IDENTIFIER
+
+        // Check for explicit operators after this unit
+        if (this.check(TokenType.CARET) || this.check(TokenType.STAR) || this.check(TokenType.SLASH)) {
+          this.current = savedPosition;
+          return true;
+        }
       }
 
-      // Check for exponentiation after this unit
-      if (this.check(TokenType.CARET)) {
-        this.current = savedPosition;
-        return true;
-      }
-
-      // Check for multiplication or division operators
-      const hasOperator = this.check(TokenType.STAR) || this.check(TokenType.SLASH);
-
-      // Restore position
+      // If we scanned at least one additional unit token, treat as derived unit with implicit multiplication
+      // This allows "1 N m" to parse as derived unit, not just "1 kg m/s" with explicit operator
       this.current = savedPosition;
-
-      return hasOperator;
+      return scannedAtLeastOneUnit;
     }
 
     return false;
@@ -1064,12 +1233,20 @@ export class Parser {
         break; // Not a unit, stop parsing
       }
 
-      // For identifiers, check if it's actually a unit (not a keyword or presentation format)
+      // For identifiers, check if it's actually a unit (not a keyword, presentation format, or defined variable)
       if (this.check(TokenType.IDENTIFIER)) {
-        const name = this.currentToken().value.toLowerCase();
+        const name = this.currentToken().value;
+        const nameLower = name.toLowerCase();
         const presentationFormats = ['binary', 'octal', 'hex', 'fraction', 'scientific', 'ordinal'];
         const properties = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'dayOfWeek', 'dayOfYear', 'weekOfYear'];
-        if (presentationFormats.includes(name) || properties.includes(name)) {
+
+        // Check if this identifier is a defined variable - if so, stop parsing the derived unit
+        // This allows: "foo = 1 kg; 100 fl oz/foo" → (100 fl oz) / foo, not 100 [fl_oz:1, foo:-1]
+        if (this.definedVariables.has(name)) {
+          break; // It's a variable, not a unit - stop parsing derived unit
+        }
+
+        if (presentationFormats.includes(nameLower) || properties.includes(nameLower)) {
           break; // Not a unit, stop parsing
         }
       }
