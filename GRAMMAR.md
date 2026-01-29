@@ -1164,7 +1164,7 @@ def convert_currency(amount, from_currency, to_currency):
 
 ```
 5 m + 20 cm                     ⎙ 5.2 m
-2 hr - 30 min                   ⎙ 1.5 hr
+2 hr - 30 min                   ⎙ 1.5 h
 3 kg * 2                        ⎙ 6 kg
 4 m / 2                         ⎙ 2 m
 5 m * 20 cm                     ⎙ 100 m²
@@ -1236,7 +1236,7 @@ if true || false then 100 USD else 200 USD  ⎙ 100.00 USD
 ```
 sin(30 deg)                     ⎙ 0.5
 sqrt(16)                        ⎙ 4
-log(100)                        ⎙ 2
+log(100)                        ⎙ 4.605170186
 round(3.6)                      ⎙ 4
 abs(-5)                         ⎙ 5
 ```

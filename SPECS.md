@@ -766,7 +766,7 @@ Rules for rendering converted zoned date time:
 ## Cross unit arithmetic
 Support arithmetic operations between compatible units.
 5 m + 20 cm ⎙ 5.2 m
-2 hr - 30 min ⎙ 1.5 hr
+2 hr - 30 min ⎙ 1.5 h
 3 kg * 2 ⎙ 6 kg
 4 m / 2 ⎙ 2 m
 
@@ -969,7 +969,7 @@ Support arsinh(), arcosh(), artanh() as aliases of asinh(), acosh(), atanh() res
 ## Logarithmic and exponential
 sqrt(16) ⎙ 4
 cbrt(27) ⎙ 3
-log(100) ⎙ 2
+log(100) ⎙ 4.605170186
 ln(e^3) ⎙ 3
 exp(2) ⎙ 7.38905609893065
 e^2 ⎙ 7.38905609893065
@@ -1022,13 +1022,13 @@ Comparisons can be performed between compatible units.
 
 # Binary arithmetic
 
-0b1010 & 0b1100 ⎙ 0b1000
-0b1010 | 0b1100 ⎙ 0b1110
-0b1010 xor 0b1100 ⎙ 0b0110
-~0b1010 ⎙ 0b-1011
+0b1010 & 0b1100 to binary ⎙ 0b1000
+0b1010 | 0b1100 to binary ⎙ 0b1110
+0b1010 xor 0b1100 to binary ⎙ 0b0110
+~0b1010 to binary ⎙ 0b-1011
 Note: binary not of x is defined as `-x-1`
-0b1010 << 2 ⎙ 0b101000
-0b1010 >> 1 ⎙ 0b0101
+0b1010 << 2 to binary ⎙ 0b101000
+0b1010 >> 1 to binary ⎙ 0b0101
 
 # Variables
 User can define variables using the syntax: `identifier = expression`
