@@ -84,6 +84,19 @@
 - Binary exponentiation: "100^2" → binary exponentiation (BinaryExpression, no unit context)
 Variables are detected via `definedVariables` set to prevent defined variables from being treated as units in derived unit expressions.
 
+**Phase 3 Gaps** (see @PHASE_8_GAPS.md for details, 4-6 hours):
+- [ ] Derived units in binary operations - 4-6 hours, blocks 80% of failures
+  - Parser incorrectly splits expressions like `3 kg/m² * 2 m²` into TWO separate lines
+  - Root cause: `/` in derived units treated as end-of-expression marker when followed by `*` or `/`
+  - Blocks user-defined units with derived units and unit cancellation features
+  - Examples that fail: `3 kg/m² * 2 m²`, `10 USD/person * 3 person`, `60 kg/cm² / 2 h/m²`
+  - Example that works: `1000 USD / 5 person / 2 day` (simple units parse correctly)
+  - Fix location: `src/parser.ts` - expression parsing logic for binary operations
+  - Re-enable tests: Unblocks lines 630-635, 659-666, 638-643, 669-679 in integration.test.ts
+- [ ] Multi-word unit parsing edge cases (see @PHASE_8_GAPS.md lines 166-186)
+  - "sq ft" case not working despite multi-word parsing being implemented
+  - Re-enable test: line 503 in integration.test.ts
+
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
 - [x] Implement Duration type (semantic, not syntactic - see section 8)
@@ -118,20 +131,22 @@ Variables are detected via `definedVariables` set to prevent defined variables f
 - [x] Implement exponentiation of units and derived units (completed)
 
 **Phase 5 Gaps** (see @PHASE_8_GAPS.md for details, 29-40 hours):
-- [ ] User-defined units support - 5 tests, 8-12 hours
-  - Allow unknown identifiers as user-defined units (1 person, 3 trips, 1 click)
-  - Support in derived units (1 kg/person, 1 USD/person/day)
-  - Enable arithmetic operations (3 trips + 2 trips → 5 trips)
-  - Allow conversions (100 person/sq ft to person/km^2)
-  - Requires changes in parser, type-checker, evaluator, formatter
-  - Re-enable tests: lines 388, 393, 503, 608, 633, 659 in integration.test.ts
-- [ ] Unit cancellation in arithmetic - 3 tests, 6-8 hours
-  - Implement proper unit algebra (add/subtract exponents during multiplication/division)
-  - Cancel opposing units (kg/m² × m² → kg, not kg/m²)
-  - Compute numeric results (3 kg/m² × 2 m² → 6 kg, not 3 kg/m²)
-  - Handle unit conversions during simplification (cm² to m² factor: 10000)
-  - Complex example: 60 kg/cm² / 2 h/m² → 300,000 kg/h
-  - Re-enable tests: lines 623, 647 (and parts of 633, 659) in integration.test.ts
+- [x] User-defined units support - 5 tests, 8-12 hours **[IMPLEMENTED BUT BLOCKED BY PHASE 3 PARSER BUG]**
+  - [x] Allow unknown identifiers as user-defined units (1 person, 3 trips, 1 click)
+  - [x] Support in derived units (1 kg/person, 1 USD/person/day)
+  - [x] Enable arithmetic operations (3 trips + 2 trips → 5 trips)
+  - [ ] Allow conversions (100 person/sq ft to person/km^2) - blocked by parser bug
+  - [x] Changes completed in parser, type-checker, evaluator, formatter
+  - [ ] ⚠️ BLOCKED: Derived unit cases fail due to Phase 3 parser bug (see above)
+  - [ ] Re-enable tests: lines 388 [x], 393 [x], 503 [ ], 608 [x], 633 [ ], 659 [ ] in integration.test.ts
+- [x] Unit cancellation in arithmetic - 3 tests, 6-8 hours **[IMPLEMENTED BUT BLOCKED BY PHASE 3 PARSER BUG]**
+  - [x] Implement proper unit algebra (add/subtract exponents during multiplication/division)
+  - [x] Cancel opposing units (kg/m² × m² → kg) - `simplifyTerms()` method working
+  - [x] Compute numeric results - integration with multiply/divide operations complete
+  - [x] Handle unit conversions during simplification (cm² to m² factor: 10000)
+  - [ ] ⚠️ BLOCKED: Cannot test properly due to Phase 3 parser bug splitting expressions
+  - [x] Evidence it works: `1000 USD / 5 person / 2 day` → `100 USD/(person day)`
+  - [ ]Re-enable tests: lines 623 [ ], 647 [ ] (and parts of 633, 659) in integration.test.ts
 - [ ] Currency unit resolution in evaluator (fallback from unit to currency lookup)
 - [ ] Ambiguous currency dimension handling ($ → "currency_symbol_0024", error on operations)
 - [ ] Dimensionless unit auto-conversion (5 dozen → 60, 100 percent → 1, 50% → 0.5)

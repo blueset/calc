@@ -1062,7 +1062,8 @@ export class TypeChecker {
     if (unit.type === 'SimpleUnit') {
       const unitData = this.dataLoader.getUnitByName(unit.name);
       if (!unitData) {
-        return { kind: 'dimensionless' };
+        // User-defined unit - treat as its own unique dimension
+        return { kind: 'physical', dimension: `user_defined_${unit.unitId}` };
       }
       return { kind: 'physical', dimension: unitData.dimension };
     }
@@ -1070,8 +1071,15 @@ export class TypeChecker {
     // DerivedUnit
     const terms = unit.terms.map(term => {
       const unitData = this.dataLoader.getUnitByName(term.unit.name);
+      if (!unitData) {
+        // User-defined unit in derived unit
+        return {
+          dimension: `user_defined_${term.unit.unitId}`,
+          exponent: term.exponent,
+        };
+      }
       return {
-        dimension: unitData?.dimension || 'dimensionless',
+        dimension: unitData.dimension,
         exponent: term.exponent,
       };
     });
@@ -1085,7 +1093,11 @@ export class TypeChecker {
   private getDimensionFromUnit(unit: AST.UnitExpression): string | null {
     if (unit.type === 'SimpleUnit') {
       const unitData = this.dataLoader.getUnitByName(unit.name);
-      return unitData?.dimension || null;
+      if (!unitData) {
+        // User-defined unit - treat as its own unique dimension
+        return `user_defined_${unit.unitId}`;
+      }
+      return unitData.dimension;
     }
 
     // For derived units, we'd need to compute the resulting dimension

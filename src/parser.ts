@@ -609,9 +609,9 @@ export class Parser {
           const end = this.previous().end;
           return createNumberWithUnit(value, multiWord, numberToken.value, start, end);
         }
-        // If no multi-word match and it's not a UNIT token, it's a plain number
-        // followed by an identifier (which will be parsed as a separate expression)
-        return createNumberLiteral(value, numberToken.value, start, numberToken.end);
+        // If no multi-word match, treat the identifier as a user-defined unit
+        // This allows "1 person", "3 trips", etc. to work
+        // Fall through to unit parsing below
       }
 
       // Check if this might be a composite unit (multiple value-unit pairs)

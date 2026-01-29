@@ -1239,6 +1239,62 @@ export class Evaluator {
   }
 
   /**
+   * Simplify terms by converting compatible units and canceling opposing exponents
+   * Returns simplified terms and a conversion factor to apply to the numeric value
+   */
+  private simplifyTerms(terms: Array<{ unit: Unit; exponent: number }>): {
+    simplified: Array<{ unit: Unit; exponent: number }>;
+    factor: number;
+  } {
+    // Group terms by dimension
+    const byDimension = new Map<string, Array<{ unit: Unit; exponent: number }>>();
+    for (const term of terms) {
+      const dimension = term.unit.dimension;
+      if (!byDimension.has(dimension)) {
+        byDimension.set(dimension, []);
+      }
+      byDimension.get(dimension)!.push(term);
+    }
+
+    let factor = 1.0;
+    const simplified: Array<{ unit: Unit; exponent: number }> = [];
+
+    // For each dimension, check if units can be converted and canceled
+    for (const [dimension, dimTerms] of byDimension) {
+      if (dimTerms.length === 1) {
+        // Single unit for this dimension, keep as-is
+        simplified.push(dimTerms[0]);
+      } else {
+        // Multiple units of same dimension - convert to common base unit and cancel
+        // Calculate total exponent
+        const totalExponent = dimTerms.reduce((sum, t) => sum + t.exponent, 0);
+
+        // Apply conversion factors to the numeric value
+        for (const term of dimTerms) {
+          // Factor raised to the power of the exponent
+          const unitFactor =
+            term.unit.conversion.type === 'linear'
+              ? term.unit.conversion.factor
+              : term.unit.conversion.type === 'affine'
+              ? term.unit.conversion.factor
+              : 1.0; // variant conversion doesn't have a simple factor
+          const conversionFactor = Math.pow(unitFactor, term.exponent);
+          factor *= conversionFactor;
+        }
+
+        // If total exponent is not zero, keep one representative unit with the total exponent
+        if (totalExponent !== 0) {
+          // Use the first unit as the representative (arbitrary choice)
+          simplified.push({ unit: dimTerms[0].unit, exponent: totalExponent });
+        }
+        // If total exponent is zero, the units cancel completely (no term added)
+      }
+    }
+
+    return { simplified, factor };
+  }
+
+  /**
    * Create result value from combined terms
    */
   private createValueFromTerms(value: number, terms: Array<{ unit: Unit; exponent: number }>): NumberValue | DerivedUnitValue {
@@ -1267,7 +1323,9 @@ export class Evaluator {
     const leftTerms = this.extractTerms(left);
     const rightTerms = this.extractTerms(right);
     const combinedTerms = this.combineTerms(leftTerms, rightTerms);
-    return this.createValueFromTerms(value, combinedTerms);
+    const { simplified, factor } = this.simplifyTerms(combinedTerms);
+    const finalValue = value * factor;
+    return this.createValueFromTerms(finalValue, simplified);
   }
 
   /**
@@ -1281,14 +1339,15 @@ export class Evaluator {
     const leftTerms = this.extractTerms(left);
     const rightTerms = this.extractTerms(right).map(t => ({ unit: t.unit, exponent: -t.exponent }));
     const combinedTerms = this.combineTerms(leftTerms, rightTerms);
-    return this.createValueFromTerms(value, combinedTerms);
+    const { simplified, factor } = this.simplifyTerms(combinedTerms);
+    return this.createValueFromTerms(value * factor, simplified);
   }
 
   /**
    * Resolve a unit expression to a Unit object from the data loader
    *
    * Returns:
-   * - For SimpleUnit: the resolved Unit object from data loader
+   * - For SimpleUnit: the resolved Unit object from data loader, or pseudo-unit for user-defined units
    * - For DerivedUnit: null (caller should check unitExpr.type and handle separately)
    *
    * Note: DerivedUnit AST nodes are now created by the parser in conversion targets.
@@ -1296,7 +1355,22 @@ export class Evaluator {
    */
   private resolveUnit(unitExpr: AST.UnitExpression): Unit | null {
     if (unitExpr.type === 'SimpleUnit') {
-      return this.dataLoader.getUnitById(unitExpr.unitId) || null;
+      const unit = this.dataLoader.getUnitById(unitExpr.unitId);
+      if (unit) return unit;
+
+      // User-defined unit - create pseudo-unit on-the-fly
+      // Each user-defined unit gets its own unique dimension
+      return {
+        id: unitExpr.unitId,
+        dimension: `user_defined_${unitExpr.unitId}`,
+        names: [unitExpr.name],
+        conversion: { type: 'linear', factor: 1.0 },
+        displayName: {
+          symbol: unitExpr.name,
+          singular: unitExpr.name,
+          plural: unitExpr.name + 's'
+        }
+      };
     }
     // DerivedUnit: return null to indicate this needs special handling
     // The caller should check unitExpr.type and call convertToDerivedUnit() instead

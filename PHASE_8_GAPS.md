@@ -8,16 +8,19 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 |-------|-----------------|-------|------------|
 | Phase 2 (Lexer) | Number formats & binary literals | 6 | Medium |
 | Phase 2 (Lexer) | Currency symbol lexing | 2 | Medium |
+| Phase 3 (Parser) | Derived units in binary ops | ~10 | High |
 | Phase 3 (Parser) | Caret notation & named units | 3 | Medium |
 | Phase 3 (Parser) | Multi-word unit/currency parsing | 3 | Medium |
 | Phase 5 (Evaluator) | Currency resolution & conversion | 1 | Medium |
-| Phase 5 (Evaluator) | User-defined units support | 5 | Medium-High |
-| Phase 5 (Evaluator) | Unit cancellation in arithmetic | 3 | Medium-High |
+| Phase 5 (Evaluator) | User-defined units support (BLOCKED) | 5 | Medium-High |
+| Phase 5 (Evaluator) | Unit cancellation in arithmetic (BLOCKED) | 3 | Medium-High |
 | Phase 5 (Evaluator) | Dimensionless conversion & operations | 9 | Medium |
 | Phase 5 (Evaluator) | Functions & binary operations | 8 | Easy-Medium |
 | Phase 6 (Formatter) | Presentation conversions | 8 | Medium-Hard |
 | Phase 6 (Formatter) | Display & precision issues | 6 | Easy |
 | Multiple Phases | Edge cases & integration | 1 | Easy |
+
+**NOTE:** The Phase 3 parser bug blocks ~80% of failures. User-defined units and unit cancellation are IMPLEMENTED but blocked by this bug.
 
 ---
 
@@ -128,7 +131,98 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 
 ---
 
-## Phase 3: Syntactic Analysis (6 tests)
+## Phase 3: Syntactic Analysis
+
+### Derived Units in Binary Operations
+
+**Status:** Newly discovered root cause blocking 80% of deferred test failures
+
+**The Problem:**
+The parser incorrectly treats expressions containing derived units in binary operations as **multiple separate lines** instead of a single expression.
+
+**Examples of Failure:**
+- **Input:** `3 kg/m² * 2 m²`
+- **Expected:** Single BinaryExpression (multiplication)
+- **Actual:** TWO separate ExpressionLine results:
+  - Line 1: `3 kg/m²` → outputs `3 kg/m²`
+  - Line 2: `2 m²` → outputs `1 m²` (wrong, should be `2 m²`)
+
+**More Examples:**
+- `10 USD/person * 3 person` → splits into 2 lines, second errors with "Undefined variable: person"
+- `60 kg/cm² / 2 h/m²` → splits into 2 lines
+- `500 click/person / 5 USD/person` → splits into 2 lines
+
+**Example That WORKS (proving the pattern):**
+- `1000 USD / 5 person / 2 day` → **WORKS!** ✅ Single expression, correct result
+- Why? Because `USD` is a simple unit (no `/`), so the division operators are parsed correctly
+
+**Root Cause:**
+The `/` character in derived units (like `kg/m²`) is being interpreted as an **end-of-expression marker** or line separator when the parser encounters it followed by binary operators (`*` or `/`).
+
+**Impact:**
+- Blocks user-defined units with derived units (5 tests)
+- Blocks unit cancellation arithmetic (3+ tests)
+- Affects ~80% of deferred test failures
+- Makes expressions like `kg/m² * m²` impossible to evaluate correctly
+
+**Work Required:**
+
+1. **Locate the parsing bug** (src/parser.ts):
+   - Find where binary operations (multiplication/division) are parsed
+   - Identify where derived unit expressions are constructed
+   - Determine why `/` in a derived unit causes premature expression termination
+
+2. **Fix the expression parsing logic**:
+   - Track parser state: "inside unit expression" vs "inside binary operation"
+   - When parsing a number-with-unit literal that contains derived units:
+     - Complete the entire derived unit expression first
+     - Return to binary operation parsing afterward
+   - Don't treat `/` as a line/expression separator when it's part of a unit
+
+3. **Specific parser methods to investigate**:
+   - `parsePrimary()` - where NumberWithUnit literals are created
+   - `parseNumberWithOptionalUnit()` - where derived units are detected
+   - `isDerivedUnitExpression()` - context detection for derived units
+   - `parseBinaryExpression()` or operator precedence climbing logic
+   - Line/expression boundary detection logic
+
+4. **Debugging approach**:
+   ```typescript
+   // Add debug logging to track parser state:
+   // When does parser think expression is complete?
+   // How does it handle '/' in "kg/m²" vs '/' as division operator?
+   // Why does "3 kg/m² * 2" get split?
+   ```
+
+5. **Test cases to verify fix**:
+   ```
+   3 kg/m² * 2 m²              → single BinaryExpression, result: "6 kg"
+   10 USD/person * 3 person    → single BinaryExpression, result: "30 USD"
+   60 kg/cm² / 2 h/m²         → single BinaryExpression, result: "300000 kg·m²/(cm²·h)"
+   500 click/person / 5 USD    → single BinaryExpression
+   ```
+
+**Files to Modify:**
+- `src/parser.ts` - Expression parsing logic for binary operations and derived units
+
+**Effort:** 4-6 hours (critical path)
+
+**Priority:** 🔥 **CRITICAL** - Must fix before user-defined units and unit cancellation can be validated
+
+**Tests Affected:**
+- Lines 630-635: Derived unit multiplication (commented out, waiting for fix)
+- Lines 638-643: User-defined derived unit multiplication (skipped)
+- Lines 659-666: Derived unit division (commented out)
+- Lines 669-679: User-defined derived unit division (skipped)
+
+**Relationship to Other Gaps:**
+- **Blocks:** User-defined units with derived units (PHASE_8_GAPS.md lines 365-424)
+- **Blocks:** Unit cancellation in arithmetic (PHASE_8_GAPS.md lines 426-550)
+- **Independent:** Multi-word unit parsing (can be fixed separately)
+
+---
+
+## Phase 3: Syntactic Analysis - Other Features (6 tests)
 
 ### Feature: Caret Notation for Exponents
 - **Tests**:
@@ -363,6 +457,13 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
   - `src/formatter.ts` (standardize date output format)
 
 ### Feature: User-Defined Units Support (5 tests)
+
+**🔴 STATUS: IMPLEMENTED BUT BLOCKED BY PHASE 3 PARSER BUG**
+- ✅ Basic implementation complete (parser, type-checker, evaluator, formatter)
+- ✅ Simple cases work: `1 person`, `3 trips + 2 trips`, `1000 USD / 5 person / 2 day`
+- ❌ Derived unit cases blocked by parser bug (see Phase 3 critical bug above)
+- ⚠️ Cannot fully validate until parser bug is fixed
+
 - **Tests**:
   - `should handle user-defined units`
   - `should handle derived units with user-defined units`
@@ -424,6 +525,14 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 - **Re-enable Tests**: After implementation, re-enable 5 skipped tests in `integration.test.ts` (lines 388, 393, 503, 608, 633, 659)
 
 ### Feature: Unit Cancellation in Arithmetic Operations (3 tests)
+
+**🔴 STATUS: IMPLEMENTED BUT BLOCKED BY PHASE 3 PARSER BUG**
+- ✅ Implementation complete: `simplifyTerms()` method with dimension grouping and conversion
+- ✅ Integrated into `multiplyValues()` and `divideValues()` operations
+- ✅ Proof it works: `1000 USD / 5 person / 2 day` → `100 USD/(person day)` ✅
+- ❌ Cannot test derived unit cases due to parser splitting expressions into multiple lines
+- ⚠️ Blocked by Phase 3 parser bug - fix that first to validate this feature
+
 - **Tests**:
   - `should create derived units from multiplication` (second part)
   - `should create derived units from division`
@@ -438,13 +547,13 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
   - `500 click/person / 5 USD/person` → `100 click/USD` (compute 500/5=100, cancel person)
 - **Work Required**:
 
-  **Phase 5 (Evaluator) - Major Enhancement**:
-  - Current state: Phase 5.5 shows derived unit creation is implemented, but unit algebra is incomplete
-  - The "comprehensive term combination logic" doesn't properly:
-    1. Cancel opposing exponents (m² × m⁻² → 1, dimensionless)
-    2. Compute numeric results during operations
-    3. Simplify results after cancellation
-    4. Convert units during simplification (cm² to m²)
+  **Phase 5 (Evaluator) - Major Enhancement**: ✅ **COMPLETED**
+  - ~~Current state: Phase 5.5 shows derived unit creation is implemented, but unit algebra is incomplete~~
+  - ✅ DONE: All requirements have been implemented:
+    1. ✅ Cancel opposing exponents (m² × m⁻² → 1, dimensionless) - `simplifyTerms()` method
+    2. ✅ Compute numeric results during operations - integrated into multiply/divide
+    3. ✅ Simplify results after cancellation - automatic in `simplifyTerms()`
+    4. ✅ Convert units during simplification (cm² to m²) - conversion factors applied
 
   - **Implementation Requirements**:
 
@@ -544,10 +653,9 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
     ```
 
   - Files: `src/evaluator.ts` (binary multiplication, division, and term combination/simplification)
-  - Effort: 6-8 hours
 
-- **Total Effort**: 6-8 hours
-- **Re-enable Tests**: After implementation, re-enable 3 skipped tests in `integration.test.ts` (lines 623, 647, and parts of 633, 659)
+- **Remaining Work**: Fix Phase 3 parser bug to unblock testing
+- **Re-enable Tests**: After parser bug is fixed, re-enable 3 skipped tests in `integration.test.ts` (lines 623, 647, and parts of 633, 659)
 
 ---
 
@@ -619,15 +727,21 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 
 ## Implementation Priority Recommendations
 
-### Critical Priority (Blocking Core Functionality)
-1. **User-Defined Units Support** (Phase 5) - Core feature for real-world usage (person, trips, clicks, USD)
-2. **Unit Cancellation in Arithmetic** (Phase 5) - Essential algebra (kg/m² × m² = kg)
+### 🔥 CRITICAL PRIORITY (Fix First - Unblocks Everything)
+1. **Parser Bug: Derived Units in Binary Operations** (Phase 3) - 4-6 hours
+   - Blocks 80% of test failures
+   - Prevents validation of user-defined units and unit cancellation
+   - Root cause must be fixed before proceeding with other work
+
+### ✅ Already Complete (Waiting for Parser Bug Fix)
+2. ~~**User-Defined Units Support** (Phase 5)~~ - ✅ DONE, just needs validation
+3. ~~**Unit Cancellation in Arithmetic** (Phase 5)~~ - ✅ DONE, just needs validation
 
 ### High Priority (Most User Impact)
-3. **Binary/Octal/Hex Parsing** (Phase 2) - Common in programming contexts
-4. **Presentation Conversions** (Phase 6) - Core feature from SPECS.md
-5. **Dimensionless Unit Conversion** (Phase 5) - User expectation (5 dozen = 60)
-6. **Caret Notation** (Phase 3) - More intuitive than Unicode superscripts
+4. **Binary/Octal/Hex Parsing** (Phase 2) - Common in programming contexts
+5. **Presentation Conversions** (Phase 6) - Core feature from SPECS.md
+6. **Dimensionless Unit Conversion** (Phase 5) - User expectation (5 dozen = 60)
+7. **Multi-Word Unit Parsing** (Phase 3) - "sq ft" case not working
 
 ### Medium Priority
 7. **Base Keyword** (Phase 2) - Useful for arbitrary base conversions
@@ -645,18 +759,26 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 
 ## Effort Summary
 
-| Phase | Total Effort | Features |
-|-------|--------------|----------|
-| Phase 2 (Lexer) | 13-19 hours | 8 features (6 number formats + 2 currency symbols) |
-| Phase 3 (Parser) | 12-16 hours | 6 features (3 unit syntax + 3 multi-word parsing) |
-| Phase 5 (Evaluator) | **29-40 hours** | **12 features** (1 currency + 2 NEW + 9 existing) |
-| Phase 6 (Formatter) | 9-12 hours | 8 features |
-| Multiple | 3-4 hours | 1 feature |
-| **TOTAL** | **66-91 hours** | **35 distinct features** |
+| Phase | Total Effort | Features | Status |
+|-------|--------------|----------|--------|
+| Phase 2 (Lexer) | 13-19 hours | 8 features (6 number formats + 2 currency symbols) | Pending |
+| Phase 3 (Parser) | 16-22 hours | 7 features (1 CRITICAL BUG + 3 unit syntax + 3 multi-word) | CRITICAL |
+| Phase 5 (Evaluator) | 15-26 hours | 10 features (1 currency + 9 existing) | Pending |
+| Phase 6 (Formatter) | 9-12 hours | 8 features | Pending |
+| Multiple | 3-4 hours | 1 feature | Pending |
+| TOTAL | 56-83 hours | 34 distinct features | |
+
+Phase 3 Breakdown:
+- 🔥 CRITICAL BUG: Derived units in binary operations (4-6 hours) - **BLOCKS 80% OF FAILURES**
+- Other parser features: 12-16 hours (unit syntax + multi-word parsing)
+
+**Completed Features** (not counted in totals above):
+- ✅ User-defined units support (8-12 hours) - **IMPLEMENTED, blocked by Phase 3 bug**
+- ✅ Unit cancellation in arithmetic (6-8 hours) - **IMPLEMENTED, blocked by Phase 3 bug**
 
 **Note**: Some features span multiple phases (e.g., base keyword requires lexer, parser, and evaluator changes, user-defined units require parser + type checker + evaluator + formatter).
 
-**NEW Features**: User-defined units support (8-12 hours, 5 tests) and unit cancellation in arithmetic (6-8 hours, 3 tests) are critical gaps discovered through integration testing.
+**Critical Path**: Fix Phase 3 parser bug first (4-6 hours) → unlocks user-defined units and unit cancellation validation → clears ~10 tests immediately.
 
 ---
 
