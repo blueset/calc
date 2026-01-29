@@ -158,6 +158,10 @@ export class DataLoader {
   } = { name: [], symbolAdjacent: [], symbolSpaced: [] };
   private currencyByCode = new Map<string, UnambiguousCurrency>();
   private currencyByCaseInsensitiveName = new Map<string, UnambiguousCurrency[]>();
+  private currencyByAdjacentSymbol = new Map<string, UnambiguousCurrency>();
+  private currencyBySpacedSymbol = new Map<string, UnambiguousCurrency>();
+  private ambiguousCurrencyByAdjacentSymbol = new Map<string, AmbiguousCurrency>();
+  private ambiguousCurrencyBySpacedSymbol = new Map<string, AmbiguousCurrency>();
 
   // Timezone data
   private timezones: Timezone[] = [];
@@ -256,6 +260,24 @@ export class DataLoader {
           existing.push(currency);
         }
       }
+
+      // Build symbolAdjacent lookup (exact match, case-sensitive)
+      for (const symbol of currency.symbolAdjacent) {
+        this.currencyByAdjacentSymbol.set(symbol, currency);
+      }
+
+      // Build symbolSpaced lookup (exact match, case-sensitive)
+      for (const symbol of currency.symbolSpaced) {
+        this.currencyBySpacedSymbol.set(symbol, currency);
+      }
+    }
+
+    // Build ambiguous currency lookups
+    for (const ambiguous of this.ambiguousCurrencies.symbolAdjacent) {
+      this.ambiguousCurrencyByAdjacentSymbol.set(ambiguous.symbol, ambiguous);
+    }
+    for (const ambiguous of this.ambiguousCurrencies.symbolSpaced) {
+      this.ambiguousCurrencyBySpacedSymbol.set(ambiguous.symbol, ambiguous);
     }
   }
 
@@ -363,6 +385,38 @@ export class DataLoader {
     symbolSpaced: AmbiguousCurrency[];
   } {
     return this.ambiguousCurrencies;
+  }
+
+  /**
+   * Get unambiguous currency by adjacent symbol (exact match, case-sensitive)
+   * Adjacent symbols go before the number with no space: US$100, €100, CA$100
+   */
+  getCurrencyByAdjacentSymbol(symbol: string): UnambiguousCurrency | undefined {
+    return this.currencyByAdjacentSymbol.get(symbol);
+  }
+
+  /**
+   * Get unambiguous currency by spaced symbol (exact match, case-sensitive)
+   * Spaced symbols go before the number with a space: USD 100, EUR 50, Kč 100
+   */
+  getCurrencyBySpacedSymbol(symbol: string): UnambiguousCurrency | undefined {
+    return this.currencyBySpacedSymbol.get(symbol);
+  }
+
+  /**
+   * Get ambiguous currency by adjacent symbol (exact match, case-sensitive)
+   * Returns the dimension code for ambiguous currency symbols like $, £, ¥
+   */
+  getAmbiguousCurrencyByAdjacentSymbol(symbol: string): AmbiguousCurrency | undefined {
+    return this.ambiguousCurrencyByAdjacentSymbol.get(symbol);
+  }
+
+  /**
+   * Get ambiguous currency by spaced symbol (exact match, case-sensitive)
+   * Returns the dimension code for ambiguous currency symbols
+   */
+  getAmbiguousCurrencyBySpacedSymbol(symbol: string): AmbiguousCurrency | undefined {
+    return this.ambiguousCurrencyBySpacedSymbol.get(symbol);
   }
 
   /**

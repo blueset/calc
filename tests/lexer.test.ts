@@ -805,7 +805,6 @@ describe('Lexer', () => {
   describe('Unknown Character Rejection', () => {
     it('should record error on various unknown characters', () => {
       expect(tokenizeWithErrors('@').errors).toHaveLength(1);
-      expect(tokenizeWithErrors('$').errors).toHaveLength(1);
       expect(tokenizeWithErrors('`').errors).toHaveLength(1);
       expect(tokenizeWithErrors('[').errors).toHaveLength(1);
       expect(tokenizeWithErrors(']').errors).toHaveLength(1);
@@ -832,6 +831,131 @@ describe('Lexer', () => {
       expect(result.errors[0].message).toContain('Unexpected character \'@\'');
       // Should have tokens for "5 + 3" before the error
       expect(result.tokens.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Currency Symbol Lexing', () => {
+    describe('Adjacent Currency Symbols', () => {
+      it('should tokenize US$ as USD currency', () => {
+        const tokens = tokenize('US$100');
+        expect(tokens).toHaveLength(3); // UNIT(USD), NUMBER(100), EOF
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('USD');
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('100');
+      });
+
+      it('should tokenize € as EUR currency', () => {
+        const tokens = tokenize('€100');
+        expect(tokens).toHaveLength(3); // UNIT(EUR), NUMBER(100), EOF
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('EUR');
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('100');
+      });
+
+      it('should tokenize CA$ as CAD currency', () => {
+        const tokens = tokenize('CA$100');
+        expect(tokens).toHaveLength(3); // UNIT(CAD), NUMBER(100), EOF
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('CAD');
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('100');
+      });
+
+      it('should tokenize ambiguous $ symbol with dimension', () => {
+        const tokens = tokenize('$100');
+        expect(tokens).toHaveLength(3); // UNIT(currency_symbol_0024), NUMBER(100), EOF
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('currency_symbol_0024'); // Ambiguous dimension
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('100');
+      });
+
+      it('should tokenize ambiguous £ symbol with dimension', () => {
+        const tokens = tokenize('£100');
+        expect(tokens).toHaveLength(3); // UNIT(currency_symbol_00A3), NUMBER(100), EOF
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('currency_symbol_00A3'); // Ambiguous dimension
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('100');
+      });
+
+      it('should handle adjacent symbols with decimal numbers', () => {
+        const tokens = tokenize('€99.99');
+        expect(tokens).toHaveLength(3); // UNIT(EUR), NUMBER(99.99), EOF
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('EUR');
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('99.99');
+      });
+
+      it('should prioritize longest match for adjacent symbols', () => {
+        const tokens = tokenize('US$50');
+        expect(tokens).toHaveLength(3);
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('USD'); // Should match US$, not just $
+      });
+    });
+
+    describe('Spaced Currency Symbols', () => {
+      it('should tokenize USD as currency code', () => {
+        const tokens = tokenize('USD 100');
+        expect(tokens).toHaveLength(3); // UNIT(USD), NUMBER(100), EOF
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('USD');
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('100');
+      });
+
+      it('should tokenize EUR as currency code', () => {
+        const tokens = tokenize('EUR 50');
+        expect(tokens).toHaveLength(3); // UNIT(EUR), NUMBER(50), EOF
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('EUR');
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('50');
+      });
+
+      it('should handle currency codes in expressions', () => {
+        const tokens = tokenize('100 + EUR 50');
+        expect(tokens).toHaveLength(5); // NUMBER(100), PLUS, UNIT(EUR), NUMBER(50), EOF
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('100');
+        expect(tokens[1].type).toBe(TokenType.PLUS);
+        expect(tokens[2].type).toBe(TokenType.UNIT);
+        expect(tokens[2].value).toBe('EUR');
+        expect(tokens[3].type).toBe(TokenType.NUMBER);
+        expect(tokens[3].value).toBe('50');
+      });
+    });
+
+    describe('Mixed Currency Patterns', () => {
+      it('should handle both adjacent and spaced symbols in same input', () => {
+        const tokens = tokenize('US$100 + EUR 50');
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('USD');
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('100');
+        expect(tokens[2].type).toBe(TokenType.PLUS);
+        expect(tokens[3].type).toBe(TokenType.UNIT);
+        expect(tokens[3].value).toBe('EUR');
+        expect(tokens[4].type).toBe(TokenType.NUMBER);
+        expect(tokens[4].value).toBe('50');
+      });
+
+      it('should handle ambiguous and unambiguous currencies', () => {
+        const tokens = tokenize('$10 + €20');
+        expect(tokens[0].type).toBe(TokenType.UNIT);
+        expect(tokens[0].value).toBe('currency_symbol_0024'); // Ambiguous $
+        expect(tokens[1].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].value).toBe('10');
+        expect(tokens[2].type).toBe(TokenType.PLUS);
+        expect(tokens[3].type).toBe(TokenType.UNIT);
+        expect(tokens[3].value).toBe('EUR'); // Unambiguous €
+        expect(tokens[4].type).toBe(TokenType.NUMBER);
+        expect(tokens[4].value).toBe('20');
+      });
     });
   });
 });

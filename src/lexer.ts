@@ -114,6 +114,13 @@ export class Lexer {
       }
     }
 
+    // Adjacent currency symbols (must check before numbers)
+    // Examples: US$100, €100, CA$100, ₹100
+    const currencyToken = this.tryScanAdjacentCurrencySymbol(start);
+    if (currencyToken) {
+      return currencyToken;
+    }
+
     // Numbers (including scientific notation)
     if (this.isDigit(this.peek())) {
       return this.scanNumber(start);
@@ -370,6 +377,48 @@ export class Lexer {
   }
 
   /**
+   * Try to scan an adjacent currency symbol (appears before number, no space)
+   * Examples: US$, €, CA$, ₹, $, £, ¥
+   * Returns a UNIT token with currency code if match found, null otherwise
+   */
+  private tryScanAdjacentCurrencySymbol(start: SourceLocation): Token | null {
+    // Try to match currency symbols of various lengths (longest first)
+    // Check up to 4 characters for symbols like "US$", "CA$", "HK$"
+    for (let len = 4; len >= 1; len--) {
+      if (this.position + len > this.input.length) {
+        continue;
+      }
+
+      const potentialSymbol = this.input.substring(this.position, this.position + len);
+
+      // Check unambiguous currencies first
+      const unambiguousCurrency = this.dataLoader.getCurrencyByAdjacentSymbol(potentialSymbol);
+      if (unambiguousCurrency) {
+        // Consume the symbol
+        for (let i = 0; i < len; i++) {
+          this.advance();
+        }
+        // Return UNIT token with currency code
+        return this.createToken(TokenType.UNIT, unambiguousCurrency.code, start, this.currentLocation());
+      }
+
+      // Check ambiguous currencies
+      const ambiguousCurrency = this.dataLoader.getAmbiguousCurrencyByAdjacentSymbol(potentialSymbol);
+      if (ambiguousCurrency) {
+        // Consume the symbol
+        for (let i = 0; i < len; i++) {
+          this.advance();
+        }
+        // Return UNIT token with the ambiguous dimension
+        // The dimension will be used in evaluation for error checking
+        return this.createToken(TokenType.UNIT, ambiguousCurrency.dimension, start, this.currentLocation());
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Scan an identifier, keyword, unit, boolean, or date/time literal
    */
   private scanIdentifierOrDateTime(start: SourceLocation): Token {
@@ -430,12 +479,26 @@ export class Lexer {
       }
     }
 
-    // Check if it's a currency
+    // Check if it's a spaced currency symbol (before general currency check)
+    // These go before numbers with a space: USD 100, EUR 50, Kč 100
+    const spacedCurrency = this.dataLoader.getCurrencyBySpacedSymbol(value);
+    if (spacedCurrency) {
+      return this.createToken(TokenType.UNIT, spacedCurrency.code, start, this.currentLocation());
+    }
+
+    // Check for ambiguous spaced currency symbols
+    const ambiguousSpacedCurrency = this.dataLoader.getAmbiguousCurrencyBySpacedSymbol(value);
+    if (ambiguousSpacedCurrency) {
+      return this.createToken(TokenType.UNIT, ambiguousSpacedCurrency.dimension, start, this.currentLocation());
+    }
+
+    // Check if it's a currency by code
     const currency = this.dataLoader.getCurrencyByCode(value);
     if (currency) {
       return this.createToken(TokenType.UNIT, value, start, this.currentLocation());
     }
 
+    // Check if it's a currency by name
     const currencies = this.dataLoader.getCurrenciesByName(value);
     if (currencies.length > 0) {
       return this.createToken(TokenType.UNIT, value, start, this.currentLocation());

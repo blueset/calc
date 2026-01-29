@@ -53,11 +53,9 @@
 - [x] Update evaluator tests for new API (79 tests)
 - [x] Update type-checker tests for new API (78 tests)
 - [x] Add integration tests for error recording (14 tests)
-
-**Phase 2 Gaps** (see @PHASE_8_GAPS.md for details, 3-5 hours):
-- [ ] Adjacent currency symbol lexing (US$, €, CA$, ₹) - scan before numbers
-- [ ] Spaced currency symbol lexing (USD, CZK in "USD 100", "Kč 100" pattern) - check in identifier scan
-- [ ] Ambiguous currency symbol tracking ($ → dimension "currency_symbol_0024")
+- [x] Adjacent currency symbol lexing (US$, €, CA$, ₹) - scan before numbers
+- [x] Spaced currency symbol lexing (USD, CZK in "USD 100", "Kč 100" pattern) - check in identifier scan
+- [x] Ambiguous currency symbol tracking ($ → dimension "currency_symbol_0024")
 
 ### Phase 3: Syntactic Analysis (Days 5-7)
 - [x] Create `ast.ts` with all AST node types
