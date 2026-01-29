@@ -76,7 +76,11 @@ export interface VariantConversion {
 
 export interface CurrenciesDatabase {
   unambiguous: UnambiguousCurrency[];
-  ambiguous: AmbiguousCurrency[];
+  ambiguous: {
+    name: AmbiguousCurrency[];
+    symbolAdjacent: AmbiguousCurrency[];
+    symbolSpaced: AmbiguousCurrency[];
+  };
 }
 
 export interface UnambiguousCurrency {
@@ -86,6 +90,8 @@ export interface UnambiguousCurrency {
   // All ways to write this currency
   displayName: Pick<DisplayName, "singular" | "plural">;
   names: string[];
+  symbolAdjacent: string[];
+  symbolSpaced: string[];
 }
 
 export interface AmbiguousCurrency {

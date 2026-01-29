@@ -7,7 +7,10 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 | Phase | Feature Category | Count | Complexity |
 |-------|-----------------|-------|------------|
 | Phase 2 (Lexer) | Number formats & binary literals | 6 | Medium |
+| Phase 2 (Lexer) | Currency symbol lexing | 2 | Medium |
 | Phase 3 (Parser) | Caret notation & named units | 3 | Medium |
+| Phase 3 (Parser) | Multi-word unit/currency parsing | 3 | Medium |
+| Phase 5 (Evaluator) | Currency resolution & conversion | 1 | Medium |
 | Phase 5 (Evaluator) | Dimensionless conversion & operations | 9 | Medium |
 | Phase 5 (Evaluator) | Functions & binary operations | 8 | Easy-Medium |
 | Phase 6 (Formatter) | Presentation conversions | 8 | Medium-Hard |
@@ -77,9 +80,53 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
   - `src/parser.ts` (parse base expression)
   - `src/evaluator.ts` (convert from base)
 
+### Feature: Adjacent Currency Symbols
+- **Tests**:
+  - `should handle unambiguous currency symbols` (partial - adjacent symbols)
+- **Examples**:
+  - `US$100` → `100 USD`
+  - `€100` → `100 EUR`
+  - `CA$100` → `100 CAD`
+  - `₹100` → `100 INR`
+- **Work Required**:
+  - Add currency symbol detection **before** number scanning
+  - Scan multi-character symbols (US$, CA$, HK$) and single-character symbols (€, £, ₹)
+  - Lookup in `currencies.json` → `symbolAdjacent` array
+  - Return UNIT token with currency code (USD, EUR, etc.)
+  - **Ambiguous symbol handling**: For ambiguous symbols ($, £, ¥), track as dimension-like type for error reporting
+- **Currency Data Structure**:
+  ```json
+  "symbolAdjacent": ["US$", "€", "CA$"]  // No space between symbol and number
+  ```
+- **Effort**: Medium (2-3 hours)
+- **Files**:
+  - `src/lexer.ts` (add `tryScanCurrencySymbol()` method before number scanning)
+  - `src/data-loader.ts` (add `getCurrencyByAdjacentSymbol()` and build lookup map)
+
+### Feature: Spaced Currency Symbols
+- **Tests**:
+  - `should handle currency ISO codes` (partial - spaced symbols like "USD 100")
+- **Examples**:
+  - `USD 100` → `100 USD`
+  - `EUR 50` → `50 EUR`
+  - `$U 1000` → `1000 UYU`
+- **Work Required**:
+  - Enhance identifier scanning to check if token is a spaced currency symbol
+  - Lookup in `currencies.json` → `symbolSpaced` array
+  - Return UNIT token with currency code
+  - **Ambiguous symbol handling**: Not applicable (ISO codes are unambiguous)
+- **Currency Data Structure**:
+  ```json
+  "symbolSpaced": ["USD", "$U", "F\u202FCFA", "Kč"]  // Space between symbol and number (or before)
+  ```
+- **Effort**: Low (1-2 hours)
+- **Files**:
+  - `src/lexer.ts` (modify `scanIdentifierOrDateTime()` to check spaced symbols)
+  - `src/data-loader.ts` (add `getCurrencyBySpacedSymbol()` and build lookup map)
+
 ---
 
-## Phase 3: Syntactic Analysis (3 tests)
+## Phase 3: Syntactic Analysis (6 tests)
 
 ### Feature: Caret Notation for Exponents
 - **Tests**:
@@ -114,9 +161,106 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
   - `src/lexer.ts` (recognize keywords)
   - `src/parser.ts` (parse named exponent syntax)
 
+### Feature: Multi-Word Unit Names
+- **Tests**:
+  - `should handle named multi-word units` (partial - "sq m", "sq ft")
+  - `should handle multi-word units` (partial - "fl oz", "fluid ounces")
+  - `should handle mmHg` (partial - "millimeter of mercury")
+- **Examples**:
+  - `1 sq m` → `1 m²`
+  - `1 sq ft` → `1 ft²`
+  - `1 fl oz` → `1 fl oz`
+  - `10 fluid ounces` → `10 fl oz`
+  - `1 millimeter of mercury` → `1 mmHg`
+- **Work Required**:
+  - After NUMBER token, implement lookahead to collect multi-word unit names
+  - Try longest-match: collect up to 4 tokens (UNIT or IDENTIFIER)
+  - Check if combined string (joined with spaces) matches a unit in database
+  - If match found, consume all tokens and create SimpleUnit
+  - If no match, backtrack and try single-token unit
+  - Examples from database: "fl oz", "sq m", "sq mi", "millimeter of mercury"
+- **Effort**: Medium (3-4 hours)
+- **Files**:
+  - `src/parser.ts` (add `tryParseMultiWordUnit()` method in `parseNumberWithOptionalUnit()`)
+  - Requires backtracking mechanism to restore parser state if no match
+
+### Feature: Multi-Word Currency Names
+- **Tests**:
+  - `should handle currency names` (partial - "US dollars", "hong kong dollars")
+- **Examples**:
+  - `100 US dollars` → `100 USD`
+  - `100 euros` → `100 EUR`
+  - `100 japanese Yen` → `100 JPY`
+  - `100 hong kong dollars` → `100 HKD`
+- **Work Required**:
+  - Same multi-word parsing logic as units above
+  - After collecting tokens, check both unit database AND currency names
+  - Lookup in `currencies.json` → `names` array (case-insensitive)
+  - Return SimpleUnit with currency code as unitId
+- **Currency Data Structure**:
+  ```json
+  "names": ["US Dollar", "US dollars"]  // Goes after number with space
+  ```
+- **Effort**: Low (1-2 hours, shares logic with multi-word units)
+- **Files**:
+  - `src/parser.ts` (enhance `tryParseMultiWordUnit()` to also check currencies)
+  - `src/data-loader.ts` (add `getCurrenciesByName()` if not exists)
+
+### Feature: Currency-Before-Number Pattern
+- **Tests**:
+  - `should handle currency ISO codes` (partial - "USD 100" pattern)
+- **Examples**:
+  - `USD 100` → `100 USD`
+  - `EUR 50` → `50 EUR`
+- **Work Required**:
+  - In `parsePrimary()`, check if current token is UNIT(currency)
+  - Look ahead for NUMBER token
+  - If found, consume both and create NumberWithUnit (swap order)
+  - This handles the "currency before number" pattern
+- **Effort**: Low (1 hour)
+- **Files**:
+  - `src/parser.ts` (add check in `parsePrimary()` method)
+
 ---
 
-## Phase 5: Evaluation Engine (17 tests)
+## Phase 5: Evaluation Engine (18 tests)
+
+### Feature: Currency Unit Resolution
+- **Tests**:
+  - `should handle currency ISO codes` (evaluation part)
+  - `should handle currency names` (evaluation part)
+  - `should handle unambiguous currency symbols` (evaluation part)
+- **Examples**:
+  - `100 USD` → evaluates successfully
+  - `100 US dollars` → evaluates successfully
+  - `US$100` → evaluates successfully
+- **Work Required**:
+  - Evaluator's `resolveUnit()` currently only checks unit database
+  - Add fallback to check currency database when unit lookup fails
+  - Convert currency to Unit format for evaluation (use currency as dimension)
+  - **Ambiguous currency handling**:
+    - For unambiguous currencies: use currency code as dimension (e.g., "USD")
+    - For ambiguous symbols ($, £, ¥): use special dimension from `ambiguous.symbolAdjacent` entry
+    - Example: `$` has `dimension: "currency_symbol_0024"` (hex for U+0024)
+    - Operations between different ambiguous dimensions should error
+    - Operations between same ambiguous dimension are allowed (e.g., `$10 + $5`)
+    - Conversions between ambiguous currencies should error with helpful message
+- **Ambiguous Currency Data Structure**:
+  ```json
+  "ambiguous": {
+    "symbolAdjacent": [
+      {"symbol": "$", "dimension": "currency_symbol_0024"},
+      {"symbol": "£", "dimension": "currency_symbol_00A3"},
+      {"symbol": "¥", "dimension": "currency_symbol_00A5"}
+    ],
+    "symbolSpaced": []  // Typically empty; ISO codes are unambiguous
+  }
+  ```
+- **Effort**: Medium (2-3 hours)
+- **Files**:
+  - `src/evaluator.ts` (enhance `resolveUnit()` to check currencies, handle ambiguous dimensions)
+  - `src/data-loader.ts` (add methods for ambiguous currency lookup)
+  - `src/type-checker.ts` (may need updates for ambiguous currency dimension checking)
 
 ### Feature: Dimensionless Unit Conversion (3 tests)
 - **Tests**:
@@ -310,12 +454,12 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 
 | Phase | Total Effort | Features |
 |-------|--------------|----------|
-| Phase 2 (Lexer) | 10-14 hours | 6 features |
-| Phase 3 (Parser) | 7-9 hours | 3 features |
-| Phase 5 (Evaluator) | 13-17 hours | 9 features |
+| Phase 2 (Lexer) | 13-19 hours | 8 features (6 number formats + 2 currency symbols) |
+| Phase 3 (Parser) | 12-16 hours | 6 features (3 unit syntax + 3 multi-word parsing) |
+| Phase 5 (Evaluator) | 15-20 hours | 10 features (1 currency resolution + 9 existing) |
 | Phase 6 (Formatter) | 9-12 hours | 8 features |
 | Multiple | 3-4 hours | 1 feature |
-| **TOTAL** | **42-56 hours** | **27 distinct features** |
+| **TOTAL** | **52-71 hours** | **33 distinct features** |
 
 **Note**: Some features span multiple phases (e.g., base keyword requires lexer, parser, and evaluator changes).
 

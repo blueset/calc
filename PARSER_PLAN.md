@@ -54,6 +54,11 @@
 - [x] Update type-checker tests for new API (78 tests)
 - [x] Add integration tests for error recording (14 tests)
 
+**Phase 2 Gaps** (see @PHASE_8_GAPS.md for details, 3-5 hours):
+- [ ] Adjacent currency symbol lexing (US$, €, CA$, ₹) - scan before numbers
+- [ ] Spaced currency symbol lexing (USD, CZK in "USD 100", "Kč 100" pattern) - check in identifier scan
+- [ ] Ambiguous currency symbol tracking ($ → dimension "currency_symbol_0024")
+
 ### Phase 3: Syntactic Analysis (Days 5-7)
 - [x] Create `ast.ts` with all AST node types
 - [x] Implement `parser.ts` with Parser class
@@ -67,6 +72,11 @@
 - [x] Parse derived unit expressions in conversion targets
 - [x] Caret notation for exponents (m^2, m^3) - requires disambiguation from power operator
 - [x] Named square/cubic units (square meter, cubic meter, meter squared, meter cubed)
+
+**Phase 3 Gaps** (see @PHASE_8_GAPS.md for details, 5-7 hours):
+- [ ] Multi-word unit parsing (fl oz, sq m, millimeter of mercury) - lookahead & backtracking
+- [ ] Multi-word currency name parsing (US dollars, hong kong dollars) - same logic as units
+- [ ] Currency-before-number pattern (USD 100, EUR 50) - parse in `parsePrimary()`
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
@@ -101,7 +111,9 @@
 - [x] Implement derived unit conversions (completed)
 - [x] Implement exponentiation of units and derived units (completed)
 
-**Phase 5 Gaps** (see @PHASE_8_GAPS.md for details, 13-17 hours):
+**Phase 5 Gaps** (see @PHASE_8_GAPS.md for details, 15-20 hours):
+- [ ] Currency unit resolution in evaluator (fallback from unit to currency lookup)
+- [ ] Ambiguous currency dimension handling ($ → "currency_symbol_0024", error on operations)
 - [ ] Dimensionless unit auto-conversion (5 dozen → 60, 100 percent → 1, 50% → 0.5)
 - [ ] Composite unit negation (-(5 m 20 cm) → -5 m -20 cm)
 - [ ] Composite to single unit conversion (6 ft 3 in to cm → 190.5 cm)
@@ -175,13 +187,15 @@
 - [x] Create `tests/integration.test.ts` with comprehensive SPECS.md examples (125 tests: 84 passing, 41 skipped)
 - [x] End-to-end verification testing
 
-**Status**: ✅ **COMPLETED**
+**Status**: ⚠️ **PHASE 8 COMPLETED WITH GAPS**
 
-**Note**: See @PHASE_8_GAPS.md for comprehensive analysis of the 41 skipped integration tests. These gaps have been added as unchecked items to Phases 2, 3, 5, and 6 above. Total effort to complete all gaps: 42-56 hours across 27 distinct features.
+**Current Issues**:
+- **32 integration tests SKIPPED** (features planned but not implemented)
+
 
 **Test Coverage Summary**:
-- **Total Tests**: 797 tests passing, 26 skipped (823 total)
-- **Integration**: 124 tests (98 passing, 26 skipped - comprehensive SPECS.md coverage)
+- **Total Tests**: 801 tests passing, 32 skipped (833 total)
+- **Integration**: 125 tests (99 passing, 32 skipped - comprehensive SPECS.md coverage)
 - **Lexer**: 99 tests (all token types, disambiguation rules, error recording, underscore separators, base prefixes)
 - **Parser**: 123 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units)
 - **Type Checker**: 78 tests (dimension compatibility, conversion validation, variable scoping)
@@ -196,10 +210,15 @@
 - **Functions**: 50 tests (all math functions)
 - **Test Execution**: All tests run in ~450ms
 
-**Features Not Yet Implemented** (29 skipped tests document these gaps):
+**Features Not Yet Implemented**:
+
+- Multi-word unit parsing (fl oz, sq m, millimeter of mercury)
+- Multi-word currency name parsing (US dollars, hong kong dollars)
+- Adjacent currency symbol lexing (US$, €, CA$, ₹)
+- Spaced currency symbol lexing (USD 100, EUR 50)
+- Currency unit resolution in evaluator
+- Ambiguous currency handling ($ as dimension "currency_symbol_0024")
 - Dimensionless unit conversion (dozen, percent to raw numbers)
-- Caret notation for exponents (m^2, m^3)
-- Named square/cubic units (square meter, cubic meter)
 - Presentation conversions (to binary, to octal, to hex, to fraction, to scientific)
 - Log with base (log(2, 32))
 - Round with units

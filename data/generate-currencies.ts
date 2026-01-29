@@ -21,7 +21,11 @@ interface DisplayName {
 
 interface CurrenciesDatabase {
   unambiguous: UnambiguousCurrency[];
-  ambiguous: AmbiguousCurrency[];
+  ambiguous: {
+    name: AmbiguousCurrency[];
+    symbolAdjacent: AmbiguousCurrency[];
+    symbolSpaced: AmbiguousCurrency[];
+  };
 }
 
 interface UnambiguousCurrency {
@@ -29,6 +33,8 @@ interface UnambiguousCurrency {
   minorUnits: number;
   displayName: Pick<DisplayName, "singular" | "plural">;
   names: string[];
+  symbolAdjacent: string[];
+  symbolSpaced: string[];
 }
 
 interface AmbiguousCurrency {
@@ -142,6 +148,11 @@ async function fetchMinorUnits(): Promise<Map<string, number>> {
     const minorUnit = fields[minorUnitIndex];
 
     if (code && code.length === 3) {
+      if (minorUnits.has(code)) {
+        // Skip when MinorUnit has already set.
+        continue;
+      }
+
       if (minorUnit === "N.A." || minorUnit === "") {
         minorUnits.set(code, 0);
       } else {
@@ -249,10 +260,23 @@ function getDisplayNameFromXml(xml: any, code: string): DisplayNameResult | null
 // Step 4: Collect All Names/Symbols from en*.xml and root.xml
 // ============================================================================
 
+interface CurrencyNameData {
+  names: Set<string>;
+  symbolAdjacent: Set<string>;
+  symbolSpaced: Set<string>;
+}
+
+/**
+ * Determines if a symbol should be "spaced" (ends with a letter) or "adjacent" (ends with non-letter)
+ */
+function isSpacedSymbol(symbol: string): boolean {
+  return /\p{L}$/u.test(symbol);
+}
+
 function collectAllNames(
   cldrPath: string,
   currencyCodes: Set<string>
-): Map<string, Set<string>> {
+): Map<string, CurrencyNameData> {
   const mainPath = path.join(cldrPath, "common", "main");
 
   // Find all en*.xml files and root.xml
@@ -261,16 +285,20 @@ function collectAllNames(
     (f) => ((f.startsWith("en") && f.endsWith(".xml")) || f === "root.xml") && f !== "en_Shaw.xml"
   );
 
-  const currencyNames = new Map<string, Set<string>>();
+  const currencyData = new Map<string, CurrencyNameData>();
   for (const code of currencyCodes) {
-    currencyNames.set(code, new Set<string>());
+    currencyData.set(code, {
+      names: new Set<string>(),
+      symbolAdjacent: new Set<string>(),
+      symbolSpaced: new Set<string>(),
+    });
   }
 
   for (const file of targetFiles) {
     const filePath = path.join(mainPath, file);
     try {
       const xml = readXmlFile(filePath);
-      extractNamesFromXml(xml, currencyCodes, currencyNames);
+      extractNamesFromXml(xml, currencyCodes, currencyData);
     } catch (e) {
       console.warn(`Warning: Could not parse ${file}: ${e}`);
     }
@@ -278,18 +306,20 @@ function collectAllNames(
 
   // Count total names collected
   let totalNames = 0;
-  for (const names of currencyNames.values()) {
-    totalNames += names.size;
+  let totalSymbols = 0;
+  for (const data of currencyData.values()) {
+    totalNames += data.names.size;
+    totalSymbols += data.symbolAdjacent.size + data.symbolSpaced.size;
   }
-  console.log(`Collected ${totalNames} total names from ${targetFiles.length} files`);
+  console.log(`Collected ${totalNames} names and ${totalSymbols} symbols from ${targetFiles.length} files`);
 
-  return currencyNames;
+  return currencyData;
 }
 
 function extractNamesFromXml(
   xml: any,
   currencyCodes: Set<string>,
-  currencyNames: Map<string, Set<string>>
+  currencyData: Map<string, CurrencyNameData>
 ): void {
   const currencies = xml?.ldml?.numbers?.currencies?.currency;
   if (!currencies) return;
@@ -298,26 +328,34 @@ function extractNamesFromXml(
     const code = currencyElement["@_type"];
     if (!currencyCodes.has(code)) continue;
 
-    const names = currencyNames.get(code)!;
+    const data = currencyData.get(code)!;
 
-    // Collect displayName elements
+    // Collect displayName elements (always go to names)
     const displayNameElements = currencyElement.displayName;
     if (displayNameElements) {
       for (const dn of displayNameElements) {
         const text = typeof dn === "string" ? dn : dn["#text"];
         if (text && typeof text === "string") {
-          names.add(text);
+          data.names.add(text);
         }
       }
     }
 
-    // Collect symbol elements
+    // Collect symbol elements (go to symbolAdjacent or symbolSpaced based on ending)
     const symbolElements = currencyElement.symbol;
     if (symbolElements) {
       for (const sym of symbolElements) {
         const text = typeof sym === "string" ? sym : sym["#text"];
         if (text && typeof text === "string") {
-          names.add(text);
+          if (text.match(/^[A-Za-z]{1,2}$/)) {
+            console.log(`Skipping likely generic symbol “${text}” for currency ${code}`);
+            continue;
+          }
+          if (isSpacedSymbol(text)) {
+            data.symbolSpaced.add(text);
+          } else {
+            data.symbolAdjacent.add(text);
+          }
         }
       }
     }
@@ -328,57 +366,130 @@ function extractNamesFromXml(
 // Step 5: Detect and Separate Ambiguous Names
 // ============================================================================
 
-interface AmbiguityResult {
-  unambiguousNames: Map<string, string[]>; // code -> unique names
-  ambiguousSymbols: Set<string>; // symbols appearing in multiple currencies
+interface UnambiguousResult {
+  names: string[];
+  symbolAdjacent: string[];
+  symbolSpaced: string[];
 }
 
+interface AmbiguityResult {
+  unambiguous: Map<string, UnambiguousResult>; // code -> unique items per category
+  ambiguous: {
+    name: Set<string>;
+    symbolAdjacent: Set<string>;
+    symbolSpaced: Set<string>;
+  };
+}
+
+type SymbolCategory = "name" | "symbolAdjacent" | "symbolSpaced";
+
 function detectAmbiguousNames(
-  currencyNames: Map<string, Set<string>>
+  currencyData: Map<string, CurrencyNameData>
 ): AmbiguityResult {
   // Build reverse map: name (lowercase) -> set of currency codes
+  // We need to track which category each item came from
   const nameToCodeMap = new Map<string, Set<string>>();
   const nameOriginalCase = new Map<string, string>(); // lowercase -> original
+  const nameCategory = new Map<string, SymbolCategory>(); // lowercase -> category
 
-  for (const [code, names] of currencyNames) {
-    for (const name of names) {
+  for (const [code, data] of currencyData) {
+    // Process names
+    for (const name of data.names) {
       const lower = name.toLowerCase();
       if (!nameToCodeMap.has(lower)) {
         nameToCodeMap.set(lower, new Set());
         nameOriginalCase.set(lower, name);
+        nameCategory.set(lower, "name");
+      }
+      nameToCodeMap.get(lower)!.add(code);
+    }
+    // Process symbolAdjacent
+    for (const symbol of data.symbolAdjacent) {
+      const lower = symbol.toLowerCase();
+      if (!nameToCodeMap.has(lower)) {
+        nameToCodeMap.set(lower, new Set());
+        nameOriginalCase.set(lower, symbol);
+        nameCategory.set(lower, "symbolAdjacent");
+      }
+      nameToCodeMap.get(lower)!.add(code);
+    }
+    // Process symbolSpaced
+    for (const symbol of data.symbolSpaced) {
+      const lower = symbol.toLowerCase();
+      if (!nameToCodeMap.has(lower)) {
+        nameToCodeMap.set(lower, new Set());
+        nameOriginalCase.set(lower, symbol);
+        nameCategory.set(lower, "symbolSpaced");
       }
       nameToCodeMap.get(lower)!.add(code);
     }
   }
 
   // Separate ambiguous from unambiguous
-  const ambiguousSymbols = new Set<string>();
-  const unambiguousNames = new Map<string, string[]>();
+  const ambiguous = {
+    name: new Set<string>(),
+    symbolAdjacent: new Set<string>(),
+    symbolSpaced: new Set<string>(),
+  };
+  const unambiguous = new Map<string, UnambiguousResult>();
 
-  for (const [code, names] of currencyNames) {
-    const uniqueNames: string[] = [];
+  for (const [code, data] of currencyData) {
+    const result: UnambiguousResult = {
+      names: [],
+      symbolAdjacent: [],
+      symbolSpaced: [],
+    };
+
+    // seenLower is shared across all categories for this currency
     const seenLower = new Set<string>();
 
-    for (const name of names) {
+    // Process names
+    for (const name of data.names) {
       const lower = name.toLowerCase();
       if (seenLower.has(lower)) continue;
       seenLower.add(lower);
 
       const codesWithThisName = nameToCodeMap.get(lower)!;
       if (codesWithThisName.size > 1) {
-        // Ambiguous - appears in multiple currencies
-        ambiguousSymbols.add(nameOriginalCase.get(lower)!);
+        ambiguous.name.add(nameOriginalCase.get(lower)!);
       } else {
-        // Unique to this currency
-        uniqueNames.push(name);
+        result.names.push(name);
       }
     }
 
-    unambiguousNames.set(code, uniqueNames);
+    // Process symbolAdjacent
+    for (const symbol of data.symbolAdjacent) {
+      const lower = symbol.toLowerCase();
+      if (seenLower.has(lower)) continue;
+      seenLower.add(lower);
+
+      const codesWithThisName = nameToCodeMap.get(lower)!;
+      if (codesWithThisName.size > 1) {
+        ambiguous.symbolAdjacent.add(nameOriginalCase.get(lower)!);
+      } else {
+        result.symbolAdjacent.push(symbol);
+      }
+    }
+
+    // Process symbolSpaced
+    for (const symbol of data.symbolSpaced) {
+      const lower = symbol.toLowerCase();
+      if (seenLower.has(lower)) continue;
+      seenLower.add(lower);
+
+      const codesWithThisName = nameToCodeMap.get(lower)!;
+      if (codesWithThisName.size > 1) {
+        ambiguous.symbolSpaced.add(nameOriginalCase.get(lower)!);
+      } else {
+        result.symbolSpaced.push(symbol);
+      }
+    }
+
+    unambiguous.set(code, result);
   }
 
-  console.log(`Found ${ambiguousSymbols.size} ambiguous symbols`);
-  return { unambiguousNames, ambiguousSymbols };
+  console.log(`Found ${ambiguous.name.size} ambiguous names, ${ambiguous.symbolAdjacent.size} ambiguous adjacent symbols, ${ambiguous.symbolSpaced.size} ambiguous spaced symbols`);
+  return { unambiguous, ambiguous };
 }
 
 // ============================================================================
@@ -455,27 +566,44 @@ const UNICODE_CURRENCY_SYMBOLS = [
 ];
 
 function addUnicodeCurrencySymbols(
-  ambiguousSymbols: Set<string>,
-  unambiguousNames: Map<string, string[]>
+  ambiguous: AmbiguityResult["ambiguous"],
+  unambiguous: Map<string, UnambiguousResult>
 ): void {
   // Build set of all existing symbols (from both ambiguous and unambiguous)
   const existingSymbols = new Set<string>();
 
-  for (const sym of ambiguousSymbols) {
+  for (const sym of ambiguous.name) {
+    existingSymbols.add(sym);
+  }
+  for (const sym of ambiguous.symbolAdjacent) {
+    existingSymbols.add(sym);
+  }
+  for (const sym of ambiguous.symbolSpaced) {
     existingSymbols.add(sym);
   }
 
-  for (const names of unambiguousNames.values()) {
-    for (const name of names) {
+  for (const data of unambiguous.values()) {
+    for (const name of data.names) {
       existingSymbols.add(name);
+    }
+    for (const sym of data.symbolAdjacent) {
+      existingSymbols.add(sym);
+    }
+    for (const sym of data.symbolSpaced) {
+      existingSymbols.add(sym);
     }
   }
 
-  // Add missing Unicode currency symbols to ambiguous
+  // Add missing Unicode currency symbols to appropriate ambiguous category
   let added = 0;
   for (const symbol of UNICODE_CURRENCY_SYMBOLS) {
     if (!existingSymbols.has(symbol)) {
-      ambiguousSymbols.add(symbol);
+      // Use isSpacedSymbol to determine category
+      if (isSpacedSymbol(symbol)) {
+        ambiguous.symbolSpaced.add(symbol);
+      } else {
+        ambiguous.symbolAdjacent.add(symbol);
+      }
       added++;
     }
   }
@@ -487,43 +615,50 @@ function addUnicodeCurrencySymbols(
 // Step 7: Generate and Write currencies.json
 // ============================================================================
 
+function createAmbiguousCurrency(symbol: string): AmbiguousCurrency {
+  // Generate dimension ID from all codepoints in the symbol
+  const codepoints = [...symbol].map((char) => {
+    const cp = char.codePointAt(0)!;
+    return cp.toString(16).toUpperCase().padStart(4, "0");
+  });
+  const dimension = `currency_symbol_${codepoints.join("_")}`;
+  return { symbol, dimension };
+}
+
 function generateDatabase(
   currencyCodes: Set<string>,
   minorUnits: Map<string, number>,
   displayNames: Map<string, DisplayNameResult>,
-  unambiguousNames: Map<string, string[]>,
-  ambiguousSymbols: Set<string>
+  unambiguous: Map<string, UnambiguousResult>,
+  ambiguous: AmbiguityResult["ambiguous"]
 ): CurrenciesDatabase {
-  const unambiguous: UnambiguousCurrency[] = [];
+  const unambiguousList: UnambiguousCurrency[] = [];
 
   for (const code of Array.from(currencyCodes).sort()) {
     const displayName = displayNames.get(code) ?? { singular: code };
-    const names = unambiguousNames.get(code) ?? [];
+    const data = unambiguous.get(code) ?? { names: [], symbolAdjacent: [], symbolSpaced: [] };
     const minor = minorUnits.get(code) ?? 0;
 
-    unambiguous.push({
+    unambiguousList.push({
       code,
       minorUnits: minor,
       displayName: {
         singular: displayName.singular,
         plural: displayName.plural,
       },
-      names,
+      names: data.names,
+      symbolAdjacent: data.symbolAdjacent,
+      symbolSpaced: data.symbolSpaced,
     });
   }
 
-  const ambiguous: AmbiguousCurrency[] = [];
-  for (const symbol of Array.from(ambiguousSymbols).sort()) {
-    // Generate dimension ID from all codepoints in the symbol
-    const codepoints = [...symbol].map((char) => {
-      const cp = char.codePointAt(0)!;
-      return cp.toString(16).toUpperCase().padStart(4, "0");
-    });
-    const dimension = `currency_symbol_${codepoints.join("_")}`;
-    ambiguous.push({ symbol, dimension });
-  }
+  const ambiguousResult = {
+    name: Array.from(ambiguous.name).sort().map(createAmbiguousCurrency),
+    symbolAdjacent: Array.from(ambiguous.symbolAdjacent).sort().map(createAmbiguousCurrency),
+    symbolSpaced: Array.from(ambiguous.symbolSpaced).sort().map(createAmbiguousCurrency),
+  };
 
-  return { unambiguous, ambiguous };
+  return { unambiguous: unambiguousList, ambiguous: ambiguousResult };
 }
 
 // ============================================================================
@@ -546,21 +681,21 @@ async function main(): Promise<void> {
   const displayNames = loadDisplayNames(cldrPath, currencyCodes);
 
   // Step 4: Collect all names
-  const currencyNames = collectAllNames(cldrPath, currencyCodes);
+  const currencyData = collectAllNames(cldrPath, currencyCodes);
 
   // Step 5: Detect ambiguous names
-  const { unambiguousNames, ambiguousSymbols } = detectAmbiguousNames(currencyNames);
+  const { unambiguous, ambiguous } = detectAmbiguousNames(currencyData);
 
   // Step 6: Add Unicode currency symbols
-  addUnicodeCurrencySymbols(ambiguousSymbols, unambiguousNames);
+  addUnicodeCurrencySymbols(ambiguous, unambiguous);
 
   // Step 7: Generate database
   const database = generateDatabase(
     currencyCodes,
     minorUnits,
     displayNames,
-    unambiguousNames,
-    ambiguousSymbols
+    unambiguous,
+    ambiguous
   );
 
   // Write output
@@ -569,7 +704,9 @@ async function main(): Promise<void> {
 
   console.log(`\nWrote ${outputPath}`);
   console.log(`  - ${database.unambiguous.length} unambiguous currencies`);
-  console.log(`  - ${database.ambiguous.length} ambiguous symbols`);
+  console.log(`  - ${database.ambiguous.name.length} ambiguous names`);
+  console.log(`  - ${database.ambiguous.symbolAdjacent.length} ambiguous adjacent symbols`);
+  console.log(`  - ${database.ambiguous.symbolSpaced.length} ambiguous spaced symbols`);
 }
 
 main().catch((error) => {

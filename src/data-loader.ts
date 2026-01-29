@@ -151,7 +151,11 @@ export class DataLoader {
 
   // Currency data
   private unambiguousCurrencies: UnambiguousCurrency[] = [];
-  private ambiguousCurrencies: AmbiguousCurrency[] = [];
+  private ambiguousCurrencies: {
+    name: AmbiguousCurrency[];
+    symbolAdjacent: AmbiguousCurrency[];
+    symbolSpaced: AmbiguousCurrency[];
+  } = { name: [], symbolAdjacent: [], symbolSpaced: [] };
   private currencyByCode = new Map<string, UnambiguousCurrency>();
   private currencyByCaseInsensitiveName = new Map<string, UnambiguousCurrency[]>();
 
@@ -236,8 +240,13 @@ export class DataLoader {
       // By code (case-insensitive)
       this.currencyByCode.set(currency.code.toUpperCase(), currency);
 
-      // By name variants (case-insensitive)
-      for (const name of currency.names) {
+      // By name variants (case-insensitive) - include names, symbolAdjacent, and symbolSpaced
+      const allNames = [
+        ...currency.names,
+        ...currency.symbolAdjacent,
+        ...currency.symbolSpaced,
+      ];
+      for (const name of allNames) {
         const lowerName = name.toLowerCase();
         if (!this.currencyByCaseInsensitiveName.has(lowerName)) {
           this.currencyByCaseInsensitiveName.set(lowerName, []);
@@ -348,7 +357,11 @@ export class DataLoader {
   /**
    * Get all ambiguous currencies
    */
-  getAllAmbiguousCurrencies(): AmbiguousCurrency[] {
+  getAllAmbiguousCurrencies(): {
+    name: AmbiguousCurrency[];
+    symbolAdjacent: AmbiguousCurrency[];
+    symbolSpaced: AmbiguousCurrency[];
+  } {
     return this.ambiguousCurrencies;
   }
 

@@ -181,7 +181,7 @@ describe('CurrencyConverter', () => {
       // Convert amount that results in fractional minor units
       const value: CurrencyValue = { amount: 33.33, currencyCode: 'USD' };
       const result = converter.convert(value, 'EUR', true); // Request rounding
-
+      
       // 33.33 * 0.85 = 28.3305, should round to 28.33
       expect(result.amount).toBeCloseTo(28.33, 2);
     });

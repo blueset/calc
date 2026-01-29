@@ -10,7 +10,10 @@
       "names": [
         "United Arab Emirates Dirham",
         "UAE dirham",
-        "UAE dirhams",
+        "UAE dirhams"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "AED"
       ]
     },
@@ -23,9 +26,13 @@
       },
       "names": [
         "Afghan Afghani",
-        "Afghan Afghanis",
-        "AFN",
+        "Afghan Afghanis"
+      ],
+      "symbolAdjacent": [
         "؋"
+      ],
+      "symbolSpaced": [
+        "AFN"
       ]
     },
     {
@@ -37,7 +44,10 @@
       },
       "names": [
         "Albanian Lek",
-        "Albanian lekë",
+        "Albanian lekë"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "ALL"
       ]
     },
@@ -50,9 +60,13 @@
       },
       "names": [
         "Armenian Dram",
-        "Armenian drams",
-        "AMD",
+        "Armenian drams"
+      ],
+      "symbolAdjacent": [
         "֏"
+      ],
+      "symbolSpaced": [
+        "AMD"
       ]
     },
     {
@@ -64,9 +78,11 @@
       },
       "names": [
         "Angolan Kwanza",
-        "Angolan kwanzas",
-        "AOA",
-        "Kz"
+        "Angolan kwanzas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "AOA"
       ]
     },
     {
@@ -78,7 +94,10 @@
       },
       "names": [
         "Argentine Peso",
-        "Argentine pesos",
+        "Argentine pesos"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "ARS"
       ]
     },
@@ -91,9 +110,12 @@
       },
       "names": [
         "Australian Dollar",
-        "Australian dollars",
+        "Australian dollars"
+      ],
+      "symbolAdjacent": [
         "A$"
-      ]
+      ],
+      "symbolSpaced": []
     },
     {
       "code": "AWG",
@@ -103,7 +125,10 @@
         "plural": "Aruban florin"
       },
       "names": [
-        "Aruban Florin",
+        "Aruban Florin"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "AWG"
       ]
     },
@@ -116,9 +141,13 @@
       },
       "names": [
         "Azerbaijani Manat",
-        "Azerbaijani manats",
-        "AZN",
+        "Azerbaijani manats"
+      ],
+      "symbolAdjacent": [
         "₼"
+      ],
+      "symbolSpaced": [
+        "AZN"
       ]
     },
     {
@@ -131,9 +160,11 @@
       "names": [
         "Bosnia-Herzegovina Convertible Mark",
         "Bosnia-Herzegovina convertible marks",
-        "BAM",
-        "Bosnia-Herzegovina Convertible Marka",
-        "KM"
+        "Bosnia-Herzegovina Convertible Marka"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "BAM"
       ]
     },
     {
@@ -146,9 +177,12 @@
       "names": [
         "Barbadian Dollar",
         "Barbadian dollars",
-        "BBD",
         "Barbados Dollar",
         "Barbados dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "BBD"
       ]
     },
     {
@@ -160,10 +194,13 @@
       },
       "names": [
         "Bangladeshi Taka",
-        "Bangladeshi takas",
-        "BDT",
-        "Tk",
+        "Bangladeshi takas"
+      ],
+      "symbolAdjacent": [
         "৳"
+      ],
+      "symbolSpaced": [
+        "BDT"
       ]
     },
     {
@@ -175,7 +212,10 @@
       },
       "names": [
         "Bulgarian Lev",
-        "Bulgarian leva",
+        "Bulgarian leva"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "BGN"
       ]
     },
@@ -188,7 +228,10 @@
       },
       "names": [
         "Bahraini Dinar",
-        "Bahraini dinars",
+        "Bahraini dinars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "BHD"
       ]
     },
@@ -201,7 +244,10 @@
       },
       "names": [
         "Burundian Franc",
-        "Burundian francs",
+        "Burundian francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "BIF",
         "FBu"
       ]
@@ -216,11 +262,14 @@
       "names": [
         "Bermudan Dollar",
         "Bermudan dollars",
-        "BMD",
         "Bermudian Dollar",
         "Bermudian dollars",
         "Bermuda Dollar",
         "Bermuda dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "BMD"
       ]
     },
     {
@@ -232,7 +281,10 @@
       },
       "names": [
         "Brunei Dollar",
-        "Brunei dollars",
+        "Brunei dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "BND"
       ]
     },
@@ -245,9 +297,11 @@
       },
       "names": [
         "Bolivian Boliviano",
-        "Bolivian bolivianos",
-        "BOB",
-        "Bs"
+        "Bolivian bolivianos"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "BOB"
       ]
     },
     {
@@ -259,8 +313,12 @@
       },
       "names": [
         "Brazilian Real",
-        "Brazilian reals",
-        "R$",
+        "Brazilian reals"
+      ],
+      "symbolAdjacent": [
+        "R$"
+      ],
+      "symbolSpaced": [
         "BRL"
       ]
     },
@@ -273,7 +331,10 @@
       },
       "names": [
         "Bahamian Dollar",
-        "Bahamian dollars",
+        "Bahamian dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "BSD"
       ]
     },
@@ -286,7 +347,10 @@
       },
       "names": [
         "Bhutanese Ngultrum",
-        "Bhutanese ngultrums",
+        "Bhutanese ngultrums"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "BTN"
       ]
     },
@@ -299,9 +363,11 @@
       },
       "names": [
         "Botswanan Pula",
-        "Botswanan pulas",
-        "BWP",
-        "P"
+        "Botswanan pulas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "BWP"
       ]
     },
     {
@@ -314,9 +380,12 @@
       "names": [
         "Belarusian Ruble",
         "Belarusian rubles",
-        "BYN",
         "Belarusian Rouble",
         "Belarusian roubles"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "BYN"
       ]
     },
     {
@@ -328,7 +397,10 @@
       },
       "names": [
         "Belize Dollar",
-        "Belize dollars",
+        "Belize dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "BZD"
       ]
     },
@@ -341,8 +413,12 @@
       },
       "names": [
         "Canadian Dollar",
-        "Canadian dollars",
-        "CA$",
+        "Canadian dollars"
+      ],
+      "symbolAdjacent": [
+        "CA$"
+      ],
+      "symbolSpaced": [
         "CAD"
       ]
     },
@@ -355,7 +431,10 @@
       },
       "names": [
         "Congolese Franc",
-        "Congolese francs",
+        "Congolese francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "CDF"
       ]
     },
@@ -368,7 +447,10 @@
       },
       "names": [
         "Swiss Franc",
-        "Swiss francs",
+        "Swiss francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "CHF"
       ]
     },
@@ -381,7 +463,10 @@
       },
       "names": [
         "Chilean Peso",
-        "Chilean pesos",
+        "Chilean pesos"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "CLP"
       ]
     },
@@ -393,8 +478,12 @@
         "plural": "Chinese yuan"
       },
       "names": [
-        "Chinese Yuan",
-        "CN¥",
+        "Chinese Yuan"
+      ],
+      "symbolAdjacent": [
+        "CN¥"
+      ],
+      "symbolSpaced": [
         "CNY"
       ]
     },
@@ -407,7 +496,10 @@
       },
       "names": [
         "Colombian Peso",
-        "Colombian pesos",
+        "Colombian pesos"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "COP"
       ]
     },
@@ -420,9 +512,13 @@
       },
       "names": [
         "Costa Rican Colón",
-        "Costa Rican colóns",
-        "CRC",
+        "Costa Rican colóns"
+      ],
+      "symbolAdjacent": [
         "₡"
+      ],
+      "symbolSpaced": [
+        "CRC"
       ]
     },
     {
@@ -434,7 +530,10 @@
       },
       "names": [
         "Cuban Peso",
-        "Cuban pesos",
+        "Cuban pesos"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "CUP"
       ]
     },
@@ -447,7 +546,10 @@
       },
       "names": [
         "Cape Verdean Escudo",
-        "Cape Verdean escudos",
+        "Cape Verdean escudos"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "CVE"
       ]
     },
@@ -460,7 +562,10 @@
       },
       "names": [
         "Czech Koruna",
-        "Czech korunas",
+        "Czech korunas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "CZK",
         "Kč"
       ]
@@ -474,7 +579,10 @@
       },
       "names": [
         "Djiboutian Franc",
-        "Djiboutian francs",
+        "Djiboutian francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "DJF"
       ]
     },
@@ -487,9 +595,13 @@
       },
       "names": [
         "Danish Krone",
-        "Danish kroner",
-        "DKK",
+        "Danish kroner"
+      ],
+      "symbolAdjacent": [
         "kr."
+      ],
+      "symbolSpaced": [
+        "DKK"
       ]
     },
     {
@@ -501,7 +613,10 @@
       },
       "names": [
         "Dominican Peso",
-        "Dominican pesos",
+        "Dominican pesos"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "DOP"
       ]
     },
@@ -514,7 +629,10 @@
       },
       "names": [
         "Algerian Dinar",
-        "Algerian dinars",
+        "Algerian dinars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "DZD"
       ]
     },
@@ -527,9 +645,13 @@
       },
       "names": [
         "Egyptian Pound",
-        "Egyptian pounds",
-        "EGP",
+        "Egyptian pounds"
+      ],
+      "symbolAdjacent": [
         "E£"
+      ],
+      "symbolSpaced": [
+        "EGP"
       ]
     },
     {
@@ -541,7 +663,10 @@
       },
       "names": [
         "Eritrean Nakfa",
-        "Eritrean nakfas",
+        "Eritrean nakfas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "ERN",
         "Nfk"
       ]
@@ -555,7 +680,10 @@
       },
       "names": [
         "Ethiopian Birr",
-        "Ethiopian birrs",
+        "Ethiopian birrs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "ETB"
       ]
     },
@@ -568,8 +696,12 @@
       },
       "names": [
         "Euro",
-        "euros",
-        "€",
+        "euros"
+      ],
+      "symbolAdjacent": [
+        "€"
+      ],
+      "symbolSpaced": [
         "EUR"
       ]
     },
@@ -582,7 +714,10 @@
       },
       "names": [
         "Fijian Dollar",
-        "Fijian dollars",
+        "Fijian dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "FJD"
       ]
     },
@@ -595,7 +730,10 @@
       },
       "names": [
         "Falkland Islands Pound",
-        "Falkland Islands pounds",
+        "Falkland Islands pounds"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "FKP"
       ]
     },
@@ -609,10 +747,14 @@
       "names": [
         "British Pound",
         "British pounds",
-        "GBP",
-        "GB£",
         "UK Pound",
         "UK pounds"
+      ],
+      "symbolAdjacent": [
+        "GB£"
+      ],
+      "symbolSpaced": [
+        "GBP"
       ]
     },
     {
@@ -624,9 +766,13 @@
       },
       "names": [
         "Georgian Lari",
-        "Georgian laris",
-        "GEL",
+        "Georgian laris"
+      ],
+      "symbolAdjacent": [
         "₾"
+      ],
+      "symbolSpaced": [
+        "GEL"
       ]
     },
     {
@@ -638,9 +784,13 @@
       },
       "names": [
         "Ghanaian Cedi",
-        "Ghanaian cedis",
-        "GHS",
+        "Ghanaian cedis"
+      ],
+      "symbolAdjacent": [
         "GH₵"
+      ],
+      "symbolSpaced": [
+        "GHS"
       ]
     },
     {
@@ -652,7 +802,10 @@
       },
       "names": [
         "Gibraltar Pound",
-        "Gibraltar pounds",
+        "Gibraltar pounds"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "GIP"
       ]
     },
@@ -665,9 +818,11 @@
       },
       "names": [
         "Gambian Dalasi",
-        "Gambian dalasis",
-        "GMD",
-        "D"
+        "Gambian dalasis"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "GMD"
       ]
     },
     {
@@ -679,9 +834,11 @@
       },
       "names": [
         "Guinean Franc",
-        "Guinean francs",
-        "GNF",
-        "FG"
+        "Guinean francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "GNF"
       ]
     },
     {
@@ -693,9 +850,11 @@
       },
       "names": [
         "Guatemalan Quetzal",
-        "Guatemalan quetzals",
-        "GTQ",
-        "Q"
+        "Guatemalan quetzals"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "GTQ"
       ]
     },
     {
@@ -707,7 +866,10 @@
       },
       "names": [
         "Guyanaese Dollar",
-        "Guyanaese dollars",
+        "Guyanaese dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "GYD"
       ]
     },
@@ -720,8 +882,12 @@
       },
       "names": [
         "Hong Kong Dollar",
-        "Hong Kong dollars",
-        "HK$",
+        "Hong Kong dollars"
+      ],
+      "symbolAdjacent": [
+        "HK$"
+      ],
+      "symbolSpaced": [
         "HKD"
       ]
     },
@@ -734,9 +900,11 @@
       },
       "names": [
         "Honduran Lempira",
-        "Honduran lempiras",
-        "HNL",
-        "L"
+        "Honduran lempiras"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "HNL"
       ]
     },
     {
@@ -748,7 +916,10 @@
       },
       "names": [
         "Haitian Gourde",
-        "Haitian gourdes",
+        "Haitian gourdes"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "HTG"
       ]
     },
@@ -761,23 +932,27 @@
       },
       "names": [
         "Hungarian Forint",
-        "Hungarian forints",
-        "HUF",
-        "Ft"
+        "Hungarian forints"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "HUF"
       ]
     },
     {
       "code": "IDR",
-      "minorUnits": 0,
+      "minorUnits": 2,
       "displayName": {
         "singular": "Indonesian rupiah",
         "plural": "Indonesian rupiahs"
       },
       "names": [
         "Indonesian Rupiah",
-        "Indonesian rupiahs",
-        "IDR",
-        "Rp"
+        "Indonesian rupiahs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "IDR"
       ]
     },
     {
@@ -790,9 +965,13 @@
       "names": [
         "Israeli New Shekel",
         "Israeli new shekels",
-        "₪",
         "Israeli Shekel",
-        "Israeli sheckles",
+        "Israeli sheckles"
+      ],
+      "symbolAdjacent": [
+        "₪"
+      ],
+      "symbolSpaced": [
         "ILS"
       ]
     },
@@ -805,8 +984,12 @@
       },
       "names": [
         "Indian Rupee",
-        "Indian rupees",
-        "₹",
+        "Indian rupees"
+      ],
+      "symbolAdjacent": [
+        "₹"
+      ],
+      "symbolSpaced": [
         "INR"
       ]
     },
@@ -819,7 +1002,10 @@
       },
       "names": [
         "Iraqi Dinar",
-        "Iraqi dinars",
+        "Iraqi dinars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "IQD"
       ]
     },
@@ -832,7 +1018,10 @@
       },
       "names": [
         "Iranian Rial",
-        "Iranian rials",
+        "Iranian rials"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "IRR"
       ]
     },
@@ -845,7 +1034,10 @@
       },
       "names": [
         "Icelandic Króna",
-        "Icelandic krónur",
+        "Icelandic krónur"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "ISK"
       ]
     },
@@ -858,7 +1050,10 @@
       },
       "names": [
         "Jamaican Dollar",
-        "Jamaican dollars",
+        "Jamaican dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "JMD"
       ]
     },
@@ -871,7 +1066,10 @@
       },
       "names": [
         "Jordanian Dinar",
-        "Jordanian dinars",
+        "Jordanian dinars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "JOD"
       ]
     },
@@ -883,8 +1081,12 @@
         "plural": "Japanese yen"
       },
       "names": [
-        "Japanese Yen",
-        "JP¥",
+        "Japanese Yen"
+      ],
+      "symbolAdjacent": [
+        "JP¥"
+      ],
+      "symbolSpaced": [
         "JPY"
       ]
     },
@@ -897,7 +1099,10 @@
       },
       "names": [
         "Kenyan Shilling",
-        "Kenyan shillings",
+        "Kenyan shillings"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "KES",
         "Ksh"
       ]
@@ -912,10 +1117,14 @@
       "names": [
         "Kyrgyz Som",
         "Kyrgyz soms",
-        "KGS",
         "Kyrgyzstani Som",
-        "Kyrgyzstani Soms",
+        "Kyrgyzstani Soms"
+      ],
+      "symbolAdjacent": [
         "⃀"
+      ],
+      "symbolSpaced": [
+        "KGS"
       ]
     },
     {
@@ -927,9 +1136,13 @@
       },
       "names": [
         "Cambodian Riel",
-        "Cambodian riels",
-        "KHR",
+        "Cambodian riels"
+      ],
+      "symbolAdjacent": [
         "៛"
+      ],
+      "symbolSpaced": [
+        "KHR"
       ]
     },
     {
@@ -941,9 +1154,11 @@
       },
       "names": [
         "Comorian Franc",
-        "Comorian francs",
-        "KMF",
-        "CF"
+        "Comorian francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "KMF"
       ]
     },
     {
@@ -954,7 +1169,10 @@
         "plural": "North Korean won"
       },
       "names": [
-        "North Korean Won",
+        "North Korean Won"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "KPW"
       ]
     },
@@ -966,7 +1184,10 @@
         "plural": "South Korean won"
       },
       "names": [
-        "South Korean Won",
+        "South Korean Won"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "KRW"
       ]
     },
@@ -979,7 +1200,10 @@
       },
       "names": [
         "Kuwaiti Dinar",
-        "Kuwaiti dinars",
+        "Kuwaiti dinars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "KWD"
       ]
     },
@@ -992,7 +1216,10 @@
       },
       "names": [
         "Cayman Islands Dollar",
-        "Cayman Islands dollars",
+        "Cayman Islands dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "KYD"
       ]
     },
@@ -1005,9 +1232,13 @@
       },
       "names": [
         "Kazakhstani Tenge",
-        "Kazakhstani tenges",
-        "KZT",
+        "Kazakhstani tenges"
+      ],
+      "symbolAdjacent": [
         "₸"
+      ],
+      "symbolSpaced": [
+        "KZT"
       ]
     },
     {
@@ -1019,9 +1250,13 @@
       },
       "names": [
         "Laotian Kip",
-        "Laotian kips",
-        "LAK",
+        "Laotian kips"
+      ],
+      "symbolAdjacent": [
         "₭"
+      ],
+      "symbolSpaced": [
+        "LAK"
       ]
     },
     {
@@ -1033,9 +1268,13 @@
       },
       "names": [
         "Lebanese Pound",
-        "Lebanese pounds",
-        "LBP",
+        "Lebanese pounds"
+      ],
+      "symbolAdjacent": [
         "L£"
+      ],
+      "symbolSpaced": [
+        "LBP"
       ]
     },
     {
@@ -1047,7 +1286,10 @@
       },
       "names": [
         "Sri Lankan Rupee",
-        "Sri Lankan rupees",
+        "Sri Lankan rupees"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "LKR"
       ]
     },
@@ -1060,7 +1302,10 @@
       },
       "names": [
         "Liberian Dollar",
-        "Liberian dollars",
+        "Liberian dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "LRD"
       ]
     },
@@ -1074,8 +1319,11 @@
       "names": [
         "Lesotho Loti",
         "Lesotho lotis",
-        "LSL",
         "Lesotho maloti"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "LSL"
       ]
     },
     {
@@ -1087,7 +1335,10 @@
       },
       "names": [
         "Libyan Dinar",
-        "Libyan dinars",
+        "Libyan dinars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "LYD"
       ]
     },
@@ -1100,7 +1351,10 @@
       },
       "names": [
         "Moroccan Dirham",
-        "Moroccan dirhams",
+        "Moroccan dirhams"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "MAD"
       ]
     },
@@ -1113,7 +1367,10 @@
       },
       "names": [
         "Moldovan Leu",
-        "Moldovan lei",
+        "Moldovan lei"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "MDL"
       ]
     },
@@ -1126,9 +1383,11 @@
       },
       "names": [
         "Malagasy Ariary",
-        "Malagasy ariaries",
-        "MGA",
-        "Ar"
+        "Malagasy ariaries"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "MGA"
       ]
     },
     {
@@ -1140,7 +1399,10 @@
       },
       "names": [
         "Macedonian Denar",
-        "Macedonian denari",
+        "Macedonian denari"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "MKD"
       ]
     },
@@ -1153,7 +1415,10 @@
       },
       "names": [
         "Myanmar Kyat",
-        "Myanmar kyats",
+        "Myanmar kyats"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "MMK"
       ]
     },
@@ -1166,9 +1431,13 @@
       },
       "names": [
         "Mongolian Tugrik",
-        "Mongolian tugriks",
-        "MNT",
+        "Mongolian tugriks"
+      ],
+      "symbolAdjacent": [
         "₮"
+      ],
+      "symbolSpaced": [
+        "MNT"
       ]
     },
     {
@@ -1180,9 +1449,13 @@
       },
       "names": [
         "Macanese Pataca",
-        "Macanese patacas",
-        "MOP",
+        "Macanese patacas"
+      ],
+      "symbolAdjacent": [
         "MOP$"
+      ],
+      "symbolSpaced": [
+        "MOP"
       ]
     },
     {
@@ -1194,7 +1467,10 @@
       },
       "names": [
         "Mauritanian Ouguiya",
-        "Mauritanian ouguiyas",
+        "Mauritanian ouguiyas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "MRU"
       ]
     },
@@ -1207,7 +1483,10 @@
       },
       "names": [
         "Mauritian Rupee",
-        "Mauritian rupees",
+        "Mauritian rupees"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "MUR"
       ]
     },
@@ -1220,22 +1499,27 @@
       },
       "names": [
         "Maldivian Rufiyaa",
-        "Maldivian rufiyaas",
+        "Maldivian rufiyaas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "MVR"
       ]
     },
     {
       "code": "MWK",
-      "minorUnits": 0,
+      "minorUnits": 2,
       "displayName": {
         "singular": "Malawian kwacha",
         "plural": "Malawian kwachas"
       },
       "names": [
         "Malawian Kwacha",
-        "Malawian kwachas",
-        "MWK",
-        "MK"
+        "Malawian kwachas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "MWK"
       ]
     },
     {
@@ -1247,8 +1531,12 @@
       },
       "names": [
         "Mexican Peso",
-        "Mexican pesos",
-        "MX$",
+        "Mexican pesos"
+      ],
+      "symbolAdjacent": [
+        "MX$"
+      ],
+      "symbolSpaced": [
         "MXN"
       ]
     },
@@ -1261,9 +1549,11 @@
       },
       "names": [
         "Malaysian Ringgit",
-        "Malaysian ringgits",
-        "MYR",
-        "RM"
+        "Malaysian ringgits"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "MYR"
       ]
     },
     {
@@ -1275,7 +1565,10 @@
       },
       "names": [
         "Mozambican Metical",
-        "Mozambican meticals",
+        "Mozambican meticals"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "MZN"
       ]
     },
@@ -1288,7 +1581,10 @@
       },
       "names": [
         "Namibian Dollar",
-        "Namibian dollars",
+        "Namibian dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "NAD"
       ]
     },
@@ -1301,9 +1597,13 @@
       },
       "names": [
         "Nigerian Naira",
-        "Nigerian nairas",
-        "NGN",
+        "Nigerian nairas"
+      ],
+      "symbolAdjacent": [
         "₦"
+      ],
+      "symbolSpaced": [
+        "NGN"
       ]
     },
     {
@@ -1315,9 +1615,13 @@
       },
       "names": [
         "Nicaraguan Córdoba",
-        "Nicaraguan córdobas",
-        "NIO",
+        "Nicaraguan córdobas"
+      ],
+      "symbolAdjacent": [
         "C$"
+      ],
+      "symbolSpaced": [
+        "NIO"
       ]
     },
     {
@@ -1329,7 +1633,10 @@
       },
       "names": [
         "Norwegian Krone",
-        "Norwegian kroner",
+        "Norwegian kroner"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "NOK"
       ]
     },
@@ -1342,7 +1649,10 @@
       },
       "names": [
         "Nepalese Rupee",
-        "Nepalese rupees",
+        "Nepalese rupees"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "NPR"
       ]
     },
@@ -1355,8 +1665,12 @@
       },
       "names": [
         "New Zealand Dollar",
-        "New Zealand dollars",
-        "NZ$",
+        "New Zealand dollars"
+      ],
+      "symbolAdjacent": [
+        "NZ$"
+      ],
+      "symbolSpaced": [
         "NZD"
       ]
     },
@@ -1369,7 +1683,10 @@
       },
       "names": [
         "Omani Rial",
-        "Omani rials",
+        "Omani rials"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "OMR"
       ]
     },
@@ -1382,20 +1699,26 @@
       },
       "names": [
         "Panamanian Balboa",
-        "Panamanian balboas",
+        "Panamanian balboas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "PAB"
       ]
     },
     {
       "code": "PEN",
-      "minorUnits": 0,
+      "minorUnits": 2,
       "displayName": {
         "singular": "Peruvian sol",
         "plural": "Peruvian soles"
       },
       "names": [
         "Peruvian Sol",
-        "Peruvian soles",
+        "Peruvian soles"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "PEN"
       ]
     },
@@ -1408,8 +1731,11 @@
       },
       "names": [
         "Papua New Guinean Kina",
-        "PGK",
         "Papua New Guinean kinas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "PGK"
       ]
     },
     {
@@ -1421,7 +1747,10 @@
       },
       "names": [
         "Philippine Peso",
-        "Philippine pesos",
+        "Philippine pesos"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "PHP"
       ]
     },
@@ -1434,7 +1763,10 @@
       },
       "names": [
         "Pakistani Rupee",
-        "Pakistani rupees",
+        "Pakistani rupees"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "PKR"
       ]
     },
@@ -1447,7 +1779,10 @@
       },
       "names": [
         "Polish Zloty",
-        "Polish zlotys",
+        "Polish zlotys"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "PLN",
         "zł"
       ]
@@ -1461,10 +1796,13 @@
       },
       "names": [
         "Paraguayan Guarani",
-        "Paraguayan guaranis",
-        "PYG",
-        "Gs",
+        "Paraguayan guaranis"
+      ],
+      "symbolAdjacent": [
         "₲"
+      ],
+      "symbolSpaced": [
+        "PYG"
       ]
     },
     {
@@ -1477,20 +1815,26 @@
       "names": [
         "Qatari Riyal",
         "Qatari riyals",
-        "QAR",
         "Quatari riyals"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "QAR"
       ]
     },
     {
       "code": "RON",
-      "minorUnits": 0,
+      "minorUnits": 2,
       "displayName": {
         "singular": "Romanian leu",
         "plural": "Romanian lei"
       },
       "names": [
         "Romanian Leu",
-        "Romanian lei",
+        "Romanian lei"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "RON",
         "lei"
       ]
@@ -1504,7 +1848,10 @@
       },
       "names": [
         "Serbian Dinar",
-        "Serbian dinars",
+        "Serbian dinars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "RSD"
       ]
     },
@@ -1518,10 +1865,14 @@
       "names": [
         "Russian Ruble",
         "Russian rubles",
-        "RUB",
         "Russian Rouble",
-        "Russian roubles",
+        "Russian roubles"
+      ],
+      "symbolAdjacent": [
         "₽"
+      ],
+      "symbolSpaced": [
+        "RUB"
       ]
     },
     {
@@ -1533,7 +1884,10 @@
       },
       "names": [
         "Rwandan Franc",
-        "Rwandan francs",
+        "Rwandan francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "RWF"
       ]
     },
@@ -1546,9 +1900,13 @@
       },
       "names": [
         "Saudi Riyal",
-        "Saudi riyals",
-        "SAR",
+        "Saudi riyals"
+      ],
+      "symbolAdjacent": [
         "⃁"
+      ],
+      "symbolSpaced": [
+        "SAR"
       ]
     },
     {
@@ -1560,7 +1918,10 @@
       },
       "names": [
         "Solomon Islands Dollar",
-        "Solomon Islands dollars",
+        "Solomon Islands dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "SBD"
       ]
     },
@@ -1573,21 +1934,26 @@
       },
       "names": [
         "Seychellois Rupee",
-        "Seychellois rupees",
-        "SCR",
-        "SR"
+        "Seychellois rupees"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "SCR"
       ]
     },
     {
       "code": "SDG",
-      "minorUnits": 0,
+      "minorUnits": 2,
       "displayName": {
         "singular": "Sudanese pound",
         "plural": "Sudanese pounds"
       },
       "names": [
         "Sudanese Pound",
-        "Sudanese pounds",
+        "Sudanese pounds"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "SDG"
       ]
     },
@@ -1600,7 +1966,10 @@
       },
       "names": [
         "Swedish Krona",
-        "Swedish kronor",
+        "Swedish kronor"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "SEK"
       ]
     },
@@ -1613,7 +1982,10 @@
       },
       "names": [
         "Singapore Dollar",
-        "Singapore dollars",
+        "Singapore dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "SGD"
       ]
     },
@@ -1627,11 +1999,14 @@
       "names": [
         "St. Helena Pound",
         "St. Helena pounds",
-        "SHP",
         "St Helena Pound",
         "St Helena pounds",
         "Saint Helena Pound",
         "Saint Helena pounds"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "SHP"
       ]
     },
     {
@@ -1643,9 +2018,11 @@
       },
       "names": [
         "Sierra Leonean Leone",
-        "Sierra Leonean leones",
-        "SLE",
-        "Le"
+        "Sierra Leonean leones"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "SLE"
       ]
     },
     {
@@ -1657,7 +2034,10 @@
       },
       "names": [
         "Somali Shilling",
-        "Somali shillings",
+        "Somali shillings"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "SOS"
       ]
     },
@@ -1671,9 +2051,12 @@
       "names": [
         "Surinamese Dollar",
         "Surinamese dollars",
-        "SRD",
         "Suriname Dollar",
         "Suriname dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "SRD"
       ]
     },
     {
@@ -1685,7 +2068,10 @@
       },
       "names": [
         "South Sudanese Pound",
-        "South Sudanese pounds",
+        "South Sudanese pounds"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "SSP"
       ]
     },
@@ -1699,10 +2085,12 @@
       "names": [
         "São Tomé & Príncipe Dobra",
         "São Tomé & Príncipe dobras",
-        "STN",
         "São Tomé and Príncipe Dobra",
-        "São Tomé and Príncipe dobras",
-        "Db"
+        "São Tomé and Príncipe dobras"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "STN"
       ]
     },
     {
@@ -1714,22 +2102,27 @@
       },
       "names": [
         "Syrian Pound",
-        "Syrian pounds",
+        "Syrian pounds"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "SYP"
       ]
     },
     {
       "code": "SZL",
-      "minorUnits": 0,
+      "minorUnits": 2,
       "displayName": {
         "singular": "Swazi lilangeni",
         "plural": "Swazi emalangeni"
       },
       "names": [
         "Swazi Lilangeni",
-        "Swazi emalangeni",
-        "SZL",
-        "E"
+        "Swazi emalangeni"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "SZL"
       ]
     },
     {
@@ -1740,9 +2133,13 @@
         "plural": "Thai baht"
       },
       "names": [
-        "Thai Baht",
-        "THB",
+        "Thai Baht"
+      ],
+      "symbolAdjacent": [
         "฿"
+      ],
+      "symbolSpaced": [
+        "THB"
       ]
     },
     {
@@ -1754,7 +2151,10 @@
       },
       "names": [
         "Tajikistani Somoni",
-        "Tajikistani somonis",
+        "Tajikistani somonis"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "TJS"
       ]
     },
@@ -1766,7 +2166,10 @@
         "plural": "Turkmenistani manat"
       },
       "names": [
-        "Turkmenistani Manat",
+        "Turkmenistani Manat"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "TMT"
       ]
     },
@@ -1779,7 +2182,10 @@
       },
       "names": [
         "Tunisian Dinar",
-        "Tunisian dinars",
+        "Tunisian dinars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "TND"
       ]
     },
@@ -1791,24 +2197,31 @@
         "plural": "Tongan paʻanga"
       },
       "names": [
-        "Tongan Paʻanga",
-        "TOP",
+        "Tongan Paʻanga"
+      ],
+      "symbolAdjacent": [
         "T$"
+      ],
+      "symbolSpaced": [
+        "TOP"
       ]
     },
     {
       "code": "TRY",
-      "minorUnits": 0,
+      "minorUnits": 2,
       "displayName": {
         "singular": "Turkish lira",
         "plural": "Turkish Lira"
       },
       "names": [
         "Turkish Lira",
-        "TRY",
-        "Turkish lire",
-        "₺",
-        "TL"
+        "Turkish lire"
+      ],
+      "symbolAdjacent": [
+        "₺"
+      ],
+      "symbolSpaced": [
+        "TRY"
       ]
     },
     {
@@ -1821,9 +2234,12 @@
       "names": [
         "Trinidad & Tobago Dollar",
         "Trinidad & Tobago dollars",
-        "TTD",
         "Trinidad and Tobago Dollar",
         "Trinidad and Tobago dollars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "TTD"
       ]
     },
     {
@@ -1835,8 +2251,12 @@
       },
       "names": [
         "New Taiwan Dollar",
-        "New Taiwan dollars",
-        "NT$",
+        "New Taiwan dollars"
+      ],
+      "symbolAdjacent": [
+        "NT$"
+      ],
+      "symbolSpaced": [
         "TWD"
       ]
     },
@@ -1849,7 +2269,10 @@
       },
       "names": [
         "Tanzanian Shilling",
-        "Tanzanian shillings",
+        "Tanzanian shillings"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "TZS",
         "TSh"
       ]
@@ -1863,9 +2286,13 @@
       },
       "names": [
         "Ukrainian Hryvnia",
-        "Ukrainian hryvnias",
-        "UAH",
+        "Ukrainian hryvnias"
+      ],
+      "symbolAdjacent": [
         "₴"
+      ],
+      "symbolSpaced": [
+        "UAH"
       ]
     },
     {
@@ -1877,7 +2304,10 @@
       },
       "names": [
         "Ugandan Shilling",
-        "Ugandan shillings",
+        "Ugandan shillings"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "UGX",
         "USh"
       ]
@@ -1891,8 +2321,12 @@
       },
       "names": [
         "US Dollar",
-        "US dollars",
-        "US$",
+        "US dollars"
+      ],
+      "symbolAdjacent": [
+        "US$"
+      ],
+      "symbolSpaced": [
         "USD"
       ]
     },
@@ -1906,8 +2340,11 @@
       "names": [
         "Uruguayan Peso",
         "Uruguayan pesos",
+        "Peso Uruguayo"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "UYU",
-        "Peso Uruguayo",
         "$U"
       ]
     },
@@ -1920,8 +2357,11 @@
       },
       "names": [
         "Uzbekistani Som",
-        "UZS",
         "Uzbekistani soms"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "UZS"
       ]
     },
     {
@@ -1933,7 +2373,10 @@
       },
       "names": [
         "Venezuelan Bolívar",
-        "Venezuelan bolívars",
+        "Venezuelan bolívars"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "VES"
       ]
     },
@@ -1946,8 +2389,12 @@
       },
       "names": [
         "Vietnamese Dong",
-        "₫",
-        "Vietnamese dongs",
+        "Vietnamese dongs"
+      ],
+      "symbolAdjacent": [
+        "₫"
+      ],
+      "symbolSpaced": [
         "VND"
       ]
     },
@@ -1960,9 +2407,11 @@
       },
       "names": [
         "Vanuatu Vatu",
-        "Vanuatu vatus",
-        "VUV",
-        "VT"
+        "Vanuatu vatus"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "VUV"
       ]
     },
     {
@@ -1974,9 +2423,13 @@
       },
       "names": [
         "Samoan Tala",
-        "WST",
-        "Samoan talas",
+        "Samoan talas"
+      ],
+      "symbolAdjacent": [
         "WS$"
+      ],
+      "symbolSpaced": [
+        "WST"
       ]
     },
     {
@@ -1988,7 +2441,10 @@
       },
       "names": [
         "Central African CFA Franc",
-        "Central African CFA francs",
+        "Central African CFA francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "FCFA",
         "XAF"
       ]
@@ -2002,8 +2458,12 @@
       },
       "names": [
         "East Caribbean Dollar",
-        "East Caribbean dollars",
-        "EC$",
+        "East Caribbean dollars"
+      ],
+      "symbolAdjacent": [
+        "EC$"
+      ],
+      "symbolSpaced": [
         "XCD"
       ]
     },
@@ -2016,10 +2476,12 @@
       },
       "names": [
         "Caribbean guilder",
-        "Caribbean guilders",
-        "Cg",
+        "Caribbean guilders"
+      ],
+      "symbolAdjacent": [
         "Cg."
-      ]
+      ],
+      "symbolSpaced": []
     },
     {
       "code": "XOF",
@@ -2030,7 +2492,10 @@
       },
       "names": [
         "West African CFA Franc",
-        "West African CFA francs",
+        "West African CFA francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "F CFA",
         "XOF"
       ]
@@ -2044,7 +2509,10 @@
       },
       "names": [
         "CFP Franc",
-        "CFP francs",
+        "CFP francs"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "CFPF",
         "CFP"
       ]
@@ -2058,7 +2526,10 @@
       },
       "names": [
         "Yemeni Rial",
-        "Yemeni rials",
+        "Yemeni rials"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "YER"
       ]
     },
@@ -2070,9 +2541,11 @@
         "plural": "South African rand"
       },
       "names": [
-        "South African Rand",
-        "ZAR",
-        "R"
+        "South African Rand"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "ZAR"
       ]
     },
     {
@@ -2084,9 +2557,11 @@
       },
       "names": [
         "Zambian Kwacha",
-        "Zambian kwachas",
-        "ZMW",
-        "ZK"
+        "Zambian kwachas"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
+        "ZMW"
       ]
     },
     {
@@ -2097,195 +2572,186 @@
         "plural": "Zimbabwean gold"
       },
       "names": [
-        "Zimbabwean Gold",
+        "Zimbabwean Gold"
+      ],
+      "symbolAdjacent": [],
+      "symbolSpaced": [
         "ZWG"
       ]
     }
   ],
-  "ambiguous": [
-    {
-      "symbol": "$",
-      "dimension": "currency_symbol_0024"
-    },
-    {
-      "symbol": "K",
-      "dimension": "currency_symbol_004B"
-    },
-    {
-      "symbol": "Rf",
-      "dimension": "currency_symbol_0052_0066"
-    },
-    {
-      "symbol": "Rs",
-      "dimension": "currency_symbol_0052_0073"
-    },
-    {
-      "symbol": "kr",
-      "dimension": "currency_symbol_006B_0072"
-    },
-    {
-      "symbol": "¢",
-      "dimension": "currency_symbol_00A2"
-    },
-    {
-      "symbol": "£",
-      "dimension": "currency_symbol_00A3"
-    },
-    {
-      "symbol": "¤",
-      "dimension": "currency_symbol_00A4"
-    },
-    {
-      "symbol": "¥",
-      "dimension": "currency_symbol_00A5"
-    },
-    {
-      "symbol": "߾",
-      "dimension": "currency_symbol_07FE"
-    },
-    {
-      "symbol": "߿",
-      "dimension": "currency_symbol_07FF"
-    },
-    {
-      "symbol": "৲",
-      "dimension": "currency_symbol_09F2"
-    },
-    {
-      "symbol": "৻",
-      "dimension": "currency_symbol_09FB"
-    },
-    {
-      "symbol": "૱",
-      "dimension": "currency_symbol_0AF1"
-    },
-    {
-      "symbol": "௹",
-      "dimension": "currency_symbol_0BF9"
-    },
-    {
-      "symbol": "₠",
-      "dimension": "currency_symbol_20A0"
-    },
-    {
-      "symbol": "₢",
-      "dimension": "currency_symbol_20A2"
-    },
-    {
-      "symbol": "₣",
-      "dimension": "currency_symbol_20A3"
-    },
-    {
-      "symbol": "₤",
-      "dimension": "currency_symbol_20A4"
-    },
-    {
-      "symbol": "₥",
-      "dimension": "currency_symbol_20A5"
-    },
-    {
-      "symbol": "₧",
-      "dimension": "currency_symbol_20A7"
-    },
-    {
-      "symbol": "₨",
-      "dimension": "currency_symbol_20A8"
-    },
-    {
-      "symbol": "₩",
-      "dimension": "currency_symbol_20A9"
-    },
-    {
-      "symbol": "₯",
-      "dimension": "currency_symbol_20AF"
-    },
-    {
-      "symbol": "₰",
-      "dimension": "currency_symbol_20B0"
-    },
-    {
-      "symbol": "₱",
-      "dimension": "currency_symbol_20B1"
-    },
-    {
-      "symbol": "₳",
-      "dimension": "currency_symbol_20B3"
-    },
-    {
-      "symbol": "₵",
-      "dimension": "currency_symbol_20B5"
-    },
-    {
-      "symbol": "₶",
-      "dimension": "currency_symbol_20B6"
-    },
-    {
-      "symbol": "₷",
-      "dimension": "currency_symbol_20B7"
-    },
-    {
-      "symbol": "₻",
-      "dimension": "currency_symbol_20BB"
-    },
-    {
-      "symbol": "₿",
-      "dimension": "currency_symbol_20BF"
-    },
-    {
-      "symbol": "꠸",
-      "dimension": "currency_symbol_A838"
-    },
-    {
-      "symbol": "𑿝",
-      "dimension": "currency_symbol_11FDD"
-    },
-    {
-      "symbol": "𑿞",
-      "dimension": "currency_symbol_11FDE"
-    },
-    {
-      "symbol": "𑿟",
-      "dimension": "currency_symbol_11FDF"
-    },
-    {
-      "symbol": "𑿠",
-      "dimension": "currency_symbol_11FE0"
-    },
-    {
-      "symbol": "𞋿",
-      "dimension": "currency_symbol_1E2FF"
-    },
-    {
-      "symbol": "𞲰",
-      "dimension": "currency_symbol_1ECB0"
-    },
-    {
-      "symbol": "﷼",
-      "dimension": "currency_symbol_FDFC"
-    },
-    {
-      "symbol": "﹩",
-      "dimension": "currency_symbol_FE69"
-    },
-    {
-      "symbol": "＄",
-      "dimension": "currency_symbol_FF04"
-    },
-    {
-      "symbol": "￠",
-      "dimension": "currency_symbol_FFE0"
-    },
-    {
-      "symbol": "￡",
-      "dimension": "currency_symbol_FFE1"
-    },
-    {
-      "symbol": "￥",
-      "dimension": "currency_symbol_FFE5"
-    },
-    {
-      "symbol": "￦",
-      "dimension": "currency_symbol_FFE6"
-    }
-  ]
+  "ambiguous": {
+    "name": [],
+    "symbolAdjacent": [
+      {
+        "symbol": "$",
+        "dimension": "currency_symbol_0024"
+      },
+      {
+        "symbol": "¢",
+        "dimension": "currency_symbol_00A2"
+      },
+      {
+        "symbol": "£",
+        "dimension": "currency_symbol_00A3"
+      },
+      {
+        "symbol": "¤",
+        "dimension": "currency_symbol_00A4"
+      },
+      {
+        "symbol": "¥",
+        "dimension": "currency_symbol_00A5"
+      },
+      {
+        "symbol": "߾",
+        "dimension": "currency_symbol_07FE"
+      },
+      {
+        "symbol": "߿",
+        "dimension": "currency_symbol_07FF"
+      },
+      {
+        "symbol": "৲",
+        "dimension": "currency_symbol_09F2"
+      },
+      {
+        "symbol": "৻",
+        "dimension": "currency_symbol_09FB"
+      },
+      {
+        "symbol": "૱",
+        "dimension": "currency_symbol_0AF1"
+      },
+      {
+        "symbol": "௹",
+        "dimension": "currency_symbol_0BF9"
+      },
+      {
+        "symbol": "₠",
+        "dimension": "currency_symbol_20A0"
+      },
+      {
+        "symbol": "₢",
+        "dimension": "currency_symbol_20A2"
+      },
+      {
+        "symbol": "₣",
+        "dimension": "currency_symbol_20A3"
+      },
+      {
+        "symbol": "₤",
+        "dimension": "currency_symbol_20A4"
+      },
+      {
+        "symbol": "₥",
+        "dimension": "currency_symbol_20A5"
+      },
+      {
+        "symbol": "₧",
+        "dimension": "currency_symbol_20A7"
+      },
+      {
+        "symbol": "₨",
+        "dimension": "currency_symbol_20A8"
+      },
+      {
+        "symbol": "₩",
+        "dimension": "currency_symbol_20A9"
+      },
+      {
+        "symbol": "₯",
+        "dimension": "currency_symbol_20AF"
+      },
+      {
+        "symbol": "₰",
+        "dimension": "currency_symbol_20B0"
+      },
+      {
+        "symbol": "₱",
+        "dimension": "currency_symbol_20B1"
+      },
+      {
+        "symbol": "₳",
+        "dimension": "currency_symbol_20B3"
+      },
+      {
+        "symbol": "₵",
+        "dimension": "currency_symbol_20B5"
+      },
+      {
+        "symbol": "₶",
+        "dimension": "currency_symbol_20B6"
+      },
+      {
+        "symbol": "₷",
+        "dimension": "currency_symbol_20B7"
+      },
+      {
+        "symbol": "₻",
+        "dimension": "currency_symbol_20BB"
+      },
+      {
+        "symbol": "₿",
+        "dimension": "currency_symbol_20BF"
+      },
+      {
+        "symbol": "꠸",
+        "dimension": "currency_symbol_A838"
+      },
+      {
+        "symbol": "𑿝",
+        "dimension": "currency_symbol_11FDD"
+      },
+      {
+        "symbol": "𑿞",
+        "dimension": "currency_symbol_11FDE"
+      },
+      {
+        "symbol": "𑿟",
+        "dimension": "currency_symbol_11FDF"
+      },
+      {
+        "symbol": "𑿠",
+        "dimension": "currency_symbol_11FE0"
+      },
+      {
+        "symbol": "𞋿",
+        "dimension": "currency_symbol_1E2FF"
+      },
+      {
+        "symbol": "𞲰",
+        "dimension": "currency_symbol_1ECB0"
+      },
+      {
+        "symbol": "﷼",
+        "dimension": "currency_symbol_FDFC"
+      },
+      {
+        "symbol": "﹩",
+        "dimension": "currency_symbol_FE69"
+      },
+      {
+        "symbol": "＄",
+        "dimension": "currency_symbol_FF04"
+      },
+      {
+        "symbol": "￠",
+        "dimension": "currency_symbol_FFE0"
+      },
+      {
+        "symbol": "￡",
+        "dimension": "currency_symbol_FFE1"
+      },
+      {
+        "symbol": "￥",
+        "dimension": "currency_symbol_FFE5"
+      },
+      {
+        "symbol": "￦",
+        "dimension": "currency_symbol_FFE6"
+      }
+    ],
+    "symbolSpaced": []
+  }
 }

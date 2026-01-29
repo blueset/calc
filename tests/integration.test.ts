@@ -222,6 +222,14 @@ describe('Integration Tests - SPECS.md Examples', () => {
       expect(result.results[0].result).toContain('ft²');
     });
 
+    it.skip('should handle named multi-word units', () => {
+      // TODO: Implement multi-word unit parsing
+      let result = calculator.calculate('1 sq m');
+      expect(result.results[0].result).toContain('m²');
+      result = calculator.calculate('1 sq ft');
+      expect(result.results[0].result).toContain('ft²');
+    });
+
     it('should handle special area units', () => {
       const result = calculator.calculate('1 hectare');
       expect(result.results[0].result).toContain('ha');
@@ -253,6 +261,14 @@ describe('Integration Tests - SPECS.md Examples', () => {
       result = calculator.calculate('1 lb^3');
       expect(result.results[0].result).toContain('lb³');
     });
+
+    it.skip('should handle multi-word units', () => {
+      // TODO: Implement multi-word unit parsing
+      let result = calculator.calculate('1 fl oz');
+      expect(result.results[0].result).toContain('fl oz');
+      result = calculator.calculate('10 fluid ounces');
+      expect(result.results[0].result).toContain('fl oz');
+    })
   });
 
   describe('Temperature Units', () => {
@@ -300,6 +316,74 @@ describe('Integration Tests - SPECS.md Examples', () => {
     it('should handle calories', () => {
       const result = calculator.calculate('100 kcal');
       expect(result.results[0].result).toContain('kcal');
+    });
+  });
+
+  describe('Pressure units', () => {
+    it('should handle pascals', () => {
+      const result = calculator.calculate('101325 Pa');
+      expect(result.results[0].result).toContain('Pa');
+    });
+
+    it('should handle atmospheres', () => {
+      const result = calculator.calculate('1 atm');
+      expect(result.results[0].result).toContain('atm');
+    });
+
+    it.skip('should handle mmHg', () => {
+      // TODO: Implement multi-word unit parsing
+      let result = calculator.calculate('1 mmHg');
+      expect(result.results[0].result).toContain('mmHg');
+      result = calculator.calculate('1 millimeter of mercury');
+      expect(result.results[0].result).toContain('mmHg');
+    });
+  });
+
+  describe('Frequency Units', () => {
+    it('should handle cycles', () => {
+      const result = calculator.calculate('60 cycles');
+      expect(result.results[0].result).toContain('cycle');
+    });
+
+    it('should handle hertz', () => {
+      const result = calculator.calculate('60 Hz');
+      expect(result.results[0].result).toContain('Hz');
+    });
+  });
+
+  describe.skip('Currency Units', () => {
+    // TODO: Support currency unit parsing and evaluation
+    it('should handle currency ISO codes', () => {
+      const result = calculator.calculate(`100 USD
+100 EUR
+100 JPY
+100 HKD`);
+      expect(result.results[0].result).toContain('USD');
+      expect(result.results[1].result).toContain('EUR');
+      expect(result.results[2].result).toContain('JPY');
+      expect(result.results[3].result).toContain('HKD');
+    });
+
+    it('should handle currency names', () => {
+      const result = calculator.calculate(`100 US Dollars
+100 euros # case insensitive
+100 japanese Yen
+100 hong kong dollars`);
+      expect(result.results[0].result).toContain('USD');
+      expect(result.results[1].result).toContain('EUR');
+      expect(result.results[2].result).toContain('JPY');
+      expect(result.results[3].result).toContain('HKD');
+    });
+
+    it('should handle unambiguous currency symbols', () => {
+      const result = calculator.calculate(`US$100
+€100
+CA$100
+₹100`);
+      expect(result.results[0].result).toContain('USD');
+      expect(result.results[1].result).toContain('EUR');
+      expect(result.results[2].result).toContain('CAD');
+      expect(result.results[3].result).toContain('INR');
     });
   });
 
