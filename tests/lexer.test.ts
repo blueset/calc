@@ -62,21 +62,56 @@ describe('Lexer', () => {
       const tokens = tokenize('0b1010');
       expect(tokens).toHaveLength(2);
       expect(tokens[0].type).toBe(TokenType.NUMBER);
-      expect(tokens[0].value).toBe('0b1010');
+      expect(tokens[0].value).toBe('10');
     });
 
     it('should tokenize octal numbers', () => {
       const tokens = tokenize('0o755');
       expect(tokens).toHaveLength(2);
       expect(tokens[0].type).toBe(TokenType.NUMBER);
-      expect(tokens[0].value).toBe('0o755');
+      expect(tokens[0].value).toBe('493');
     });
 
     it('should tokenize hexadecimal numbers', () => {
       const tokens = tokenize('0xFF');
       expect(tokens).toHaveLength(2);
       expect(tokens[0].type).toBe(TokenType.NUMBER);
-      expect(tokens[0].value).toBe('0xFF');
+      expect(tokens[0].value).toBe('255');
+    });
+
+    it('should handle underscore separators in numbers', () => {
+      const tokens = tokenize('1_000');
+      expect(tokens).toHaveLength(2);
+      expect(tokens[0].type).toBe(TokenType.NUMBER);
+      expect(tokens[0].value).toBe('1000'); // Underscores stripped
+    });
+
+    it('should handle underscore separators in decimal numbers', () => {
+      const tokens = tokenize('1_234.567_89');
+      expect(tokens).toHaveLength(2);
+      expect(tokens[0].type).toBe(TokenType.NUMBER);
+      expect(tokens[0].value).toBe('1234.56789'); // Underscores stripped
+    });
+
+    it('should handle underscore separators in scientific notation', () => {
+      const tokens = tokenize('1_000e3');
+      expect(tokens).toHaveLength(2);
+      expect(tokens[0].type).toBe(TokenType.NUMBER);
+      expect(tokens[0].value).toBe('1000e3'); // Underscores stripped in mantissa
+    });
+
+    it('should handle underscore separators in binary numbers', () => {
+      const tokens = tokenize('0b1010_1010');
+      expect(tokens).toHaveLength(2);
+      expect(tokens[0].type).toBe(TokenType.NUMBER);
+      expect(tokens[0].value).toBe('170'); // 0b10101010 = 170
+    });
+
+    it('should handle underscore separators in hex numbers', () => {
+      const tokens = tokenize('0xDEAD_BEEF');
+      expect(tokens).toHaveLength(2);
+      expect(tokens[0].type).toBe(TokenType.NUMBER);
+      expect(tokens[0].value).toBe('3735928559'); // 0xDEADBEEF
     });
   });
 
@@ -190,6 +225,16 @@ describe('Lexer', () => {
     it('should tokenize other keywords', () => {
       const types = getTokenTypes('mod per xor');
       expect(types.slice(0, -1)).toEqual([TokenType.MOD, TokenType.PER, TokenType.XOR]);
+    });
+
+    it('should tokenize base keyword', () => {
+      const types = getTokenTypes('base');
+      expect(types.slice(0, -1)).toEqual([TokenType.BASE]);
+    });
+
+    it('should tokenize base keyword in context', () => {
+      const types = getTokenTypes('1010 base 2');
+      expect(types.slice(0, -1)).toEqual([TokenType.NUMBER, TokenType.BASE, TokenType.NUMBER]);
     });
 
     it('should tokenize boolean literals', () => {

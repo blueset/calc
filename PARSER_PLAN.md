@@ -24,24 +24,16 @@
 - [x] Implement AM/PM disambiguation rule (attometers/picometers/petameters vs. time)
 - [x] Implement keyword vs identifier distinction
 - [x] Add source location tracking
-- [x] Write unit tests for lexer (84 tests passing - includes Phase 2.5 time literal tests)
-
-**Phase 2 Gaps** (see @PHASE_8_GAPS.md for details, 10-14 hours):
-- [ ] Number underscore separators (1_000)
-- [ ] Binary number parsing with 0b prefix (0b1010)
-- [ ] Octal number parsing with 0o prefix (0o12)
-- [ ] Hexadecimal number parsing with 0x prefix (0xA)
-- [ ] Base keyword parsing (1010 base 2, ABC base 36)
-
-### Phase 2.5: Time Literal Tokenization (Optional Enhancement)
-
+- [x] Write unit tests for lexer
+- [x] Number underscore separators (1_000) - strips underscores in lexer
+- [x] Binary number parsing with 0b prefix (0b1010) - converts to decimal in lexer
+- [x] Octal number parsing with 0o prefix (0o12) - converts to decimal in lexer
+- [x] Hexadecimal number parsing with 0x prefix (0xA) - converts to decimal in lexer
+- [x] Base keyword parsing (1010 base 2, ABC base 36) - handled in parser
 - [x] Enhance lexer to recognize colon patterns (H:MM, H:MM:SS)
 - [x] Tokenize time literals as single DATETIME tokens
 - [x] Update parser's `tryParseTime()` to handle tokenized time literals
 - [x] Add tests for time literal parsing
-
-### Phase 2.6: Unicode Superscript Support (Enhancement)
-
 - [x] Add `isSuperscript()` method to recognize Unicode superscripts (⁰¹²³⁴⁵⁶⁷⁸⁹⁻)
 - [x] Extend `scanIdentifierOrDateTime()` to include superscripts in token values
 - [x] Add `containsSuperscript()` and `extractBaseBeforeSuperscript()` helpers
@@ -51,9 +43,6 @@
 - [x] Add lexer tests for unknown character rejection (3 tests)
 - [x] Add parser tests for Unicode superscript derived units (4 tests)
 - [x] Update error recovery tests to expect LexerError
-
-### Phase 2.7: Error Recording Architecture (Major Enhancement)
-
 - [x] Add error container interfaces (LineError, TokenizeResult, DocumentResult) to error-handling.ts
 - [x] Modify lexer to record errors instead of throwing
 - [x] Add skipToNextLine() method to lexer for error recovery
@@ -74,9 +63,8 @@
 - [x] Implement "per" operator disambiguation
 - [x] Implement "in" keyword ambiguity handling for composite units
 - [x] Implement error recovery (fallback to PlainText)
-- [x] Write unit tests for parser (80 tests passing - includes Phase 2.5 time literal parsing tests)
-- [x] Parse derived unit expressions in conversion targets (deferred from Phase 5.5)
-  - **Note**: Both ASCII notation (m^2) and Unicode superscripts (m²) are fully supported in conversion targets (Unicode added in Phase 2.6)
+- [x] Write unit tests for parser
+- [x] Parse derived unit expressions in conversion targets
 
 **Phase 3 Gaps** (see @PHASE_8_GAPS.md for details, 7-9 hours):
 - [ ] Caret notation for exponents (m^2, m^3) - requires disambiguation from power operator
@@ -194,10 +182,10 @@
 **Note**: See @PHASE_8_GAPS.md for comprehensive analysis of the 41 skipped integration tests. These gaps have been added as unchecked items to Phases 2, 3, 5, and 6 above. Total effort to complete all gaps: 42-56 hours across 27 distinct features.
 
 **Test Coverage Summary**:
-- **Total Tests**: 757 tests passing, 41 skipped (798 total)
-- **Integration**: 125 tests (84 passing, 41 skipped - comprehensive SPECS.md coverage)
-- **Lexer**: 92 tests (all token types, disambiguation rules, error recording)
-- **Parser**: 105 tests (AST generation, operator precedence, composite units, error recovery)
+- **Total Tests**: 781 tests passing, 29 skipped (810 total)
+- **Integration**: 124 tests (95 passing, 29 skipped - comprehensive SPECS.md coverage)
+- **Lexer**: 99 tests (all token types, disambiguation rules, error recording, underscore separators, base prefixes)
+- **Parser**: 111 tests (AST generation, operator precedence, composite units, error recovery, base keyword)
 - **Type Checker**: 78 tests (dimension compatibility, conversion validation, variable scoping)
 - **Evaluator**: 95 tests (binary operations, conversions, functions, date arithmetic)
 - **Unit Converter**: 19 tests (linear, affine, variant, composite conversions)
@@ -210,10 +198,7 @@
 - **Functions**: 50 tests (all math functions)
 - **Test Execution**: All tests run in ~450ms
 
-**Features Not Yet Implemented** (41 skipped tests document these gaps):
-- Number underscore separators (1_000)
-- Binary/octal/hex prefix parsing (0b, 0o, 0x)
-- Base keyword conversions (ABC base 36, 10 base 3)
+**Features Not Yet Implemented** (29 skipped tests document these gaps):
 - Dimensionless unit conversion (dozen, percent to raw numbers)
 - Caret notation for exponents (m^2, m^3)
 - Named square/cubic units (square meter, cubic meter)

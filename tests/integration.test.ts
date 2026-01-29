@@ -32,8 +32,7 @@ describe('Integration Tests - SPECS.md Examples', () => {
       expect(result.results[0].result).toBe('3.14');
     });
 
-    it.skip('should handle numbers with underscore separator', () => {
-      // TODO: Lexer doesn't support underscore separators in numbers yet
+    it('should handle numbers with underscore separator', () => {
       const result = calculator.calculate('1_000');
       expect(result.results[0].result).toBe('1 000');
     });
@@ -52,34 +51,40 @@ describe('Integration Tests - SPECS.md Examples', () => {
       expect(result.results[0].result).toBe('-5');
     });
 
-    it.skip('should handle binary numbers with 0b prefix', () => {
-      // TODO: Binary prefix 0b parsing not fully working
+    it('should handle binary numbers with 0b prefix', () => {
       const result = calculator.calculate('0b1010');
       expect(result.results[0].result).toBe('10');
     });
 
-    it.skip('should handle binary numbers with base keyword', () => {
-      // TODO: Base keyword conversion not implemented
+    it('should handle binary numbers with base keyword', () => {
       const result = calculator.calculate('1010 base 2');
       expect(result.results[0].result).toBe('10');
     });
 
-    it.skip('should handle octal numbers with 0o prefix', () => {
-      // TODO: Octal prefix 0o parsing not fully working
+    it('should handle octal numbers with 0o prefix', () => {
       const result = calculator.calculate('0o12');
       expect(result.results[0].result).toBe('10');
     });
 
-    it.skip('should handle hexadecimal numbers with 0x prefix', () => {
-      // TODO: Hexadecimal prefix 0x parsing not fully working
-      const result = calculator.calculate('0xA');
+    it('should handle hexadecimal numbers with 0x prefix', () => {
+      let result = calculator.calculate('0xA');
       expect(result.results[0].result).toBe('10');
+
+      // Mixed case
+      result = calculator.calculate('0xAa');
+      expect(result.results[0].result).toBe('170');
     });
 
-    it.skip('should handle arbitrary bases', () => {
-      // TODO: Base keyword conversion not implemented
-      const result = calculator.calculate('ABC base 36');
+    it('should handle arbitrary bases', () => {
+      let result = calculator.calculate('ABC base 36');
       expect(result.results[0].result).toBe('13 368');
+
+      // Mixed case
+      result = calculator.calculate('1A2b base 36');
+      expect(result.results[0].result).toBe('59 699');
+      
+      result = calculator.calculate('Hello base 30');
+      expect(result.results[0].result).toBe('14 167 554');
     });
   });
 

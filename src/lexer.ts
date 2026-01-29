@@ -237,21 +237,69 @@ export class Lexer {
     if (this.peek() === '0' && this.position + 1 < this.input.length) {
       const next = this.input[this.position + 1].toLowerCase();
       if (next === 'b' || next === 'o' || next === 'x') {
-        value += this.advance(); // '0'
-        value += this.advance(); // 'b', 'o', or 'x'
+        this.advance(); // skip '0'
+        const base = this.advance(); // 'b', 'o', or 'x'
 
-        // Scan digits for the specific base
-        while (!this.isAtEnd() && this.isAlphaNumeric(this.peek())) {
-          value += this.advance();
+        let digits = '';
+        // Scan digits for the specific base (allow underscores)
+        while (!this.isAtEnd() && (this.isAlphaNumeric(this.peek()) || this.peek() === '_')) {
+          const char = this.peek();
+          if (char !== '_') {
+            digits += char;
+          }
+          this.advance();
         }
 
-        return this.createToken(TokenType.NUMBER, value, start, this.currentLocation());
+        // Validate and convert based on base
+        if (digits.length === 0) {
+          throw new LexerError(
+            `Invalid number: 0${base} must be followed by digits`,
+            start,
+            this.currentLocation()
+          );
+        }
+
+        let decimalValue: number;
+        try {
+          if (base.toLowerCase() === 'b') {
+            // Binary: only 0 and 1 allowed
+            if (!/^[01]+$/.test(digits)) {
+              throw new Error('Invalid binary digits');
+            }
+            decimalValue = parseInt(digits, 2);
+          } else if (base.toLowerCase() === 'o') {
+            // Octal: only 0-7 allowed
+            if (!/^[0-7]+$/.test(digits)) {
+              throw new Error('Invalid octal digits');
+            }
+            decimalValue = parseInt(digits, 8);
+          } else {
+            // Hexadecimal: 0-9, a-f, A-F allowed
+            if (!/^[0-9a-fA-F]+$/.test(digits)) {
+              throw new Error('Invalid hexadecimal digits');
+            }
+            decimalValue = parseInt(digits, 16);
+          }
+        } catch (error) {
+          throw new LexerError(
+            `Invalid number: 0${base}${digits} - ${error instanceof Error ? error.message : 'unknown error'}`,
+            start,
+            this.currentLocation()
+          );
+        }
+
+        // Return the decimal value as a string
+        return this.createToken(TokenType.NUMBER, decimalValue.toString(), start, this.currentLocation());
       }
     }
 
-    // Regular number
-    while (!this.isAtEnd() && this.isDigit(this.peek())) {
-      value += this.advance();
+    // Regular number (with optional underscore separators)
+    while (!this.isAtEnd() && (this.isDigit(this.peek()) || this.peek() === '_')) {
+      const char = this.peek();
+      if (char !== '_') {
+        value += char;
+      }
+      this.advance();
     }
 
     // Check for time literal pattern (H:MM or H:MM:SS)
@@ -285,26 +333,34 @@ export class Lexer {
       return this.createToken(TokenType.DATETIME, value, start, this.currentLocation());
     }
 
-    // Decimal part
-    if (this.peek() === '.' && this.isDigit(this.peekNext())) {
+    // Decimal part (with optional underscore separators)
+    if (this.peek() === '.' && (this.isDigit(this.peekNext()) || this.peekNext() === '_')) {
       value += this.advance(); // '.'
-      while (!this.isAtEnd() && this.isDigit(this.peek())) {
-        value += this.advance();
+      while (!this.isAtEnd() && (this.isDigit(this.peek()) || this.peek() === '_')) {
+        const char = this.peek();
+        if (char !== '_') {
+          value += char;
+        }
+        this.advance();
       }
     }
 
-    // Scientific notation (e or E)
+    // Scientific notation (e or E) with optional underscore separators
     // Priority: 2e3 should be 2000, not 2*e*3
     if ((this.peek() === 'e' || this.peek() === 'E')) {
       const next = this.peekNext();
       // Check if it's scientific notation (e followed by digit or sign+digit)
-      if (this.isDigit(next) || ((next === '+' || next === '-') && this.isDigit(this.input[this.position + 2]))) {
+      if (this.isDigit(next) || next === '_' || ((next === '+' || next === '-') && (this.isDigit(this.input[this.position + 2]) || this.input[this.position + 2] === '_'))) {
         value += this.advance(); // 'e' or 'E'
         if (this.peek() === '+' || this.peek() === '-') {
           value += this.advance();
         }
-        while (!this.isAtEnd() && this.isDigit(this.peek())) {
-          value += this.advance();
+        while (!this.isAtEnd() && (this.isDigit(this.peek()) || this.peek() === '_')) {
+          const char = this.peek();
+          if (char !== '_') {
+            value += char;
+          }
+          this.advance();
         }
       }
     }

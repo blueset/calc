@@ -453,6 +453,40 @@ export class Parser {
       const identifierToken = this.previous();
       const name = identifierToken.value;
 
+      // Check for base notation with identifier: ABC base 36
+      if (this.check(TokenType.BASE)) {
+        this.advance(); // consume 'base' keyword
+
+        if (!this.check(TokenType.NUMBER)) {
+          throw new Error(`Expected base number after 'base' keyword at ${this.currentToken().start.line}:${this.currentToken().start.column}`);
+        }
+
+        const baseToken = this.currentToken();
+        this.advance(); // consume base number
+        const base = parseInt(baseToken.value);
+
+        // Validate base (2-36 are standard)
+        if (base < 2 || base > 36) {
+          throw new Error(`Invalid base ${base}. Base must be between 2 and 36 at ${baseToken.start.line}:${baseToken.start.column}`);
+        }
+
+        // Parse the identifier as a number in the given base
+        const digits = name;
+        let decimalValue: number;
+
+        try {
+          decimalValue = parseInt(digits, base);
+          if (isNaN(decimalValue)) {
+            throw new Error(`Invalid digits for base ${base}`);
+          }
+        } catch (error) {
+          throw new Error(`Failed to parse '${digits}' as base ${base} number at ${identifierToken.start.line}:${identifierToken.start.column}`);
+        }
+
+        const end = this.previous().end;
+        return createNumberLiteral(decimalValue, start, end);
+      }
+
       // Check if it's a function call
       if (this.check(TokenType.LPAREN)) {
         return this.parseFunctionCall(name, start);
@@ -485,10 +519,91 @@ export class Parser {
    * - Plain number: 42
    * - Number with unit: 5 km
    * - Composite unit: 5 ft 3 in
+   * - Base notation: 1010 base 2, ABC base 36, 1A2b base 36
    */
   private parseNumberWithOptionalUnit(numberToken: Token): Expression {
-    const value = parseFloat(numberToken.value);
     const start = numberToken.start;
+
+    // Check for base notation: NUMBER [IDENTIFIER] base NUMBER
+    // e.g., "1010 base 2", "ABC base 36", or "1A2b base 36"
+    // The last case happens when digits are followed by letters, which the lexer splits
+    if (this.check(TokenType.IDENTIFIER)) {
+      const identifierToken = this.currentToken();
+      // Look ahead for BASE keyword
+      const nextToken = this.peekAhead(1);
+      if (nextToken && nextToken.type === TokenType.BASE) {
+        // This is: NUMBER IDENTIFIER base NUMBER
+        // Combine the number and identifier (e.g., "1" + "A2b" = "1A2b")
+        this.advance(); // consume identifier
+        this.advance(); // consume 'base' keyword
+
+        if (!this.check(TokenType.NUMBER)) {
+          throw new Error(`Expected base number after 'base' keyword at ${this.currentToken().start.line}:${this.currentToken().start.column}`);
+        }
+
+        const baseToken = this.currentToken();
+        this.advance(); // consume base number
+        const base = parseInt(baseToken.value);
+
+        // Validate base (2-36 are standard)
+        if (base < 2 || base > 36) {
+          throw new Error(`Invalid base ${base}. Base must be between 2 and 36 at ${baseToken.start.line}:${baseToken.start.column}`);
+        }
+
+        // Combine number and identifier for parsing
+        const digits = numberToken.value + identifierToken.value;
+        let decimalValue: number;
+
+        try {
+          decimalValue = parseInt(digits, base);
+          if (isNaN(decimalValue)) {
+            throw new Error(`Invalid digits for base ${base}`);
+          }
+        } catch (error) {
+          throw new Error(`Failed to parse '${digits}' as base ${base} number at ${numberToken.start.line}:${numberToken.start.column}`);
+        }
+
+        const end = this.previous().end;
+        return createNumberLiteral(decimalValue, start, end);
+      }
+    }
+
+    // Check for base notation: NUMBER base NUMBER (without identifier)
+    // e.g., "1010 base 2"
+    if (this.check(TokenType.BASE)) {
+      this.advance(); // consume 'base' keyword
+
+      if (!this.check(TokenType.NUMBER)) {
+        throw new Error(`Expected base number after 'base' keyword at ${this.currentToken().start.line}:${this.currentToken().start.column}`);
+      }
+
+      const baseToken = this.currentToken();
+      this.advance(); // consume base number
+      const base = parseInt(baseToken.value);
+
+      // Validate base (2-36 are standard)
+      if (base < 2 || base > 36) {
+        throw new Error(`Invalid base ${base}. Base must be between 2 and 36 at ${baseToken.start.line}:${baseToken.start.column}`);
+      }
+
+      // Parse the number in the given base
+      const digits = numberToken.value;
+      let decimalValue: number;
+
+      try {
+        decimalValue = parseInt(digits, base);
+        if (isNaN(decimalValue)) {
+          throw new Error(`Invalid digits for base ${base}`);
+        }
+      } catch (error) {
+        throw new Error(`Failed to parse '${digits}' as base ${base} number at ${numberToken.start.line}:${numberToken.start.column}`);
+      }
+
+      const end = this.previous().end;
+      return createNumberLiteral(decimalValue, start, end);
+    }
+
+    const value = parseFloat(numberToken.value);
 
     // Check for date pattern: YYYY MONTH D (e.g., "2024 Jan 15")
     if (this.check(TokenType.DATETIME)) {

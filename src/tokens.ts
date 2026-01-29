@@ -57,6 +57,7 @@ export enum TokenType {
   PER = 'PER',                // per
   MOD = 'MOD',                // mod
   XOR = 'XOR',                // xor
+  BASE = 'BASE',              // base
 
   // Punctuation
   LPAREN = 'LPAREN',          // (
@@ -104,6 +105,7 @@ export const KEYWORDS = new Set([
   'per',
   'mod',
   'xor',
+  'base',
   'true',
   'false'
 ]);
@@ -129,6 +131,7 @@ export function getKeywordType(keyword: string): TokenType {
     case 'per': return TokenType.PER;
     case 'mod': return TokenType.MOD;
     case 'xor': return TokenType.XOR;
+    case 'base': return TokenType.BASE;
     case 'true':
     case 'false':
       return TokenType.BOOLEAN;

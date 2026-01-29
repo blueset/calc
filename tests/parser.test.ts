@@ -92,6 +92,48 @@ describe('Parser', () => {
       const expr = parseExpression('pi');
       expect(expr.type).toBe('ConstantLiteral');
     });
+
+    it('should parse binary numbers with 0b prefix', () => {
+      const expr = parseExpression('0b1010');
+      expect(expr.type).toBe('NumberLiteral');
+      expect((expr as NumberLiteral).value).toBe(10);
+    });
+
+    it('should parse octal numbers with 0o prefix', () => {
+      const expr = parseExpression('0o12');
+      expect(expr.type).toBe('NumberLiteral');
+      expect((expr as NumberLiteral).value).toBe(10);
+    });
+
+    it('should parse hexadecimal numbers with 0x prefix', () => {
+      const expr = parseExpression('0xA');
+      expect(expr.type).toBe('NumberLiteral');
+      expect((expr as NumberLiteral).value).toBe(10);
+    });
+
+    it('should parse numbers with base keyword', () => {
+      const expr = parseExpression('1010 base 2');
+      expect(expr.type).toBe('NumberLiteral');
+      expect((expr as NumberLiteral).value).toBe(10);
+    });
+
+    it('should parse base 36 numbers', () => {
+      const expr = parseExpression('ABC base 36');
+      expect(expr.type).toBe('NumberLiteral');
+      expect((expr as NumberLiteral).value).toBe(13368);
+    });
+
+    it('should parse numbers with underscore separators', () => {
+      const expr = parseExpression('1_000');
+      expect(expr.type).toBe('NumberLiteral');
+      expect((expr as NumberLiteral).value).toBe(1000);
+    });
+
+    it('should parse mixed alphanumeric with base keyword', () => {
+      const expr = parseExpression('1A2b base 36');
+      expect(expr.type).toBe('NumberLiteral');
+      expect((expr as NumberLiteral).value).toBe(59699);
+    });
   });
 
   describe('Numbers with Units', () => {
