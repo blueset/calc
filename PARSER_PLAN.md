@@ -65,10 +65,8 @@
 - [x] Implement error recovery (fallback to PlainText)
 - [x] Write unit tests for parser
 - [x] Parse derived unit expressions in conversion targets
-
-**Phase 3 Gaps** (see @PHASE_8_GAPS.md for details, 7-9 hours):
-- [ ] Caret notation for exponents (m^2, m^3) - requires disambiguation from power operator
-- [ ] Named square/cubic units (square meter, cubic meter, meter squared, meter cubed)
+- [x] Caret notation for exponents (m^2, m^3) - requires disambiguation from power operator
+- [x] Named square/cubic units (square meter, cubic meter, meter squared, meter cubed)
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
@@ -182,10 +180,10 @@
 **Note**: See @PHASE_8_GAPS.md for comprehensive analysis of the 41 skipped integration tests. These gaps have been added as unchecked items to Phases 2, 3, 5, and 6 above. Total effort to complete all gaps: 42-56 hours across 27 distinct features.
 
 **Test Coverage Summary**:
-- **Total Tests**: 781 tests passing, 29 skipped (810 total)
-- **Integration**: 124 tests (95 passing, 29 skipped - comprehensive SPECS.md coverage)
+- **Total Tests**: 797 tests passing, 26 skipped (823 total)
+- **Integration**: 124 tests (98 passing, 26 skipped - comprehensive SPECS.md coverage)
 - **Lexer**: 99 tests (all token types, disambiguation rules, error recording, underscore separators, base prefixes)
-- **Parser**: 111 tests (AST generation, operator precedence, composite units, error recovery, base keyword)
+- **Parser**: 123 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units)
 - **Type Checker**: 78 tests (dimension compatibility, conversion validation, variable scoping)
 - **Evaluator**: 95 tests (binary operations, conversions, functions, date arithmetic)
 - **Unit Converter**: 19 tests (linear, affine, variant, composite conversions)

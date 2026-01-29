@@ -58,6 +58,10 @@ export enum TokenType {
   MOD = 'MOD',                // mod
   XOR = 'XOR',                // xor
   BASE = 'BASE',              // base
+  SQUARE = 'SQUARE',          // square
+  CUBIC = 'CUBIC',            // cubic
+  SQUARED = 'SQUARED',        // squared
+  CUBED = 'CUBED',            // cubed
 
   // Punctuation
   LPAREN = 'LPAREN',          // (
@@ -106,6 +110,10 @@ export const KEYWORDS = new Set([
   'mod',
   'xor',
   'base',
+  'square',
+  'cubic',
+  'squared',
+  'cubed',
   'true',
   'false'
 ]);
@@ -132,6 +140,10 @@ export function getKeywordType(keyword: string): TokenType {
     case 'mod': return TokenType.MOD;
     case 'xor': return TokenType.XOR;
     case 'base': return TokenType.BASE;
+    case 'square': return TokenType.SQUARE;
+    case 'cubic': return TokenType.CUBIC;
+    case 'squared': return TokenType.SQUARED;
+    case 'cubed': return TokenType.CUBED;
     case 'true':
     case 'false':
       return TokenType.BOOLEAN;

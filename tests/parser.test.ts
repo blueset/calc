@@ -1046,4 +1046,153 @@ describe('Parser', () => {
       });
     });
   });
+
+  describe('Phase 3: Caret Notation and Named Units', () => {
+    describe('Caret notation for exponents', () => {
+      it('should parse caret notation for square units', () => {
+        const expr = parseExpression('5 m^2');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(5);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(2);
+      });
+
+      it('should parse caret notation for cubic units', () => {
+        const expr = parseExpression('10 m^3');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(10);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(3);
+      });
+
+      it('should parse caret notation with negative exponents', () => {
+        const expr = parseExpression('100 s^-1');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(100);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(-1);
+      });
+
+      it('should parse caret notation with fractional exponents', () => {
+        const expr = parseExpression('25 m^0.5');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(25);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(0.5);
+      });
+    });
+
+    describe('Named square/cubic units - prefix pattern', () => {
+      it('should parse "square meter"', () => {
+        const expr = parseExpression('1 square meter');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(1);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(2);
+      });
+
+      it('should parse "cubic meter"', () => {
+        const expr = parseExpression('5 cubic meter');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(5);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(3);
+      });
+
+      it('should parse "square foot"', () => {
+        const expr = parseExpression('10 square foot');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(10);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(2);
+      });
+    });
+
+    describe('Named square/cubic units - postfix pattern', () => {
+      it('should parse "meter squared"', () => {
+        const expr = parseExpression('2 meter squared');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(2);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(2);
+      });
+
+      it('should parse "meter cubed"', () => {
+        const expr = parseExpression('3 meter cubed');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(3);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(3);
+      });
+
+      it('should parse "foot squared"', () => {
+        const expr = parseExpression('7 foot squared');
+        expect(expr.type).toBe('NumberWithUnit');
+        const nwu = expr as NumberWithUnit;
+        expect(nwu.value).toBe(7);
+        expect(nwu.unit.type).toBe('DerivedUnit');
+        const derived = nwu.unit as DerivedUnit;
+        expect(derived.terms).toHaveLength(1);
+        expect(derived.terms[0].exponent).toBe(2);
+      });
+    });
+
+    describe('Edge cases and combinations', () => {
+      it('should not confuse caret with power operator in parentheses', () => {
+        // (5 m)^2 should be a power expression, not a derived unit
+        const expr = parseExpression('(5 m)^2');
+        expect(expr.type).toBe('BinaryExpression');
+        const binary = expr as BinaryExpression;
+        expect(binary.operator).toBe('^');
+      });
+
+      it('should handle Unicode superscripts and caret notation', () => {
+        const caretExpr = parseExpression('5 m^2');
+        const unicodeExpr = parseExpression('5 m²');
+
+        expect(caretExpr.type).toBe('NumberWithUnit');
+        expect(unicodeExpr.type).toBe('NumberWithUnit');
+
+        const caretNwu = caretExpr as NumberWithUnit;
+        const unicodeNwu = unicodeExpr as NumberWithUnit;
+
+        expect(caretNwu.value).toBe(unicodeNwu.value);
+        expect(caretNwu.unit.type).toBe('DerivedUnit');
+        expect(unicodeNwu.unit.type).toBe('DerivedUnit');
+
+        // Both have same structure
+        const caretDerived = caretNwu.unit as DerivedUnit;
+        const unicodeDerived = unicodeNwu.unit as DerivedUnit;
+        expect(caretDerived.terms[0].exponent).toBe(2);
+        expect(unicodeDerived.terms[0].exponent).toBe(2);
+      });
+    });
+  });
 });

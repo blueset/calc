@@ -208,16 +208,18 @@ describe('Integration Tests - SPECS.md Examples', () => {
       expect(result.results[0].result).toContain('m²');
     });
 
-    it.skip('should handle square units with caret', () => {
-      // TODO: Parser doesn't support m^2 syntax, only Unicode superscripts
+    it('should handle square units with caret', () => {
       const result = calculator.calculate('1 m^2');
       expect(result.results[0].result).toContain('m²');
     });
 
-    it.skip('should handle named square units', () => {
-      // TODO: Named units like "square meter" not implemented
-      const result = calculator.calculate('1 square meter');
+    it('should handle named square units', () => {
+      let result = calculator.calculate('1 square meter');
       expect(result.results[0].result).toContain('m²');
+      result = calculator.calculate('1 meter squared');
+      expect(result.results[0].result).toContain('m²');
+      result = calculator.calculate('1 square foot');
+      expect(result.results[0].result).toContain('ft²');
     });
 
     it('should handle special area units', () => {
@@ -239,14 +241,17 @@ describe('Integration Tests - SPECS.md Examples', () => {
     });
 
     it('should handle cubic units with superscript', () => {
-      const result = calculator.calculate('1 m³');
+      let result = calculator.calculate('1 m³');
       expect(result.results[0].result).toContain('m³');
+      result = calculator.calculate('1 lb³');
+      expect(result.results[0].result).toContain('lb³');
     });
 
-    it.skip('should handle cubic units with caret', () => {
-      // TODO: Parser doesn't support m^3 syntax, only Unicode superscripts
-      const result = calculator.calculate('1 m^3');
+    it('should handle cubic units with caret', () => {
+      let result = calculator.calculate('1 m^3');
       expect(result.results[0].result).toContain('m³');
+      result = calculator.calculate('1 lb^3');
+      expect(result.results[0].result).toContain('lb³');
     });
   });
 

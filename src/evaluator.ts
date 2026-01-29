@@ -257,6 +257,20 @@ export class Evaluator {
         return { kind: 'number', value: literal.value };
 
       case 'NumberWithUnit': {
+        // Handle DerivedUnit (e.g., from m^2 syntax)
+        if (literal.unit.type === 'DerivedUnit') {
+          const terms: Array<{ unit: Unit; exponent: number }> = [];
+          for (const term of literal.unit.terms) {
+            const resolvedUnit = this.resolveUnit(term.unit);
+            if (!resolvedUnit) {
+              return this.createError(`Unknown unit in derived unit literal`);
+            }
+            terms.push({ unit: resolvedUnit, exponent: term.exponent });
+          }
+          return { kind: 'derivedUnit', value: literal.value, terms };
+        }
+
+        // Handle SimpleUnit
         const unit = this.resolveUnit(literal.unit);
         if (!unit) {
           return this.createError(`Unknown unit in literal`);

@@ -628,13 +628,49 @@ export class Parser {
       }
     }
 
+    // Check for named square/cubic units (prefix pattern: "square meter", "cubic meter")
+    let namedExponent: number | null = null;
+    if (this.check(TokenType.SQUARE) || this.check(TokenType.CUBIC)) {
+      const exponentKeyword = this.currentToken();
+      this.advance();
+      namedExponent = exponentKeyword.type === TokenType.SQUARE ? 2 : 3;
+    }
+
     // Check for unit after number
-    if (this.check(TokenType.UNIT)) {
+    if (this.check(TokenType.UNIT) || namedExponent !== null) {
       // Check if this might be a composite unit (multiple value-unit pairs)
       const units: Array<{ value: number; unit: UnitExpression }> = [];
 
       // First value-unit pair
-      let firstUnit: UnitExpression = this.parseUnit();
+      // Extract Unicode superscripts at parse time for consistency
+      // This treats m² and lb³ uniformly (both become [meter:2] and [pound:3])
+      const unitToken = this.currentToken();
+      const unitOriginalValue = unitToken.value;
+      const [, unicodeExponent] = this.extractSuperscript(unitOriginalValue);
+
+      // Parse unit with extraction enabled (strips superscript from name)
+      let firstUnit: UnitExpression = this.parseUnit(true);
+
+      // Handle prefix pattern (square/cubic was already consumed above)
+      if (namedExponent !== null) {
+        const derivedUnit = createDerivedUnit(
+          [{ unit: firstUnit as SimpleUnit, exponent: namedExponent }],
+          firstUnit.start,
+          this.previous().end
+        );
+        firstUnit = derivedUnit;
+        namedExponent = null; // Reset after use
+      }
+
+      // Handle Unicode superscript exponent (e.g., "m²" → [meter:2], "lb³" → [pound:3])
+      if (unicodeExponent !== null && firstUnit.type === 'SimpleUnit') {
+        const derivedUnit = createDerivedUnit(
+          [{ unit: firstUnit as SimpleUnit, exponent: unicodeExponent }],
+          firstUnit.start,
+          this.previous().end
+        );
+        firstUnit = derivedUnit;
+      }
 
       // Check for ASCII exponent notation (e.g., "m^2" should parse like "m²")
       // This makes "16 m^2" parse as NumberWithUnit(16, DerivedUnit([{unit: m, exponent: 2}]))
@@ -664,6 +700,21 @@ export class Parser {
           [{ unit: firstUnit as SimpleUnit, exponent: exponent }],
           firstUnit.start,
           exponentToken.end
+        );
+        firstUnit = derivedUnit;
+      }
+
+      // Check for named square/cubic units (postfix pattern: "meter squared", "meter cubed")
+      if (this.check(TokenType.SQUARED) || this.check(TokenType.CUBED)) {
+        const exponentKeyword = this.currentToken();
+        this.advance();
+        const exponent = exponentKeyword.type === TokenType.SQUARED ? 2 : 3;
+
+        // Wrap the SimpleUnit in a DerivedUnit with the exponent
+        const derivedUnit = createDerivedUnit(
+          [{ unit: firstUnit as SimpleUnit, exponent: exponent }],
+          firstUnit.start,
+          exponentKeyword.end
         );
         firstUnit = derivedUnit;
       }
