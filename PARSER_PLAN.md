@@ -117,7 +117,21 @@ Variables are detected via `definedVariables` set to prevent defined variables f
 - [x] Implement derived unit conversions (completed)
 - [x] Implement exponentiation of units and derived units (completed)
 
-**Phase 5 Gaps** (see @PHASE_8_GAPS.md for details, 15-20 hours):
+**Phase 5 Gaps** (see @PHASE_8_GAPS.md for details, 29-40 hours):
+- [ ] User-defined units support - 5 tests, 8-12 hours
+  - Allow unknown identifiers as user-defined units (1 person, 3 trips, 1 click)
+  - Support in derived units (1 kg/person, 1 USD/person/day)
+  - Enable arithmetic operations (3 trips + 2 trips → 5 trips)
+  - Allow conversions (100 person/sq ft to person/km^2)
+  - Requires changes in parser, type-checker, evaluator, formatter
+  - Re-enable tests: lines 388, 393, 503, 608, 633, 659 in integration.test.ts
+- [ ] Unit cancellation in arithmetic - 3 tests, 6-8 hours
+  - Implement proper unit algebra (add/subtract exponents during multiplication/division)
+  - Cancel opposing units (kg/m² × m² → kg, not kg/m²)
+  - Compute numeric results (3 kg/m² × 2 m² → 6 kg, not 3 kg/m²)
+  - Handle unit conversions during simplification (cm² to m² factor: 10000)
+  - Complex example: 60 kg/cm² / 2 h/m² → 300,000 kg/h
+  - Re-enable tests: lines 623, 647 (and parts of 633, 659) in integration.test.ts
 - [ ] Currency unit resolution in evaluator (fallback from unit to currency lookup)
 - [ ] Ambiguous currency dimension handling ($ → "currency_symbol_0024", error on operations)
 - [ ] Dimensionless unit auto-conversion (5 dozen → 60, 100 percent → 1, 50% → 0.5)
@@ -190,20 +204,20 @@ Variables are detected via `definedVariables` set to prevent defined variables f
 - [x] Ensure test exists for `tests/currency.test.ts` (30 tests)
 - [x] Ensure test exists for `tests/data-loader.test.ts` (40 tests)
 - [x] Ensure test exists for `tests/functions.test.ts` (50 tests)
-- [x] Create `tests/integration.test.ts` with comprehensive SPECS.md examples (125 tests: 84 passing, 41 skipped)
+- [x] Create `tests/integration.test.ts` with comprehensive SPECS.md examples (141 tests: 105 passing, 36 skipped)
 - [x] End-to-end verification testing
 
 **Status**: ⚠️ **PHASE 8 COMPLETED WITH GAPS**
 
 **Current Issues**:
-- **32 integration tests SKIPPED** (features planned but not implemented)
+- **36 integration tests SKIPPED** (28 originally planned + 8 newly discovered for user-defined units and unit cancellation)
 
 
 **Test Coverage Summary**:
-- **Total Tests**: 801 tests passing, 32 skipped (833 total)
-- **Integration**: 125 tests (99 passing, 32 skipped - comprehensive SPECS.md coverage)
-- **Lexer**: 99 tests (all token types, disambiguation rules, error recording, underscore separators, base prefixes)
-- **Parser**: 123 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units)
+- **Total Tests**: 835 tests passing, 36 skipped (871 total)
+- **Integration**: 141 tests (105 passing, 36 skipped - comprehensive SPECS.md coverage)
+- **Lexer**: 111 tests (all token types, disambiguation rules, error recording, underscore separators, base prefixes)
+- **Parser**: 143 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units)
 - **Type Checker**: 78 tests (dimension compatibility, conversion validation, variable scoping)
 - **Evaluator**: 95 tests (binary operations, conversions, functions, date arithmetic)
 - **Unit Converter**: 19 tests (linear, affine, variant, composite conversions)
@@ -218,6 +232,8 @@ Variables are detected via `definedVariables` set to prevent defined variables f
 
 **Features Not Yet Implemented**:
 
+- User-defined units support: Allow unknown identifiers as units (1 person, 3 trips, 1 kg/person)
+- Unit cancellation in arithmetic: Proper unit algebra (kg/m² × m² → kg, not kg/m²)
 - Multi-word unit parsing (fl oz, sq m, millimeter of mercury)
 - Multi-word currency name parsing (US dollars, hong kong dollars)
 - Adjacent currency symbol lexing (US$, €, CA$, ₹)

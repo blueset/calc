@@ -11,6 +11,8 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 | Phase 3 (Parser) | Caret notation & named units | 3 | Medium |
 | Phase 3 (Parser) | Multi-word unit/currency parsing | 3 | Medium |
 | Phase 5 (Evaluator) | Currency resolution & conversion | 1 | Medium |
+| Phase 5 (Evaluator) | User-defined units support | 5 | Medium-High |
+| Phase 5 (Evaluator) | Unit cancellation in arithmetic | 3 | Medium-High |
 | Phase 5 (Evaluator) | Dimensionless conversion & operations | 9 | Medium |
 | Phase 5 (Evaluator) | Functions & binary operations | 8 | Easy-Medium |
 | Phase 6 (Formatter) | Presentation conversions | 8 | Medium-Hard |
@@ -360,6 +362,193 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 - **Files**:
   - `src/formatter.ts` (standardize date output format)
 
+### Feature: User-Defined Units Support (5 tests)
+- **Tests**:
+  - `should handle user-defined units`
+  - `should handle derived units with user-defined units`
+  - `should convert derived units with user-defined units`
+  - `should add compatible user-defined units`
+  - `should create derived units from multiplication with user-defined units`
+  - `should create derived units from division with user-defined units`
+- **Examples**:
+  - `1 person` → `1 person`
+  - `1 kg / person` → `1 kg/person`
+  - `3 trips + 2 trips` → `5 trips`
+  - `1 USD/person/day` → `1 USD/person/day`
+  - `100 person/sq ft to person/km^2` → `1 076 391 041.67 person/km²`
+  - `10 USD/person * 3 person` → `30 USD` (person cancels)
+  - `1000 USD / 5 person / 2 day` → `100 USD/person/day`
+- **Work Required**:
+
+  **Phase 3 (Parser) - Minor Changes**:
+  - Allow unknown identifiers after numbers to be treated as user-defined units
+  - Create `SimpleUnit` nodes with unknown unitIds
+  - Files: `src/parser.ts` (parseNumberWithOptionalUnit)
+  - Effort: 1-2 hours
+
+  **Phase 4 (Type Checker) - Moderate Changes**:
+  - Accept user-defined units as valid dimensions
+  - Treat each user-defined unit as its own unique dimension
+  - Allow dimension-compatible operations (e.g., `person + person` ✓, `person + meter` ✗)
+  - Files: `src/type-checker.ts`
+  - Effort: 2-3 hours
+
+  **Phase 5 (Evaluator) - Major Changes**:
+  - Enhance `resolveUnit()` to create pseudo-dimensions for user-defined units on-the-fly
+  - Store user-defined units with identity conversion (factor: 1.0, offset: 0)
+  - Handle arithmetic: `3 trips + 2 trips` → `5 trips`
+  - Support in derived units: `1 kg/person`, `1 USD/person/day`
+  - Track user-defined units separately to avoid conflicts with known units
+  - **Implementation details**:
+    ```typescript
+    // When resolving unknown unit:
+    if (!unit) {
+      // Create pseudo-unit for user-defined unit
+      return {
+        unitId: identifier,
+        dimension: `user_defined_${identifier}`, // Unique dimension per unit
+        conversionToBase: { factor: 1.0, offset: 0 },
+        displayName: { symbol: identifier }
+      };
+    }
+    ```
+  - Files: `src/evaluator.ts` (resolveUnit, unit arithmetic operations)
+  - Effort: 4-6 hours
+
+  **Phase 6 (Formatter) - Minor Changes**:
+  - Display user-defined unit names as-is (no lookup needed)
+  - Files: `src/formatter.ts`
+  - Effort: 1 hour
+
+- **Total Effort**: 8-12 hours
+- **Re-enable Tests**: After implementation, re-enable 5 skipped tests in `integration.test.ts` (lines 388, 393, 503, 608, 633, 659)
+
+### Feature: Unit Cancellation in Arithmetic Operations (3 tests)
+- **Tests**:
+  - `should create derived units from multiplication` (second part)
+  - `should create derived units from division`
+  - `should create derived units from multiplication with user-defined units` (second part)
+  - `should create derived units from division with user-defined units` (second part)
+- **Examples**:
+  - `5 N * 2 m` → `10 N·m` (compute 5*2=10)
+  - `3 kg/m^2 * 2 m^2` → `6 kg` (compute 3*2=6, cancel m² with m⁻²)
+  - `60 km / 2 h` → `30 km/h` (compute 60/2=30)
+  - `60 kg/cm^2 / 2 h/m^2` → `300 000 kg/h` (compute 60/2 × 10000 = 300000)
+  - `10 USD/person * 3 person` → `30 USD` (compute 10*3=30, cancel person)
+  - `500 click/person / 5 USD/person` → `100 click/USD` (compute 500/5=100, cancel person)
+- **Work Required**:
+
+  **Phase 5 (Evaluator) - Major Enhancement**:
+  - Current state: Phase 5.5 shows derived unit creation is implemented, but unit algebra is incomplete
+  - The "comprehensive term combination logic" doesn't properly:
+    1. Cancel opposing exponents (m² × m⁻² → 1, dimensionless)
+    2. Compute numeric results during operations
+    3. Simplify results after cancellation
+    4. Convert units during simplification (cm² to m²)
+
+  - **Implementation Requirements**:
+
+    1. **Multiplication**: Combine units by adding exponents, compute numeric product
+       ```typescript
+       // (3 kg/m²) * (2 m²)
+       // Numeric: 3 * 2 = 6
+       // Units: [kg:1, m:-2] + [m:2] = [kg:1, m:0]
+       // Result: 6 kg
+       ```
+
+    2. **Division**: Flip divisor exponents, combine units, compute numeric quotient
+       ```typescript
+       // (60 kg/cm²) / (2 h/m²)
+       // Numeric: 60 / 2 = 30
+       // Units: [kg:1, cm:-2] + [h:-1, m:2] = [kg:1, cm:-2, h:-1, m:2]
+       // Simplify: Convert cm² to m² (factor: 10000)
+       // Result: 30 × 10000 kg/h = 300000 kg/h
+       ```
+
+    3. **Simplification**:
+       - Remove terms with exponent 0 (they cancel to dimensionless)
+       - Convert compatible units when possible (cm² → m², km → m, etc.)
+       - Apply conversion factors to numeric value
+
+    4. **Unit conversion during simplification**:
+       - When m² and cm² both appear, convert to common unit
+       - Example: m²/cm² → (1 m² / 10000 cm²) = 10000 dimensionless
+
+  - **Detailed Algorithm**:
+    ```typescript
+    function multiplyQuantities(left: Quantity, right: Quantity): Quantity {
+      // 1. Compute numeric result
+      const value = left.value * right.value;
+
+      // 2. Combine units by adding exponents
+      const terms = combineTerms(left.unit.terms, right.unit.terms);
+
+      // 3. Simplify: remove terms with exponent 0, convert compatible units
+      const { simplified, factor } = simplifyTerms(terms);
+
+      // 4. Apply conversion factor to value
+      const finalValue = value * factor;
+
+      // 5. Return result with simplified units
+      return { value: finalValue, unit: createDerivedUnit(simplified) };
+    }
+
+    function combineTerms(left: UnitTerm[], right: UnitTerm[]): UnitTerm[] {
+      const termMap = new Map<string, number>();
+
+      // Add exponents from left
+      for (const term of left) {
+        termMap.set(term.unit.unitId, (termMap.get(term.unit.unitId) || 0) + term.exponent);
+      }
+
+      // Add exponents from right
+      for (const term of right) {
+        termMap.set(term.unit.unitId, (termMap.get(term.unit.unitId) || 0) + term.exponent);
+      }
+
+      // Filter out zero exponents
+      return Array.from(termMap.entries())
+        .filter(([_, exp]) => exp !== 0)
+        .map(([unitId, exp]) => ({ unit: resolveUnit(unitId), exponent: exp }));
+    }
+
+    function simplifyTerms(terms: UnitTerm[]): { simplified: UnitTerm[], factor: number } {
+      // Group terms by dimension
+      const byDimension = groupBy(terms, t => t.unit.dimension);
+
+      let factor = 1.0;
+      const simplified: UnitTerm[] = [];
+
+      // For each dimension, check if units can be converted
+      for (const [dimension, dimTerms] of byDimension) {
+        if (dimTerms.length === 1) {
+          // Single unit, keep as-is
+          simplified.push(dimTerms[0]);
+        } else {
+          // Multiple units of same dimension - convert to common base
+          for (const term of dimTerms) {
+            const conversionFactor = Math.pow(term.unit.conversionToBase.factor, term.exponent);
+            factor *= conversionFactor;
+          }
+          // After conversion, exponents cancel if they sum to 0
+          const totalExponent = dimTerms.reduce((sum, t) => sum + t.exponent, 0);
+          if (totalExponent !== 0) {
+            // Keep one representative unit with total exponent
+            simplified.push({ unit: dimTerms[0].unit, exponent: totalExponent });
+          }
+        }
+      }
+
+      return { simplified, factor };
+    }
+    ```
+
+  - Files: `src/evaluator.ts` (binary multiplication, division, and term combination/simplification)
+  - Effort: 6-8 hours
+
+- **Total Effort**: 6-8 hours
+- **Re-enable Tests**: After implementation, re-enable 3 skipped tests in `integration.test.ts` (lines 623, 647, and parts of 633, 659)
+
 ---
 
 ## Phase 6: Result Formatting (14 tests)
@@ -430,23 +619,27 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 
 ## Implementation Priority Recommendations
 
+### Critical Priority (Blocking Core Functionality)
+1. **User-Defined Units Support** (Phase 5) - Core feature for real-world usage (person, trips, clicks, USD)
+2. **Unit Cancellation in Arithmetic** (Phase 5) - Essential algebra (kg/m² × m² = kg)
+
 ### High Priority (Most User Impact)
-1. **Binary/Octal/Hex Parsing** (Phase 2) - Common in programming contexts
-2. **Presentation Conversions** (Phase 6) - Core feature from SPECS.md
-3. **Dimensionless Unit Conversion** (Phase 5) - User expectation (5 dozen = 60)
-4. **Caret Notation** (Phase 3) - More intuitive than Unicode superscripts
+3. **Binary/Octal/Hex Parsing** (Phase 2) - Common in programming contexts
+4. **Presentation Conversions** (Phase 6) - Core feature from SPECS.md
+5. **Dimensionless Unit Conversion** (Phase 5) - User expectation (5 dozen = 60)
+6. **Caret Notation** (Phase 3) - More intuitive than Unicode superscripts
 
 ### Medium Priority
-5. **Base Keyword** (Phase 2) - Useful for arbitrary base conversions
-6. **Composite Unit Operations** (Phase 5) - Expected to work
-7. **Named Square/Cubic Units** (Phase 3) - Alternative syntax
-8. **Binary Operation Formatting** (Phase 6) - Complete bitwise support
+7. **Base Keyword** (Phase 2) - Useful for arbitrary base conversions
+8. **Composite Unit Operations** (Phase 5) - Expected to work
+9. **Named Square/Cubic Units** (Phase 3) - Alternative syntax
+10. **Binary Operation Formatting** (Phase 6) - Complete bitwise support
 
 ### Low Priority (Polish)
-9. **Number Underscore Separators** (Phase 2) - Nice to have
-10. **Function Enhancements** (Phase 5) - Minor improvements
-11. **Formatting Tweaks** (Phase 6) - Minor display issues
-12. **Plain Text Detection** (Multiple) - Edge case handling
+11. **Number Underscore Separators** (Phase 2) - Nice to have
+12. **Function Enhancements** (Phase 5) - Minor improvements
+13. **Formatting Tweaks** (Phase 6) - Minor display issues
+14. **Plain Text Detection** (Multiple) - Edge case handling
 
 ---
 
@@ -456,12 +649,14 @@ This document analyzes all 41 skipped tests from `tests/integration.test.ts` and
 |-------|--------------|----------|
 | Phase 2 (Lexer) | 13-19 hours | 8 features (6 number formats + 2 currency symbols) |
 | Phase 3 (Parser) | 12-16 hours | 6 features (3 unit syntax + 3 multi-word parsing) |
-| Phase 5 (Evaluator) | 15-20 hours | 10 features (1 currency resolution + 9 existing) |
+| Phase 5 (Evaluator) | **29-40 hours** | **12 features** (1 currency + 2 NEW + 9 existing) |
 | Phase 6 (Formatter) | 9-12 hours | 8 features |
 | Multiple | 3-4 hours | 1 feature |
-| **TOTAL** | **52-71 hours** | **33 distinct features** |
+| **TOTAL** | **66-91 hours** | **35 distinct features** |
 
-**Note**: Some features span multiple phases (e.g., base keyword requires lexer, parser, and evaluator changes).
+**Note**: Some features span multiple phases (e.g., base keyword requires lexer, parser, and evaluator changes, user-defined units require parser + type checker + evaluator + formatter).
+
+**NEW Features**: User-defined units support (8-12 hours, 5 tests) and unit cancellation in arithmetic (6-8 hours, 3 tests) are critical gaps discovered through integration testing.
 
 ---
 
@@ -473,4 +668,6 @@ For each feature implementation:
 3. Add unit tests in the relevant test file (lexer.test.ts, parser.test.ts, etc.)
 4. Verify end-to-end functionality
 
-The skipped tests serve as acceptance criteria - implementation is complete when all 41 tests pass.
+The skipped tests serve as acceptance criteria - implementation is complete when all tests pass.
+
+**Current Status**: 105 tests passing, 36 skipped.
