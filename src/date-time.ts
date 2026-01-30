@@ -86,25 +86,111 @@ export class DateTimeEngine {
   }
 
   /**
+   * Get current plain date (today)
+   */
+  getCurrentPlainDate(): PlainDate {
+    const today = Temporal.Now.plainDateISO();
+    return { year: today.year, month: today.month, day: today.day };
+  }
+
+  /**
+   * Get current zoned date time (now)
+   */
+  getCurrentZonedDateTime(): ZonedDateTime {
+    const now = Temporal.Now.zonedDateTimeISO();
+    return {
+      dateTime: {
+        date: { year: now.year, month: now.month, day: now.day },
+        time: { hour: now.hour, minute: now.minute, second: now.second, millisecond: 0 }
+      },
+      timezone: now.timeZoneId
+    };
+  }
+
+  /**
+   * Convert duration to total milliseconds
+   * Used as fallback when Temporal API rejects fractional duration components
+   */
+  private durationToMilliseconds(duration: Duration): number {
+    // Approximate conversions (calendar-aware operations are more accurate but require integers)
+    const msPerYear = 365.25 * 24 * 60 * 60 * 1000;
+    const msPerMonth = (365.25 / 12) * 24 * 60 * 60 * 1000;
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const msPerHour = 60 * 60 * 1000;
+    const msPerMinute = 60 * 1000;
+    const msPerSecond = 1000;
+
+    return (
+      duration.years * msPerYear +
+      duration.months * msPerMonth +
+      duration.weeks * msPerWeek +
+      duration.days * msPerDay +
+      duration.hours * msPerHour +
+      duration.minutes * msPerMinute +
+      duration.seconds * msPerSecond +
+      duration.milliseconds
+    );
+  }
+
+  /**
    * Add duration to PlainDate
    * Implements month clamping: Jan 31 + 1 month = Feb 28/29
    * Uses Temporal API for accurate date arithmetic
+   * Falls back to millisecond arithmetic for fractional durations
+   * Returns PlainDateTime if duration has time components
    */
-  addToPlainDate(date: PlainDate, duration: Duration): PlainDate {
+  addToPlainDate(date: PlainDate, duration: Duration): PlainDate | PlainDateTime {
+    // Check if duration has time components
+    const hasTimeComponents = duration.hours !== 0 || duration.minutes !== 0 ||
+                              duration.seconds !== 0 || duration.milliseconds !== 0;
+
+    if (hasTimeComponents) {
+      // Convert to PlainDateTime at midnight and add duration
+      const plainDateTime: PlainDateTime = {
+        date,
+        time: { hour: 0, minute: 0, second: 0, millisecond: 0 }
+      };
+      return this.addToPlainDateTime(plainDateTime, duration);
+    }
+
+    // No time components, use date-only arithmetic
     const temporalDate = Temporal.PlainDate.from({
       year: date.year,
       month: date.month,
       day: date.day
     });
 
-    const result = temporalDate.add({
-      years: duration.years,
-      months: duration.months,
-      weeks: duration.weeks,
-      days: duration.days
-    }, { overflow: 'constrain' });  // Handles month-end clamping automatically
+    try {
+      const result = temporalDate.add({
+        years: duration.years,
+        months: duration.months,
+        weeks: duration.weeks,
+        days: duration.days
+      }, { overflow: 'constrain' });  // Handles month-end clamping automatically
 
-    return { year: result.year, month: result.month, day: result.day };
+      return { year: result.year, month: result.month, day: result.day };
+    } catch (error) {
+      // Fallback: convert to milliseconds for fractional durations
+      const totalMs = Math.round(this.durationToMilliseconds(duration));
+      const msPerDay = 24 * 60 * 60 * 1000;
+
+      // Check if the milliseconds represent time within a day (not just full days)
+      if (totalMs % msPerDay !== 0) {
+        // Has time component, convert to PlainDateTime
+        const plainDateTime: PlainDateTime = {
+          date,
+          time: { hour: 0, minute: 0, second: 0, millisecond: 0 }
+        };
+        // Create a duration with only milliseconds to avoid double-counting
+        const msDuration = this.createDuration({ milliseconds: totalMs });
+        return this.addToPlainDateTime(plainDateTime, msDuration);
+      }
+
+      // Only full days, return PlainDate
+      const result = temporalDate.add({ milliseconds: totalMs }, { overflow: 'constrain' });
+      return { year: result.year, month: result.month, day: result.day };
+    }
   }
 
   /**
@@ -120,6 +206,7 @@ export class DateTimeEngine {
    * Add duration to PlainTime
    * Returns PlainDateTime if the result crosses day boundaries or has date components
    * Uses Temporal API for accurate time arithmetic
+   * Falls back to millisecond arithmetic for fractional durations
    */
   addToPlainTime(time: PlainTime, duration: Duration): PlainTime | PlainDateTime {
     // Check if duration has date components OR if time arithmetic might cross day boundary
@@ -141,7 +228,14 @@ export class DateTimeEngine {
         millisecond: time.millisecond
       });
 
-      const result = dateTime.add(duration, { overflow: 'constrain' });
+      let result;
+      try {
+        result = dateTime.add(duration, { overflow: 'constrain' });
+      } catch (error) {
+        // Fallback: convert to milliseconds for fractional durations
+        const totalMs = Math.round(this.durationToMilliseconds(duration));
+        result = dateTime.add({ milliseconds: totalMs }, { overflow: 'constrain' });
+      }
 
       // If date changed, return PlainDateTime
       if (result.year !== now.year || result.month !== now.month || result.day !== now.day) {
@@ -175,6 +269,7 @@ export class DateTimeEngine {
   /**
    * Add duration to PlainDateTime
    * Uses Temporal API for accurate datetime arithmetic
+   * Falls back to millisecond arithmetic for fractional durations
    */
   addToPlainDateTime(dateTime: PlainDateTime, duration: Duration): PlainDateTime {
     const temporal = Temporal.PlainDateTime.from({
@@ -187,7 +282,14 @@ export class DateTimeEngine {
       millisecond: dateTime.time.millisecond
     });
 
-    const result = temporal.add(duration, { overflow: 'constrain' });
+    let result;
+    try {
+      result = temporal.add(duration, { overflow: 'constrain' });
+    } catch (error) {
+      // Fallback: convert to milliseconds for fractional durations
+      const totalMs = Math.round(this.durationToMilliseconds(duration));
+      result = temporal.add({ milliseconds: totalMs }, { overflow: 'constrain' });
+    }
 
     return {
       date: { year: result.year, month: result.month, day: result.day },

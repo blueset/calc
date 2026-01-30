@@ -275,6 +275,14 @@ export class Evaluator {
         if (!unit) {
           return this.createError(`Unknown unit in literal`);
         }
+
+        // Auto-convert dimensionless units to pure numbers
+        if (unit.dimension === 'dimensionless') {
+          // Convert to base unit (which is 1.0 for dimensionless units)
+          const convertedValue = this.unitConverter.toBaseUnit(literal.value, unit);
+          return { kind: 'number', value: convertedValue };
+        }
+
         return { kind: 'number', value: literal.value, unit };
       }
 
@@ -543,9 +551,33 @@ export class Evaluator {
     left: Value,
     right: Value
   ): Value {
+    // Convert time-dimensioned numbers to durations for date arithmetic
+    let convertedLeft = left;
+    let convertedRight = right;
+
+    // If left is a date/time type and right is a number with time dimension, convert right to duration
+    if (this.isDateTime(left) && right.kind === 'number' && right.unit) {
+      if (right.unit.dimension === 'time') {
+        // Convert to duration
+        const duration = this.convertTimeToDuration(right.value, right.unit);
+        convertedRight = { kind: 'duration', duration };
+      }
+    }
+
+    // If left is a date/time type and right is a composite unit, check if all components are time-dimensioned
+    if (this.isDateTime(left) && right.kind === 'composite') {
+      // Check if all components have time dimension
+      const allTimeComponents = right.components.every(comp => comp.unit.dimension === 'time');
+      if (allTimeComponents) {
+        // Convert composite unit to duration
+        const duration = this.convertCompositeTimeToDuration(right);
+        convertedRight = { kind: 'duration', duration };
+      }
+    }
+
     // Handle date/time arithmetic
-    if (this.isDateTime(left) || this.isDateTime(right)) {
-      return this.evaluateDateTimeArithmetic(op, left, right);
+    if (this.isDateTime(convertedLeft) || this.isDateTime(convertedRight)) {
+      return this.evaluateDateTimeArithmetic(op, convertedLeft, convertedRight);
     }
 
     // Handle number and derived unit arithmetic
@@ -738,17 +770,29 @@ export class Evaluator {
    * Evaluate date/time arithmetic
    */
   private evaluateDateTimeArithmetic(op: string, left: Value, right: Value): Value {
-    // PlainDate + Duration → PlainDate
+    // PlainDate + Duration → PlainDate or PlainDateTime (if duration has time components)
     if (left.kind === 'plainDate' && right.kind === 'duration') {
       if (op === '+') {
         const result = this.dateTimeEngine.addToPlainDate(left.date, right.duration);
-        return { kind: 'plainDate', date: result };
+        // Result can be PlainDate or PlainDateTime depending on duration
+        // PlainDate has 'year' property, PlainDateTime has 'date' and 'time' properties
+        if ('year' in result) {
+          return { kind: 'plainDate', date: result };
+        } else {
+          return { kind: 'plainDateTime', dateTime: result };
+        }
       }
       if (op === '-') {
         // Negate duration
         const negated = this.dateTimeEngine.negateDuration(right.duration);
         const result = this.dateTimeEngine.addToPlainDate(left.date, negated);
-        return { kind: 'plainDate', date: result };
+        // Result can be PlainDate or PlainDateTime depending on duration
+        // PlainDate has 'year' property, PlainDateTime has 'date' and 'time' properties
+        if ('year' in result) {
+          return { kind: 'plainDate', date: result };
+        } else {
+          return { kind: 'plainDateTime', dateTime: result };
+        }
       }
     }
 
@@ -843,6 +887,14 @@ export class Evaluator {
       if (operand.kind === 'number') {
         return { kind: 'number', value: -operand.value, unit: operand.unit };
       }
+      if (operand.kind === 'composite') {
+        // Negate each component of the composite unit
+        const negatedComponents = operand.components.map(comp => ({
+          value: -comp.value,
+          unit: comp.unit
+        }));
+        return { kind: 'composite', components: negatedComponents };
+      }
       if (operand.kind === 'duration') {
         return { kind: 'duration', duration: this.dateTimeEngine.negateDuration(operand.duration) };
       }
@@ -903,14 +955,24 @@ export class Evaluator {
    * Evaluate a function call
    */
   private evaluateFunctionCall(expr: AST.FunctionCall, context: EvaluationContext): Value {
+    // Check if function preserves units (round, floor, ceil, abs, trunc, frac)
+    const preservesUnits = ['round', 'floor', 'ceil', 'abs', 'trunc', 'frac'].includes(expr.name.toLowerCase());
+
     // Evaluate all arguments
     const args: number[] = [];
+    let firstArgUnit: Unit | undefined;
+
     for (const argExpr of expr.arguments) {
       const argValue = this.evaluateExpression(argExpr, context);
       if (argValue.kind === 'error') return argValue;
 
       if (argValue.kind !== 'number') {
         return this.createError(`Function argument must be a number, got ${argValue.kind}`);
+      }
+
+      // Capture the first argument's unit if the function preserves units
+      if (preservesUnits && args.length === 0 && 'unit' in argValue) {
+        firstArgUnit = argValue.unit;
       }
 
       // For trig functions, convert angle to radians if needed
@@ -932,6 +994,11 @@ export class Evaluator {
       return { kind: 'number', value: this.radiansToDegrees(result.value) };
     }
 
+    // Return result with preserved unit if applicable
+    if (firstArgUnit) {
+      return { kind: 'number', value: result.value, unit: firstArgUnit };
+    }
+
     return { kind: 'number', value: result.value };
   }
 
@@ -939,7 +1006,13 @@ export class Evaluator {
    * Evaluate an identifier (variable lookup or implicit unit)
    */
   private evaluateIdentifier(expr: AST.Identifier, context: EvaluationContext): Value {
-    // First, try to look up as a variable
+    // Check for relative instant keywords first
+    const relativeInstant = this.evaluateRelativeInstantKeyword(expr.name);
+    if (relativeInstant) {
+      return relativeInstant;
+    }
+
+    // Try to look up as a variable
     const value = context.variables.get(expr.name);
     if (value !== undefined) {
       return value;
@@ -958,10 +1031,71 @@ export class Evaluator {
   }
 
   /**
+   * Evaluate relative instant keywords (now, today, tomorrow, yesterday)
+   * Returns null if not a relative instant keyword
+   */
+  private evaluateRelativeInstantKeyword(name: string): Value | null {
+    const lowerName = name.toLowerCase();
+
+    switch (lowerName) {
+      case 'now': {
+        // Return zoned date time (current date and time)
+        const zonedDateTime = this.dateTimeEngine.getCurrentZonedDateTime();
+        return { kind: 'zonedDateTime', zonedDateTime };
+      }
+
+      case 'today': {
+        // Return zoned date time (current date and time)
+        const zonedDateTime = this.dateTimeEngine.getCurrentZonedDateTime();
+        return { kind: 'zonedDateTime', zonedDateTime };
+      }
+
+      case 'tomorrow': {
+        // Return zoned date time (current date + 1 day, same time)
+        const zonedDateTime = this.dateTimeEngine.getCurrentZonedDateTime();
+        const tomorrowResult = this.dateTimeEngine.addToPlainDate(zonedDateTime.dateTime.date, { days: 1 } as any);
+        // addToPlainDate returns PlainDate when only date components, so it's safe to cast
+        const tomorrow = tomorrowResult as any;
+        return {
+          kind: 'zonedDateTime',
+          zonedDateTime: {
+            dateTime: {
+              date: tomorrow,
+              time: zonedDateTime.dateTime.time
+            },
+            timezone: zonedDateTime.timezone
+          }
+        };
+      }
+
+      case 'yesterday': {
+        // Return zoned date time (current date - 1 day, same time)
+        const zonedDateTime = this.dateTimeEngine.getCurrentZonedDateTime();
+        const yesterdayResult = this.dateTimeEngine.addToPlainDate(zonedDateTime.dateTime.date, { days: -1 } as any);
+        // addToPlainDate returns PlainDate when only date components, so it's safe to cast
+        const yesterday = yesterdayResult as any;
+        return {
+          kind: 'zonedDateTime',
+          zonedDateTime: {
+            dateTime: {
+              date: yesterday,
+              time: zonedDateTime.dateTime.time
+            },
+            timezone: zonedDateTime.timezone
+          }
+        };
+      }
+
+      default:
+        return null;
+    }
+  }
+
+  /**
    * Convert value to unit
    */
   private convertToUnit(value: Value, unitExpr: AST.UnitExpression): Value {
-    if (value.kind !== 'number' && value.kind !== 'derivedUnit') {
+    if (value.kind !== 'number' && value.kind !== 'derivedUnit' && value.kind !== 'composite') {
       return this.createError(`Cannot convert ${value.kind} to unit`);
     }
 
@@ -974,6 +1108,27 @@ export class Evaluator {
     const targetUnit = this.resolveUnit(unitExpr);
     if (!targetUnit) {
       return this.createError('Unknown target unit');
+    }
+
+    // Handle composite unit source (e.g., "6 ft 3 in to cm")
+    if (value.kind === 'composite') {
+      // Check dimension compatibility: all components must have same dimension as target
+      for (const component of value.components) {
+        if (component.unit.dimension !== targetUnit.dimension) {
+          return this.createError('Cannot convert between different dimensions');
+        }
+      }
+
+      // Convert all components to base unit and sum them
+      let totalInBase = 0;
+      for (const component of value.components) {
+        const inBase = this.unitConverter.toBaseUnit(component.value, component.unit);
+        totalInBase += inBase;
+      }
+
+      // Convert from base unit to target unit
+      const result = this.unitConverter.fromBaseUnit(totalInBase, targetUnit);
+      return { kind: 'number', value: result, unit: targetUnit };
     }
 
     if (value.kind !== 'number') {
@@ -1459,7 +1614,16 @@ export class Evaluator {
     for (const term of terms) {
       // Get the dimension of this unit
       const dimension = this.dataLoader.getDimensionById(term.unit.dimension);
+
+      // Handle user-defined dimensions (not in dimension database)
       if (!dimension) {
+        // User-defined units have dimensions like "user_defined_person"
+        // Treat them as their own base dimensions
+        if (term.unit.dimension.startsWith('user_defined_')) {
+          const currentExp = dimensionMap.get(term.unit.dimension) || 0;
+          dimensionMap.set(term.unit.dimension, currentExp + term.exponent);
+          continue;
+        }
         throw new Error(`Unknown dimension: ${term.unit.dimension}`);
       }
 
@@ -1485,6 +1649,78 @@ export class Evaluator {
     }
 
     return dimensionMap;
+  }
+
+  /**
+   * Convert a time-dimensioned number to duration components
+   */
+  private convertTimeToDuration(value: number, unit: Unit): Duration {
+    // Map common time units to duration components
+    const unitToDuration: Record<string, keyof Duration> = {
+      'year': 'years',
+      'month': 'months',
+      'week': 'weeks',
+      'day': 'days',
+      'hour': 'hours',
+      'minute': 'minutes',
+      'second': 'seconds',
+      'millisecond': 'milliseconds',
+      'ms': 'milliseconds'
+    };
+
+    const durationKey = unitToDuration[unit.id];
+    if (durationKey) {
+      return this.dateTimeEngine.createDuration({ [durationKey]: value });
+    }
+
+    // For other time units (like fortnight, microsecond, etc.), convert to base unit first
+    // Base unit for time is second
+    const valueInSeconds = this.unitConverter.toBaseUnit(value, unit);
+    return this.dateTimeEngine.createDuration({ seconds: valueInSeconds });
+  }
+
+  /**
+   * Convert a composite unit with all time-dimensioned components to a duration
+   */
+  private convertCompositeTimeToDuration(composite: CompositeUnitValue): Duration {
+    // Initialize empty duration
+    const durationComponents: Partial<Duration> = {
+      years: 0,
+      months: 0,
+      weeks: 0,
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0
+    };
+
+    // Map common time units to duration components
+    const unitToDuration: Record<string, keyof Duration> = {
+      'year': 'years',
+      'month': 'months',
+      'week': 'weeks',
+      'day': 'days',
+      'hour': 'hours',
+      'minute': 'minutes',
+      'second': 'seconds',
+      'millisecond': 'milliseconds',
+      'ms': 'milliseconds'
+    };
+
+    // Convert each component
+    for (const comp of composite.components) {
+      const durationKey = unitToDuration[comp.unit.id];
+      if (durationKey) {
+        durationComponents[durationKey] = (durationComponents[durationKey] || 0) + comp.value;
+      } else {
+        // For other time units, convert to seconds
+        const valueInSeconds = this.unitConverter.toBaseUnit(comp.value, comp.unit);
+        durationComponents.seconds = (durationComponents.seconds || 0) + valueInSeconds;
+      }
+    }
+
+    return this.dateTimeEngine.createDuration(durationComponents as Duration);
   }
 
   /**

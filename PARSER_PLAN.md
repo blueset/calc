@@ -76,6 +76,13 @@
 - [x] Derived units in binary operations
 - [x] Multi-word unit parsing edge case
 
+**Phase 3 Gaps**:
+- [ ] Plain date time parsing - 3 tests, 2-3 hours
+  - Parser doesn't combine date and time tokens into PlainDateTimeLiteral
+  - Examples: "1970 Jan 01 14:30", "14:30 1970 Jan 01"
+  - Need to check for time after parsing date, and date after parsing time
+  - Files: `src/parser.ts` (modify `parseDateWithMonth()` and `tryParseTime()`)
+
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
 - [x] Implement Duration type (semantic, not syntactic - see section 8)
@@ -110,31 +117,39 @@
 - [x] Implement exponentiation of units and derived units (completed)
 
 **Phase 5 Gaps** (see @PHASE_8_GAPS.md for details, 29-40 hours):
-- [x] User-defined units support - 5 tests, 8-12 hours **[IMPLEMENTED BUT BLOCKED BY PHASE 3 PARSER BUG]**
+- [x] User-defined units support - 5 tests, 8-12 hours
   - [x] Allow unknown identifiers as user-defined units (1 person, 3 trips, 1 click)
   - [x] Support in derived units (1 kg/person, 1 USD/person/day)
   - [x] Enable arithmetic operations (3 trips + 2 trips → 5 trips)
-  - [ ] Allow conversions (100 person/sq ft to person/km^2) - blocked by parser bug
+  - [x] Allow conversions (100 person/sq ft to person/km^2) - FIXED with Phase 3 parser fix + user-defined dimension handling
   - [x] Changes completed in parser, type-checker, evaluator, formatter
-  - [ ] ⚠️ BLOCKED: Derived unit cases fail due to Phase 3 parser bug (see above)
-  - [ ] Re-enable tests: lines 388 [x], 393 [x], 503 [ ], 608 [x], 633 [ ], 659 [ ] in integration.test.ts
-- [x] Unit cancellation in arithmetic - 3 tests, 6-8 hours **[IMPLEMENTED BUT BLOCKED BY PHASE 3 PARSER BUG]**
+  - [x] Test re-enabled: line 503 in integration.test.ts ✓
+- [x] Unit cancellation in arithmetic - 3 tests, 6-8 hours
   - [x] Implement proper unit algebra (add/subtract exponents during multiplication/division)
   - [x] Cancel opposing units (kg/m² × m² → kg) - `simplifyTerms()` method working
   - [x] Compute numeric results - integration with multiply/divide operations complete
   - [x] Handle unit conversions during simplification (cm² to m² factor: 10000)
-  - [ ] ⚠️ BLOCKED: Cannot test properly due to Phase 3 parser bug splitting expressions
-  - [x] Evidence it works: `1000 USD / 5 person / 2 day` → `100 USD/(person day)`
-  - [ ]Re-enable tests: lines 623 [ ], 647 [ ] (and parts of 633, 659) in integration.test.ts
+  - [x] Tests re-enabled: lines 624-680 in integration.test.ts ✓
 - [ ] Currency unit resolution in evaluator (fallback from unit to currency lookup)
 - [ ] Ambiguous currency dimension handling ($ → "currency_symbol_0024", error on operations)
-- [ ] Dimensionless unit auto-conversion (5 dozen → 60, 100 percent → 1, 50% → 0.5)
-- [ ] Composite unit negation (-(5 m 20 cm) → -5 m -20 cm)
-- [ ] Composite to single unit conversion (6 ft 3 in to cm → 190.5 cm)
+- [x] Dimensionless unit auto-conversion (5 dozen → 60, 100 percent → 1) **[COMPLETED - except % symbol parsing]**
+  - [x] Auto-convert dimensionless units to pure numbers (dozen, percent word form)
+  - [ ] Percent symbol (%) parsing issue - lexer treats % as modulo operator (Phase 2 issue)
+- [x] Composite unit negation (-(5 m 20 cm) → -5 m -20 cm)
+- [x] Composite to single unit conversion (6 ft 3 in to cm → 190.5 cm)
 - [ ] Derived units with space multiplication (1 N m → derived unit)
-- [ ] Log with base (log(2, 32) → 5)
-- [ ] Round with units (round(18.9 kg) → 19 kg)
-- [ ] Date/time arithmetic formatting consistency
+- [x] Log with base (log(2, 32) → 5)
+- [x] Round with units (round(18.9 kg) → 19 kg)
+- [x] Date/time arithmetic (2023 Jan 1 + 10 days, 1970 Jan 31 + 1 month)
+- [x] Relative instant keywords (now, today, tomorrow, yesterday)
+  - [x] Simple keywords implemented (now, today, tomorrow, yesterday) - return zonedDateTime
+  - [ ] Complex relative expressions need parser support (Phase 3 issue)
+    - "2 days ago", "3 days from now", "5 years ago", "10 hours from now"
+    - Requires parsing patterns: `NUMBER UNIT ago` and `NUMBER UNIT from now`
+- [x] Composite duration arithmetic
+  - [x] Add composite durations to plain time (10:25 + 2 hours 40 min → 13:05)
+  - [x] Add composite durations to plain date (1970 Jan 1 + 1 month 2 days → 1970-02-03)
+  - [x] Implemented convertCompositeTimeToDuration() method
 
 ### Phase 5.5: Derived Unit Support
 
@@ -208,7 +223,7 @@
 
 
 **Test Coverage Summary**:
-- **Total Tests**: 835 tests passing, 36 skipped (871 total)
+- **Total Tests**: 854 tests passing, 23 skipped (877 total)
 - **Integration**: 141 tests (105 passing, 36 skipped - comprehensive SPECS.md coverage)
 - **Lexer**: 111 tests (all token types, disambiguation rules, error recording, underscore separators, base prefixes)
 - **Parser**: 143 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units)

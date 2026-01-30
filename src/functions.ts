@@ -192,6 +192,35 @@ export class MathFunctions {
   // Logarithmic functions
 
   private executeLog(name: string, args: number[]): FunctionResult {
+    // Special case: log(base, value) with 2 arguments
+    if (name === 'log') {
+      if (args.length == 2) {
+        const base = args[0];
+        const value = args[1];
+
+        if (base <= 0 || base === 1) {
+          return { value: 0, error: 'log base must be positive and not equal to 1' };
+        }
+        if (value <= 0) {
+          return { value: 0, error: 'log argument must be positive' };
+        }
+
+        // log_base(value) = ln(value) / ln(base)
+        const result = Math.log(value) / Math.log(base);
+        return { value: result };
+      } else if (args.length == 1) {
+        const value = args[0];
+        if (value <= 0) {
+          return { value: 0, error: 'log argument must be positive' };
+        }
+        const result = Math.log(value);
+        return { value: result };
+      } else {
+        return { value: 0, error: `log requires 1 or 2 arguments, got ${args.length}` };
+      }
+    }
+
+    // Standard single-argument functions
     if (args.length !== 1) {
       return { value: 0, error: `${name} requires 1 argument, got ${args.length}` };
     }
@@ -209,13 +238,6 @@ export class MathFunctions {
 
       case 'cbrt':
         result = Math.cbrt(x);
-        break;
-
-      case 'log':
-        if (x <= 0) {
-          return { value: 0, error: 'log argument must be positive' };
-        }
-        result = Math.log(x);
         break;
 
       case 'ln':

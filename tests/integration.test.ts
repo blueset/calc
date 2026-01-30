@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { Calculator } from '../src/calculator';
 import { DataLoader } from '../src/data-loader';
 import * as path from 'path';
+import { get } from 'http';
 
 /**
  * Comprehensive integration tests covering examples from SPECS.md
@@ -120,25 +121,20 @@ describe('Integration Tests - SPECS.md Examples', () => {
   });
 
   describe('Dimensionless Units', () => {
-    it.skip('should handle English number units converting to dimensionless', () => {
-      // TODO: Dimensionless units like dozen, gross, score are kept as units, not converted
+    it('should handle English number units converting to dimensionless', () => {
       const result = calculator.calculate('5 dozen');
       expect(result.results[0].result).toBe('60');
     });
 
-    it('should handle English number units as units', () => {
-      // Currently dozen is kept as a unit
-      const result = calculator.calculate('5 dozen');
-      expect(result.results[0].result).toContain('doz');
-    });
-
-    it.skip('should handle percentages converting to dimensionless', () => {
-      // TODO: Percent unit parsing issue
+    it('should handle percentages (word form) converting to dimensionless', () => {
       const result = calculator.calculate('100 percent');
       expect(result.results[0].result).toBe('1');
-      
-      const result2 = calculator.calculate('50%');
-      expect(result2.results[0].result).toBe('0.5');
+    });
+
+    it.skip('should handle percent symbol converting to dimensionless', () => {
+      // TODO: Percent symbol (%) is parsed as modulo operator, not unit - lexer/parser issue
+      const result = calculator.calculate('50%');
+      expect(result.results[0].result).toBe('0.5');
     });
 
   });
@@ -460,8 +456,7 @@ CA$100
       expect(result.results[0].result).toContain('min');
     });
 
-    it.skip('should handle negated composite units', () => {
-      // TODO: Negation of composite units not supported
+    it('should handle negated composite units', () => {
       const result = calculator.calculate('-(5 m 20 cm)');
       expect(result.results[0].result).toContain('-5');
       expect(result.results[0].result).toContain('m');
@@ -500,16 +495,12 @@ CA$100
       expect(result.results[0].result).toContain('in');
     });
 
-    it.skip('should convert derived units with user-defined units', () => {
-      // TODO: Fix parsing of "sq ft" as "ft²" or implement multi-word unit parsing
+    it('should convert derived units with user-defined units', () => {
       const result = calculator.calculate('100 person/sq ft to person/km^2');
-      expect(result.results[0].result).toContain('1 076 391 041.67');
-      expect(result.results[0].result).toContain('person');
-      expect(result.results[0].result).toContain('km²');
+      expect(result.results[0].result).toMatch("1 076 391 042 person/km²");
     });
 
-    it.skip('should convert from composite units to single unit', () => {
-      // TODO: Converting from composite units to single unit not supported yet
+    it('should convert from composite units to single unit', () => {
       const result = calculator.calculate('6 ft 3 in to cm');
       expect(result.results[0].result).toContain('190.5');
       expect(result.results[0].result).toContain('cm');
@@ -709,10 +700,76 @@ CA$100
     });
 
     it.skip('should handle plain date times', () => {
-      // TODO: Date time formatting may vary
+      // TODO: Plain date time not parsed correctly
       const result = calculator.calculate('1970 Jan 01 14:30');
       expect(result.results[0].result).toContain('1970');
       expect(result.results[0].result).toContain('14:30');
+    });
+
+    it.skip('should handle instants (relative time)', () => {
+      // TODO: relative time parsing not implemented
+      function getDateString(date: Date): string {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+      function getTimeString(date: Date): string {
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      }
+      function modifyNow(dateModifier: (date: Date) => void): Date {
+        const modified = new Date();
+        dateModifier(modified);
+        return modified;
+      }
+
+      const result = calculator.calculate(`now
+today
+tomorrow
+yesterday
+2 days ago
+3 days from now
+5 years ago
+10 hours from now`);
+      const todayString = getDateString(new Date());
+      const nowString = getTimeString(new Date());
+
+      // now
+      expect(result.results[0].result).toContain(todayString);
+      expect(result.results[0].result).toContain(nowString);
+
+      // today
+      expect(result.results[1].result).toContain(todayString);
+      expect(result.results[1].result).toContain(nowString);
+      
+      expect(result.results[0].result).toContain(result.results[1].result); // `now` and `today` should be the same
+
+      // tomorrow
+      expect(result.results[2].result).toContain(getDateString(modifyNow(d => d.setDate(d.getDate() + 1))));
+      expect(result.results[2].result).toContain(nowString);
+
+      // yesterday
+      expect(result.results[3].result).toContain(getDateString(modifyNow(d => d.setDate(d.getDate() - 1))));
+      expect(result.results[3].result).toContain(nowString);
+
+      // 2 days ago
+      expect(result.results[4].result).toContain(getDateString(modifyNow(d => d.setDate(d.getDate() - 2))));
+      expect(result.results[4].result).toContain(nowString);
+
+      // 3 days from now
+      expect(result.results[5].result).toContain(getDateString(modifyNow(d => d.setDate(d.getDate() + 3))));
+      expect(result.results[5].result).toContain(nowString);
+
+      // 5 years ago
+      expect(result.results[6].result).toContain(getDateString(modifyNow(d => d.setFullYear(d.getFullYear() - 5))));
+      expect(result.results[6].result).toContain(nowString);
+
+      // 10 hours from now
+      const tenHoursLater = modifyNow(d => d.setHours(d.getHours() + 10));
+      expect(result.results[7].result).toContain(getDateString(tenHoursLater));
+      expect(result.results[7].result).toContain(getTimeString(tenHoursLater));
     });
   });
 
@@ -729,20 +786,74 @@ CA$100
       expect(result.results[0].result).toContain('day');
     });
 
-    it.skip('should add duration to date', () => {
-      // TODO: Date arithmetic result formatting may vary
+    it('should add duration to date', () => {
       const result = calculator.calculate('2023 Jan 1 + 10 days');
-      expect(result.results[0].result).toContain('2023');
-      expect(result.results[0].result).toContain('01');
-      expect(result.results[0].result).toContain('11');
+      expect(result.results[0].result).toBe('2023-01-11 Wed');
     });
 
-    it.skip('should handle month addition with clamping', () => {
-      // TODO: Date arithmetic result formatting may vary
+    it('should handle month addition with clamping', () => {
       const result = calculator.calculate('1970 Jan 31 + 1 month');
-      expect(result.results[0].result).toContain('1970');
-      expect(result.results[0].result).toContain('02');
-      expect(result.results[0].result).toContain('28');
+      expect(result.results[0].result).toBe('1970-02-28 Sat');
+    });
+
+    it('should handle adding decimal duration to date', () => {
+      // 0.3 month = 0.3 * (365.25 / 12) days = 9.13125 days = 13149 minutes
+      const result = calculator.calculate('1970 Jan 31 + 13149 minutes\n1970 Jan 31 + 0.3 month');
+      expect(result.results[0].result).toBe('1970-02-09 Mon 03:09');
+      expect(result.results[1].result).toBe('1970-02-09 Mon 03:09');
+    });
+
+    it('should handle add duration to plain time', () => {
+      const result = calculator.calculate('10:25 + 2 hours');
+      expect(result.results[0].result).toBe('12:25');
+    });
+
+    it('should handle add decimal duration to plain time', () => {
+      const result = calculator.calculate('10:25 + 30 minutes\n10:25 + 0.5 hour');
+      expect(result.results[0].result).toBe('10:55');
+      expect(result.results[1].result).toBe('10:55');
+    });
+
+    it('should expand plain time to plain date time when exceeding 24 hours', () => {
+      const result = calculator.calculate('10:25 + 24 hours\n10:25 + 1 day');
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const year = tomorrow.getFullYear();
+      const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const day = String(tomorrow.getDate()).padStart(2, '0');
+      expect(result.results[0].result).toContain(`${year}-${month}-${day}`);
+      expect(result.results[0].result).toContain('10:25');
+      expect(result.results[1].result).toContain(`${year}-${month}-${day}`);
+      expect(result.results[1].result).toContain('10:25');
+    });
+
+    it.skip('should handle add duration to date time', () => {
+      // TODO: Plain date time not parsed correctly
+      const result = calculator.calculate('1970 Jan 1 12:00 + 2 hours');
+      expect(result.results[0].result).toContain('1970-01-01');
+      expect(result.results[0].result).toContain('14:00');
+    });
+
+    it('should handle add composite duration to plain time', () => {
+      const result = calculator.calculate('10:25 + 2 hours 40 min');
+      expect(result.results[0].result).toBe('13:05');
+    });
+
+    it('should handle add composite duration to date', () => {
+      const result = calculator.calculate('1970 Jan 1 + 1 month 2 days');
+      expect(result.results[0].result).toContain('1970-02-03');
+    });
+
+    it('should expand plain date to plain date time when time component added', () => {
+      const result = calculator.calculate('1970 Jan 1 + 1 hour');
+      expect(result.results[0].result).toBe('1970-01-01 Thu 01:00');
+    });
+
+    it.skip('should handle add composite duration to date time', () => {
+      // TODO: Plain date time not parsed correctly
+      const result = calculator.calculate('1970 Jan 1 12:00 + 1 month 2 hours');
+      expect(result.results[0].result).toContain('1970-02-01');
+      expect(result.results[0].result).toContain('14:00');
     });
   });
 
@@ -801,8 +912,7 @@ CA$100
       expect(result.results[0].result).toBe('3');
     });
 
-    it.skip('should handle log with base', () => {
-      // TODO: log(base, value) not implemented
+    it('should handle log with base', () => {
       const result = calculator.calculate('log(2, 32)');
       expect(result.results[0].result).toBe('5');
     });
@@ -819,8 +929,7 @@ CA$100
       expect(result.results[0].result).toBe('4');
     });
 
-    it.skip('should handle round with units', () => {
-      // TODO: round() with units may not work as expected
+    it('should handle round with units', () => {
       const result = calculator.calculate('round(18.9 kg)');
       expect(result.results[0].result).toContain('19');
       expect(result.results[0].result).toContain('kg');
