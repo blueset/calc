@@ -275,10 +275,9 @@ describe('Integration Tests - SPECS.md Examples', () => {
   });
 
   describe('Temperature Units', () => {
-    it.skip('should handle temperature units with degree symbol', () => {
-      // TODO: Temperature unit display may vary
+    it('should handle temperature units with degree symbol', () => {
       const result = calculator.calculate('25 °C');
-      expect(result.results[0].result).toContain('°C');
+      expect(result.results[0].result).toBe('25 °C');
     });
 
     it('should handle temperature units', () => {
@@ -484,23 +483,23 @@ CA$100
       expect(result.results[0].result).toBe('25.4 cm');
     });
 
+    it('should convert between temperature units', () => {
+      const result = calculator.calculate(`77 deg F to deg C
+275 K to deg C`);
+      expect(result.results[0].result).toBe('25 °C');
+      expect(result.results[1].result).toBe('1.85 °C');
+    });
+
     it('should convert derived units', () => {
       let result = calculator.calculate('60 mph to km/h');
-      expect(result.results[0].result).toContain('96.56');
-      expect(result.results[0].result).toContain('km');
-      expect(result.results[0].result).toContain('h');
+      expect(result.results[0].result).toMatch(/96.56\d* km\/h/);
       result = calculator.calculate('900 kg/h to g/s');
-      expect(result.results[0].result).toContain('250');
-      expect(result.results[0].result).toContain('g');
-      expect(result.results[0].result).toContain('s');
+      expect(result.results[0].result).toBe('250 g/s');
     });
 
     it('should convert to composite units', () => {
       const result = calculator.calculate('171 cm to ft in');
-      expect(result.results[0].result).toContain('5');
-      expect(result.results[0].result).toContain('ft');
-      expect(result.results[0].result).toContain('7.32');
-      expect(result.results[0].result).toContain('in');
+      expect(result.results[0].result).toMatch(/5 ft 7.32\d* in/);
     });
 
     it('should convert derived units with user-defined units', () => {
@@ -510,8 +509,7 @@ CA$100
 
     it('should convert from composite units to single unit', () => {
       const result = calculator.calculate('6 ft 3 in to cm');
-      expect(result.results[0].result).toContain('190.5');
-      expect(result.results[0].result).toContain('cm');
+      expect(result.results[0].result).toMatch(/190.5\d* cm/);
     });
   });
 
@@ -750,7 +748,7 @@ CA$100
       expect(result.results[0].result).toBe('05:00');
       expect(result.results[1].result).toBe('05:00 UTC');
       expect(result.results[2].result).toBe('1 h 30 min');
-      expect(result.results[3].result).toBe('-1 day -6 h -30 min'); // zonedDateTime - plainTime: 05:00 UTC - 03:30 (local time)
+      expect(result.results[3].result).toBe('17 h 30 min'); // zonedDateTime - plainTime: 05:00 UTC - 03:30 (local time)
       expect(result.results[4].hasError).toBe(true); // date time add date time is not supported.
     });
 

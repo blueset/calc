@@ -230,7 +230,8 @@ export class Lexer {
     }
 
     // Identifiers, keywords, or date/time literals
-    if (this.isAlpha(char) || char === '_') {
+    // Include special Unicode characters used in units (°, Å, ‰)
+    if (this.isXIDStart(char) || char === '_' || char === '°' || char === 'Å' || char === '‰') {
       return this.scanIdentifierOrDateTime(start);
     }
 
@@ -434,8 +435,8 @@ export class Lexer {
   private scanIdentifierOrDateTime(start: SourceLocation): Token {
     let value = '';
 
-    // Scan alphanumeric characters, underscores, and Unicode superscripts
-    while (!this.isAtEnd() && (this.isAlphaNumeric(this.peek()) || this.peek() === '_' || this.isSuperscript(this.peek()))) {
+    // Scan alphanumeric characters, underscores, Unicode superscripts, and special unit characters
+    while (!this.isAtEnd() && (this.isXIDContinue(this.peek()) || this.peek() === '_' || this.isSuperscript(this.peek()) || this.peek() === '°' || this.peek() === 'Å' || this.peek() === '‰')) {
       value += this.advance();
     }
 
@@ -762,14 +763,14 @@ export class Lexer {
    * Check if character is a digit
    */
   private isDigit(char: string): boolean {
-    return char >= '0' && char <= '9';
+    return /^\p{Nd}$/u.test(char);
   }
 
   /**
    * Check if character is alphabetic
    */
   private isAlpha(char: string): boolean {
-    return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z');
+    return /^\p{L}$/u.test(char);
   }
 
   /**
@@ -777,6 +778,20 @@ export class Lexer {
    */
   private isAlphaNumeric(char: string): boolean {
     return this.isAlpha(char) || this.isDigit(char);
+  }
+
+  /**
+   * Check if character is a Unicode XID_Start character
+   */
+  private isXIDStart(char: string): boolean {
+    return /^\p{XID_Start}$/u.test(char);
+  }
+
+  /**
+   * Check if character is a Unicode XID_Continue character
+   */
+  private isXIDContinue(char: string): boolean {
+    return /^\p{XID_Continue}$/u.test(char);
   }
 
   /**
