@@ -218,6 +218,9 @@ export class TypeChecker {
       case 'GroupedExpression':
         return this.checkExpression(expr.expression, context);
 
+      case 'RelativeInstantExpression':
+        return this.checkRelativeInstant(expr, context);
+
       default:
         const exhaustive: never = expr;
         throw new Error(`Unknown expression type: ${(exhaustive as any).type}`);
@@ -892,6 +895,17 @@ export class TypeChecker {
     }
 
     return { kind: 'dimensionless' };
+  }
+
+  /**
+   * Check relative instant expression (e.g., "2 days ago", "5 minutes from now")
+   */
+  private checkRelativeInstant(expr: AST.RelativeInstantExpression, context: TypeContext): InstantType | ErrorType {
+    const amountType = this.checkExpression(expr.amount, context);
+    if (amountType.kind !== 'physical' && amountType.kind !== 'derived') {
+      return this.createError(`Relative time expression requires time unit, got ${amountType.kind}`, expr.amount);
+    }
+    return { kind: 'instant' };
   }
 
   /**

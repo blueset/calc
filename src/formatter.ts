@@ -9,15 +9,18 @@ import type { Unit } from '../types/types';
 import type { PresentationFormat } from './ast';
 import { Temporal } from '@js-temporal/polyfill';
 import { Duration, ZonedDateTime } from './date-time';
+import type { DataLoader } from './data-loader';
 
 /**
  * Formatter class - formats values according to settings
  */
 export class Formatter {
   private settings: Settings;
+  private dataLoader: DataLoader | null;
 
-  constructor(settings: Settings = defaultSettings) {
+  constructor(settings: Settings = defaultSettings, dataLoader?: DataLoader) {
     this.settings = settings;
+    this.dataLoader = dataLoader || null;
   }
 
   /**
@@ -287,6 +290,16 @@ export class Formatter {
   }
 
   /**
+   * Get a unit by ID from the data loader
+   */
+  private getUnitById(id: string): Unit | null {
+    if (!this.dataLoader) {
+      return null;
+    }
+    return this.dataLoader.getUnitById(id) || null;
+  }
+
+  /**
    * Format a unit (display name based on settings)
    */
   private formatUnit(unit: Unit): string {
@@ -295,6 +308,24 @@ export class Formatter {
     } else {
       // Use singular or plural based on context (for now, always use singular)
       return unit.displayName.singular;
+    }
+  }
+
+  /**
+   * Format a unit by ID with optional count for pluralization
+   */
+  private formatUnitById(unitId: string, count: number): string {
+    const unit = this.getUnitById(unitId);
+    if (!unit) {
+      // Fallback to the unit ID if not found
+      return unitId;
+    }
+
+    if (this.settings.unitDisplayStyle === 'symbol') {
+      return unit.displayName.symbol;
+    } else {
+      // Use plural if count is not 1, fallback to singular if plural not defined
+      return count === 1 ? unit.displayName.singular : (unit.displayName.plural || unit.displayName.singular);
     }
   }
 
@@ -464,12 +495,17 @@ export class Formatter {
   }
 
   /**
-   * Format an instant (epoch milliseconds) as ISO 8601
-   * Uses Temporal API for consistent formatting
+   * Format an instant (epoch milliseconds) in local time
+   * Shows date+time without UTC offset
    */
   private formatInstant(epochMs: number): string {
     const instant = Temporal.Instant.fromEpochMilliseconds(epochMs);
-    return instant.toString(); // ISO 8601 format
+    const localTimeZone = Temporal.Now.timeZoneId();
+    const zdt = instant.toZonedDateTimeISO(localTimeZone);
+
+    const dateStr = this.formatPlainDate(zdt.year, zdt.month, zdt.day);
+    const timeStr = this.formatPlainTime(zdt.hour, zdt.minute, zdt.second, zdt.millisecond);
+    return this.formatDateTime(dateStr, timeStr);
   }
 
   /**
@@ -479,18 +515,34 @@ export class Formatter {
     const parts: string[] = [];
 
     // Date components
-    if (duration.years) parts.push(`${duration.years} year${duration.years !== 1 ? 's' : ''}`);
-    if (duration.months) parts.push(`${duration.months} month${duration.months !== 1 ? 's' : ''}`);
-    if (duration.weeks) parts.push(`${duration.weeks} week${duration.weeks !== 1 ? 's' : ''}`);
-    if (duration.days) parts.push(`${duration.days} day${duration.days !== 1 ? 's' : ''}`);
+    if (duration.years) {
+      parts.push(`${duration.years} ${this.formatUnitById('year', duration.years)}`);
+    }
+    if (duration.months) {
+      parts.push(`${duration.months} ${this.formatUnitById('month', duration.months)}`);
+    }
+    if (duration.weeks) {
+      parts.push(`${duration.weeks} ${this.formatUnitById('week', duration.weeks)}`);
+    }
+    if (duration.days) {
+      parts.push(`${duration.days} ${this.formatUnitById('day', duration.days)}`);
+    }
 
     // Time components
-    if (duration.hours) parts.push(`${duration.hours} hour${duration.hours !== 1 ? 's' : ''}`);
-    if (duration.minutes) parts.push(`${duration.minutes} minute${duration.minutes !== 1 ? 's' : ''}`);
-    if (duration.seconds) parts.push(`${duration.seconds} second${duration.seconds !== 1 ? 's' : ''}`);
-    if (duration.milliseconds) parts.push(`${duration.milliseconds} millisecond${duration.milliseconds !== 1 ? 's' : ''}`);
+    if (duration.hours) {
+      parts.push(`${duration.hours} ${this.formatUnitById('hour', duration.hours)}`);
+    }
+    if (duration.minutes) {
+      parts.push(`${duration.minutes} ${this.formatUnitById('minute', duration.minutes)}`);
+    }
+    if (duration.seconds) {
+      parts.push(`${duration.seconds} ${this.formatUnitById('second', duration.seconds)}`);
+    }
+    if (duration.milliseconds) {
+      parts.push(`${duration.milliseconds} ${this.formatUnitById('millisecond', duration.milliseconds)}`);
+    }
 
-    return parts.length > 0 ? parts.join(' ') : '0 seconds';
+    return parts.length > 0 ? parts.join(' ') : `0 ${this.formatUnitById('second', 0)}`;
   }
 
   /**

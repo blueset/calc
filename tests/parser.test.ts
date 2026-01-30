@@ -1620,4 +1620,37 @@ describe('Parser', () => {
       });
     });
   });
+
+  describe('Relative Instant Expressions', () => {
+    it('should parse "ago" postfix', () => {
+      const doc = parse('2 days ago');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('RelativeInstantExpression');
+      expect(expr.direction).toBe('ago');
+      expect(expr.amount.type).toBe('NumberWithUnit');
+      expect(expr.amount.value).toBe(2);
+    });
+
+    it('should parse "from now" postfix', () => {
+      const doc = parse('5 minutes from now');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('RelativeInstantExpression');
+      expect(expr.direction).toBe('from_now');
+      expect(expr.amount.type).toBe('NumberWithUnit');
+      expect(expr.amount.value).toBe(5);
+    });
+
+    it('should parse complex relative instant with operations', () => {
+      const doc = parse('(2 days ago) + 1 hour');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('BinaryExpression');
+      expect(expr.operator).toBe('+');
+      const left = expr.left;
+      expect(left.type).toBe('GroupedExpression');
+      expect(left.expression.type).toBe('RelativeInstantExpression');
+    });
+  });
 });

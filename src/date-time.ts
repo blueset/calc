@@ -107,6 +107,14 @@ export class DateTimeEngine {
     };
   }
 
+  getCurrentInstant(): Instant {
+    const now = Temporal.Now.instant();
+    // Round to nearest second to ensure consistent results within same calculation
+    const epochMs = Number(now.epochMilliseconds);
+    const epochSeconds = Math.floor(epochMs / 1000);
+    return { timestamp: epochSeconds * 1000 };
+  }
+
   /**
    * Convert duration to total milliseconds
    * Used as fallback when Temporal API rejects fractional duration components
@@ -195,8 +203,9 @@ export class DateTimeEngine {
 
   /**
    * Subtract duration from PlainDate
+   * Returns PlainDateTime if duration has time components
    */
-  subtractFromPlainDate(date: PlainDate, duration: Duration): PlainDate {
+  subtractFromPlainDate(date: PlainDate, duration: Duration): PlainDate | PlainDateTime {
     // Negate the duration and add
     const negated = this.negateDuration(duration);
     return this.addToPlainDate(date, negated);
@@ -595,6 +604,34 @@ export class DateTimeEngine {
   subtractZonedDateTimes(left: ZonedDateTime, right: ZonedDateTime): Duration {
     const leftInstant = this.toInstant(left.dateTime, left.timezone);
     const rightInstant = this.toInstant(right.dateTime, right.timezone);
+    return this.subtractInstants(leftInstant, rightInstant);
+  }
+
+  /**
+   * Subtract a PlainTime from a ZonedDateTime
+   * Treats the PlainTime as today in the local timezone (per SPECS.md line 914)
+   */
+  subtractPlainTimeFromZonedDateTime(zdt: ZonedDateTime, plainTime: PlainTime): Duration {
+    // Get today's date in the local timezone
+    const localNow = Temporal.Now.plainDateTimeISO();
+    const todayLocal = localNow.toPlainDate();
+
+    // Combine today's date with the plain time to create a PlainDateTime in local timezone
+    const rightDateTime: PlainDateTime = {
+      date: {
+        year: todayLocal.year,
+        month: todayLocal.month,
+        day: todayLocal.day
+      },
+      time: plainTime
+    };
+
+    // Convert both to instants for comparison
+    const leftInstant = this.toInstant(zdt.dateTime, zdt.timezone);
+    const localTimeZone = Temporal.Now.timeZoneId(); // Get system timezone
+    const rightInstant = this.toInstant(rightDateTime, localTimeZone);
+
+    // Subtract to get duration
     return this.subtractInstants(leftInstant, rightInstant);
   }
 

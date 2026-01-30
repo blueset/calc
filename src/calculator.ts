@@ -44,7 +44,7 @@ export class Calculator {
       variant: settings.imperialUnits,
       angleUnit: settings.angleUnit
     });
-    this.formatter = new Formatter(settings);
+    this.formatter = new Formatter(settings, dataLoader);
   }
 
   /**

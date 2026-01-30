@@ -401,7 +401,8 @@ describe('Formatter', () => {
     });
 
     it('should format duration with multiple components', () => {
-      const formatter = new Formatter();
+      const settings = createSettings({ unitDisplayStyle: 'name' });
+      const formatter = new Formatter(settings, dataLoader);
       const value: DurationValue = {
         kind: 'duration',
         duration: {
@@ -419,7 +420,8 @@ describe('Formatter', () => {
     });
 
     it('should format duration with singular values', () => {
-      const formatter = new Formatter();
+      const settings = createSettings({ unitDisplayStyle: 'name' });
+      const formatter = new Formatter(settings, dataLoader);
       const value: DurationValue = {
         kind: 'duration',
         duration: {
@@ -437,7 +439,8 @@ describe('Formatter', () => {
     });
 
     it('should format zero duration', () => {
-      const formatter = new Formatter();
+      const settings = createSettings({ unitDisplayStyle: 'name' });
+      const formatter = new Formatter(settings, dataLoader);
       const value: DurationValue = {
         kind: 'duration',
         duration: {

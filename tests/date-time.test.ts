@@ -66,7 +66,7 @@ describe('DateTimeEngine', () => {
     it('should add days to a date', () => {
       const date: PlainDate = { year: 2024, month: 1, day: 15 };
       const duration = engine.createDuration({ days: 10 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(1);
@@ -76,7 +76,7 @@ describe('DateTimeEngine', () => {
     it('should add days that cross month boundary', () => {
       const date: PlainDate = { year: 2024, month: 1, day: 25 };
       const duration = engine.createDuration({ days: 10 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(2);
@@ -86,7 +86,7 @@ describe('DateTimeEngine', () => {
     it('should add days that cross year boundary', () => {
       const date: PlainDate = { year: 2023, month: 12, day: 25 };
       const duration = engine.createDuration({ days: 10 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(1);
@@ -96,7 +96,7 @@ describe('DateTimeEngine', () => {
     it('should add months with clamping (Jan 31 + 1 month = Feb 28)', () => {
       const date: PlainDate = { year: 2023, month: 1, day: 31 };
       const duration = engine.createDuration({ months: 1 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2023);
       expect(result.month).toBe(2);
@@ -106,7 +106,7 @@ describe('DateTimeEngine', () => {
     it('should add months with clamping in leap year (Jan 31 + 1 month = Feb 29)', () => {
       const date: PlainDate = { year: 2024, month: 1, day: 31 };
       const duration = engine.createDuration({ months: 1 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(2);
@@ -116,7 +116,7 @@ describe('DateTimeEngine', () => {
     it('should add months that cross year boundary', () => {
       const date: PlainDate = { year: 2023, month: 11, day: 15 };
       const duration = engine.createDuration({ months: 3 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(2);
@@ -126,7 +126,7 @@ describe('DateTimeEngine', () => {
     it('should add years', () => {
       const date: PlainDate = { year: 2020, month: 2, day: 29 };
       const duration = engine.createDuration({ years: 1 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2021);
       expect(result.month).toBe(2);
@@ -136,7 +136,7 @@ describe('DateTimeEngine', () => {
     it('should subtract days from a date', () => {
       const date: PlainDate = { year: 2024, month: 2, day: 10 };
       const duration = engine.createDuration({ days: 15 });
-      const result = engine.subtractFromPlainDate(date, duration);
+      const result = engine.subtractFromPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(1);
@@ -463,7 +463,7 @@ describe('DateTimeEngine', () => {
     it('should handle leap year Feb 29', () => {
       const date: PlainDate = { year: 2024, month: 2, day: 29 };
       const duration = engine.createDuration({ days: 1 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(3);
@@ -473,7 +473,7 @@ describe('DateTimeEngine', () => {
     it('should handle end of year rollover', () => {
       const date: PlainDate = { year: 2023, month: 12, day: 31 };
       const duration = engine.createDuration({ days: 1 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(1);
@@ -483,7 +483,7 @@ describe('DateTimeEngine', () => {
     it('should handle adding 12 months (should equal 1 year)', () => {
       const date: PlainDate = { year: 2023, month: 6, day: 15 };
       const duration = engine.createDuration({ months: 12 });
-      const result = engine.addToPlainDate(date, duration);
+      const result = engine.addToPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(6);
@@ -493,7 +493,7 @@ describe('DateTimeEngine', () => {
     it('should handle negative day subtraction crossing month boundary', () => {
       const date: PlainDate = { year: 2024, month: 3, day: 5 };
       const duration = engine.createDuration({ days: 10 });
-      const result = engine.subtractFromPlainDate(date, duration);
+      const result = engine.subtractFromPlainDate(date, duration) as PlainDate;
 
       expect(result.year).toBe(2024);
       expect(result.month).toBe(2);

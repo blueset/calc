@@ -221,6 +221,9 @@ export class Evaluator {
       case 'PostfixExpression':
         return this.evaluatePostfix(expr, context);
 
+      case 'RelativeInstantExpression':
+        return this.evaluateRelativeInstant(expr, context);
+
       case 'FunctionCall':
         return this.evaluateFunctionCall(expr, context);
 
@@ -802,6 +805,18 @@ export class Evaluator {
       return { kind: 'duration', duration };
     }
 
+    // PlainTime - PlainTime → Duration
+    if (left.kind === 'plainTime' && right.kind === 'plainTime' && op === '-') {
+      const duration = this.dateTimeEngine.subtractPlainTimes(left.time, right.time);
+      return { kind: 'duration', duration };
+    }
+
+    // ZonedDateTime - PlainTime → Duration (treat RHS as today in local timezone)
+    if (left.kind === 'zonedDateTime' && right.kind === 'plainTime' && op === '-') {
+      const duration = this.dateTimeEngine.subtractPlainTimeFromZonedDateTime(left.zonedDateTime, right.time);
+      return { kind: 'duration', duration };
+    }
+
     // PlainDateTime + Duration → PlainDateTime
     if (left.kind === 'plainDateTime' && right.kind === 'duration') {
       if (op === '+') {
@@ -1051,57 +1066,46 @@ export class Evaluator {
     const lowerName = name.toLowerCase();
 
     switch (lowerName) {
-      case 'now': {
-        // Return zoned date time (current date and time)
-        const zonedDateTime = this.dateTimeEngine.getCurrentZonedDateTime();
-        return { kind: 'zonedDateTime', zonedDateTime };
-      }
-
+      case 'now':
       case 'today': {
-        // Return zoned date time (current date and time)
-        const zonedDateTime = this.dateTimeEngine.getCurrentZonedDateTime();
-        return { kind: 'zonedDateTime', zonedDateTime };
+        const instant = this.dateTimeEngine.getCurrentInstant();
+        return { kind: 'instant', instant };
       }
 
       case 'tomorrow': {
-        // Return zoned date time (current date + 1 day, same time)
-        const zonedDateTime = this.dateTimeEngine.getCurrentZonedDateTime();
-        const tomorrowResult = this.dateTimeEngine.addToPlainDate(zonedDateTime.dateTime.date, { days: 1 } as any);
-        // addToPlainDate returns PlainDate when only date components, so it's safe to cast
-        const tomorrow = tomorrowResult as any;
-        return {
-          kind: 'zonedDateTime',
-          zonedDateTime: {
-            dateTime: {
-              date: tomorrow,
-              time: zonedDateTime.dateTime.time
-            },
-            timezone: zonedDateTime.timezone
-          }
-        };
+        const instant = this.dateTimeEngine.getCurrentInstant();
+        return { kind: 'instant', instant: { timestamp: instant.timestamp + 86400000 } };
       }
 
       case 'yesterday': {
-        // Return zoned date time (current date - 1 day, same time)
-        const zonedDateTime = this.dateTimeEngine.getCurrentZonedDateTime();
-        const yesterdayResult = this.dateTimeEngine.addToPlainDate(zonedDateTime.dateTime.date, { days: -1 } as any);
-        // addToPlainDate returns PlainDate when only date components, so it's safe to cast
-        const yesterday = yesterdayResult as any;
-        return {
-          kind: 'zonedDateTime',
-          zonedDateTime: {
-            dateTime: {
-              date: yesterday,
-              time: zonedDateTime.dateTime.time
-            },
-            timezone: zonedDateTime.timezone
-          }
-        };
+        const instant = this.dateTimeEngine.getCurrentInstant();
+        return { kind: 'instant', instant: { timestamp: instant.timestamp - 86400000 } };
       }
 
       default:
         return null;
     }
+  }
+
+  /**
+   * Evaluate relative instant expression (e.g., "2 days ago", "5 minutes from now")
+   */
+  private evaluateRelativeInstant(expr: AST.RelativeInstantExpression, context: EvaluationContext): Value {
+    const amountValue = this.evaluateExpression(expr.amount, context);
+    if (amountValue.kind === 'error') return amountValue;
+
+    if (amountValue.kind !== 'number' || !amountValue.unit) {
+      return this.createError('Relative time expressions require number with time unit');
+    }
+
+    const duration = this.convertTimeToDuration(amountValue.value, amountValue.unit);
+    const now = this.dateTimeEngine.getCurrentInstant();
+
+    const result = expr.direction === 'ago'
+      ? this.dateTimeEngine.subtractFromInstant(now, duration)
+      : this.dateTimeEngine.addToInstant(now, duration);
+
+    return { kind: 'instant', instant: result };
   }
 
   /**

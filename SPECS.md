@@ -801,24 +801,24 @@ For the purpose of date and time arithmetic, treat values of one time unit and v
 2 days + 3 hours ⎙ 2.125 days
 
 Subtraction between two “plain date” values results in a duration.
-2023 Jan 10 - 2023 Jan 1 ⎙ 9 days
-2023 Jun 15 - 2023 Jan 1 ⎙ 6 months 14 days
-2023 Jun 15 - 2023 Jan 1 to days ⎙ 195 days
-2023 Jan 1 - 2023 Jun 15 ⎙ -6 months -14 days
+2023 Jan 10 - 2023 Jan 1 ⎙ 9 day
+2023 Jun 15 - 2023 Jan 1 ⎙ 6 months 14 day
+2023 Jun 15 - 2023 Jan 1 to days ⎙ 195 day
+2023 Jan 1 - 2023 Jun 15 ⎙ -6 months -14 day
 
 Subtraction between two “plain time” values results in a duration.
-14:30 - 09:15 ⎙ 5 hours 15 minutes
-2:30 PM - 11:00 AM ⎙ 3 hours 30 minutes
+14:30 - 09:15 ⎙ 5 h 15 min
+2:30 PM - 11:00 AM ⎙ 3 h 30 min
 
 Subtraction between two “plain date time” values results in a duration.
-2023 Jan 10 14:30 - 2023 Jan 1 09:15 ⎙ 9 days 5 hours 15 minutes
-2023 Jun 15 08:00 - 2023 Jan 1 18:00 ⎙ 5 months 13 days 14 hours
+2023 Jan 10 14:30 - 2023 Jan 1 09:15 ⎙ 9 day 5 h 15 min
+2023 Jun 15 08:00 - 2023 Jan 1 18:00 ⎙ 5 mo 13 day 14 h
 
 When dates are involved in addition or subtraction, resulting duration should be expressed in terms of years, months, weeks, days as applicable.
 When times are involved in addition or subtraction, resulting duration should be expressed in terms of hours, minutes, seconds as applicable.
 
 Subtraction between two “instant” values results in a duration expressed in terms of seconds.
-now - 3600 seconds ago ⎙ 3600 seconds
+now - 3600 seconds ago ⎙ 3600 s
 
 Subtraction between two “zoned date time” values results in a duration expressed in terms of years, months, weeks, days, hours, minutes, seconds as applicable.
 The time zone offsets are taken into account during the subtraction.

@@ -62,6 +62,7 @@ export type Expression =
   | BinaryExpression
   | UnaryExpression
   | PostfixExpression
+  | RelativeInstantExpression
   | FunctionCall
   | Literal
   | Identifier
@@ -123,6 +124,12 @@ export interface PostfixExpression extends ASTNode {
   type: 'PostfixExpression';
   operator: '!'; // factorial
   operand: Expression;
+}
+
+export interface RelativeInstantExpression extends ASTNode {
+  type: 'RelativeInstantExpression';
+  amount: NumberWithUnit;
+  direction: 'ago' | 'from_now';
 }
 
 export interface FunctionCall extends ASTNode {
@@ -503,4 +510,16 @@ export function createUnitTarget(unit: UnitExpression, start: SourceLocation, en
 
 export function createCompositeUnitTarget(units: UnitExpression[], start: SourceLocation, end: SourceLocation): CompositeUnitTarget {
   return { type: 'CompositeUnitTarget', units, start, end };
+}
+
+export function createRelativeInstantExpression(
+  amount: Expression,
+  direction: 'ago' | 'from_now',
+  start: SourceLocation,
+  end: SourceLocation
+): RelativeInstantExpression {
+  if (amount.type !== 'NumberWithUnit') {
+    throw new Error('RelativeInstantExpression requires NumberWithUnit');
+  }
+  return { type: 'RelativeInstantExpression', amount: amount as NumberWithUnit, direction, start, end };
 }

@@ -47,8 +47,11 @@ import {
   createPlainDateTimeLiteral,
   createZonedDateTimeLiteral,
   createInstantLiteral,
+  createRelativeInstantExpression,
   PlainDateLiteral,
   PlainTimeLiteral,
+  PlainDateTimeLiteral,
+  ZonedDateTimeLiteral,
   CompositeUnitLiteral,
   NumberLiteral,
   PresentationTarget,
@@ -329,6 +332,20 @@ export class Parser {
         precedence = 14;
         isOperator = true;
       }
+      // Relative instant postfix expressions (ago, from now)
+      else if (operatorToken.type === TokenType.IDENTIFIER) {
+        const keyword = operatorToken.value.toLowerCase();
+        if (keyword === 'ago') {
+          precedence = 14;
+          isOperator = true;
+        } else if (keyword === 'from') {
+          const nextToken = this.peekAhead(1);
+          if (nextToken?.type === TokenType.IDENTIFIER && nextToken.value.toLowerCase() === 'now') {
+            precedence = 14;
+            isOperator = true;
+          }
+        }
+      }
 
       if (!isOperator || precedence < minPrecedence) {
         break;
@@ -346,6 +363,27 @@ export class Parser {
         // Postfix factorial
         const end = this.previous().end;
         left = createPostfixExpression('!', left, left.start, end);
+      }
+      // Relative instant postfix expressions
+      else if (operatorToken.type === TokenType.IDENTIFIER) {
+        const keyword = operatorToken.value.toLowerCase();
+
+        if (keyword === 'ago') {
+          if (left.type !== 'NumberWithUnit') {
+            throw new Error(`Expected number with time unit before 'ago' at ${operatorToken.start.line}:${operatorToken.start.column}`);
+          }
+          // Already advanced past 'ago' at line 353
+          left = createRelativeInstantExpression(left, 'ago', left.start, this.previous().end);
+        } else if (keyword === 'from') {
+          if (left.type !== 'NumberWithUnit') {
+            throw new Error(`Expected number with time unit before 'from now' at ${operatorToken.start.line}:${operatorToken.start.column}`);
+          }
+          // Already advanced past 'from', now consume 'now'
+          this.advance(); // 'now'
+          left = createRelativeInstantExpression(left, 'from_now', left.start, this.previous().end);
+        } else {
+          break;
+        }
       }
       else if (operatorToken.type === TokenType.PER) {
         // "per" operator disambiguation (PARSER_PLAN.md lines 510-512)
@@ -1186,6 +1224,15 @@ export class Parser {
       // Scan through consecutive UNIT/IDENTIFIER tokens looking for operators or superscripts
       while (this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER)) {
         const token = this.currentToken();
+
+        // Skip relative instant keywords (ago, from) - they are postfix operators, not units
+        if (token.type === TokenType.IDENTIFIER) {
+          const keyword = token.value.toLowerCase();
+          if (keyword === 'ago' || keyword === 'from') {
+            break;
+          }
+        }
+
         const [, unicodeExponent] = this.extractSuperscript(token.value);
 
         // Check for Unicode superscript in the unit itself
@@ -1881,9 +1928,9 @@ export class Parser {
    * Assumes today's date in the specified timezone
    */
   private attachTimezoneToTime(
-    timeLiteral: AST.PlainTimeLiteral,
+    timeLiteral: PlainTimeLiteral,
     timezone: string
-  ): AST.ZonedDateTimeLiteral {
+  ): ZonedDateTimeLiteral {
     // Get today's date in the specified timezone
     // Use Temporal API to get the current date in the timezone
     const now = Temporal.Now.zonedDateTimeISO(timezone);
@@ -1916,9 +1963,9 @@ export class Parser {
    * Convert PlainDateTimeLiteral + timezone to ZonedDateTimeLiteral
    */
   private attachTimezoneToDateTime(
-    dateTimeLiteral: AST.PlainDateTimeLiteral,
+    dateTimeLiteral: PlainDateTimeLiteral,
     timezone: string
-  ): AST.ZonedDateTimeLiteral {
+  ): ZonedDateTimeLiteral {
     return createZonedDateTimeLiteral(
       dateTimeLiteral,
       timezone,

@@ -730,8 +730,33 @@ CA$100
       expect(result.results[5].result).toBe('1970-01-01 Thu 23:59 UTC+8');
     });
 
-    it.skip('should handle instants (relative time)', () => {
-      // TODO: relative time parsing not implemented
+    it('should handle zoned date times with offsets', () => {
+      const result = calculator.calculate(`12:30 Z
+12:30 UTC+1
+12:30 UTC+01
+12:30 UTC-515
+12:30 UTC-1015`);
+      expect(result.results[0].result).toBe('12:30 UTC');
+      expect(result.results[1].result).toBe('12:30 UTC+1');
+      expect(result.results[2].result).toBe('12:30 UTC+1');
+      expect(result.results[3].result).toBe('12:30 UTC-5:15');
+      expect(result.results[4].result).toBe('12:30 UTC-10:15');
+    });
+
+    it('should handle parsing surrounding zoned date times', () => {
+      const result = calculator.calculate(`05:00
+05:00 UTC
+05:00-3:30
+05:00 UTC-3:30
+05:00 UTC+3:30`);
+      expect(result.results[0].result).toBe('05:00');
+      expect(result.results[1].result).toBe('05:00 UTC');
+      expect(result.results[2].result).toBe('1 h 30 min');
+      expect(result.results[3].result).toBe('-1 day -6 h -30 min'); // zonedDateTime - plainTime: 05:00 UTC - 03:30 (local time)
+      expect(result.results[4].hasError).toBe(true); // date time add date time is not supported.
+    });
+
+    it('should handle instants (relative time)', () => {
       function getDateString(date: Date): string {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
