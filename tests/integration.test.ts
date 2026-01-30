@@ -131,10 +131,20 @@ describe('Integration Tests - SPECS.md Examples', () => {
       expect(result.results[0].result).toBe('1');
     });
 
-    it.skip('should handle percent symbol converting to dimensionless', () => {
-      // TODO: Percent symbol (%) is parsed as modulo operator, not unit - lexer/parser issue
+    it('should handle percent symbol converting to dimensionless', () => {
       const result = calculator.calculate('50%');
       expect(result.results[0].result).toBe('0.5');
+    });
+
+    it('should handle modulo operator', () => {
+      const result = calculator.calculate('10 % 3');
+      expect(result.results[0].result).toBe('1');
+    });
+
+    it('should distinguish percent from modulo', () => {
+      const result = calculator.calculate('50%\n10 % 3');
+      expect(result.results[0].result).toBe('0.5');  // percent
+      expect(result.results[1].result).toBe('1');    // modulo
     });
 
   });

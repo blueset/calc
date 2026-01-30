@@ -28,6 +28,7 @@ export class Lexer {
   private dataLoader: DataLoader;
   private lastToken: Token | null = null;
   private errors: LexerError[] = [];  // Collect errors instead of throwing
+  private hadWhitespaceBeforeCurrentToken: boolean = false;  // Track whitespace for disambiguation
 
   constructor(input: string, dataLoader: DataLoader) {
     this.input = input;
@@ -90,7 +91,12 @@ export class Lexer {
    * Get the next token
    */
   private nextToken(): Token | null {
+    const posBeforeWhitespace = this.position;
     this.skipWhitespace();
+    const posAfterWhitespace = this.position;
+
+    // Track if there was whitespace before this token
+    this.hadWhitespaceBeforeCurrentToken = posAfterWhitespace > posBeforeWhitespace;
 
     if (this.isAtEnd()) {
       return null;
@@ -180,7 +186,8 @@ export class Lexer {
         return this.createToken(TokenType.SLASH, '/', start, this.currentLocation());
       case '%':
         this.advance();
-        return this.createToken(TokenType.PERCENT, '%', start, this.currentLocation());
+        const percentType = this.disambiguatePercent();
+        return this.createToken(percentType, '%', start, this.currentLocation());
       case '^':
         this.advance();
         return this.createToken(TokenType.CARET, '^', start, this.currentLocation());
@@ -553,6 +560,61 @@ export class Lexer {
 
     // Not preceded by valid time hour or time literal, treat as unit
     return TokenType.UNIT;  // attometers/picometers/petameters
+  }
+
+  /**
+   * Disambiguate % between percent unit and modulo operator
+   *
+   * Strategy:
+   * 1. If previous token is NUMBER and % is adjacent (no whitespace) → UNIT (percent)
+   * 2. If previous token is NUMBER and % has whitespace before it:
+   *    - Look ahead: if next non-whitespace is a number/identifier → PERCENT (modulo)
+   *    - Otherwise → UNIT (percent with trailing space)
+   * 3. If previous token is not a NUMBER → PERCENT (modulo operator)
+   *
+   * Examples:
+   * - "50%" → UNIT(percent) - adjacent
+   * - "50 %" → UNIT(percent) - trailing space, no right operand
+   * - "50 % 3" → PERCENT(modulo) - binary operation
+   * - "x % y" → PERCENT(modulo) - not after number
+   */
+  private disambiguatePercent(): TokenType {
+    // Case 3: Not preceded by a number → must be modulo operator
+    if (!this.lastToken || this.lastToken.type !== TokenType.NUMBER) {
+      return TokenType.PERCENT;  // modulo operator
+    }
+
+    // Previous token is NUMBER
+    // Case 1: Adjacent to number (no whitespace) → percent unit
+    if (!this.hadWhitespaceBeforeCurrentToken) {
+      return TokenType.UNIT;  // percent unit
+    }
+
+    // Case 2: Whitespace before % → need lookahead
+    // Save current position
+    const savedPos = this.position;
+    const savedLine = this.line;
+    const savedColumn = this.column;
+
+    // Skip whitespace after %
+    while (!this.isAtEnd() && (this.peek() === ' ' || this.peek() === '\t')) {
+      this.advance();
+    }
+
+    // Check if next character is a digit or letter (start of number/identifier)
+    const nextChar = this.peek();
+    const hasOperandAfter = this.isDigit(nextChar) || this.isAlpha(nextChar) || nextChar === '(';
+
+    // Restore position
+    this.position = savedPos;
+    this.line = savedLine;
+    this.column = savedColumn;
+
+    if (hasOperandAfter) {
+      return TokenType.PERCENT;  // modulo operator (pattern: 50 % 3)
+    } else {
+      return TokenType.UNIT;  // percent unit (pattern: 50 %)
+    }
   }
 
   /**

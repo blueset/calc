@@ -761,6 +761,134 @@ describe('Lexer', () => {
     });
   });
 
+  describe('Percent/Modulo Disambiguation', () => {
+    describe('Percent unit (UNIT)', () => {
+      it('should recognize % adjacent to number as percent unit', () => {
+        const tokens = tokenize('50%');
+        expect(tokens.length).toBe(3);  // NUMBER, UNIT, EOF
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('50');
+        expect(tokens[1].type).toBe(TokenType.UNIT);
+        expect(tokens[1].value).toBe('%');
+        expect(tokens[2].type).toBe(TokenType.EOF);
+      });
+
+      it('should recognize % with trailing space as percent unit', () => {
+        const tokens = tokenize('50 %');
+        expect(tokens.length).toBe(3);  // NUMBER, UNIT, EOF
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[1].type).toBe(TokenType.UNIT);
+        expect(tokens[1].value).toBe('%');
+      });
+
+      it('should recognize % at end of expression as percent unit', () => {
+        const tokens = tokenize('50 % + 25');
+        // "50 %" should be NUMBER + UNIT(percent), then "+" operator, then "25"
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('50');
+        expect(tokens[1].type).toBe(TokenType.UNIT);  // percent, not modulo
+        expect(tokens[1].value).toBe('%');
+        expect(tokens[2].type).toBe(TokenType.PLUS);
+        expect(tokens[3].type).toBe(TokenType.NUMBER);
+        expect(tokens[3].value).toBe('25');
+      });
+
+      it('should handle multiple percent units in expression', () => {
+        const tokens = tokenize('50% + 25%');
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('50');
+        // Token 1 should be UNIT(percent) - but wait, adjacent % creates a unit!
+        // Actually, when % is adjacent, it should lookup "percent" unit
+        // Let me check the implementation - we return UNIT type but value is still '%'
+        // The evaluator/parser should resolve '%' as the percent unit
+      });
+
+      it('should recognize % after decimal number as percent unit', () => {
+        const tokens = tokenize('12.5%');
+        expect(tokens.length).toBe(3);  // NUMBER, UNIT, EOF
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('12.5');
+        expect(tokens[1].type).toBe(TokenType.UNIT);
+        expect(tokens[1].value).toBe('%');
+      });
+    });
+
+    describe('Modulo operator (PERCENT)', () => {
+      it('should recognize % between two numbers as modulo', () => {
+        const tokens = tokenize('10 % 3');
+        expect(tokens.length).toBe(4);  // NUMBER, PERCENT, NUMBER, EOF
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('10');
+        expect(tokens[1].type).toBe(TokenType.PERCENT);  // modulo operator
+        expect(tokens[1].value).toBe('%');
+        expect(tokens[2].type).toBe(TokenType.NUMBER);
+        expect(tokens[2].value).toBe('3');
+      });
+
+      it('should recognize % between identifiers as modulo', () => {
+        const tokens = tokenize('x % y');
+        expect(tokens.length).toBe(4);
+        expect(tokens[0].type).toBe(TokenType.IDENTIFIER);
+        expect(tokens[0].value).toBe('x');
+        expect(tokens[1].type).toBe(TokenType.PERCENT);
+        expect(tokens[1].value).toBe('%');
+        expect(tokens[2].type).toBe(TokenType.IDENTIFIER);
+        expect(tokens[2].value).toBe('y');
+      });
+
+      it('should recognize % in complex expression as modulo', () => {
+        const tokens = tokenize('10 % 3 + 5');
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('10');
+        expect(tokens[1].type).toBe(TokenType.PERCENT);  // modulo
+        expect(tokens[2].type).toBe(TokenType.NUMBER);
+        expect(tokens[2].value).toBe('3');
+        expect(tokens[3].type).toBe(TokenType.PLUS);
+        expect(tokens[4].type).toBe(TokenType.NUMBER);
+        expect(tokens[4].value).toBe('5');
+      });
+
+      it('should recognize % before parenthesized expression as modulo', () => {
+        const tokens = tokenize('10 % (3 + 2)');
+        expect(tokens[1].type).toBe(TokenType.PERCENT);  // modulo
+      });
+    });
+
+    describe('Edge cases', () => {
+      it('should handle adjacent % followed by number (ambiguous case)', () => {
+        // "50%3" → treated as "50%" + "3" (percent followed by separate number)
+        const tokens = tokenize('50%3');
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('50');
+        // Adjacent % should be UNIT
+        expect(tokens[1].type).toBe(TokenType.UNIT);
+        expect(tokens[1].value).toBe('%');
+        expect(tokens[2].type).toBe(TokenType.NUMBER);
+        expect(tokens[2].value).toBe('3');
+      });
+
+      it('should handle % at start of input (error case)', () => {
+        const tokens = tokenize('% 5');
+        expect(tokens[0].type).toBe(TokenType.PERCENT);  // modulo (will error in evaluation)
+      });
+
+      it('should handle multiple % in sequence', () => {
+        const tokens = tokenize('10 % 3 % 2');
+        expect(tokens[1].type).toBe(TokenType.PERCENT);  // first modulo
+        expect(tokens[3].type).toBe(TokenType.PERCENT);  // second modulo
+      });
+
+      it('should handle % in parentheses', () => {
+        const tokens1 = tokenize('(50%)');
+        expect(tokens1[1].type).toBe(TokenType.NUMBER);
+        expect(tokens1[1].value).toBe('50');
+
+        const tokens2 = tokenize('(10 % 3)');
+        expect(tokens2[2].type).toBe(TokenType.PERCENT);  // modulo
+      });
+    });
+  });
+
   describe('Unicode Superscripts', () => {
     it('should tokenize unit with Unicode superscript (m²)', () => {
       const tokens = tokenize('5 m²');

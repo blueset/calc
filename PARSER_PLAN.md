@@ -132,9 +132,9 @@
   - [x] Tests re-enabled: lines 624-680 in integration.test.ts ✓
 - [ ] Currency unit resolution in evaluator (fallback from unit to currency lookup)
 - [ ] Ambiguous currency dimension handling ($ → "currency_symbol_0024", error on operations)
-- [x] Dimensionless unit auto-conversion (5 dozen → 60, 100 percent → 1) **[COMPLETED - except % symbol parsing]**
+- [x] Dimensionless unit auto-conversion (5 dozen → 60, 100 percent → 1)
   - [x] Auto-convert dimensionless units to pure numbers (dozen, percent word form)
-  - [ ] Percent symbol (%) parsing issue - lexer treats % as modulo operator (Phase 2 issue)
+  - [x] Percent symbol (%) disambiguation - lexer now correctly distinguishes percent unit from modulo operator
 - [x] Composite unit negation (-(5 m 20 cm) → -5 m -20 cm)
 - [x] Composite to single unit conversion (6 ft 3 in to cm → 190.5 cm)
 - [ ] Derived units with space multiplication (1 N m → derived unit)
@@ -223,9 +223,9 @@
 
 
 **Test Coverage Summary**:
-- **Total Tests**: 854 tests passing, 23 skipped (877 total)
-- **Integration**: 141 tests (105 passing, 36 skipped - comprehensive SPECS.md coverage)
-- **Lexer**: 111 tests (all token types, disambiguation rules, error recording, underscore separators, base prefixes)
+- **Total Tests**: 873 tests passing, 23 skipped (896 total)
+- **Integration**: 153 tests (130 passing, 23 skipped - comprehensive SPECS.md coverage)
+- **Lexer**: 124 tests (all token types, disambiguation rules including percent/modulo, error recording, underscore separators, base prefixes)
 - **Parser**: 143 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units)
 - **Type Checker**: 78 tests (dimension compatibility, conversion validation, variable scoping)
 - **Evaluator**: 95 tests (binary operations, conversions, functions, date arithmetic)

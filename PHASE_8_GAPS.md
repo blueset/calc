@@ -491,29 +491,35 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
 
 ### Feature: Dimensionless Unit Conversion (3 tests)
 
-**Status**: ✅ **PARTIALLY COMPLETED** (2 of 3 tests passing)
+**Status**: ✅ **COMPLETED** (all 3 tests passing + 3 additional tests)
 
 - **Tests**:
   - ✅ `should handle English number units converting to dimensionless` - PASSING
   - ✅ `should handle percentages converting to dimensionless` (word form) - PASSING
-  - ❌ `should handle percentages as units` (% symbol) - BLOCKED (Phase 2 lexer issue)
+  - ✅ `should handle percent symbol converting to dimensionless` (% symbol) - PASSING
+  - ✅ `should handle modulo operator` - PASSING (new test)
+  - ✅ `should distinguish percent from modulo` - PASSING (new test)
 - **Examples**:
   - ✅ `5 dozen` → `60` (working)
   - ✅ `100 percent` → `1` (working)
-  - ❌ `50%` → `0.5` (blocked - lexer treats % as modulo operator)
+  - ✅ `50%` → `0.5` (working)
+  - ✅ `10 % 3` → `1` (modulo operator working)
 - **Implementation Completed**:
-  - Auto-conversion of dimensionless units in evaluator (lines 273-287)
-  - Checks `unit.dimension === 'dimensionless'` after resolving
-  - Converts to base unit and strips unit from result
-- **Remaining Work**:
-  - **Phase 2 (Lexer)**: Fix percent symbol parsing
-    - Currently `%` is tokenized as modulo operator
-    - Need to disambiguate: after NUMBER it should be unit, not operator
-    - Similar to `am`/`pm` disambiguation logic (lines 530-556 in lexer.ts)
+  - ✅ Auto-conversion of dimensionless units in evaluator (lines 273-287)
+  - ✅ Percent/modulo disambiguation in lexer (lines 564-615)
+  - ✅ Whitespace tracking for context-sensitive tokenization
+  - ✅ Lookahead for modulo operator detection
+- **Disambiguation Strategy**:
+  - Adjacent to number (no space): `50%` → UNIT (percent)
+  - Separated with operand: `50 % 3` → PERCENT (modulo)
+  - Separated without operand: `50 %` → UNIT (percent)
+  - Not after number: `x % y` → PERCENT (modulo)
 - **Files Modified**:
   - ✅ `src/evaluator.ts` (lines 273-287)
-- **Files Needing Work**:
-  - ❌ `src/lexer.ts` (disambiguate % symbol)
+  - ✅ `src/lexer.ts` (added `hadWhitespaceBeforeCurrentToken` field, `disambiguatePercent()` method, modified `%` tokenization)
+- **Tests Added**:
+  - ✅ `tests/lexer.test.ts` (13 new tests for percent/modulo disambiguation)
+  - ✅ `tests/integration.test.ts` (re-enabled 1 test, added 3 new tests)
 
 ### Feature: Composite Unit Operations (3 tests)
 
@@ -944,30 +950,31 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
 1. ~~**Parser Bug: Derived Units in Binary Operations** (Phase 3)~~ - ✅ FIXED (Phase 3 completed)
 2. ~~**User-Defined Units Support** (Phase 5)~~ - ✅ DONE (all tests passing)
 3. ~~**Unit Cancellation in Arithmetic** (Phase 5)~~ - ✅ DONE (all tests passing)
-4. ~~**Dimensionless Unit Conversion** (Phase 5)~~ - ✅ MOSTLY DONE (2/3 tests, % symbol blocked by Phase 2)
+4. ~~**Dimensionless Unit Conversion** (Phase 5)~~ - ✅ COMPLETED (all tests passing, percent/modulo disambiguation working)
 5. ~~**Date/Time Arithmetic** (Phase 5)~~ - ✅ DONE (composite durations working)
 6. ~~**Relative Instant Keywords** (Phase 5)~~ - ✅ DONE (now, today, tomorrow, yesterday)
 7. ~~**Composite Unit Operations** (Phase 5)~~ - ✅ MOSTLY DONE (2/3 tests, space multiplication skipped)
 8. ~~**Function Enhancements** (Phase 5)~~ - ✅ MOSTLY DONE (2/3 tests, inverse trig formatting skipped)
+9. ~~**Percent/Modulo Disambiguation** (Phase 2)~~ - ✅ DONE (lexer correctly distinguishes % as percent vs modulo)
 
 ### High Priority (Most User Impact)
-9. **Binary/Octal/Hex Parsing** (Phase 2) - Common in programming contexts
-10. **Presentation Conversions** (Phase 6) - Core feature from SPECS.md
-11. **Plain Date Time Parsing** (Phase 3) - "1970 Jan 01 14:30" not working (3 tests blocked)
-12. **Complex Relative Date/Time Expressions** (Phase 3) - "2 days ago", "3 days from now"
-13. **Multi-Word Unit Parsing** (Phase 3) - "sq ft" case not working
+1. **Binary/Octal/Hex Parsing** (Phase 2) - Common in programming contexts
+1. **Presentation Conversions** (Phase 6) - Core feature from SPECS.md
+1. **Plain Date Time Parsing** (Phase 3) - "1970 Jan 01 14:30" not working (3 tests blocked)
+1. **Complex Relative Date/Time Expressions** (Phase 3) - "2 days ago", "3 days from now"
+1. **Multi-Word Unit Parsing** (Phase 3) - "sq ft" case not working
 
 ### Medium Priority
-7. **Base Keyword** (Phase 2) - Useful for arbitrary base conversions
-8. **Composite Unit Operations** (Phase 5) - Expected to work
-9. **Named Square/Cubic Units** (Phase 3) - Alternative syntax
-10. **Binary Operation Formatting** (Phase 6) - Complete bitwise support
+1. **Base Keyword** (Phase 2) - Useful for arbitrary base conversions
+1. **Composite Unit Operations** (Phase 5) - Expected to work
+1. **Named Square/Cubic Units** (Phase 3) - Alternative syntax
+1. **Binary Operation Formatting** (Phase 6) - Complete bitwise support
 
 ### Low Priority (Polish)
-11. **Number Underscore Separators** (Phase 2) - Nice to have
-12. **Function Enhancements** (Phase 5) - Minor improvements
-13. **Formatting Tweaks** (Phase 6) - Minor display issues
-14. **Plain Text Detection** (Multiple) - Edge case handling
+1. **Number Underscore Separators** (Phase 2) - Nice to have
+1. **Function Enhancements** (Phase 5) - Minor improvements
+1. **Formatting Tweaks** (Phase 6) - Minor display issues
+1. **Plain Text Detection** (Multiple) - Edge case handling
 
 ---
 
@@ -975,28 +982,29 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
 
 | Phase | Total Effort | Features | Status |
 |-------|--------------|----------|--------|
-| Phase 2 (Lexer) | 13-19 hours | 8 features (6 number formats + 2 currency symbols) | Pending |
+| Phase 2 (Lexer) | 10-16 hours | 7 features (6 number formats + 1 currency symbol) | Pending |
 | Phase 3 (Parser) | 5-7 hours | 2 features (complex relative date/time + plain date time parsing) | Pending |
 | Phase 5 (Evaluator) | 2-3 hours | 1 feature (currency resolution) | Pending |
 | Phase 6 (Formatter) | 9-12 hours | 8 features | Pending |
 | Multiple | 3-4 hours | 1 feature | Pending |
-| **COMPLETED** | **~30 hours** | **8 major features** | ✅ **DONE** |
-| TOTAL REMAINING | 32-45 hours | 20 remaining features | |
+| **COMPLETED** | **~33 hours** | **9 major features** | ✅ **DONE** |
+| TOTAL REMAINING | 29-42 hours | 19 remaining features | |
 
-**Completed Features** (estimated ~30 hours of work):
+**Completed Features** (estimated ~33 hours of work):
 - ✅ Parser bug: Derived units in binary operations (4-6 hours) - **FIXED**
 - ✅ User-defined units support (8-12 hours) - **COMPLETED**
 - ✅ Unit cancellation in arithmetic (6-8 hours) - **COMPLETED**
-- ✅ Dimensionless unit conversion (3 hours) - **MOSTLY DONE** (2/3 tests)
+- ✅ Dimensionless unit conversion (3 hours) - **COMPLETED** (all tests passing)
+- ✅ Percent/modulo disambiguation (3 hours) - **COMPLETED** (lexer disambiguation working)
 - ✅ Date/time arithmetic (2 hours) - **COMPLETED**
 - ✅ Relative instant keywords (2 hours) - **COMPLETED**
 - ✅ Composite unit operations (3 hours) - **MOSTLY DONE** (2/3 tests)
 - ✅ Function enhancements (2 hours) - **MOSTLY DONE** (2/3 tests)
 
 **Test Results:**
-- Before this session: 850 passing, 29 skipped
-- After this session: 854 passing, 23 skipped
-- **Impact: +4 tests passing (now, today, tomorrow, yesterday + 2 composite duration tests)**
+- Before dimensionless completion: 856 passing, 24 skipped
+- After percent/modulo: 873 passing, 23 skipped
+- **Impact: +17 tests passing (re-enabled 1 integration test, added 3 integration tests, added 13 lexer tests)**
 
 **Note**: Some features span multiple phases (e.g., base keyword requires lexer, parser, and evaluator changes, user-defined units require parser + type checker + evaluator + formatter).
 
@@ -1013,6 +1021,8 @@ For each feature implementation:
 The skipped tests serve as acceptance criteria - implementation is complete when all tests pass.
 
 **Current Status**:
-- **Integration tests**: 854 passing (out of 877 total), 23 skipped
+- **Total tests**: 873 passing, 23 skipped (896 total)
+- **Integration tests**: 130 passing (out of 153 total), 23 skipped
+- **Lexer tests**: 124 passing (includes 13 new percent/modulo disambiguation tests)
 - **Original baseline**: 105 passing, 36 skipped
-- **Progress**: +749 integration tests added and passing, -13 skipped tests resolved
+- **Progress**: +768 tests added and passing, -13 skipped tests resolved
