@@ -221,6 +221,9 @@ export class Lexer {
       case ',':
         this.advance();
         return this.createToken(TokenType.COMMA, ',', start, this.currentLocation());
+      case '.':
+        this.advance();
+        return this.createToken(TokenType.DOT, '.', start, this.currentLocation());
       case '→':
         this.advance();
         return this.createToken(TokenType.ARROW, '→', start, this.currentLocation());

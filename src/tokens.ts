@@ -67,6 +67,7 @@ export enum TokenType {
   LPAREN = 'LPAREN',          // (
   RPAREN = 'RPAREN',          // )
   COMMA = 'COMMA',            // ,
+  DOT = 'DOT',                // .
 
   // Structural
   NEWLINE = 'NEWLINE',        // \n

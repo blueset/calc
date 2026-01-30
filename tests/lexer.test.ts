@@ -1085,5 +1085,34 @@ describe('Lexer', () => {
         expect(tokens[4].value).toBe('20');
       });
     });
+
+    describe('DOT token', () => {
+      it('should tokenize standalone dot as DOT token', () => {
+        const tokens = tokenize('2023.06 . 15');
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('2023.06');
+        expect(tokens[1].type).toBe(TokenType.DOT);
+        expect(tokens[1].value).toBe('.');
+        expect(tokens[2].type).toBe(TokenType.NUMBER);
+        expect(tokens[2].value).toBe('15');
+      });
+
+      it('should handle dot in arithmetic context', () => {
+        const tokens = tokenize('5 . 3');
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('5');
+        expect(tokens[1].type).toBe(TokenType.DOT);
+        expect(tokens[1].value).toBe('.');
+        expect(tokens[2].type).toBe(TokenType.NUMBER);
+        expect(tokens[2].value).toBe('3');
+      });
+
+      it('should distinguish decimal dots from standalone dots', () => {
+        const tokens = tokenize('1.5');
+        expect(tokens[0].type).toBe(TokenType.NUMBER);
+        expect(tokens[0].value).toBe('1.5');
+        expect(tokens).toHaveLength(2); // NUMBER + EOF, no DOT
+      });
+    });
   });
 });

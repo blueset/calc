@@ -756,6 +756,22 @@ CA$100
       expect(result.results[4].hasError).toBe(true); // date time add date time is not supported.
     });
 
+    it('should handle numeric date formats', () => {
+      const result = calculator.calculate(`2023.01.15
+2023.13.15
+2023.06.32
+2023.02.30
+2023.00.15
+2023.06.00`);
+      expect(result.results[0].result).toBe('2023-01-15 Sun');
+      expect(result.results[1].result).toBe('2023-12-15 Fri'); // month 13 clamps to December
+      expect(result.results[2].result).toBe('2023-06-30 Fri'); // day 32 clamps to 30
+      expect(result.results[3].result).toBe('2023-02-28 Tue'); // day 30 clamps to 28
+      expect(result.results[4].hasError).toBe(true); // month 0 is invalid
+      expect(result.results[5].hasError).toBe(true); // day 0 is invalid
+    });
+
+
     it('should handle instants (relative time)', () => {
       function getDateString(date: Date): string {
         const year = date.getFullYear();

@@ -593,6 +593,12 @@ export class Parser {
 
     const value = parseFloat(numberToken.value);
 
+    // Try numeric date format: YYYY.MM.DD
+    const numericDate = this.tryParseNumericDate(numberToken);
+    if (numericDate) {
+      return numericDate;
+    }
+
     // Check for date pattern: YYYY MONTH D (e.g., "2024 Jan 15")
     if (this.check(TokenType.DATETIME)) {
       const monthToken = this.currentToken();
@@ -1753,6 +1759,142 @@ export class Parser {
     };
 
     return months[name] ?? null;
+  }
+
+  /**
+   * Try to parse numeric date format: YYYY.MM.DD
+   * Returns PlainDateLiteral, PlainDateTimeLiteral, or ZonedDateTimeLiteral if pattern matches.
+   * Returns null if pattern doesn't match (allowing fallback to other parsing).
+   *
+   * Disambiguation:
+   * - NUMBER → Number literal
+   * - NUMBER.NUMBER → Decimal number (1 dot, 2 components)
+   * - NUMBER.NUMBER.NUMBER → Date (2 dots, 3 components) - COMMIT to date parsing
+   * - NUMBER.NUMBER.NUMBER.NUMBER+ → Invalid input (error)
+   */
+  private tryParseNumericDate(firstComponent: Token): Expression | null {
+    const savedPosition = this.current;
+
+    // Parse first component (should be YYYY.MM)
+    const parts = firstComponent.value.split('.');
+    if (parts.length !== 2) {
+      return null; // Not a date pattern
+    }
+
+    const yearStr = parts[0];
+    const monthStr = parts[1];
+
+    // Check for third component (DD)
+    if (!this.check(TokenType.DOT)) {
+      return null; // Only 2 components = decimal number
+    }
+
+    this.advance(); // consume DOT
+
+    if (!this.check(TokenType.NUMBER)) {
+      this.current = savedPosition;
+      return null; // No number after DOT
+    }
+
+    // COMMIT POINT: We have 3 dot-separated numbers → this MUST be a date
+    const dayToken = this.currentToken();
+    const dayStr = dayToken.value;
+    this.advance(); // consume day number
+
+    // Parse components as integers
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+    const day = parseInt(dayStr, 10);
+
+    // Use Temporal API to constrain out-of-range values and detect errors
+    let validatedYear: number, validatedMonth: number, validatedDay: number;
+    // try {
+    //   const plainDate = Temporal.PlainDate.from(
+    //     { year, month, day },
+    //     { overflow: 'constrain' }
+    //   );
+    //   validatedYear = plainDate.year;
+    //   validatedMonth = plainDate.month;
+    //   validatedDay = plainDate.day;
+    // } catch (error) {
+    //   // Temporal throws on invalid values (e.g., month/day = 0)
+    //   const errorMessage = error instanceof Error ? error.message : 'Invalid date';
+    //   const parserError = new ParserError(errorMessage, firstComponent.start, dayToken.end);
+    //   const lineNumber = firstComponent.start.line;
+    //   this.lineErrors.set(lineNumber, parserError);
+    {
+
+      // Use the original values (will fail at evaluation time)
+      validatedYear = year;
+      validatedMonth = month;
+      validatedDay = day;
+    }
+
+    // Create PlainDateLiteral
+    let result: Expression = createPlainDateLiteral(
+      validatedYear,
+      validatedMonth,
+      validatedDay,
+      firstComponent.start,
+      dayToken.end
+    );
+
+    // Check for optional time
+    if (this.check(TokenType.DATETIME)) {
+      const timeToken = this.currentToken();
+      const timeSavedPos = this.current;
+      this.advance(); // consume time token
+
+      const timeLiteral = this.tryParseTime(timeToken, false);
+      if (timeLiteral) {
+        // Combine date and time
+        const dateLiteral = result as PlainDateLiteral;
+        result = createPlainDateTimeLiteral(
+          dateLiteral,
+          timeLiteral as PlainTimeLiteral,
+          firstComponent.start,
+          timeLiteral.end
+        );
+      } else {
+        this.current = timeSavedPos; // restore if time parsing failed
+      }
+    }
+
+    // Check for optional timezone
+    const timezone = this.tryAttachTimezone();
+    if (timezone) {
+      if (result.type === 'PlainDateTimeLiteral') {
+        result = this.attachTimezoneToDateTime(result as PlainDateTimeLiteral, timezone);
+      } else if (result.type === 'PlainDateLiteral') {
+        // If we have a date with timezone but no time, convert to datetime at midnight
+        const plainDate = result as PlainDateLiteral;
+        const dateTimeLiteral: PlainDateTimeLiteral = {
+          type: 'PlainDateTimeLiteral',
+          date: {
+            type: 'PlainDateLiteral',
+            year: plainDate.year,
+            month: plainDate.month,
+            day: plainDate.day,
+            start: plainDate.start,
+            end: plainDate.end
+          },
+          time: {
+            type: 'PlainTimeLiteral',
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+            start: plainDate.end,
+            end: plainDate.end
+          },
+          start: plainDate.start,
+          end: plainDate.end
+        };
+        result = this.attachTimezoneToDateTime(dateTimeLiteral, timezone);
+      }
+    }
+
+    return result;
   }
 
   /**

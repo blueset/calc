@@ -46,6 +46,11 @@ describe('Parser', () => {
     return parseWithErrors(input).ast;
   }
 
+  function tokenize(input: string) {
+    const lexer = new Lexer(input, dataLoader);
+    return lexer.tokenize().tokens;
+  }
+
   function parseExpression(input: string): Expression {
     const doc = parse(input);
     expect(doc.lines.length).toBeGreaterThan(0);
@@ -1651,6 +1656,101 @@ describe('Parser', () => {
       const left = expr.left;
       expect(left.type).toBe('GroupedExpression');
       expect(left.expression.type).toBe('RelativeInstantExpression');
+    });
+  });
+
+  describe('Numeric date format (YYYY.MM.DD)', () => {
+    it('should parse basic numeric date', () => {
+      const doc = parse('2023.06.15');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('PlainDateLiteral');
+      expect(expr.year).toBe(2023);
+      expect(expr.month).toBe(6);
+      expect(expr.day).toBe(15);
+    });
+
+    it('should parse single digit month and day', () => {
+      const doc = parse('2023.6.5');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('PlainDateLiteral');
+      expect(expr.year).toBe(2023);
+      expect(expr.month).toBe(6);
+      expect(expr.day).toBe(5);
+    });
+
+    it('should parse numeric date with leading zeros', () => {
+      const doc = parse('2023.06.05');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('PlainDateLiteral');
+      expect(expr.year).toBe(2023);
+      expect(expr.month).toBe(6);
+      expect(expr.day).toBe(5);
+    });
+
+    it('should parse numeric date with time', () => {
+      const doc = parse('2023.06.15 09:30');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('PlainDateTimeLiteral');
+      expect(expr.date.year).toBe(2023);
+      expect(expr.date.month).toBe(6);
+      expect(expr.date.day).toBe(15);
+      expect(expr.time.hour).toBe(9);
+      expect(expr.time.minute).toBe(30);
+    });
+
+    it('should parse numeric date with time and timezone', () => {
+      const doc = parse('2023.06.15 09:00 London');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('ZonedDateTimeLiteral');
+      expect(expr.dateTime.date.year).toBe(2023);
+      expect(expr.dateTime.date.month).toBe(6);
+      expect(expr.dateTime.date.day).toBe(15);
+      expect(expr.dateTime.time.hour).toBe(9);
+      expect(expr.dateTime.time.minute).toBe(0);
+      expect(expr.timezone).toBe('Europe/London');
+    });
+
+    it('should parse valid leap year date', () => {
+      const doc = parse('2024.02.29');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('PlainDateLiteral');
+      expect(expr.year).toBe(2024);
+      expect(expr.month).toBe(2);
+      expect(expr.day).toBe(29);
+    });
+
+    it('should parse year zero', () => {
+      const doc = parse('0.06.15');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('PlainDateLiteral');
+      expect(expr.year).toBe(0);
+      expect(expr.month).toBe(6);
+      expect(expr.day).toBe(15);
+    });
+
+    it('should parse decimal as number, not date', () => {
+      const doc = parse('2023.06');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('NumberLiteral');
+      expect(expr.value).toBe(2023.06);
+    });
+
+    it('should handle decimal arithmetic', () => {
+      const doc = parse('2023.06 + 10');
+      expect(doc.lines[0].type).toBe('ExpressionLine');
+      const expr = (doc.lines[0] as any).expression;
+      expect(expr.type).toBe('BinaryExpression');
+      expect(expr.operator).toBe('+');
+      expect(expr.left.type).toBe('NumberLiteral');
+      expect(expr.left.value).toBe(2023.06);
     });
   });
 });

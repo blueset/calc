@@ -413,12 +413,6 @@ export class Formatter {
    */
   private formatPlainDate(year: number, month: number, day: number): string {
     const format = this.settings.dateFormat;
-
-    // Pad numbers
-    const yyyy = String(year).padStart(4, '0');
-    const mm = String(month).padStart(2, '0');
-    const dd = String(day).padStart(2, '0');
-
     // Month names (abbreviated)
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const mmm = monthNames[month - 1] || '';
@@ -426,6 +420,12 @@ export class Formatter {
     // Day of week using Temporal (Monday=1, Sunday=7)
     const dayOfWeekNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const temporalDate = Temporal.PlainDate.from({ year, month, day });
+
+    // Pad numbers
+    const yyyy = String(temporalDate.year).padStart(4, '0');
+    const mm = String(temporalDate.month).padStart(2, '0');
+    const dd = String(temporalDate.day).padStart(2, '0');
+
     const ddd = dayOfWeekNames[temporalDate.dayOfWeek - 1];
 
     return format

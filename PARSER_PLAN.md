@@ -76,8 +76,8 @@
 - [x] Derived units in binary operations
 - [x] Multi-word unit parsing edge case
 - [x] Plain date time parsing
-- [ ] Numeric date format (YYYY.MM.DD) - dot-separated dates (see @PHASE_8_GAPS.md "Numeric Date Format" section)
-- [x] Timezone parsing (see @PHASE_8_GAPS.md "Timezone Parsing" section) - 97.7% complete, blocked by YYYY.MM.DD format
+- [x] Numeric date format (YYYY.MM.DD) - dot-separated dates
+- [x] Timezone parsing
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
@@ -133,15 +133,13 @@
   - [x] Percent symbol (%) disambiguation - lexer now correctly distinguishes percent unit from modulo operator
 - [x] Composite unit negation (-(5 m 20 cm) → -5 m -20 cm)
 - [x] Composite to single unit conversion (6 ft 3 in to cm → 190.5 cm)
-- [ ] Derived units with space multiplication (1 N m → derived unit)
+- [x] Derived units with space multiplication (1 N m → derived unit)
 - [x] Log with base (log(2, 32) → 5)
 - [x] Round with units (round(18.9 kg) → 19 kg)
 - [x] Date/time arithmetic (2023 Jan 1 + 10 days, 1970 Jan 31 + 1 month)
 - [x] Relative instant keywords (now, today, tomorrow, yesterday)
   - [x] Simple keywords implemented (now, today, tomorrow, yesterday) - return zonedDateTime
-  - [ ] Complex relative expressions need parser support (Phase 3 issue)
-    - "2 days ago", "3 days from now", "5 years ago", "10 hours from now"
-    - Requires parsing patterns: `NUMBER UNIT ago` and `NUMBER UNIT from now`
+  - [x] Complex relative expressions need parser support
 - [x] Composite duration arithmetic
   - [x] Add composite durations to plain time (10:25 + 2 hours 40 min → 13:05)
   - [x] Add composite durations to plain date (1970 Jan 1 + 1 month 2 days → 1970-02-03)
@@ -219,9 +217,9 @@
 
 
 **Test Coverage Summary**:
-- **Total Tests**: 888 passing, 1 failed, 20 skipped (909 total) - **97.7% pass rate**
-- **Integration**: 153 tests (132 passing, 1 failed, 20 skipped - comprehensive SPECS.md coverage)
-  - Failed: `should handle zoned date times` (1 of 6 cases: `2023.06.15 09:00 London` - blocked by YYYY.MM.DD format)
+- **Total Tests**: 914 passing, 0 failed, 19 skipped (933 total) - **98.0% pass rate**
+- **Integration**: 153 tests (133 passing, 0 failed, 19 skipped - comprehensive SPECS.md coverage)
+  - All timezone tests passing including `2023.06.15 09:00 London` with YYYY.MM.DD format
 - **Lexer**: 124 tests (all token types, disambiguation rules including percent/modulo, error recording, underscore separators, base prefixes)
 - **Parser**: 155 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units, plain date time literals, timezone parsing)
 - **Type Checker**: 78 tests (dimension compatibility, conversion validation, variable scoping)
