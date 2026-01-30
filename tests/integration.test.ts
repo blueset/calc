@@ -179,8 +179,7 @@ describe('Integration Tests - SPECS.md Examples', () => {
       expect(result.results[0].result).toContain('Å');
     });
 
-    it.skip('should handle nautical mile unit symbol', () => {
-      // TODO: Unit display may not show full 'nmi' symbol
+    it('should handle nautical mile unit symbol', () => {
       const result = calculator.calculate('5 nautical mile');
       expect(result.results[0].result).toContain('nmi');
     });
@@ -284,8 +283,7 @@ describe('Integration Tests - SPECS.md Examples', () => {
 
     it('should handle temperature units', () => {
       const result = calculator.calculate('25 Celsius');
-      expect(result.results[0].result).toContain('25');
-      expect(result.results[0].result).toContain('C');
+      expect(result.results[0].result).toBe('25 °C');
     });
   });
 

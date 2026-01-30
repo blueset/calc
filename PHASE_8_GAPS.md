@@ -953,7 +953,6 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
 
 ### Feature: Formatting Issues (9 tests)
 - **Tests**:
-  - `should handle nautical mile unit symbol`
   - `should handle temperature units with degree symbol`
   - `should handle plain date times`
   - `should handle mixed calculations`

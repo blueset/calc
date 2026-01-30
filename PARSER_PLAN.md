@@ -171,8 +171,6 @@
 - [ ] Presentation conversion: to hexadecimal (255 to hex → 0xFF)
 - [ ] Presentation conversion: to fraction (0.75 to fraction → 3/4)
 - [ ] Presentation conversion: to scientific (5000 to scientific → 5e3)
-- [ ] Unit display formatting tweaks (nautical mile, temperature degree symbol)
-- [ ] Date/time format standardization
 - [ ] Infinity display handling
 - [ ] Angle unit display for inverse trig functions
 

@@ -770,9 +770,121 @@ export class Evaluator {
   }
 
   /**
+   * Helper: Check if duration has date components (years, months, weeks, days)
+   */
+  private hasDateComponents(duration: Duration): boolean {
+    return duration.years !== 0 || duration.months !== 0 || duration.weeks !== 0 || duration.days !== 0;
+  }
+
+  /**
+   * Helper: Check if duration has time components (hours, minutes, seconds, milliseconds)
+   */
+  private hasTimeComponents(duration: Duration): boolean {
+    return duration.hours !== 0 || duration.minutes !== 0 || duration.seconds !== 0 || duration.milliseconds !== 0;
+  }
+
+  /**
+   * Helper: Check if duration is date-only (only date components, no time components)
+   */
+  private isDateOnlyDuration(duration: Duration): boolean {
+    return this.hasDateComponents(duration) && !this.hasTimeComponents(duration);
+  }
+
+  /**
+   * Helper: Check if duration is time-only (only time components, no date components)
+   */
+  private isTimeOnlyDuration(duration: Duration): boolean {
+    return !this.hasDateComponents(duration) && this.hasTimeComponents(duration);
+  }
+
+  /**
+   * Helper: Check if duration is datetime (has both date and time components)
+   */
+  private isDateTimeDuration(duration: Duration): boolean {
+    return this.hasDateComponents(duration) && this.hasTimeComponents(duration);
+  }
+
+  /**
+   * Helper: Normalize PlainDate/PlainTime/PlainDateTime to PlainDateTime for cross-type subtraction
+   */
+  private normalizeToPlainDateTime(value: Value): PlainDateTime | null {
+    if (value.kind === 'plainDateTime') {
+      return value.dateTime;
+    }
+
+    if (value.kind === 'plainDate') {
+      // PlainDate → PlainDateTime at 00:00:00
+      return {
+        date: value.date,
+        time: { hour: 0, minute: 0, second: 0, millisecond: 0 }
+      };
+    }
+
+    if (value.kind === 'plainTime') {
+      // PlainTime → PlainDateTime with today's date
+      const today = this.dateTimeEngine.getCurrentPlainDate();
+      return {
+        date: today,
+        time: value.time
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Helper: Normalize PlainDate/PlainTime/PlainDateTime/ZonedDateTime/Instant to Instant
+   */
+  private normalizeToInstant(value: Value): Instant | null {
+    const systemTimezone = Temporal.Now.timeZoneId();
+
+    if (value.kind === 'instant') {
+      return value.instant;
+    }
+
+    if (value.kind === 'zonedDateTime') {
+      return this.dateTimeEngine.toInstant(value.zonedDateTime.dateTime, value.zonedDateTime.timezone);
+    }
+
+    if (value.kind === 'plainDateTime') {
+      // Interpret as system local timezone
+      return this.dateTimeEngine.toInstant(value.dateTime, systemTimezone);
+    }
+
+    if (value.kind === 'plainDate') {
+      // PlainDate → PlainDateTime at 00:00:00, then to Instant
+      const plainDateTime: PlainDateTime = {
+        date: value.date,
+        time: { hour: 0, minute: 0, second: 0, millisecond: 0 }
+      };
+      return this.dateTimeEngine.toInstant(plainDateTime, systemTimezone);
+    }
+
+    if (value.kind === 'plainTime') {
+      // PlainTime → PlainDateTime with today's date, then to Instant
+      const today = this.dateTimeEngine.getCurrentPlainDate();
+      const plainDateTime: PlainDateTime = {
+        date: today,
+        time: value.time
+      };
+      return this.dateTimeEngine.toInstant(plainDateTime, systemTimezone);
+    }
+
+    return null;
+  }
+
+  /**
    * Evaluate date/time arithmetic
    */
   private evaluateDateTimeArithmetic(op: string, left: Value, right: Value): Value {
+    // === PlainDate Operations ===
+
+    // PlainDate + PlainTime → PlainDateTime (SPECS.md line 845)
+    if (left.kind === 'plainDate' && right.kind === 'plainTime' && op === '+') {
+      const result = this.dateTimeEngine.combineDateAndTime(left.date, right.time);
+      return { kind: 'plainDateTime', dateTime: result };
+    }
+
     // PlainDate + Duration → PlainDate or PlainDateTime (if duration has time components)
     if (left.kind === 'plainDate' && right.kind === 'duration') {
       if (op === '+') {
@@ -805,32 +917,9 @@ export class Evaluator {
       return { kind: 'duration', duration };
     }
 
-    // PlainTime - PlainTime → Duration
-    if (left.kind === 'plainTime' && right.kind === 'plainTime' && op === '-') {
-      const duration = this.dateTimeEngine.subtractPlainTimes(left.time, right.time);
-      return { kind: 'duration', duration };
-    }
+    // === PlainTime Operations ===
 
-    // ZonedDateTime - PlainTime → Duration (treat RHS as today in local timezone)
-    if (left.kind === 'zonedDateTime' && right.kind === 'plainTime' && op === '-') {
-      const duration = this.dateTimeEngine.subtractPlainTimeFromZonedDateTime(left.zonedDateTime, right.time);
-      return { kind: 'duration', duration };
-    }
-
-    // PlainDateTime + Duration → PlainDateTime
-    if (left.kind === 'plainDateTime' && right.kind === 'duration') {
-      if (op === '+') {
-        const result = this.dateTimeEngine.addToPlainDateTime(left.dateTime, right.duration);
-        return { kind: 'plainDateTime', dateTime: result };
-      }
-      if (op === '-') {
-        const negated = this.dateTimeEngine.negateDuration(right.duration);
-        const result = this.dateTimeEngine.addToPlainDateTime(left.dateTime, negated);
-        return { kind: 'plainDateTime', dateTime: result };
-      }
-    }
-
-    // PlainTime + Duration → PlainTime (or PlainDateTime if crosses day boundary)
+    // PlainTime + Duration → PlainTime or PlainDateTime (if crosses day boundary or has date components)
     if (left.kind === 'plainTime' && right.kind === 'duration') {
       if (op === '+') {
         const result = this.dateTimeEngine.addToPlainTime(left.time, right.duration);
@@ -849,6 +938,81 @@ export class Evaluator {
       }
     }
 
+    // PlainTime - PlainTime → Duration
+    if (left.kind === 'plainTime' && right.kind === 'plainTime' && op === '-') {
+      const duration = this.dateTimeEngine.subtractPlainTimes(left.time, right.time);
+      return { kind: 'duration', duration };
+    }
+
+    // === PlainDateTime Operations ===
+
+    // PlainDateTime + Duration → PlainDateTime
+    if (left.kind === 'plainDateTime' && right.kind === 'duration') {
+      if (op === '+') {
+        const result = this.dateTimeEngine.addToPlainDateTime(left.dateTime, right.duration);
+        return { kind: 'plainDateTime', dateTime: result };
+      }
+      if (op === '-') {
+        const negated = this.dateTimeEngine.negateDuration(right.duration);
+        const result = this.dateTimeEngine.addToPlainDateTime(left.dateTime, negated);
+        return { kind: 'plainDateTime', dateTime: result };
+      }
+    }
+
+    // PlainDateTime - PlainDateTime → Duration (SPECS.md line 899)
+    if (left.kind === 'plainDateTime' && right.kind === 'plainDateTime' && op === '-') {
+      const duration = this.dateTimeEngine.subtractPlainDateTimes(left.dateTime, right.dateTime);
+      return { kind: 'duration', duration };
+    }
+
+    // === Instant Operations ===
+
+    // Instant + Duration → Instant (SPECS.md lines 867-869)
+    if (left.kind === 'instant' && right.kind === 'duration') {
+      if (op === '+') {
+        const result = this.dateTimeEngine.addToInstant(left.instant, right.duration);
+        return { kind: 'instant', instant: result };
+      }
+      if (op === '-') {
+        const result = this.dateTimeEngine.subtractFromInstant(left.instant, right.duration);
+        return { kind: 'instant', instant: result };
+      }
+    }
+
+    // Instant - Instant → Duration (SPECS.md line 912)
+    if (left.kind === 'instant' && right.kind === 'instant' && op === '-') {
+      const duration = this.dateTimeEngine.subtractInstants(left.instant, right.instant);
+      return { kind: 'duration', duration };
+    }
+
+    // === ZonedDateTime Operations ===
+
+    // ZonedDateTime + Duration → ZonedDateTime (SPECS.md lines 871-873)
+    if (left.kind === 'zonedDateTime' && right.kind === 'duration') {
+      if (op === '+') {
+        const result = this.dateTimeEngine.addToZonedDateTime(left.zonedDateTime, right.duration);
+        return { kind: 'zonedDateTime', zonedDateTime: result };
+      }
+      if (op === '-') {
+        const result = this.dateTimeEngine.subtractFromZonedDateTime(left.zonedDateTime, right.duration);
+        return { kind: 'zonedDateTime', zonedDateTime: result };
+      }
+    }
+
+    // ZonedDateTime - ZonedDateTime → Duration (SPECS.md line 920)
+    if (left.kind === 'zonedDateTime' && right.kind === 'zonedDateTime' && op === '-') {
+      const duration = this.dateTimeEngine.subtractZonedDateTimes(left.zonedDateTime, right.zonedDateTime);
+      return { kind: 'duration', duration };
+    }
+
+    // ZonedDateTime - PlainTime → Duration (treat RHS as today in local timezone)
+    if (left.kind === 'zonedDateTime' && right.kind === 'plainTime' && op === '-') {
+      const duration = this.dateTimeEngine.subtractPlainTimeFromZonedDateTime(left.zonedDateTime, right.time);
+      return { kind: 'duration', duration };
+    }
+
+    // === Duration Operations ===
+
     // Duration + Duration → Duration
     if (left.kind === 'duration' && right.kind === 'duration') {
       if (op === '+') {
@@ -860,6 +1024,124 @@ export class Evaluator {
         const result = this.dateTimeEngine.addDurations(left.duration, negated);
         return { kind: 'duration', duration: result };
       }
+    }
+
+    // === Cross-Type Subtraction Operations (SPECS.md lines 882-920) ===
+
+    // Only support subtraction for cross-type operations
+    if (op === '-') {
+      // PlainDateTime - PlainDate → Duration (SPECS.md line 889)
+      if (left.kind === 'plainDateTime' && right.kind === 'plainDate') {
+        const rightAsDateTime = this.normalizeToPlainDateTime(right);
+        if (rightAsDateTime) {
+          const duration = this.dateTimeEngine.subtractPlainDateTimes(left.dateTime, rightAsDateTime);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // PlainDateTime - PlainTime → Duration (SPECS.md line 893)
+      if (left.kind === 'plainDateTime' && right.kind === 'plainTime') {
+        const rightAsDateTime = this.normalizeToPlainDateTime(right);
+        if (rightAsDateTime) {
+          const duration = this.dateTimeEngine.subtractPlainDateTimes(left.dateTime, rightAsDateTime);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // PlainTime - PlainDate → Duration (SPECS.md line 882)
+      if (left.kind === 'plainTime' && right.kind === 'plainDate') {
+        const leftAsDateTime = this.normalizeToPlainDateTime(left);
+        const rightAsDateTime = this.normalizeToPlainDateTime(right);
+        if (leftAsDateTime && rightAsDateTime) {
+          const duration = this.dateTimeEngine.subtractPlainDateTimes(leftAsDateTime, rightAsDateTime);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // PlainDate - PlainTime → Duration (SPECS.md line 886)
+      if (left.kind === 'plainDate' && right.kind === 'plainTime') {
+        const leftAsDateTime = this.normalizeToPlainDateTime(left);
+        const rightAsDateTime = this.normalizeToPlainDateTime(right);
+        if (leftAsDateTime && rightAsDateTime) {
+          const duration = this.dateTimeEngine.subtractPlainDateTimes(leftAsDateTime, rightAsDateTime);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // PlainDate - PlainDateTime → Duration (SPECS.md line 887)
+      if (left.kind === 'plainDate' && right.kind === 'plainDateTime') {
+        const leftAsDateTime = this.normalizeToPlainDateTime(left);
+        if (leftAsDateTime) {
+          const duration = this.dateTimeEngine.subtractPlainDateTimes(leftAsDateTime, right.dateTime);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // PlainTime - PlainDateTime → Duration (SPECS.md line 891)
+      if (left.kind === 'plainTime' && right.kind === 'plainDateTime') {
+        const leftAsDateTime = this.normalizeToPlainDateTime(left);
+        if (leftAsDateTime) {
+          const duration = this.dateTimeEngine.subtractPlainDateTimes(leftAsDateTime, right.dateTime);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // Instant - PlainDate → Duration (SPECS.md line 905)
+      // Instant - PlainTime → Duration (SPECS.md line 909)
+      // Instant - PlainDateTime → Duration (SPECS.md line 910)
+      // Instant - ZonedDateTime → Duration (SPECS.md line 911)
+      if (left.kind === 'instant' &&
+          (right.kind === 'plainDate' || right.kind === 'plainTime' ||
+           right.kind === 'plainDateTime' || right.kind === 'zonedDateTime')) {
+        const rightAsInstant = this.normalizeToInstant(right);
+        if (rightAsInstant) {
+          const duration = this.dateTimeEngine.subtractInstants(left.instant, rightAsInstant);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // ZonedDateTime - PlainDate → Duration (SPECS.md line 913)
+      // ZonedDateTime - PlainDateTime → Duration (SPECS.md line 917)
+      // ZonedDateTime - Instant → Duration (SPECS.md line 918)
+      if (left.kind === 'zonedDateTime' &&
+          (right.kind === 'plainDate' || right.kind === 'plainDateTime' || right.kind === 'instant')) {
+        const leftAsInstant = this.normalizeToInstant(left);
+        const rightAsInstant = this.normalizeToInstant(right);
+        if (leftAsInstant && rightAsInstant) {
+          const duration = this.dateTimeEngine.subtractInstants(leftAsInstant, rightAsInstant);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // PlainDate - Instant → Duration (reverse of Instant - PlainDate)
+      // PlainTime - Instant → Duration (reverse of Instant - PlainTime)
+      // PlainDateTime - Instant → Duration (reverse of Instant - PlainDateTime)
+      if ((left.kind === 'plainDate' || left.kind === 'plainTime' || left.kind === 'plainDateTime') &&
+          right.kind === 'instant') {
+        const leftAsInstant = this.normalizeToInstant(left);
+        if (leftAsInstant) {
+          const duration = this.dateTimeEngine.subtractInstants(leftAsInstant, right.instant);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // PlainDate - ZonedDateTime → Duration (reverse of ZonedDateTime - PlainDate)
+      // PlainTime - ZonedDateTime → Duration
+      // PlainDateTime - ZonedDateTime → Duration (reverse of ZonedDateTime - PlainDateTime)
+      if ((left.kind === 'plainDate' || left.kind === 'plainTime' || left.kind === 'plainDateTime') &&
+          right.kind === 'zonedDateTime') {
+        const leftAsInstant = this.normalizeToInstant(left);
+        const rightAsInstant = this.normalizeToInstant(right);
+        if (leftAsInstant && rightAsInstant) {
+          const duration = this.dateTimeEngine.subtractInstants(leftAsInstant, rightAsInstant);
+          return { kind: 'duration', duration };
+        }
+      }
+
+      // ZonedDateTime - PlainTime → Duration (already handled above, but included for completeness)
+      // This was already implemented earlier in the method
+
+      // Instant - ZonedDateTime and ZonedDateTime - Instant (already covered above)
     }
 
     return this.createError(`Unsupported date/time arithmetic: ${left.kind} ${op} ${right.kind}`);
