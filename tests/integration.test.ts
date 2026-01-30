@@ -709,11 +709,25 @@ CA$100
       expect(result.results[0].result).toContain('14:30');
     });
 
-    it.skip('should handle plain date times', () => {
-      // TODO: Plain date time not parsed correctly
+    it('should handle plain date times', () => {
       const result = calculator.calculate('1970 Jan 01 14:30');
       expect(result.results[0].result).toContain('1970');
       expect(result.results[0].result).toContain('14:30');
+    });
+
+    it('should handle zoned date times', () => {
+      const result = calculator.calculate(`12:30 UTC
+8:25 Japan
+2023 Jan 01 14:00 America/New_York
+2023 Jan 01 14:00 New York
+2023.06.15 09:00 London
+1970 Jan 01 23:59 UTC+8`);
+      expect(result.results[0].result).toBe('12:30 UTC');
+      expect(result.results[1].result).toBe('08:25 UTC+9');
+      expect(result.results[2].result).toBe('2023-01-01 Sun 14:00 UTC-5');
+      expect(result.results[3].result).toBe('2023-01-01 Sun 14:00 UTC-5');
+      expect(result.results[4].result).toBe('2023-06-15 Thu 09:00 UTC+1');
+      expect(result.results[5].result).toBe('1970-01-01 Thu 23:59 UTC+8');
     });
 
     it.skip('should handle instants (relative time)', () => {
@@ -837,8 +851,7 @@ yesterday
       expect(result.results[1].result).toContain('10:25');
     });
 
-    it.skip('should handle add duration to date time', () => {
-      // TODO: Plain date time not parsed correctly
+    it('should handle add duration to date time', () => {
       const result = calculator.calculate('1970 Jan 1 12:00 + 2 hours');
       expect(result.results[0].result).toContain('1970-01-01');
       expect(result.results[0].result).toContain('14:00');
@@ -859,8 +872,7 @@ yesterday
       expect(result.results[0].result).toBe('1970-01-01 Thu 01:00');
     });
 
-    it.skip('should handle add composite duration to date time', () => {
-      // TODO: Plain date time not parsed correctly
+    it('should handle add composite duration to date time', () => {
       const result = calculator.calculate('1970 Jan 1 12:00 + 1 month 2 hours');
       expect(result.results[0].result).toContain('1970-02-01');
       expect(result.results[0].result).toContain('14:00');

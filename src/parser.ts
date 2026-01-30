@@ -60,6 +60,7 @@ import {
 import { DataLoader } from './data-loader';
 import { isConstant, getConstant } from './constants';
 import { ParserError, LineError, DocumentResult } from './error-handling';
+import { Temporal } from '@js-temporal/polyfill';
 
 /**
  * Parser for the Notepad Calculator Language
@@ -569,7 +570,38 @@ export class Parser {
           const year = parseInt(numberToken.value);
           const day = parseInt(dayToken.value);
           const end = this.previous().end;
-          return createPlainDateLiteral(year, monthNum, day, start, end);
+          const dateLiteral = createPlainDateLiteral(year, monthNum, day, start, end);
+
+          // Check if next token is a time - "1970 Jan 01 14:30" pattern
+          if (this.check(TokenType.DATETIME)) {
+            const savedPosition = this.current;
+            this.advance(); // consume time token
+            const timeToken = this.previous();
+            const timeResult = this.tryParseTime(timeToken, false); // Don't attach timezone yet - we'll do it after combining date+time
+            if (timeResult && timeResult.type === 'PlainTimeLiteral') {
+              // tryParseTime may have consumed AM/PM token internally
+              // Use the end location from the time literal which includes AM/PM if present
+              const combinedEnd = timeResult.end;
+              const dateTimeLiteral = createPlainDateTimeLiteral(
+                dateLiteral,
+                timeResult as PlainTimeLiteral,
+                start,
+                combinedEnd
+              );
+
+              // Check for timezone after date time
+              const timezone = this.tryAttachTimezone();
+              if (timezone) {
+                return this.attachTimezoneToDateTime(dateTimeLiteral, timezone);
+              }
+
+              return dateTimeLiteral;
+            }
+            // If time parsing failed, restore position
+            this.current = savedPosition;
+          }
+
+          return dateLiteral;
         }
 
         // No day, backtrack
@@ -1376,8 +1408,10 @@ export class Parser {
    * 24-hour format (without AM/PM):
    * - Hour range: 0-23 (inclusive)
    * - "0:00" is valid (midnight)
+   *
+   * @param attachTimezone - If false, skips timezone attachment (used when caller will attach timezone to a combined date+time)
    */
-  private tryParseTime(token: Token): Expression | null {
+  private tryParseTime(token: Token, attachTimezone: boolean = true): Expression | null {
     const start = token.start;
     const value = token.value.toLowerCase();
 
@@ -1436,12 +1470,136 @@ export class Parser {
             finalHour = 0;
           }
 
-          return createPlainTimeLiteral(finalHour, minute, second, 0, start, nextToken.end);
+          const timeLiteralWithAmPm = createPlainTimeLiteral(finalHour, minute, second, 0, start, nextToken.end);
+
+          // Check if next token is a date (after AM/PM) - "10:15 am 2024 Jan 1" pattern
+          if (this.check(TokenType.NUMBER)) {
+            // Try "YYYY MONTH D" pattern
+            const yearToken = this.currentToken();
+            if (this.peekAhead(1)?.type === TokenType.DATETIME) {
+              const monthToken = this.peekAhead(1)!;
+              const monthNum = this.parseMonthName(monthToken.value.toLowerCase());
+              if (monthNum !== null && this.peekAhead(2)?.type === TokenType.NUMBER) {
+                // Found "NUMBER DATETIME NUMBER" pattern
+                this.advance(); // consume year
+                this.advance(); // consume month
+                const dayToken = this.currentToken();
+                this.advance(); // consume day
+
+                const year = parseInt(yearToken.value);
+                const day = parseInt(dayToken.value);
+                const dateLiteral = createPlainDateLiteral(year, monthNum, day, yearToken.start, this.previous().end);
+                const combinedEnd = this.previous().end;
+                const dateTimeLiteral = createPlainDateTimeLiteral(dateLiteral, timeLiteralWithAmPm, start, combinedEnd);
+
+                // Check for timezone after date time
+                const timezone = this.tryAttachTimezone();
+                if (timezone) {
+                  return this.attachTimezoneToDateTime(dateTimeLiteral, timezone);
+                }
+
+                return dateTimeLiteral;
+              }
+            }
+          } else if (this.check(TokenType.DATETIME)) {
+            // Try "MONTH D YYYY" pattern
+            const dateResult = this.tryParseDate(this.currentToken());
+            if (dateResult && dateResult.type === 'PlainDateLiteral') {
+              const combinedEnd = this.previous().end;
+              const dateTimeLiteral = createPlainDateTimeLiteral(
+                dateResult as PlainDateLiteral,
+                timeLiteralWithAmPm,
+                start,
+                combinedEnd
+              );
+
+              // Check for timezone after date time
+              const timezone = this.tryAttachTimezone();
+              if (timezone) {
+                return this.attachTimezoneToDateTime(dateTimeLiteral, timezone);
+              }
+
+              return dateTimeLiteral;
+            }
+          }
+
+          // Check for timezone after plain time with AM/PM (assumes today's date)
+          if (attachTimezone) {
+            const timezone = this.tryAttachTimezone();
+            if (timezone) {
+              return this.attachTimezoneToTime(timeLiteralWithAmPm, timezone);
+            }
+          }
+
+          return timeLiteralWithAmPm;
         }
       }
 
       // 24-hour format (no AM/PM)
-      return createPlainTimeLiteral(finalHour, minute, second, 0, start, end);
+      const timeLiteral = createPlainTimeLiteral(finalHour, minute, second, 0, start, end);
+
+      // Check if next token is a date
+      // Pattern 1: "14:30 1970 Jan 01" (NUMBER DATETIME NUMBER)
+      // Pattern 2: "14:30 Jan 01 1970" (DATETIME NUMBER NUMBER)
+      if (this.check(TokenType.NUMBER)) {
+        // Try "YYYY MONTH D" pattern
+        const yearToken = this.currentToken();
+        if (this.peekAhead(1)?.type === TokenType.DATETIME) {
+          const monthToken = this.peekAhead(1)!;
+          const monthNum = this.parseMonthName(monthToken.value.toLowerCase());
+          if (monthNum !== null && this.peekAhead(2)?.type === TokenType.NUMBER) {
+            // Found "NUMBER DATETIME NUMBER" pattern
+            this.advance(); // consume year
+            this.advance(); // consume month
+            const dayToken = this.currentToken();
+            this.advance(); // consume day
+
+            const year = parseInt(yearToken.value);
+            const day = parseInt(dayToken.value);
+            const dateLiteral = createPlainDateLiteral(year, monthNum, day, yearToken.start, this.previous().end);
+            const combinedEnd = this.previous().end;
+            const dateTimeLiteral = createPlainDateTimeLiteral(dateLiteral, timeLiteral, start, combinedEnd);
+
+            // Check for timezone after date time
+            const timezone = this.tryAttachTimezone();
+            if (timezone) {
+              return this.attachTimezoneToDateTime(dateTimeLiteral, timezone);
+            }
+
+            return dateTimeLiteral;
+          }
+        }
+      } else if (this.check(TokenType.DATETIME)) {
+        // Try "MONTH D YYYY" pattern
+        const dateResult = this.tryParseDate(this.currentToken());
+        if (dateResult && dateResult.type === 'PlainDateLiteral') {
+          const combinedEnd = this.previous().end;
+          const dateTimeLiteral = createPlainDateTimeLiteral(
+            dateResult as PlainDateLiteral,
+            timeLiteral,
+            start,
+            combinedEnd
+          );
+
+          // Check for timezone after date time
+          const timezone = this.tryAttachTimezone();
+          if (timezone) {
+            return this.attachTimezoneToDateTime(dateTimeLiteral, timezone);
+          }
+
+          return dateTimeLiteral;
+        }
+      }
+
+      // Check for timezone after plain time (assumes today's date)
+      if (attachTimezone) {
+        const timezone = this.tryAttachTimezone();
+        if (timezone) {
+          return this.attachTimezoneToTime(timeLiteral, timezone);
+        }
+      }
+
+      return timeLiteral;
     }
 
     return null;
@@ -1496,7 +1654,35 @@ export class Parser {
     const year = parseInt(yearToken.value);
 
     const end = this.previous().end;
-    return createPlainDateLiteral(year, month, day, start, end);
+    const dateLiteral = createPlainDateLiteral(year, month, day, start, end);
+
+    // Check if next token is a time - "Jan 01 1970 14:30" pattern
+    if (this.check(TokenType.DATETIME)) {
+      const savedPosition = this.current;
+      this.advance(); // consume time token
+      const timeToken = this.previous();
+      const timeResult = this.tryParseTime(timeToken, false); // Don't attach timezone yet - we'll do it after combining date+time
+      if (timeResult && timeResult.type === 'PlainTimeLiteral') {
+        const combinedEnd = timeResult.end;
+        const dateTimeLiteral = createPlainDateTimeLiteral(
+          dateLiteral,
+          timeResult as PlainTimeLiteral,
+          start,
+          combinedEnd
+        );
+
+        // Check for timezone after date time
+        const timezone = this.tryAttachTimezone();
+        if (timezone) {
+          return this.attachTimezoneToDateTime(dateTimeLiteral, timezone);
+        }
+
+        return dateTimeLiteral;
+      }
+      this.current = savedPosition;
+    }
+
+    return dateLiteral;
   }
 
   /**
@@ -1520,6 +1706,225 @@ export class Parser {
     };
 
     return months[name] ?? null;
+  }
+
+  /**
+   * Try to attach a timezone to a time/date/datetime literal
+   * Handles patterns like: UTC, UTC+8, UTC-330, GMT+5:30 (via lexer), America/New_York, Tokyo, etc.
+   *
+   * Pattern: (Z|(UTC|GMT)[+-]\d{1,2}(\d{2})?)
+   * - For IDENTIFIER: Try DataLoader.resolveTimezone()
+   * - For offset pattern: Parse digits and convert to ±hh:mm format
+   *
+   * Returns timezone string (IANA or offset format) or null if no timezone found
+   */
+  private tryAttachTimezone(): string | null {
+    if (!this.check(TokenType.IDENTIFIER) && !this.check(TokenType.MINUS) && !this.check(TokenType.PLUS)) {
+      return null;
+    }
+
+    const savedPosition = this.current;
+
+    // Case 1: IDENTIFIER (could be timezone name or Z)
+    if (this.check(TokenType.IDENTIFIER)) {
+      const token = this.currentToken();
+      const value = token.value;
+
+      // Special case: Z = UTC
+      if (value === 'Z') {
+        this.advance();
+        return 'UTC';
+      }
+
+      // Check for offset pattern FIRST: UTC+... or GMT+...
+      // This must come before general timezone resolution because UTC/GMT alone
+      // would match as plain timezones and prevent us from seeing the offset
+      if (value === 'UTC' || value === 'GMT') {
+        // Look ahead for +/- and digits
+        const nextToken = this.peekAhead(1);
+        if (nextToken && (nextToken.type === TokenType.PLUS || nextToken.type === TokenType.MINUS)) {
+          const signToken = nextToken;
+          const digitsToken = this.peekAhead(2);
+
+          if (digitsToken && digitsToken.type === TokenType.NUMBER) {
+            // Parse offset: UTC+3, UTC-330, UTC+0530, etc.
+            this.advance(); // consume UTC/GMT
+            this.advance(); // consume +/-
+            this.advance(); // consume digits
+
+            const sign = signToken.type === TokenType.PLUS ? '+' : '-';
+            const digits = digitsToken.value;
+            const offset = this.parseTimezoneOffset(sign, digits);
+
+            if (offset) {
+              return offset;
+            }
+          }
+        }
+      }
+
+      // Try resolving as timezone name (IANA, city, abbreviation)
+      // Use greedy matching to handle multi-word names and multi-slash IANA names
+      // e.g., "Australian Central Western Standard Time", "America/Argentina/Buenos_Aires"
+
+      let combinedName = value;
+      let tokensConsumed = 0;
+      let lastValidTimezone: string | null = null;
+      let lastValidTokenCount = 0;
+
+      // Try the initial identifier
+      let timezone = this.dataLoader.resolveTimezone(combinedName);
+      if (timezone) {
+        lastValidTimezone = timezone;
+        lastValidTokenCount = 0;
+      }
+
+      // Greedily consume additional tokens (space-separated or slash-separated)
+      let lookAhead = 1;
+      while (true) {
+        const nextToken = this.peekAhead(lookAhead);
+        if (!nextToken) break;
+
+        let separator = '';
+        let nextValue = '';
+
+        // Check for space-separated multi-word (IDENTIFIER IDENTIFIER)
+        if (nextToken.type === TokenType.IDENTIFIER) {
+          separator = ' ';
+          nextValue = nextToken.value;
+        }
+        // Check for slash-separated IANA name (IDENTIFIER / IDENTIFIER)
+        else if (nextToken.type === TokenType.SLASH) {
+          const afterSlash = this.peekAhead(lookAhead + 1);
+          if (afterSlash && afterSlash.type === TokenType.IDENTIFIER) {
+            separator = '/';
+            nextValue = afterSlash.value;
+            lookAhead++; // Skip the slash in next iteration
+          } else {
+            break;
+          }
+        } else {
+          break;
+        }
+
+        // Try the extended name
+        combinedName += separator + nextValue;
+        timezone = this.dataLoader.resolveTimezone(combinedName);
+
+        if (timezone) {
+          // Found a valid timezone with more tokens
+          lastValidTimezone = timezone;
+          lastValidTokenCount = lookAhead;
+        }
+
+        lookAhead++;
+      }
+
+      // If we found a valid timezone, consume the tokens and return it
+      if (lastValidTimezone) {
+        this.advance(); // consume initial identifier
+        for (let i = 0; i < lastValidTokenCount; i++) {
+          this.advance(); // consume additional tokens
+        }
+        return lastValidTimezone;
+      }
+
+      // Not a timezone, restore position
+      this.current = savedPosition;
+      return null;
+    }
+
+    // Not a valid timezone pattern
+    this.current = savedPosition;
+    return null;
+  }
+
+  /**
+   * Parse timezone offset digits into ±hh:mm format
+   * Handles: 1-2 digits (hour), 3 digits (H+MM), 4 digits (HH+MM)
+   */
+  private parseTimezoneOffset(sign: string, digits: string): string | null {
+    const len = digits.length;
+    let hours: number;
+    let minutes: number;
+
+    if (len === 1 || len === 2) {
+      // Hour only: UTC+3 or UTC+03
+      hours = parseInt(digits, 10);
+      minutes = 0;
+    } else if (len === 3) {
+      // H+MM format: UTC+330 → +03:30
+      hours = parseInt(digits[0], 10);
+      minutes = parseInt(digits.slice(1), 10);
+    } else if (len === 4) {
+      // HH+MM format: UTC+0330 → +03:30
+      hours = parseInt(digits.slice(0, 2), 10);
+      minutes = parseInt(digits.slice(2), 10);
+    } else {
+      // Invalid format
+      return null;
+    }
+
+    // Validate ranges
+    if (hours < 0 || hours > 14 || minutes < 0 || minutes > 59) {
+      return null;
+    }
+
+    // Format as ±hh:mm
+    const hh = hours.toString().padStart(2, '0');
+    const mm = minutes.toString().padStart(2, '0');
+    return `${sign}${hh}:${mm}`;
+  }
+
+  /**
+   * Convert PlainTimeLiteral + timezone to ZonedDateTimeLiteral
+   * Assumes today's date in the specified timezone
+   */
+  private attachTimezoneToTime(
+    timeLiteral: AST.PlainTimeLiteral,
+    timezone: string
+  ): AST.ZonedDateTimeLiteral {
+    // Get today's date in the specified timezone
+    // Use Temporal API to get the current date in the timezone
+    const now = Temporal.Now.zonedDateTimeISO(timezone);
+    const todayInTimezone = now.toPlainDate();
+
+    const dateLiteral = createPlainDateLiteral(
+      todayInTimezone.year,
+      todayInTimezone.month,
+      todayInTimezone.day,
+      timeLiteral.start,
+      timeLiteral.end
+    );
+
+    const dateTimeLiteral = createPlainDateTimeLiteral(
+      dateLiteral,
+      timeLiteral,
+      timeLiteral.start,
+      timeLiteral.end
+    );
+
+    return createZonedDateTimeLiteral(
+      dateTimeLiteral,
+      timezone,
+      timeLiteral.start,
+      timeLiteral.end
+    );
+  }
+
+  /**
+   * Convert PlainDateTimeLiteral + timezone to ZonedDateTimeLiteral
+   */
+  private attachTimezoneToDateTime(
+    dateTimeLiteral: AST.PlainDateTimeLiteral,
+    timezone: string
+  ): AST.ZonedDateTimeLiteral {
+    return createZonedDateTimeLiteral(
+      dateTimeLiteral,
+      timezone,
+      dateTimeLiteral.start,
+      dateTimeLiteral.end
+    );
   }
 
   /**

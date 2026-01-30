@@ -360,26 +360,23 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
   - `should handle plain date times`
   - `should handle add duration to date time`
   - `should handle add composite duration to date time`
-- **Status**: ❌ **NOT IMPLEMENTED**
+- **Status**: ✅ **COMPLETED**
 - **Examples**:
-  - `1970 Jan 01 14:30` → PlainDateTime literal
-  - `14:30 1970 Jan 01` → PlainDateTime literal (time before date)
-  - `1970 Jan 1 12:00 + 2 hours` → date-time arithmetic
-  - `1970 Jan 1 12:00 + 1 month 2 hours` → date-time arithmetic with composite duration
-- **The Problem**:
-  - Parser currently handles date and time **separately**:
-    - `parseDateWithMonth()` creates `PlainDateLiteral` and stops (doesn't check for time)
-    - `tryParseTime()` creates `PlainTimeLiteral` and stops (doesn't check for date)
-  - Input like `1970 Jan 01 14:30` is parsed as just `PlainDateLiteral`, ignoring `14:30`
-  - Input like `14:30 1970 Jan 01` is parsed as just `PlainTimeLiteral`, ignoring the date
-- **What Exists**:
-  - ✅ AST infrastructure ready:
-    - `PlainDateTimeLiteral` interface (ast.ts:204-208)
-    - `createPlainDateTimeLiteral()` helper (ast.ts:429-436)
-  - ✅ Evaluator handles PlainDateTimeLiteral (has case for it)
-  - ✅ Type checker handles PlainDateTimeLiteral
-  - ✅ Formatter handles PlainDateTimeLiteral
-- **Work Required**:
+  - ✅ `1970 Jan 01 14:30` → PlainDateTime literal (working)
+  - ✅ `14:30 1970 Jan 01` → PlainDateTime literal (time before date - working)
+  - ✅ `1970 Jan 1 12:00 + 2 hours` → date-time arithmetic (working)
+  - ✅ `1970 Jan 1 12:00 + 1 month 2 hours` → date-time arithmetic with composite duration (working)
+- **Implementation Completed**:
+  - ✅ Parser now combines date and time tokens into PlainDateTimeLiteral
+  - ✅ Handles both orderings: date→time and time→date
+  - ✅ Handles AM/PM time indicators
+  - ✅ Added evaluator support for plainDateTime + duration arithmetic
+- **Files Modified**:
+  - ✅ `src/parser.ts` - Modified `parseNumberWithOptionalUnit()` and `tryParseTime()`
+  - ✅ `src/evaluator.ts` - Added plainDateTime + duration arithmetic support
+  - ✅ `tests/parser.test.ts` - Added 5 new tests for plain date time literals
+  - ✅ `tests/integration.test.ts` - Re-enabled 3 tests
+- **Original Requirements**:
   1. **Modify `parseDateWithMonth()`** (parser.ts:1476-1500):
      - After creating `PlainDateLiteral`, check if next token is a time
      - If time found, consume it and create `PlainDateTimeLiteral` instead
@@ -440,13 +437,82 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
 - **According to SPECS.md** (line 120-123):
   - Support input format `{plain date} {plain time}` and `{plain time} {plain date}`
   - Examples: "1970 Jan 01 14:30", "14:30 1970 Jan 01"
-- **Effort**: Medium (2-3 hours)
-- **Files**:
-  - `src/parser.ts` (modify `parseDateWithMonth()` lines 1476-1500, `tryParseTime()` lines 1380-1448)
-- **Tests to Re-enable**:
-  - Line 702: `should handle plain date times`
-  - Line 814: `should handle add duration to date time`
-  - Line 837: `should handle add composite duration to date time`
+- **Effort**: Medium (2-3 hours) - ✅ **COMPLETED**
+- **Actual Time**: ~2 hours (including tests and evaluator support)
+- **Tests Re-enabled and Passing**: ✅ All 3 tests
+  - Line 712: `should handle plain date times` ✅
+  - Line 839: `should handle add duration to date time` ✅
+  - Line 860: `should handle add composite duration to date time` ✅
+
+### Feature: Numeric Date Format (YYYY.MM.DD)
+- **Tests**:
+  - `should handle zoned date times` (partial - line 723: `2023.06.15 09:00 London`)
+- **Status**: ❌ **NOT IMPLEMENTED**
+- **Examples**:
+  - ❌ `2023.06.15` → PlainDate literal (not working)
+  - ❌ `2023.06.15 09:00` → PlainDateTime literal (not working)
+  - ❌ `2023.06.15 09:00 London` → ZonedDateTime literal (not working - test failing)
+- **Current Behavior**:
+  - `2023.06.15 09:00 London` is parsed as arithmetic: `2023.06` (decimal) then something with `.15`
+  - Output: `"2 023.06"` (completely wrong)
+- **Work Required**:
+  - Add parsing support for YYYY.MM.DD date format (dot-separated numeric dates)
+  - This is separate from the YYYY MONTH D format (space-separated with month names)
+  - Need to detect pattern: NUMBER(YYYY) DOT NUMBER(MM) DOT NUMBER(DD)
+  - Must distinguish from decimal arithmetic (2023.06 as a decimal number)
+  - **Parsing approach**:
+    1. After parsing a NUMBER token, check if it's followed by DOT + NUMBER + DOT + NUMBER
+    2. Validate that the values represent a valid date (year, month, day)
+    3. Create PlainDateLiteral
+    4. Check for following time token (DATETIME) to create PlainDateTimeLiteral
+    5. Check for following timezone to create ZonedDateTimeLiteral
+  - **Disambiguation from decimals**:
+    - `2023.06` alone → decimal number
+    - `2023.06.15` → date (three dot-separated numbers)
+    - `2023.06.15 09:00` → date + time
+- **Files to Modify**:
+  - `src/parser.ts` - Add `tryParseNumericDate()` method in `parseNumberWithOptionalUnit()`
+  - After NUMBER token, check for DOT pattern
+  - May need to handle backtracking if pattern doesn't match
+- **Effort**: Medium (3-4 hours)
+- **Priority**: Medium - Required by SPECS.md (line 567), currently blocks 1 test
+- **Blocked By**: None (independent feature)
+- **According to SPECS.md** (line 567):
+  - Example: `2023.06.15 09:00 London` → `2023-06-15 Thu 09:00 UTC+1`
+
+### Feature: Timezone Parsing
+- **Tests**:
+  - `should handle zoned date times` (lines 719-724, 6 test cases)
+- **Status**: ✅ **MOSTLY COMPLETED** (5 of 6 test cases passing, 97.7% overall pass rate)
+- **Examples**:
+  - ✅ `12:30 UTC` → ZonedDateTime (working)
+  - ✅ `8:25 Japan` → ZonedDateTime (working)
+  - ✅ `2023 Jan 01 14:00 America/New_York` → ZonedDateTime (working)
+  - ✅ `2023 Jan 01 14:00 New York` → ZonedDateTime (working)
+  - ❌ `2023.06.15 09:00 London` → ZonedDateTime (blocked by YYYY.MM.DD parsing)
+  - ✅ `1970 Jan 01 23:59 UTC+8` → ZonedDateTime (working)
+- **Implementation Completed**:
+  - ✅ Formatter displays UTC offsets correctly
+  - ✅ Formatter shows time-only for "today", date+time for other dates
+  - ✅ Parser attaches timezones to time/date/datetime literals
+  - ✅ Greedy matching for multi-word/multi-slash timezone names
+  - ✅ Offset pattern parsing (UTC+9, UTC-330, etc.)
+  - ✅ Fixed token type bug (SLASH not DIV)
+  - ✅ Fixed DataLoader to index IANA identifiers as searchable names
+  - ✅ Added `attachTimezone` parameter to `tryParseTime()` to prevent premature attachment
+- **Files Modified**:
+  - ✅ `src/formatter.ts` - Updated formatZonedDateTime() method
+  - ✅ `src/parser.ts` - Added tryAttachTimezone(), parseTimezoneOffset(), attachTimezoneToTime(), attachTimezoneToDateTime()
+  - ✅ `src/parser.ts` - Updated tryParseTime() with attachTimezone parameter
+  - ✅ `src/parser.ts` - Updated parseNumberWithOptionalUnit() and parseDateWithMonth() with timezone attachment
+  - ✅ `src/data-loader.ts` - Fixed timezone indexing to include IANA identifiers
+  - ✅ `tests/parser.test.ts` - Added 7 timezone tests
+- **Test Results**:
+  - Total: 888 passing / 909 tests (97.7%)
+  - Integration: 1 failing (blocked by YYYY.MM.DD format)
+  - Parser: All 7 timezone tests passing
+- **Effort**: Medium-High (6-8 hours) - ✅ **COMPLETED**
+- **Actual Time**: ~6 hours (including debugging and fixes)
 
 ---
 
@@ -956,11 +1022,13 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
 7. ~~**Composite Unit Operations** (Phase 5)~~ - ✅ MOSTLY DONE (2/3 tests, space multiplication skipped)
 8. ~~**Function Enhancements** (Phase 5)~~ - ✅ MOSTLY DONE (2/3 tests, inverse trig formatting skipped)
 9. ~~**Percent/Modulo Disambiguation** (Phase 2)~~ - ✅ DONE (lexer correctly distinguishes % as percent vs modulo)
+10. ~~**Plain Date Time Parsing** (Phase 3)~~ - ✅ COMPLETED (all 3 tests passing, evaluator support added)
+11. ~~**Timezone Parsing** (Phase 3/5/6)~~ - ✅ MOSTLY COMPLETED (5 of 6 test cases, 97.7% pass rate, blocked by YYYY.MM.DD format)
 
 ### High Priority (Most User Impact)
 1. **Binary/Octal/Hex Parsing** (Phase 2) - Common in programming contexts
 1. **Presentation Conversions** (Phase 6) - Core feature from SPECS.md
-1. **Plain Date Time Parsing** (Phase 3) - "1970 Jan 01 14:30" not working (3 tests blocked)
+1. **Numeric Date Format (YYYY.MM.DD)** (Phase 3) - Blocks last timezone test case
 1. **Complex Relative Date/Time Expressions** (Phase 3) - "2 days ago", "3 days from now"
 1. **Multi-Word Unit Parsing** (Phase 3) - "sq ft" case not working
 
@@ -983,14 +1051,14 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
 | Phase | Total Effort | Features | Status |
 |-------|--------------|----------|--------|
 | Phase 2 (Lexer) | 10-16 hours | 7 features (6 number formats + 1 currency symbol) | Pending |
-| Phase 3 (Parser) | 5-7 hours | 2 features (complex relative date/time + plain date time parsing) | Pending |
+| Phase 3 (Parser) | 3-4 hours | 1 feature (complex relative date/time) | Pending |
 | Phase 5 (Evaluator) | 2-3 hours | 1 feature (currency resolution) | Pending |
 | Phase 6 (Formatter) | 9-12 hours | 8 features | Pending |
 | Multiple | 3-4 hours | 1 feature | Pending |
-| **COMPLETED** | **~33 hours** | **9 major features** | ✅ **DONE** |
-| TOTAL REMAINING | 29-42 hours | 19 remaining features | |
+| **COMPLETED** | **~35 hours** | **10 major features** | ✅ **DONE** |
+| TOTAL REMAINING | 27-39 hours | 18 remaining features | |
 
-**Completed Features** (estimated ~33 hours of work):
+**Completed Features** (estimated ~35 hours of work):
 - ✅ Parser bug: Derived units in binary operations (4-6 hours) - **FIXED**
 - ✅ User-defined units support (8-12 hours) - **COMPLETED**
 - ✅ Unit cancellation in arithmetic (6-8 hours) - **COMPLETED**
@@ -1000,11 +1068,15 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
 - ✅ Relative instant keywords (2 hours) - **COMPLETED**
 - ✅ Composite unit operations (3 hours) - **MOSTLY DONE** (2/3 tests)
 - ✅ Function enhancements (2 hours) - **MOSTLY DONE** (2/3 tests)
+- ✅ Plain date time parsing (2-3 hours) - **COMPLETED** (all 3 tests passing)
+- ✅ Timezone parsing (6 hours) - **MOSTLY COMPLETED** (5 of 6 test cases, 97.7% pass rate)
 
 **Test Results:**
 - Before dimensionless completion: 856 passing, 24 skipped
 - After percent/modulo: 873 passing, 23 skipped
-- **Impact: +17 tests passing (re-enabled 1 integration test, added 3 integration tests, added 13 lexer tests)**
+- After plain date time parsing: 881 passing, 20 skipped
+- After timezone parsing: 888 passing, 1 failed, 20 skipped (909 total)
+- **Impact: +32 tests passing total (+7 from timezone: added 7 parser tests, fixed DataLoader/formatter)**
 
 **Note**: Some features span multiple phases (e.g., base keyword requires lexer, parser, and evaluator changes, user-defined units require parser + type checker + evaluator + formatter).
 
@@ -1021,8 +1093,12 @@ For each feature implementation:
 The skipped tests serve as acceptance criteria - implementation is complete when all tests pass.
 
 **Current Status**:
-- **Total tests**: 873 passing, 23 skipped (896 total)
-- **Integration tests**: 130 passing (out of 153 total), 23 skipped
+- **Total tests**: 888 passing, 1 failed, 20 skipped (909 total)
+- **Pass rate**: 97.7% (888/909)
+- **Integration tests**: 132 passing, 1 failed (out of 153 total), 20 skipped
+  - Failing test: `should handle zoned date times` (1 of 6 test cases - `2023.06.15 09:00 London`)
+  - Root cause: YYYY.MM.DD date format not implemented
+- **Parser tests**: 155 passing (includes 5 plain date time tests + 7 timezone tests)
 - **Lexer tests**: 124 passing (includes 13 new percent/modulo disambiguation tests)
 - **Original baseline**: 105 passing, 36 skipped
-- **Progress**: +768 tests added and passing, -13 skipped tests resolved
+- **Progress**: +783 tests added and passing, -16 skipped tests resolved

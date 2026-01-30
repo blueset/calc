@@ -8958,7 +8958,10 @@
       "iana": "Etc/GMT+1",
       "names": [
         {
-          "name": "GMT+1"
+          "name": "GMT-1"
+        },
+        {
+          "name": "UTC-1"
         }
       ]
     },
@@ -8966,7 +8969,10 @@
       "iana": "Etc/GMT+10",
       "names": [
         {
-          "name": "GMT+10"
+          "name": "GMT-10"
+        },
+        {
+          "name": "UTC-10"
         }
       ]
     },
@@ -8974,7 +8980,10 @@
       "iana": "Etc/GMT+11",
       "names": [
         {
-          "name": "GMT+11"
+          "name": "GMT-11"
+        },
+        {
+          "name": "UTC-11"
         }
       ]
     },
@@ -8982,7 +8991,10 @@
       "iana": "Etc/GMT+12",
       "names": [
         {
-          "name": "GMT+12"
+          "name": "GMT-12"
+        },
+        {
+          "name": "UTC-12"
         }
       ]
     },
@@ -8990,7 +9002,10 @@
       "iana": "Etc/GMT+2",
       "names": [
         {
-          "name": "GMT+2"
+          "name": "GMT-2"
+        },
+        {
+          "name": "UTC-2"
         }
       ]
     },
@@ -8998,7 +9013,10 @@
       "iana": "Etc/GMT+3",
       "names": [
         {
-          "name": "GMT+3"
+          "name": "GMT-3"
+        },
+        {
+          "name": "UTC-3"
         }
       ]
     },
@@ -9006,7 +9024,10 @@
       "iana": "Etc/GMT+4",
       "names": [
         {
-          "name": "GMT+4"
+          "name": "GMT-4"
+        },
+        {
+          "name": "UTC-4"
         }
       ]
     },
@@ -9014,7 +9035,10 @@
       "iana": "Etc/GMT+5",
       "names": [
         {
-          "name": "GMT+5"
+          "name": "GMT-5"
+        },
+        {
+          "name": "UTC-5"
         }
       ]
     },
@@ -9022,7 +9046,10 @@
       "iana": "Etc/GMT+6",
       "names": [
         {
-          "name": "GMT+6"
+          "name": "GMT-6"
+        },
+        {
+          "name": "UTC-6"
         }
       ]
     },
@@ -9030,7 +9057,10 @@
       "iana": "Etc/GMT+7",
       "names": [
         {
-          "name": "GMT+7"
+          "name": "GMT-7"
+        },
+        {
+          "name": "UTC-7"
         }
       ]
     },
@@ -9038,7 +9068,10 @@
       "iana": "Etc/GMT+8",
       "names": [
         {
-          "name": "GMT+8"
+          "name": "GMT-8"
+        },
+        {
+          "name": "UTC-8"
         }
       ]
     },
@@ -9046,7 +9079,10 @@
       "iana": "Etc/GMT+9",
       "names": [
         {
-          "name": "GMT+9"
+          "name": "GMT-9"
+        },
+        {
+          "name": "UTC-9"
         }
       ]
     },
@@ -9054,7 +9090,10 @@
       "iana": "Etc/GMT-1",
       "names": [
         {
-          "name": "GMT-1"
+          "name": "GMT+1"
+        },
+        {
+          "name": "UTC+1"
         }
       ]
     },
@@ -9062,7 +9101,10 @@
       "iana": "Etc/GMT-10",
       "names": [
         {
-          "name": "GMT-10"
+          "name": "GMT+10"
+        },
+        {
+          "name": "UTC+10"
         }
       ]
     },
@@ -9070,7 +9112,10 @@
       "iana": "Etc/GMT-11",
       "names": [
         {
-          "name": "GMT-11"
+          "name": "GMT+11"
+        },
+        {
+          "name": "UTC+11"
         }
       ]
     },
@@ -9078,7 +9123,10 @@
       "iana": "Etc/GMT-12",
       "names": [
         {
-          "name": "GMT-12"
+          "name": "GMT+12"
+        },
+        {
+          "name": "UTC+12"
         }
       ]
     },
@@ -9086,7 +9134,10 @@
       "iana": "Etc/GMT-13",
       "names": [
         {
-          "name": "GMT-13"
+          "name": "GMT+13"
+        },
+        {
+          "name": "UTC+13"
         }
       ]
     },
@@ -9094,7 +9145,10 @@
       "iana": "Etc/GMT-14",
       "names": [
         {
-          "name": "GMT-14"
+          "name": "GMT+14"
+        },
+        {
+          "name": "UTC+14"
         }
       ]
     },
@@ -9102,7 +9156,10 @@
       "iana": "Etc/GMT-2",
       "names": [
         {
-          "name": "GMT-2"
+          "name": "GMT+2"
+        },
+        {
+          "name": "UTC+2"
         }
       ]
     },
@@ -9110,7 +9167,10 @@
       "iana": "Etc/GMT-3",
       "names": [
         {
-          "name": "GMT-3"
+          "name": "GMT+3"
+        },
+        {
+          "name": "UTC+3"
         }
       ]
     },
@@ -9118,7 +9178,10 @@
       "iana": "Etc/GMT-4",
       "names": [
         {
-          "name": "GMT-4"
+          "name": "GMT+4"
+        },
+        {
+          "name": "UTC+4"
         }
       ]
     },
@@ -9126,7 +9189,10 @@
       "iana": "Etc/GMT-5",
       "names": [
         {
-          "name": "GMT-5"
+          "name": "GMT+5"
+        },
+        {
+          "name": "UTC+5"
         }
       ]
     },
@@ -9134,7 +9200,10 @@
       "iana": "Etc/GMT-6",
       "names": [
         {
-          "name": "GMT-6"
+          "name": "GMT+6"
+        },
+        {
+          "name": "UTC+6"
         }
       ]
     },
@@ -9142,7 +9211,10 @@
       "iana": "Etc/GMT-7",
       "names": [
         {
-          "name": "GMT-7"
+          "name": "GMT+7"
+        },
+        {
+          "name": "UTC+7"
         }
       ]
     },
@@ -9150,7 +9222,10 @@
       "iana": "Etc/GMT-8",
       "names": [
         {
-          "name": "GMT-8"
+          "name": "GMT+8"
+        },
+        {
+          "name": "UTC+8"
         }
       ]
     },
@@ -9158,7 +9233,10 @@
       "iana": "Etc/GMT-9",
       "names": [
         {
-          "name": "GMT-9"
+          "name": "GMT+9"
+        },
+        {
+          "name": "UTC+9"
         }
       ]
     },

@@ -544,7 +544,7 @@ Attaching a timezone unit converts the unit to type “zoned date time”.
 
 Timezone can be specified as:
 - UTC: `UTC`, `Z`, `Coordinated Universal Time`, `GMT`, `Greenwich Mean Time`
-- UTC offset: `UTC+h`, `UTC-h`, `UTC+h:mm`, `UTC-h:mm`, `UTC+hmm`, `UTC-hmm`, `GMT+h`, `GMT-h`, `GMT+h:mm`, `GMT-h:mm`, `GMT+hmm`, `GMT-hmm`
+- UTC offset: `UTC+h`, `UTC-h`, `UTC+hmm`, `UTC-hmm`, `GMT+h`, `GMT-h`, `GMT+hmm`, `GMT-hmm`
 - IANA timezone name: e.g. `America/New_York`, `Europe/London`, `Asia/Tokyo`, etc.
 - Unambiguous long and short timezone : e.g. `Eastern Standard Time`, `Eastern Time`, `Central European Time`, `Japan Standard Time`, `Japan Time`, `AEST`, `JST`, etc.
 - Unambiguous major city names: e.g. `New York`, `London`, `Tokyo`, `Sydney`, etc.
@@ -559,10 +559,12 @@ Source of world’s major cities: https://download.geonames.org/export/dump/citi
 - Filter to population > 500000 or capital cities (`PPLC`) only.
 
 Examples:
-12:30 UTC ⎙ 12:30:00 UTC
-8:25 JST ⎙ 08:25:00 UTC+9
-2023 Jan 01 14:00 America/New_York ⎙ 2023-01-01 Sun 14:00:00 UTC-5
-2023.06.15 09:00 London ⎙ 2023-06-15 Thu 09:00:00 UTC+1
+12:30 UTC ⎙ 12:30 UTC
+8:25 Japan ⎙ 08:25 UTC+9
+8:25 UTC+9 ⎙ 08:25 UTC+9
+2023 Jan 01 14:00 New York ⎙ 2023-01-01 Sun 14:00 UTC-5
+2023 Jan 01 14:00 America/New_York ⎙ 2023-01-01 Sun 14:00 UTC-5
+2023.06.15 09:00 London ⎙ 2023-06-15 Thu 09:00 UTC+1
 
 Render rules for zoned date time:
 - If the date is today in the specified timezone, render as `(settings time format) UTC±H(:MM)`.

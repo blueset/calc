@@ -291,6 +291,17 @@ export class DataLoader {
 
     // Build timezone lookup with territory support
     for (const timezone of this.timezones) {
+      // First, add the IANA identifier itself as a name
+      const ianaLower = timezone.iana.toLowerCase();
+      if (!this.timezoneByName.has(ianaLower)) {
+        this.timezoneByName.set(ianaLower, []);
+      }
+      this.timezoneByName.get(ianaLower)!.push({
+        iana: timezone.iana,
+        territory: undefined // IANA names don't have territories
+      });
+
+      // Then add all the alternative names
       for (const nameObj of timezone.names) {
         const lowerName = nameObj.name.toLowerCase();
 

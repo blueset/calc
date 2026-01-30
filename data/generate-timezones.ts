@@ -653,6 +653,14 @@ async function buildTimezonesDatabase() {
       }
     }
 
+    const offsetMatch = tz.match(/^Etc\/GMT([+-]\d+)$/)
+    if (offsetMatch) {
+      names.push({ name: `UTC${offsetMatch[1]}`.replaceAll(/^UTC[+-]/g, (match) => match === "UTC+" ? "UTC-" : "UTC+") });
+      names.forEach(n => {
+        n.name = n.name.replaceAll(/^GMT[+-]/g, (match) => match === "GMT+" ? "GMT-" : "GMT+");
+      })
+    }
+
     // 2. Add timezone aliases from tzdata
     for (const [aliasName, canonicalName] of aliases.entries()) {
       if (canonicalName === tz) {

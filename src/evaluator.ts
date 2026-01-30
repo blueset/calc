@@ -802,6 +802,19 @@ export class Evaluator {
       return { kind: 'duration', duration };
     }
 
+    // PlainDateTime + Duration → PlainDateTime
+    if (left.kind === 'plainDateTime' && right.kind === 'duration') {
+      if (op === '+') {
+        const result = this.dateTimeEngine.addToPlainDateTime(left.dateTime, right.duration);
+        return { kind: 'plainDateTime', dateTime: result };
+      }
+      if (op === '-') {
+        const negated = this.dateTimeEngine.negateDuration(right.duration);
+        const result = this.dateTimeEngine.addToPlainDateTime(left.dateTime, negated);
+        return { kind: 'plainDateTime', dateTime: result };
+      }
+    }
+
     // PlainTime + Duration → PlainTime (or PlainDateTime if crosses day boundary)
     if (left.kind === 'plainTime' && right.kind === 'duration') {
       if (op === '+') {

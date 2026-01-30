@@ -23,7 +23,8 @@ import {
   Heading,
   PlainText,
   CompositeUnitLiteral,
-  DerivedUnit
+  DerivedUnit,
+  PlainDateTimeLiteral
 } from '../src/ast';
 
 describe('Parser', () => {
@@ -1043,6 +1044,128 @@ describe('Parser', () => {
           expect(evening.type).toBe('PlainTimeLiteral');
           expect((evening as any).hour).toBe(23);
         });
+      });
+    });
+
+    describe('Plain Date Time Literals (Phase 3)', () => {
+      it('should parse date followed by time', () => {
+        const expr = parseExpression('1970 Jan 01 14:30');
+        expect(expr.type).toBe('PlainDateTimeLiteral');
+        const dateTime = expr as PlainDateTimeLiteral;
+
+        // Check date part
+        expect(dateTime.date.year).toBe(1970);
+        expect(dateTime.date.month).toBe(1);
+        expect(dateTime.date.day).toBe(1);
+
+        // Check time part
+        expect(dateTime.time.hour).toBe(14);
+        expect(dateTime.time.minute).toBe(30);
+        expect(dateTime.time.second).toBe(0);
+      });
+
+      it('should parse time followed by date', () => {
+        const expr = parseExpression('14:30 1970 Jan 01');
+        expect(expr.type).toBe('PlainDateTimeLiteral');
+        const dateTime = expr as PlainDateTimeLiteral;
+
+        // Check date part
+        expect(dateTime.date.year).toBe(1970);
+        expect(dateTime.date.month).toBe(1);
+        expect(dateTime.date.day).toBe(1);
+
+        // Check time part
+        expect(dateTime.time.hour).toBe(14);
+        expect(dateTime.time.minute).toBe(30);
+        expect(dateTime.time.second).toBe(0);
+      });
+
+      it('should parse date time with seconds', () => {
+        const expr = parseExpression('2024 Feb 15 10:30:45');
+        expect(expr.type).toBe('PlainDateTimeLiteral');
+        const dateTime = expr as PlainDateTimeLiteral;
+
+        expect(dateTime.date.year).toBe(2024);
+        expect(dateTime.date.month).toBe(2);
+        expect(dateTime.date.day).toBe(15);
+
+        expect(dateTime.time.hour).toBe(10);
+        expect(dateTime.time.minute).toBe(30);
+        expect(dateTime.time.second).toBe(45);
+      });
+
+      it('should parse date time with AM/PM', () => {
+        const expr = parseExpression('2024 Dec 25 2:30 pm');
+        expect(expr.type).toBe('PlainDateTimeLiteral');
+        const dateTime = expr as PlainDateTimeLiteral;
+
+        expect(dateTime.date.year).toBe(2024);
+        expect(dateTime.date.month).toBe(12);
+        expect(dateTime.date.day).toBe(25);
+
+        // 2:30 PM should be converted to 14:30 (24-hour)
+        expect(dateTime.time.hour).toBe(14);
+        expect(dateTime.time.minute).toBe(30);
+      });
+
+      it('should parse time with AM/PM followed by date', () => {
+        const expr = parseExpression('10:15 am 2024 Jan 1');
+        expect(expr.type).toBe('PlainDateTimeLiteral');
+        const dateTime = expr as PlainDateTimeLiteral;
+
+        expect(dateTime.date.year).toBe(2024);
+        expect(dateTime.date.month).toBe(1);
+        expect(dateTime.date.day).toBe(1);
+
+        expect(dateTime.time.hour).toBe(10);
+        expect(dateTime.time.minute).toBe(15);
+      });
+    });
+
+    describe('Zoned date times', () => {
+      it('should parse plain time with UTC', () => {
+        const expr = parseExpression('12:30 UTC');
+        expect(expr.type).toBe('ZonedDateTimeLiteral');
+      });
+
+      it('should parse plain time with timezone offset', () => {
+        const expr = parseExpression('08:25 UTC+9');
+        expect(expr.type).toBe('ZonedDateTimeLiteral');
+      });
+
+      it('should parse date time with IANA timezone', () => {
+        const expr = parseExpression('2023 Jan 01 14:00 America/New_York');
+        expect(expr.type).toBe('ZonedDateTimeLiteral');
+      });
+
+      it('should parse YYYY MONTH D time pattern without timezone', () => {
+        const expr = parseExpression('2023 Jan 01 14:00');
+        expect(expr.type).toBe('PlainDateTimeLiteral');
+      });
+
+      it('should parse YYYY MONTH D time without leading zero', () => {
+        const expr = parseExpression('2023 Jan 1 14:00');
+        expect(expr.type).toBe('PlainDateTimeLiteral');
+      });
+
+      it('should parse date time with city name', () => {
+        const expr = parseExpression('2023 Jan 01 14:00 New York');
+        expect(expr.type).toBe('ZonedDateTimeLiteral');
+      });
+
+      it('should parse date time with long timezone name', () => {
+        const expr = parseExpression('2023 Jan 01 14:00 america/argentina/buenos_aires');
+        expect(expr.type).toBe('ZonedDateTimeLiteral');
+      });
+
+      it('should parse date time with long timezone name', () => {
+        const expr = parseExpression('2023 Jan 01 14:00 australian central western standard time');
+        expect(expr.type).toBe('ZonedDateTimeLiteral');
+      });
+
+      it('should parse date time with timezone offset', () => {
+        const expr = parseExpression('1970 Jan 01 23:59 UTC+8');
+        expect(expr.type).toBe('ZonedDateTimeLiteral');
       });
     });
   });

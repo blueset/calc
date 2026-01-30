@@ -8,6 +8,7 @@ import { defaultSettings } from './settings';
 import type { Unit } from '../types/types';
 import type { PresentationFormat } from './ast';
 import { Temporal } from '@js-temporal/polyfill';
+import { Duration, ZonedDateTime } from './date-time';
 
 /**
  * Formatter class - formats values according to settings
@@ -98,9 +99,7 @@ export class Formatter {
         // Format as ISO 8601
         return this.formatInstant(value.instant.timestamp);
       case 'zonedDateTime':
-        const zdtDateStr = this.formatPlainDate(value.zonedDateTime.dateTime.date.year, value.zonedDateTime.dateTime.date.month, value.zonedDateTime.dateTime.date.day);
-        const zdtTimeStr = this.formatPlainTime(value.zonedDateTime.dateTime.time.hour, value.zonedDateTime.dateTime.time.minute, value.zonedDateTime.dateTime.time.second, value.zonedDateTime.dateTime.time.millisecond);
-        return `${this.formatDateTime(zdtDateStr, zdtTimeStr)} ${value.zonedDateTime.timezone}`;
+        return this.formatZonedDateTime(value.zonedDateTime);
       case 'duration':
         return this.formatDuration(value.duration);
       default:
@@ -476,7 +475,7 @@ export class Formatter {
   /**
    * Format a duration
    */
-  private formatDuration(duration: any): string {
+  private formatDuration(duration: Duration): string {
     const parts: string[] = [];
 
     // Date components
@@ -492,6 +491,67 @@ export class Formatter {
     if (duration.milliseconds) parts.push(`${duration.milliseconds} millisecond${duration.milliseconds !== 1 ? 's' : ''}`);
 
     return parts.length > 0 ? parts.join(' ') : '0 seconds';
+  }
+
+  /**
+   * Format a zoned date time
+   * Follows SPECS.md timezone section:
+   * - If the date is today in the specified timezone, render as `(settings time format) UTC±H(:MM)`
+   * - Otherwise, render as `(settings date time format) UTC±H(:MM)`
+   */
+  private formatZonedDateTime(zonedDateTime: ZonedDateTime): string {
+    const { dateTime, timezone } = zonedDateTime;
+    const { date, time } = dateTime;
+
+    // Create a Temporal.ZonedDateTime to get the offset
+    const temporalZDT = Temporal.ZonedDateTime.from({
+      year: date.year,
+      month: date.month,
+      day: date.day,
+      hour: time.hour,
+      minute: time.minute,
+      second: time.second,
+      millisecond: time.millisecond,
+      timeZone: timezone,
+    });
+
+    // Get the offset in seconds and convert to hours/minutes
+    const offsetNs = temporalZDT.offsetNanoseconds;
+    const offsetSeconds = Math.floor(offsetNs / 1e9);
+    const offsetMinutes = Math.abs(offsetSeconds / 60);
+    const offsetHours = Math.floor(offsetMinutes / 60);
+    const offsetMins = offsetMinutes % 60;
+
+    // Format the offset as UTC, UTC±H, or UTC±H:MM
+    let offsetStr: string;
+    if (offsetSeconds === 0) {
+      // Special case: UTC with no offset
+      offsetStr = 'UTC';
+    } else {
+      const offsetSign = offsetSeconds >= 0 ? '+' : '-';
+      offsetStr = offsetMins === 0
+        ? `UTC${offsetSign}${offsetHours}`
+        : `UTC${offsetSign}${offsetHours}:${String(offsetMins).padStart(2, '0')}`;
+    }
+
+    // Get today's date in the specified timezone
+    const now = Temporal.Now.zonedDateTimeISO(timezone);
+    const todayPlainDate = now.toPlainDate();
+    const zdtPlainDate = temporalZDT.toPlainDate();
+
+    // Check if the date is today in the timezone
+    const isToday = todayPlainDate.equals(zdtPlainDate);
+
+    if (isToday) {
+      // Render as time only
+      const timeStr = this.formatPlainTime(time.hour, time.minute, time.second, time.millisecond);
+      return `${timeStr} ${offsetStr}`;
+    } else {
+      // Render as date + time
+      const dateStr = this.formatPlainDate(date.year, date.month, date.day);
+      const timeStr = this.formatPlainTime(time.hour, time.minute, time.second, time.millisecond);
+      return `${this.formatDateTime(dateStr, timeStr)} ${offsetStr}`;
+    }
   }
 
   /**

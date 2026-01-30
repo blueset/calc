@@ -75,13 +75,9 @@
 - [x] Currency-before-number pattern (USD 100, EUR 50) - implemented in `parsePrimary()`
 - [x] Derived units in binary operations
 - [x] Multi-word unit parsing edge case
-
-**Phase 3 Gaps**:
-- [ ] Plain date time parsing - 3 tests, 2-3 hours
-  - Parser doesn't combine date and time tokens into PlainDateTimeLiteral
-  - Examples: "1970 Jan 01 14:30", "14:30 1970 Jan 01"
-  - Need to check for time after parsing date, and date after parsing time
-  - Files: `src/parser.ts` (modify `parseDateWithMonth()` and `tryParseTime()`)
+- [x] Plain date time parsing
+- [ ] Numeric date format (YYYY.MM.DD) - dot-separated dates (see @PHASE_8_GAPS.md "Numeric Date Format" section)
+- [x] Timezone parsing (see @PHASE_8_GAPS.md "Timezone Parsing" section) - 97.7% complete, blocked by YYYY.MM.DD format
 
 ### Phase 4: Semantic Analysis (Days 8-9)
 - [x] Create `type-checker.ts` with type system definitions
@@ -223,10 +219,11 @@
 
 
 **Test Coverage Summary**:
-- **Total Tests**: 873 tests passing, 23 skipped (896 total)
-- **Integration**: 153 tests (130 passing, 23 skipped - comprehensive SPECS.md coverage)
+- **Total Tests**: 888 passing, 1 failed, 20 skipped (909 total) - **97.7% pass rate**
+- **Integration**: 153 tests (132 passing, 1 failed, 20 skipped - comprehensive SPECS.md coverage)
+  - Failed: `should handle zoned date times` (1 of 6 cases: `2023.06.15 09:00 London` - blocked by YYYY.MM.DD format)
 - **Lexer**: 124 tests (all token types, disambiguation rules including percent/modulo, error recording, underscore separators, base prefixes)
-- **Parser**: 143 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units)
+- **Parser**: 155 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units, plain date time literals, timezone parsing)
 - **Type Checker**: 78 tests (dimension compatibility, conversion validation, variable scoping)
 - **Evaluator**: 95 tests (binary operations, conversions, functions, date arithmetic)
 - **Unit Converter**: 19 tests (linear, affine, variant, composite conversions)
@@ -237,7 +234,6 @@
 - **Currency**: 30 tests (exchange rates, conversions)
 - **Data Loader**: 40 tests (unit lookup, timezone resolution, trie operations)
 - **Functions**: 50 tests (all math functions)
-- **Test Execution**: All tests run in ~450ms
 
 **Features Not Yet Implemented**:
 
