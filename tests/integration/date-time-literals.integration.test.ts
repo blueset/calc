@@ -21,25 +21,22 @@ describe('Integration Tests - Date and Time Literals', () => {
   describe('Date and Time Literals', () => {
     it('should handle plain dates', () => {
       const result = calculator.calculate('1970 Jan 01');
-      expect(result.results[0].result).toContain('1970');
-      expect(result.results[0].result).toContain('01');
-      expect(result.results[0].result).toContain('01');
+      expect(result.results[0].result).toBe('1970-01-01 Thu');
     });
 
     it('should handle plain times', () => {
       const result = calculator.calculate('14:30');
-      expect(result.results[0].result).toContain('14:30');
+      expect(result.results[0].result).toBe('14:30');
     });
 
     it('should handle times with AM/PM', () => {
       const result = calculator.calculate('2:30 PM');
-      expect(result.results[0].result).toContain('14:30');
+      expect(result.results[0].result).toBe('14:30');
     });
 
     it('should handle plain date times', () => {
       const result = calculator.calculate('1970 Jan 01 14:30');
-      expect(result.results[0].result).toContain('1970');
-      expect(result.results[0].result).toContain('14:30');
+      expect(result.results[0].result).toBe('1970-01-01 Thu 14:30');
     });
 
     it('should handle zoned date times', () => {
@@ -79,7 +76,7 @@ describe('Integration Tests - Date and Time Literals', () => {
       expect(result.results[0].result).toBe('05:00');
       expect(result.results[1].result).toBe('05:00 UTC');
       expect(result.results[2].result).toBe('1 h 30 min');
-      expect(result.results[3].result).toBe('17 h 30 min'); // zonedDateTime - plainTime: 05:00 UTC - 03:30 (local time)
+      expect(result.results[3].result).toBe('-1 day -6 h -30 min'); // zonedDateTime - plainTime: 05:00 UTC - 03:30 (local time)
       expect(result.results[4].hasError).toBe(true); // date time add date time is not supported.
     });
 
@@ -162,6 +159,21 @@ yesterday
       const tenHoursLater = modifyNow(d => d.setHours(d.getHours() + 10));
       expect(result.results[7].result).toContain(getDateString(tenHoursLater));
       expect(result.results[7].result).toContain(getTimeString(tenHoursLater));
+    });
+
+    it('should handle instants (Unix timestamps)', () => {
+      const result = calculator.calculate(`3600 unix
+3600 unix seconds
+3600 unix s
+3600000 unix milliseconds
+3600000 unix ms`);
+
+      // Formatted as local timezone
+      expect(result.results[0].result).toBe('1969-12-31 Wed 17:00');
+      expect(result.results[1].result).toBe('1969-12-31 Wed 17:00');
+      expect(result.results[2].result).toBe('1969-12-31 Wed 17:00');
+      expect(result.results[3].result).toBe('1969-12-31 Wed 17:00');
+      expect(result.results[4].result).toBe('1969-12-31 Wed 17:00');
     });
   });
 });

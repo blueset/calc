@@ -21,15 +21,15 @@
 - [x] Implement longest unit match after numbers
 - [x] Implement multi-word unit detection (handled in parser)
 - [x] Implement date/time pattern recognition
-- [x] Implement AM/PM disambiguation rule (attometers/picometers/petameters vs. time)
+- [x] Implement AM/PM disambiguation rule
 - [x] Implement keyword vs identifier distinction
 - [x] Add source location tracking
 - [x] Write unit tests for lexer
-- [x] Number underscore separators (1_000) - strips underscores in lexer
-- [x] Binary number parsing with 0b prefix (0b1010) - converts to decimal in lexer
-- [x] Octal number parsing with 0o prefix (0o12) - converts to decimal in lexer
-- [x] Hexadecimal number parsing with 0x prefix (0xA) - converts to decimal in lexer
-- [x] Base keyword parsing (1010 base 2, ABC base 36) - handled in parser
+- [x] Number underscore separators (1_000)
+- [x] Binary number parsing with 0b prefix (0b1010)
+- [x] Octal number parsing with 0o prefix (0o12)
+- [x] Hexadecimal number parsing with 0x prefix (0xA)
+- [x] Base keyword parsing (1010 base 2, ABC base 36)
 - [x] Enhance lexer to recognize colon patterns (H:MM, H:MM:SS)
 - [x] Tokenize time literals as single DATETIME tokens
 - [x] Update parser's `tryParseTime()` to handle tokenized time literals
@@ -69,7 +69,7 @@
 - [x] Write unit tests for parser
 - [x] Parse derived unit expressions in conversion targets
 - [x] Caret notation for exponents (m^2, m^3) - requires disambiguation from power operator
-- [x] Named square/cubic units (square meter, cubic meter, meter squared, meter cubed)\
+- [x] Named square/cubic units (square meter, cubic meter, meter squared, meter cubed)
 - [x] Multi-word unit parsing (fl oz, sq m, millimeter of mercury) - implemented with lookahead & backtracking
 - [x] Multi-word currency name parsing (US dollars, hong kong dollars) - fully implemented and tested
 - [x] Currency-before-number pattern (USD 100, EUR 50) - implemented in `parsePrimary()`
@@ -93,55 +93,28 @@
 ### Phase 5: Evaluation Engine (Days 10-14)
 - [x] Add composite unit conversion target support to parser (for "171 cm to ft in")
 - [x] Implement date/time literal parsing in parser (DATETIME tokens → AST nodes)
-- [x] Re-enable 3 skipped tests in type-checker.test.ts (date arithmetic tests)
-- [x] Create `unit-converter.ts` with conversion logic (19 tests passing)
+- [x] Create `unit-converter.ts` with conversion logic
 - [x] Implement linear/affine/variant conversions
 - [x] Implement composite unit conversion
-- [x] Create `date-time.ts` with Temporal-spec arithmetic (37 tests passing)
+- [x] Create `date-time.ts` with Temporal-spec arithmetic
 - [x] Implement month addition with clamping
 - [x] Implement timezone name resolution with territory (via DataLoader)
 - [x] Implement Duration representation
-- [x] Create `currency.ts` with exchange rate handling (29 tests passing)
-- [x] Create `functions.ts` with all math functions (50 tests passing)
+- [x] Create `currency.ts` with exchange rate handling
+- [x] Create `functions.ts` with all math functions
 - [x] Create `evaluator.ts` with Evaluator class
 - [x] Implement binary operations with unit handling
 - [x] Implement conversions (unit/date/currency)
 - [x] Implement variable assignments and lookups
-- [x] Write unit tests for all evaluation components (95/95 tests passing - 100%)
-- [x] Fix single-letter variable name issue (parser now accepts UNIT tokens as identifiers in assignment context)
-- [x] Implement derived unit conversions (completed)
-- [x] Implement exponentiation of units and derived units (completed)
-
-**Phase 5 Gaps** (see @PHASE_8_GAPS.md for details, 29-40 hours):
-- [x] User-defined units support - 5 tests, 8-12 hours
-  - [x] Allow unknown identifiers as user-defined units (1 person, 3 trips, 1 click)
-  - [x] Support in derived units (1 kg/person, 1 USD/person/day)
-  - [x] Enable arithmetic operations (3 trips + 2 trips → 5 trips)
-  - [x] Allow conversions (100 person/sq ft to person/km^2) - FIXED with Phase 3 parser fix + user-defined dimension handling
-  - [x] Changes completed in parser, type-checker, evaluator, formatter
-  - [x] Test re-enabled: line 503 in integration.test.ts ✓
-- [x] Unit cancellation in arithmetic - 3 tests, 6-8 hours
-  - [x] Implement proper unit algebra (add/subtract exponents during multiplication/division)
-  - [x] Cancel opposing units (kg/m² × m² → kg) - `simplifyTerms()` method working
-  - [x] Compute numeric results - integration with multiply/divide operations complete
-  - [x] Handle unit conversions during simplification (cm² to m² factor: 10000)
-  - [x] Tests re-enabled: lines 624-680 in integration.test.ts ✓
-- [x] Currency unit resolution in evaluator (fallback from unit to currency lookup)
-  - [x] ISO currency codes (USD, EUR, GBP, JPY) - parser checks by code
-  - [x] Currency names (dollars, euros, pounds) - parser checks by name
-  - [x] Multi-word names (US Dollars, Hong Kong Dollars) - multi-word unit parsing
-  - [x] Adjacent symbols ($10, €100, ¥1000) - lexer tokenizes, parser handles
-  - [x] Currency-specific formatting (USD: 2 decimals, JPY: 0 decimals)
-  - [x] Currency precision in derived units (50.123 USD/hour → 50.12 USD/h)
-- [x] Ambiguous currency dimension handling ($ → "currency_symbol_0024", error on operations)
-  - [x] Ambiguous symbols ($, £, ¥) get unique dimensions per symbol
-  - [x] Parser recognizes ambiguous currencies via dimension lookup
-  - [x] Formatter displays symbols before values: "$15" not "15 $"
-  - [x] Type system prevents mixing different ambiguous currencies ($10 + £5 → error)
-  - [x] Currency dimensions handled in derived unit conversions
+- [x] Write unit tests for all evaluation components
+- [x] Fix single-letter variable name issue
+- [x] Implement derived unit conversions
+- [x] Implement exponentiation of units and derived units
+- [x] User-defined units support
+- [x] Unit cancellation in arithmetic
+- [x] Currency unit resolution in evaluator
+- [x] Ambiguous currency dimension handling
 - [x] Dimensionless unit auto-conversion (5 dozen → 60, 100 percent → 1)
-  - [x] Auto-convert dimensionless units to pure numbers (dozen, percent word form)
-  - [x] Percent symbol (%) disambiguation - lexer now correctly distinguishes percent unit from modulo operator
 - [x] Composite unit negation (-(5 m 20 cm) → -5 m -20 cm)
 - [x] Composite to single unit conversion (6 ft 3 in to cm → 190.5 cm)
 - [x] Derived units with space multiplication (1 N m → derived unit)
@@ -149,16 +122,7 @@
 - [x] Round with units (round(18.9 kg) → 19 kg)
 - [x] Date/time arithmetic (2023 Jan 1 + 10 days, 1970 Jan 31 + 1 month)
 - [x] Relative instant keywords (now, today, tomorrow, yesterday)
-  - [x] Simple keywords implemented (now, today, tomorrow, yesterday) - return zonedDateTime
-  - [x] Complex relative expressions need parser support
 - [x] Composite duration arithmetic
-  - [x] Add composite durations to plain time (10:25 + 2 hours 40 min → 13:05)
-  - [x] Add composite durations to plain date (1970 Jan 1 + 1 month 2 days → 1970-02-03)
-  - [x] Implemented convertCompositeTimeToDuration() method
-
-### Phase 5.5: Derived Unit Support
-
-**Tasks**:
 - [x] Refactored architecture to use signed exponents instead of numerator/denominator
 - [x] Update evaluator binary multiplication to create derived units
 - [x] Update evaluator binary division to create derived units
@@ -175,8 +139,6 @@
 - [x] Implement composite unit formatting
 - [x] Implement presentation target formatting (binary, hex, etc.)
 - [x] Write unit tests for formatter (52 tests passing)
-
-**Phase 6 Gaps** (see @PHASE_8_GAPS.md for details, 9-12 hours): ✅ **COMPLETED**
 - [x] Presentation conversion: to binary (255 to binary → 0b11111111)
 - [x] Presentation conversion: to octal (255 to octal → 0o377)
 - [x] Presentation conversion: to hexadecimal (255 to hex → 0xFF)
@@ -188,9 +150,6 @@
 - [x] Fractional base conversions (10.625 to base 2 → 0b1010.101)
 - [x] Presentations with units (5000 km to scientific → 5e3 km)
 - [x] Presentations with composite units (5 ft 7.5 in to fraction → 5 ft 7 1/2 in)
-
-### Phase 6.5: Temporal API Integration
-
 - [x] Add `@js-temporal/polyfill` dependency
 - [x] Implement timezone offset-aware conversions in `date-time.ts`
 - [x] Implement timezone conversion targets in parser
@@ -223,8 +182,6 @@
 - [x] Create `tests/integration.test.ts` with comprehensive SPECS.md examples (141 tests: 105 passing, 36 skipped)
 - [x] End-to-end verification testing
 
-**Status**: **PHASE 8 COMPLETED**
-
 ### Phase 9: Enhancements
 **Status**: Optional quality-of-life improvements
 
@@ -234,9 +191,6 @@
 - [ ] Better error messages for dimension mismatches in function calls
 
 **Current limitation**: All math functions return `dimensionless` type. Evaluation handles units correctly, but type checker doesn't validate function dimensions.
-
-**Reason for deferral**: Non-critical enhancement. Core evaluation works. Type checking is already functional, this just improves error messages.
-
 #### Formatter Enhancements
 - [ ] Implement proper unit name pluralization based on numeric value
   - Use `unit.displayName.plural` when value is not 1 or -1
@@ -268,9 +222,9 @@ Build a complete parser for the Notepad Calculator Language as specified in GRAM
 
 ## File Structure
 
-All files will be created at `./src`:
 
 ### Core Parser Components
+All files are at `./src`:
 - **`tokens.ts`** - Token type definitions and utilities
 - **`lexer.ts`** - Context-sensitive tokenizer with longest-match unit lookup
 - **`ast.ts`** - AST node type definitions
@@ -279,6 +233,7 @@ All files will be created at `./src`:
 - **`evaluator.ts`** - Expression evaluation engine
 
 ### Supporting Components
+All files are at `./src`:
 - **`data-loader.ts`** - Load and index JSON data files (units, currencies, timezones)
 - **`unit-converter.ts`** - Unit conversion logic (linear, affine, variant)
 - **`date-time.ts`** - Date/time arithmetic following Temporal spec
@@ -292,328 +247,11 @@ All files will be created at `./src`:
 ### Testing
 - **`tests/`** directory with unit and integration tests
 
----
-
-## Implementation Phases
-
-### Phase 1: Data Loading Foundation (Days 1-2)
-
-**Files to create**: `data-loader.ts`, `constants.ts`
-
-**Tasks**:
-1. Create `DataLoader` class that loads units.json, currencies.json, timezones.json
-2. Build fast lookup structures:
-   - **Unit lookup maps** (case-sensitive and case-insensitive):
-     - Primary: `Map<string, Unit>` for exact case-sensitive matches
-     - Fallback: `Map<string, Unit[]>` for case-insensitive matches (may have multiple)
-   - `Map<string, Currency>` for currency code/name → currency object
-   - **Timezone lookup with territory support**:
-     - `Map<string, TimezoneMatch[]>` where each match includes IANA timezone and territory
-     - Resolver function that takes browser/system locale to disambiguate
-     - Territory priority: user country code > "001" (universal) > undefined
-     - Tie-breaking: use first match at same priority level
-   - `Map<string, Dimension>` for dimension ID → dimension object
-3. Implement **unit trie with case-sensitive matching**:
-   - After consuming a number token, find longest matching unit name
-   - **Matching algorithm**:
-     1. Try case-sensitive match first (highest priority)
-     2. If no match, try case-insensitive match
-     3. If multiple case-insensitive matches, pick the one with most matching case characters
-     4. If tie on matching case count, use first match in database
-     5. Example: "mL" → milliliter (exact case), "ML" → megaliter (exact case), "ml" → count chars, tie → first in database
-   - Example: "5km" should match "km" (kilometer), not "k" + "m"
-4. Create constant definitions (pi, e, golden_ratio, NaN, Infinity)
-
-**Key algorithms**:
-- Trie-based longest match: O(n) lookup where n = length of potential unit name
-- Case-sensitive matching with case-insensitive fallback and tie-breaking
-- Timezone resolution based on user locale/territory
-- Pre-compute all unit name variations during load
-
-**Critical path**: Everything else depends on this being complete first.
-
----
-
-### Phase 2: Lexical Analysis (Days 3-4)
-
-**Files to create**: `tokens.ts`, `lexer.ts`
-
-**Tasks**:
-1. Define token types: NUMBER, UNIT, IDENTIFIER, KEYWORD, OPERATOR, BOOLEAN, DATETIME, COMMENT, NEWLINE, EOF, LPAREN, RPAREN, COMMA
-2. Implement `Lexer` class with context-aware tokenization:
-   - Number literals (integer, decimal, scientific, binary/octal/hex)
-   - **Scientific notation priority**: `2e3` → NUMBER(2000), not `2 * e * 3`
-   - **Longest unit match**: After NUMBER, use trie to find longest unit
-   - Multi-word units ("cubic meter", "US dollars", "New York")
-   - Date/time patterns (various formats from GRAMMAR.md)
-   - Keywords vs identifiers
-   - Operators and punctuation
-   - Comments (# to end of line)
-3. Track source locations (line, column) for error reporting
-4. Handle whitespace significance for composite units
-
-**Disambiguation rules to implement**:
-- Scientific notation takes precedence (GRAMMAR.md:689-699)
-- Longest unit match (GRAMMAR.md:656-683)
-- Multi-word unit detection (GRAMMAR.md:845-852)
-
-**Testing**: Verify all token types from GRAMMAR.md examples
-
----
-
-### Phase 3: Syntactic Analysis (Days 5-7)
-
-**Files to create**: `ast.ts`, `parser.ts`
-
-**Tasks**:
-1. Define AST node types in `ast.ts`:
-   - Document structure: Document, Line types (Heading, Expression, VariableDefinition, PlainText, Empty)
-   - Expressions: Conditional, Conversion, Binary, Unary, Postfix, FunctionCall, Literal, Identifier, Grouped
-   - Literals: Number, NumberWithUnit, CompositeUnit, DateTime variants, Boolean, Constant
-   - Units: SimpleUnit, DerivedUnit, UnitTerm
-   - Conversion targets: Unit, CompositeUnit, Presentation, Property, Timezone
-
-2. Implement `Parser` class using recursive descent:
-   - Top-level: `parseDocument()` → `parseLine()` for each line
-   - Expression parsing following operator precedence (GRAMMAR.md:523-549):
-     - Level 15: Assignment (=)
-     - Level 14: Conditional (if-then-else)
-     - Level 13: Conversion (to, in, as, →)
-     - Level 12: Logical OR (||)
-     - Level 11: Logical AND (&&)
-     - Level 10: Bitwise OR (|)
-     - Level 9: Bitwise XOR (xor)
-     - Level 8: Bitwise AND (&)
-     - Level 7: Comparison (<, <=, >, >=, ==, !=)
-     - Level 6: Bit shift (<<, >>)
-     - Level 5: Addition/Subtraction (+, -)
-     - Level 4: Multiplication/Division (*, /, %, mod, per)
-     - Level 3: Unary (-, !, ~)
-     - Level 2: Power (^) - right-associative
-     - Level 1: Postfix (factorial !)
-   - Primary expressions: literals, identifiers, function calls, grouped expressions
-
-3. Special parsing cases:
-   - **Composite units**: Detect `NUMBER UNIT [NUMBER UNIT]+` pattern
-   - **"per" disambiguation**: Single unit → derived unit; expression → division operator
-   - **City/timezone lookup with territory**: After TIME_VALUE + IDENTIFIER, lookup in timezone database
-     - Use browser/system locale to resolve territory field
-     - Example: "EST" → "America/New_York" (territory: US) vs "Australia/Sydney" (territory: AU)
-     - Disambiguate based on user's locale/region
-   - **Conversion chaining**: Left-associative `5 km to m in cm` = `((5 km) to m) in cm`
-
-4. Error recovery: On parse error, consume tokens until newline and return PlainText
-
-**Testing**: Parse all examples from GRAMMAR.md, verify AST structure
-
----
-
-### Phase 4: Semantic Analysis (Days 8-9)
-
-**Files to create**: `type-checker.ts`, `error-handling.ts`
-
-**Tasks**:
-1. Define value type system:
-   - Physical types: Dimensionless, Physical (with dimension), Derived
-   - CompositeUnit type
-   - DateTime types: PlainDate, PlainTime, PlainDateTime, Instant, ZonedDateTime
-   - **Duration type** (semantic, not syntactic):
-     - Single `Duration` type with optional components:
-       - Date components: year, month, week, day
-       - Time components: hour, minute, second, millisecond
-     - A duration is "date duration" if it only has date components
-     - A duration is "time duration" if it only has time components
-     - A duration is "date-time duration" if it has both
-   - Boolean type
-   - Error type
-
-2. Implement `TypeChecker` class:
-   - Walk AST and compute type for each expression
-   - Validate binary operations:
-     - Addition/subtraction: require same dimension
-     - Multiplication/division: derive new dimension (exponent arithmetic)
-     - Comparisons: require same dimension, return Boolean
-   - Validate conversions:
-     - Unit conversions: require same dimension
-     - Presentation conversions: always valid
-     - Property extractions: require date/time types
-   - Validate composite units: all components must have same dimension
-   - Variable scoping: track symbol table, check variable definitions
-
-3. Implement dimension compatibility checking:
-   - Same dimension check for +, -, comparisons
-   - Dimension derivation for *, / (multiply/divide exponents)
-   - Special handling for dimensionless values
-
-4. Create error types: LexerError, ParserError, TypeError, RuntimeError
-
-**Testing**: Validate type checking for all operations, verify error messages
-
----
-
-### Phase 5: Evaluation Engine (Days 10-14)
-
-**Files to create**: `evaluator.ts`, `unit-converter.ts`, `date-time.ts`, `currency.ts`, `functions.ts`
-
-**Tasks**:
-
-#### `unit-converter.ts`:
-1. Implement conversion to/from base units:
-   - Linear: `baseValue = value * factor`
-   - Affine: `baseValue = (value + offset) * factor` (for temperature)
-   - Variant: Handle US vs UK variants (gallons, etc.)
-2. Convert between units: `value → base → target`
-3. Composite unit conversion (GRAMMAR.md:961-992):
-   - Convert all components to base unit (sum)
-   - Distribute to target units (largest to smallest)
-   - Integer parts for all except last unit
-
-#### `date-time.ts`:
-1. Implement date/time arithmetic following Temporal spec:
-   - PlainDate + Duration → PlainDate/PlainDateTime
-   - PlainDate - PlainDate → Duration (with date components)
-   - Month addition with day clamping (GRAMMAR.md:1012-1033)
-   - Handle fractional vs integer durations differently
-2. Implement `{overflow: 'constrain'}` behavior:
-   - Jan 31 + 1 month → Feb 28/29 (clamp to last day)
-3. **Timezone conversions with territory resolution**:
-   - Use user's locale/region to disambiguate timezone names
-   - Handle territory field from timezones.json
-4. Property extraction (year, month, day, hour, etc.)
-5. **Duration representation**:
-   - Duration type with optional date/time components
-   - Combine durations intelligently (date + time = date-time)
-
-#### `currency.ts`:
-1. Load exchange rates (stub for now, real API later)
-2. Convert between unambiguous currencies only
-3. Error on ambiguous currency conversions
-4. Round to appropriate minor units (decimals)
-
-#### `functions.ts`:
-1. Implement all functions from GRAMMAR.md:
-   - Trig: sin, cos, tan, asin, acos, atan, sinh, cosh, tanh
-   - Log/exp: sqrt, cbrt, log, ln, exp, log10
-   - Number: abs, round, floor, ceil, trunc, frac
-   - Random: random(0-4 args)
-   - Combinatorics: perm, comb
-
-#### `evaluator.ts`:
-1. Create `Value` type representing evaluated results:
-   - Number with optional unit
-   - CompositeUnit
-   - DateTime variants
-   - Boolean
-   - Error
-2. Implement `Evaluator` class:
-   - Walk AST and evaluate each expression
-   - Binary operations: add, subtract, multiply, divide (with unit handling)
-   - Conversions: delegate to unit-converter, date-time, currency
-   - Variable assignments and lookups
-   - Function calls
-   - Conditionals (if-then-else)
-3. Handle unit arithmetic:
-   - Same dimension: convert to common unit, operate, keep unit
-   - Different dimensions: multiplication/division creates derived units
-4. Error handling: propagate errors through evaluation
-
-**Testing**: Verify all examples from GRAMMAR.md produce correct results
-
----
-
-### Phase 6: Result Formatting (Days 15-16)
-
-**Files to create**: `formatter.ts`, `settings.ts`
-
-**Tasks**:
-1. Define `Settings` interface:
-   - precision: number
-   - angleUnit: 'degree' | 'radian'
-   - decimalSeparator: '.' | ','
-   - digitGrouping: 'none' | 'thousands' | 'indian'
-   - dateFormat: string
-   - timeFormat: '12h' | '24h'
-   - imperialUnits: boolean
-
-2. Implement `Formatter` class:
-   - Format numbers: apply precision, decimal separator, digit grouping
-   - Format units: use display names (symbols or full names)
-   - Format dates: apply date/time format settings
-   - Format composite units: "5 ft 7.32 in"
-   - Format presentation targets: binary (0b...), hex (0x...), fraction, etc.
-
-3. Handle special cases:
-   - Currency formatting with minor units
-   - Angle formatting (degrees vs radians based on settings)
-   - Scientific notation when needed
-
-**Testing**: Verify formatting matches examples from SPECS.md
-
----
-
-### Phase 7: Integration & Main Orchestrator (Day 17)
-
-**Files to create**: `calculator.ts`
-
-**Tasks**:
-1. Create `Calculator` class that orchestrates all components:
-   - Initialize DataLoader and load JSON files
-   - Create Lexer, Parser, TypeChecker, Evaluator, Formatter instances
-   - Expose main API: `calculate(input: string): CalculationResult[]`
-
-2. Implement full pipeline:
-   ```typescript
-   calculate(input: string) {
-     1. tokens = lexer.tokenize(input)
-     2. ast = parser.parseDocument(tokens)
-     3. typedAst = typeChecker.checkDocument(ast)
-     4. values = evaluator.evaluate(typedAst)
-     5. formatted = formatter.format(values)
-     return formatted
-   }
-   ```
-
-3. Handle errors gracefully:
-   - Continue processing on errors (don't stop at first error)
-   - Return both successful results and errors
-   - Provide helpful error messages with line/column info
-
-4. Optimize for multi-line input:
-   - Process line by line
-   - Maintain variable scope across lines
-   - Return array of results (one per line)
-
-**Testing**: Run full integration tests from SPECS.md
-
----
-
-### Phase 8: Testing & Validation (Days 18-20)
-
-**Create test files**:
-- `tests/lexer.test.ts` - Tokenization edge cases
-- `tests/parser.test.ts` - AST generation for all expression types
-- `tests/type-checker.test.ts` - Type validation and errors
-- `tests/evaluator.test.ts` - Evaluation correctness
-- `tests/unit-converter.test.ts` - Unit conversions (linear, affine, variant, composite)
-- `tests/date-time.test.ts` - Date arithmetic with clamping
-- `tests/integration.test.ts` - All examples from GRAMMAR.md and SPECS.md (~200 examples)
-- `tests/disambiguation.test.ts` - All disambiguation rules from GRAMMAR.md
-
-**Testing approach**:
-1. Unit tests for each component in isolation
-2. Integration tests for full pipeline
-3. Edge case tests for disambiguation rules
-4. Error handling tests
-
-**Test framework**: Use Node.js built-in test runner or Jest
-
----
-
 ## Critical Files & Dependencies
 
 ### Dependency Order:
 ```
-1. types.ts (exists) + data-loader.ts + constants.ts
+1. types.ts + data-loader.ts + constants.ts
    ↓
 2. tokens.ts + lexer.ts
    ↓
@@ -630,7 +268,7 @@ All files will be created at `./src`:
 8. calculator.ts
 ```
 
-### Most Critical Files (implement in this order):
+### Most Critical Files:
 1. **`data-loader.ts`** - Foundation for all lookups; builds unit trie
 2. **`lexer.ts`** - Context-sensitive tokenization with all disambiguation rules
 3. **`parser.ts`** - Recursive descent with operator precedence; entire syntactic grammar
@@ -797,26 +435,6 @@ Use JavaScript `number` (IEEE 754 double) initially; can upgrade to decimal.js l
 
 ## Verification & Testing
 
-### Manual Testing
-Run examples from GRAMMAR.md:
-```
-2 + 2                           → 4
-5 m + 20 cm                     → 5.2 m
-5 km to m                       → 5000 m
-171 cm to ft in                 → 5 ft 7.32 in
-(5 ft 3 in) * 2                 → 10 ft 6 in
-1970 Jan 31 + 1 month           → 1970-02-28
-100 USD to EUR                  → 85.8 EUR (with exchange rate)
-```
-
-### Automated Testing
-1. Run lexer tests: verify all token types
-2. Run parser tests: verify AST structure for all expression types
-3. Run type checker tests: verify dimension compatibility
-4. Run evaluator tests: verify all examples from GRAMMAR.md (~92 examples)
-5. Run integration tests: verify examples from SPECS.md (~200 examples)
-6. Run disambiguation tests: verify all 9 disambiguation rules
-
 ### End-to-End Verification
 
 Use unit test to verify full calculation pipeline.
@@ -831,14 +449,3 @@ Use unit test to verify full calculation pipeline.
 4. **Exchange rate API** - Live currency conversions
 5. **Arbitrary precision** - Upgrade to decimal.js
 6. **Performance optimization** - Token pooling, AST caching
-
----
-
-## Implementation Timeline
-
-- **Week 1** (Days 1-5): Foundation + Lexer + Parser
-- **Week 2** (Days 6-10): Type Checker + Evaluator core
-- **Week 3** (Days 11-15): Evaluation engines (units, dates, currencies) + Formatter
-- **Week 4** (Days 16-20): Integration + Testing + Documentation
-
-**Total estimated effort**: 20 days for complete implementation

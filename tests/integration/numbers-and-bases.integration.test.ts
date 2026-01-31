@@ -116,6 +116,59 @@ describe('Integration Tests - Numbers and Bases', () => {
       const result2 = calculator.calculate('phi');
       expect(result2.results[0].result).toContain('1.61803');
     });
+
+    it('should handle case insensitive pi variants', () => {
+      const result = calculator.calculate(`pi
+PI
+Pi`);
+      // All should evaluate to the same value
+      expect(result.results[0].result).toContain('3.14159');
+      expect(result.results[1].result).toContain('3.14159');
+      expect(result.results[2].result).toContain('3.14159');
+    });
+
+    it('should handle case insensitive NaN variants', () => {
+      const result = calculator.calculate(`NaN
+nan
+NAN
+Nan`);
+      expect(result.results[0].result).toBe('NaN');
+      expect(result.results[1].result).toBe('NaN');
+      expect(result.results[2].result).toBe('NaN');
+      expect(result.results[3].result).toBe('NaN');
+    });
+
+    it('should handle case insensitive Infinity variants', () => {
+      const result = calculator.calculate(`Infinity
+infinity
+INFINITY
+inf
+INF
+Inf`);
+      expect(result.results[0].result).toBe('Infinity');
+      expect(result.results[1].result).toBe('Infinity');
+      expect(result.results[2].result).toBe('Infinity');
+      expect(result.results[3].result).toBe('Infinity');
+      expect(result.results[4].result).toBe('Infinity');
+      expect(result.results[5].result).toBe('Infinity');
+    });
+
+    it('should handle case insensitive e constant variants', () => {
+      const result = calculator.calculate(`e
+E`);
+      // Both should evaluate to Euler's number
+      expect(result.results[0].result).toContain('2.71828');
+      expect(result.results[1].result).toContain('2.71828');
+    });
+
+    it('should handle case insensitive phi variants', () => {
+      const result = calculator.calculate(`phi
+Phi
+PHI`);
+      expect(result.results[0].result).toContain('1.61803');
+      expect(result.results[1].result).toContain('1.61803');
+      expect(result.results[2].result).toContain('1.61803');
+    });
   });
 
   describe('Arbitrary Base Conversion', () => {

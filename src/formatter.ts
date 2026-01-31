@@ -210,7 +210,7 @@ export class Formatter {
     if (!this.dataLoader) return false;
 
     // Check unambiguous currency
-    if (this.dataLoader.getCurrencyByCode(unit.id)) {
+    if (unit.dimension === 'currency' && this.dataLoader.getCurrencyByCode(unit.id)) {
       return true;
     }
 
@@ -348,6 +348,16 @@ export class Formatter {
    * Apply digit grouping to a formatted number string
    */
   private applyDigitGrouping(numStr: string, decimalSep: string): string {
+    // Handle exponential notation: only group the mantissa, not the exponent
+    const expMatch = numStr.match(/^(.+?)([eE][+\-]?\d+)$/);
+    if (expMatch) {
+      const mantissa = expMatch[1];
+      const exponent = expMatch[2];
+      // Recursively apply grouping to mantissa only
+      const groupedMantissa = this.applyDigitGrouping(mantissa, decimalSep);
+      return groupedMantissa + exponent;
+    }
+
     // Get the grouping separator character (it's already the actual character)
     const groupSep = this.settings.digitGroupingSeparator;
 

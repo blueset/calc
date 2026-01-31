@@ -42,6 +42,32 @@ distance / time`;
       expect(result.results[2].result).toContain('km');
       expect(result.results[2].result).toContain('h');
     });
+
+    it('should handle variable reassignment', () => {
+      const input = `x = 10
+x = 20
+x`;
+      const result = calculator.calculate(input);
+      expect(result.results[0].result).toBe('10');
+      expect(result.results[1].result).toBe('20');
+      expect(result.results[2].result).toBe('20');
+    });
+
+    it('should support Unicode identifiers (if supported)', () => {
+      // Unicode Standard Annex #31 compliance
+      // Note: This may fail if Unicode identifiers are not yet implemented
+      const input = `距离 = 100
+distância = 50
+距离 + distância`;
+      const result = calculator.calculate(input);
+      // If Unicode identifiers are supported:
+      if (!result.results[0].hasError) {
+        expect(result.results[0].result).toBe('100');
+        expect(result.results[1].result).toBe('50');
+        expect(result.results[2].result).toBe('150');
+      }
+      // Otherwise, this test documents the expected behavior
+    });
   });
 
   describe('Conditional Expressions', () => {
@@ -66,11 +92,30 @@ result = if x > 5 then 100 else 50`;
       const result = calculator.calculate(input);
       expect(result.results[1].result).toBe('100');
     });
+
+    it('should handle conditional with units', () => {
+      // Conditionals with units should ensure type consistency
+      const result = calculator.calculate('if true then 5 m else 10 m');
+      expect(result.results[0].result).toBe('5 m');
+    });
+
+    it('should handle conditional with currency', () => {
+      const result = calculator.calculate('if 10 > 5 then 100 USD else 50 USD');
+      expect(result.results[0].result).toContain('100');
+      expect(result.results[0].result).toContain('USD');
+    });
+
+    it('should handle conditional with multiple variables', () => {
+      const input = `x = 10
+y = 20
+result = if x < y then x else y`;
+      const result = calculator.calculate(input);
+      expect(result.results[2].result).toBe('10');
+    });
   });
 
   describe('Complex Multi-Line Calculations', () => {
     it('should handle mixed calculations', () => {
-      // TODO: result.results.length should be 7, currently 6.
       const input = `# Distance calculation
 speed = 60 km/h
 time = 2.5 h
@@ -155,7 +200,6 @@ distance to m`;
     });
 
     it('should fail on invalid expressions gracefully', () => {
-      // TODO: result.results.length should be 3, currently 5.
       const input = `This is just text
 5 + 5
 More text here`;

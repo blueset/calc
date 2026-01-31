@@ -161,16 +161,57 @@ describe('Integration Tests - Arithmetic', () => {
   describe('Alternative Operators', () => {
     it('should handle per operator for derived units', () => {
       const result = calculator.calculate('60 km per h');
-      expect(result.results[0].result).toContain('60');
-      expect(result.results[0].result).toContain('km');
-      expect(result.results[0].result).toContain('h');
+      expect(result.results[0].result).toContain('60 km/h');
     });
 
     it('should handle per operator for division', () => {
       const result = calculator.calculate('60 km per 2 h');
-      expect(result.results[0].result).toContain('30');
-      expect(result.results[0].result).toContain('km');
-      expect(result.results[0].result).toContain('h');
+      expect(result.results[0].result).toContain('30 km/h');
+    });
+
+    it('should handle × symbol for multiplication', () => {
+      const result = calculator.calculate(`3 × 4
+5 × 2
+10 × 10`);
+      expect(result.results[0].result).toBe('12');
+      expect(result.results[1].result).toBe('10');
+      expect(result.results[2].result).toBe('100');
+    });
+
+    it('should handle · symbol for multiplication', () => {
+      const result = calculator.calculate(`3 · 4
+5 · 2
+10 · 10`);
+      expect(result.results[0].result).toBe('12');
+      expect(result.results[1].result).toBe('10');
+      expect(result.results[2].result).toBe('100');
+    });
+
+    it('should handle ÷ symbol for division', () => {
+      const result = calculator.calculate(`10 ÷ 2
+20 ÷ 4
+100 ÷ 5`);
+      expect(result.results[0].result).toBe('5');
+      expect(result.results[1].result).toBe('5');
+      expect(result.results[2].result).toBe('20');
+    });
+
+    it('should handle mixed alternative operators', () => {
+      const result = calculator.calculate(`3 × 4 + 2
+10 ÷ 2 + 3
+5 · 2 × 3`);
+      expect(result.results[0].result).toBe('14');
+      expect(result.results[1].result).toBe('8');
+      expect(result.results[2].result).toBe('30');
+    });
+
+    it('should handle alternative operators with units', () => {
+      const result = calculator.calculate(`5 m × 3
+20 kg ÷ 4
+10 N · 2 m`);
+      expect(result.results[0].result).toContain('15 m');
+      expect(result.results[1].result).toContain('5 kg');
+      expect(result.results[2].result).toContain('20 N m');
     });
   });
 });

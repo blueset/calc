@@ -138,6 +138,91 @@ CA$100
       expect(result.results[0].result).toBe('1 155 JPY');
     });
 
+    it('should handle JPY (0 decimals) formatting', () => {
+      const result = calculator.calculate('1000 JPY');
+      // JPY has 0 decimal places - no decimal point shown
+      expect(result.results[0].result).toBe('1 000 JPY');
+      expect(result.results[0].result).not.toContain('.');
+    });
+  });
+
+  describe('ISO 4217 Minor Units (Decimal Places)', () => {
+    beforeAll(() => {
+      // Add exchange rates for 3-decimal currencies
+      const mockExchangeRates = {
+        date: '2024-01-01',
+        usd: {
+          eur: 0.85,
+          gbp: 0.73,
+          jpy: 110.0,
+          hkd: 7.8,
+          cad: 1.25,
+          inr: 74.0,
+          kwd: 0.30,  // Kuwaiti Dinar
+          bhd: 0.38,  // Bahraini Dinar
+          omr: 0.38,  // Omani Rial
+          tnd: 3.1,   // Tunisian Dinar
+          krw: 1200,  // South Korean Won (0 decimals)
+          vnd: 23000  // Vietnamese Dong (0 decimals)
+        }
+      };
+      calculator.loadExchangeRates(mockExchangeRates);
+    });
+
+    it('should handle KWD with 3 decimal places', () => {
+      // Kuwaiti Dinar: 3 decimal places
+      const result = calculator.calculate('10 KWD');
+      expect(result.results[0].result).toBe('10.000 KWD');
+    });
+
+    it('should handle BHD with 3 decimal places', () => {
+      // Bahraini Dinar: 3 decimal places
+      const result = calculator.calculate('10 BHD');
+      expect(result.results[0].result).toBe('10.000 BHD');
+    });
+
+    it('should handle OMR with 3 decimal places', () => {
+      // Omani Rial: 3 decimal places
+      const result = calculator.calculate('10 OMR');
+      expect(result.results[0].result).toBe('10.000 OMR');
+    });
+
+    it('should handle TND with 3 decimal places', () => {
+      // Tunisian Dinar: 3 decimal places
+      const result = calculator.calculate('10 TND');
+      expect(result.results[0].result).toBe('10.000 TND');
+    });
+
+    it('should convert to KWD and maintain 3 decimal precision', () => {
+      const result = calculator.calculate('100 USD to KWD');
+      // 100 USD * 0.30 = 30 KWD
+      expect(result.results[0].result).toBe('30.000 KWD');
+    });
+
+    it('should convert fractional amounts to 3-decimal currencies', () => {
+      const result = calculator.calculate('10.5 USD to BHD');
+      // 10.5 USD * 0.38 = 3.99 BHD → 3.990 BHD
+      expect(result.results[0].result).toBe('3.990 BHD');
+    });
+
+    it('should handle KRW with 0 decimal places', () => {
+      // South Korean Won: 0 decimal places
+      const result = calculator.calculate('10000 KRW');
+      expect(result.results[0].result).toBe('10 000 KRW');
+    });
+
+    it('should handle VND with 0 decimal places', () => {
+      // Vietnamese Dong: 0 decimal places
+      const result = calculator.calculate('100000 VND');
+      expect(result.results[0].result).toBe('100 000 VND');
+    });
+
+    it('should convert to KRW and round to integer', () => {
+      const result = calculator.calculate('10 USD to KRW');
+      // 10 USD * 1200 = 12000 KRW (0 decimals)
+      expect(result.results[0].result).toBe('12 000 KRW');
+    });
+
     // Ambiguous Currency Errors
     it('should error on ambiguous currency conversion', () => {
       const result = calculator.calculate('$100 to EUR');

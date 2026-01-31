@@ -24,6 +24,12 @@ describe('Integration Tests - Conversions', () => {
       expect(result.results[0].result).toBe('5 000 m');
     });
 
+    it('should convert using Unicode arrow operator →', () => {
+      // SPECS.md mentions both -> and → should work
+      const result = calculator.calculate('5 km → m');
+      expect(result.results[0].result).toBe('5 000 m');
+    });
+
     it('should convert between imperial and metric', () => {
       const result = calculator.calculate('10 inches in cm');
       expect(result.results[0].result).toBe('25.4 cm');
@@ -117,7 +123,7 @@ describe('Integration Tests - Conversions', () => {
   describe('Presentations with Units', () => {
     it('should preserve units in scientific notation', () => {
       const result = calculator.calculate('5000 km to scientific');
-      expect(result.results[0].result).toMatch(/5(\.0+)?e\+?3 km/);
+      expect(result.results[0].result).toBe('5e+3 km');
     });
 
     it('should preserve units in fraction', () => {
@@ -157,7 +163,7 @@ describe('Integration Tests - Conversions', () => {
     it('should display angle unit for inverse trig in degrees', () => {
       const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
       const result = degreeCalc.calculate('asin(0.5)');
-      expect(result.results[0].result).toMatch(/30(\.\d+)? °/);
+      expect(result.results[0].result).toBe('30 °');
     });
 
     it('should display angle unit for inverse trig in radians', () => {
@@ -169,13 +175,13 @@ describe('Integration Tests - Conversions', () => {
     it('should display angle unit for acos in degrees', () => {
       const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
       const result = degreeCalc.calculate('acos(0)');
-      expect(result.results[0].result).toMatch(/90(\.\d+)? °/);
+      expect(result.results[0].result).toBe('90 °');
     });
 
     it('should display angle unit for atan in degrees', () => {
       const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
       const result = degreeCalc.calculate('atan(1)');
-      expect(result.results[0].result).toMatch(/45(\.\d+)? °/);
+      expect(result.results[0].result).toBe('45 °');
     });
   });
 });

@@ -315,19 +315,7 @@ some_text
   describe('Formatting with Settings', () => {
     it('should apply precision settings', () => {
       const customCalculator = new Calculator(dataLoader, {
-        theme: 'system',
-        fontSize: 'medium',
-        fontFamily: 'monospace',
         precision: 4,
-        angleUnit: 'degree',
-        decimalSeparator: '.',
-        digitGroupingSeparator: ' ',
-        digitGroupingSize: '3',
-        dateFormat: 'YYYY-MM-DD DDD',
-        timeFormat: 'h23',
-        dateTimeFormat: '{date} {time}',
-        imperialUnits: 'us',
-        unitDisplayStyle: 'symbol'
       });
 
       const input = '1 / 3';
@@ -338,18 +326,7 @@ some_text
 
     it('should handle unit display style settings', () => {
       const customCalculator = new Calculator(dataLoader, {
-        theme: 'system',
-        fontSize: 'medium',
-        fontFamily: 'monospace',
         precision: 2,
-        angleUnit: 'degree',
-        decimalSeparator: '.',
-        digitGroupingSeparator: ' ',
-        digitGroupingSize: '3',
-        dateFormat: 'YYYY-MM-DD DDD',
-        timeFormat: 'h23',
-        dateTimeFormat: '{date} {time}',
-        imperialUnits: 'us',
         unitDisplayStyle: 'name'
       });
 
