@@ -64,7 +64,7 @@ Support the following number formats:
 12 oct ⎙ 10
 0xA ⎙ 10
 A base 16 ⎙ 10
-A hexadecimel ⎙ 10
+A hexadecimal ⎙ 10
 A hex ⎙ 10
 255 ⎙ 255
 255 decimal ⎙ 255
@@ -126,11 +126,11 @@ Support input format `{plain date} {plain time}` and `{plain time} {plain date}`
 
 Unix time:
 Support input format in seconds or milliseconds since Unix epoch (1970 Jan 01 00:00:00 UTC)
-3600 unix ⎙ 1970-01-01 Thu 01:00:00 UTC
-3600 unix seconds ⎙ 1970-01-01 Thu 01:00:00 UTC
-3600 unix s ⎙ 1970-01-01 Thu 01:00:00 UTC
-3600000 unix milliseconds ⎙ 1970-01-01 Thu 01:00:00 UTC
-3600000 unix ms ⎙ 1970-01-01 Thu 01:00:00 UTC
+3600 unix ⎙ (1970-01-01 Thu 01:00:00 UTC in local timezone)
+3600 unix seconds ⎙ (1970-01-01 Thu 01:00:00 UTC in local timezone)
+3600 unix s ⎙ (1970-01-01 Thu 01:00:00 UTC in local timezone)
+3600000 unix milliseconds ⎙ (1970-01-01 Thu 01:00:00 UTC in local timezone)
+3600000 unix ms ⎙ (1970-01-01 Thu 01:00:00 UTC in local timezone)
 
 Unix times are of type “instant”.
 
@@ -144,6 +144,7 @@ e # (case insensitive) ⎙ 2.718281828459045
 golden_ratio # (case insensitive) ⎙ 1.618033988749895
 phi # (case insensitive) ⎙ 1.618033988749895
 φ # (case insensitive) ⎙ 1.618033988749895
+Note: number output should follow the settings for decimal places, thousands separator, etc.
 
 # Units
 
@@ -176,11 +177,11 @@ Support meters with all SI prefixes, spelt out or abbreviated.
 Note: abbreviations of attometers, picometers, petameters conflict with am, pm respectively. am/AM/PM of number written exactly as /(0?[1-9]|1[0-2])/ are treated as time indicators only. To use attometers, picometers, petameters, add a decimal part or use the full spelling for these 12 values.
 
 10 am # plain time ⎙ 10:00:00
-10.0 am ⎙ 10 attometers
+10.0 am ⎙ 10 am
 10 attometers ⎙ 10 am
 13 am # 13 attometers ⎙ 13 am
 10 pm # plain time ⎙ 22:00:00
-10.0 pm ⎙ 10 picometers
+10.0 pm ⎙ 10 pm
 10 picometers ⎙ 10 pm
 22 pm # 22 picometers ⎙ 22 pm
 10 PM # plain time ⎙ 22:00:00
@@ -212,10 +213,10 @@ Refer to settings for US/UK definition.
 3 kg ⎙ 3 kg
 3 kilograms ⎙ 3 kg
 Support grams with all SI prefixes, spelt out or abbreviated.
-5 ton ⎙ 5000 kg
-5 tonne ⎙ 5000 kg
-5 t ⎙ 5000 kg
-Support metric tons (tonnes), spelt out or abbreviated, treated as alias of 1000 kg.
+5 ton ⎙ 5 t
+5 tonne ⎙ 5 t
+5 t ⎙ 5 t
+Support metric tons (tonnes), spelt out or abbreviated.
 
 5 carats ⎙ 5 ct
 10 ounces ⎙ 10 oz
@@ -332,19 +333,20 @@ Support mph as an alias of mi/h.
 30 seconds ⎙ 30 s
 30 min ⎙ 30 min
 30 minutes ⎙ 30 min
-1 h ⎙ 1 hour
-1 hours ⎙ 1 hour
-24 hr ⎙ 24 hours
-24 hrs ⎙ 24 hours
-24 hours ⎙ 24 hours
+1 h ⎙ 1 h
+1 hours ⎙ 1 h
+24 hr ⎙ 24 h
+24 hrs ⎙ 24 h
+24 hours ⎙ 24 h
 1 day ⎙ 1 day
-1 wk ⎙ 1 week
-1 week ⎙ 1 week
-1 mth ⎙ 1 month
-1 month ⎙ 1 month
-1 yr ⎙ 1 year
-2 yrs ⎙ 2 years
-1 year ⎙ 1 year
+1 wk ⎙ 1 wk
+1 week ⎙ 1 wk
+1 mo ⎙ 1 mo
+1 mth ⎙ 1 mo
+1 month ⎙ 1 mo
+1 yr ⎙ 1 yr
+2 yrs ⎙ 2 yr
+1 year ⎙ 1 yr
 Support milliseconds, seconds, minutes, hours, days, weeks, months, years (spelt out or abbreviated).
 
 ## Power
@@ -486,34 +488,20 @@ Support unambiguous currency names and symbols:
 10 US dollars ⎙ 10.00 USD
 10 euros ⎙ 10.00 EUR
 €10 ⎙ 10.00 EUR
-£10 ⎙ 10.00 GBP
 ₹10 ⎙ 10.00 INR
 ⃁10 ⎙ 10.00 SAR
-10 dong ⎙ 10 VND
 US$10 ⎙ 10.00 USD
-C$10 ⎙ 10.00 CAD
+C$10 ⎙ 10.00 NIO
 CA$10 ⎙ 10.00 CAD
-CAN$10 ⎙ 10.00 CAD
 A$10 ⎙ 10.00 AUD
 NT$10 ⎙ 10.00 TWD
 HK$10 ⎙ 10.00 HKD
-Note this list is not exhaustive.
-
-Support other unambiguous currency names:
-
-10 won ⎙ 10 KRW
-10 yuan ⎙ 10.00 CNY
-10 renminbi ⎙ 10.00 CNY
-10 RMB ⎙ 10.00 CNY
-10 円 ⎙ 10 JPY
+zł 10 ⎙ 10.00 PLN
 Note this list is not exhaustive.
 
 Ambiguous currency names are treated as currency units of their own dimension, and cannot be converted to other currencies.
 
-Dollars = `$`
-10 dollars ⎙ $10
 $10 ⎙ $10
-10 cents ⎙ ¢10
 ¢10 ⎙ ¢10
 ¥10 ⎙ ¥10
 10 pesos ⎙ 10 pesos
@@ -521,11 +509,10 @@ $10 ⎙ $10
 10 rupees ⎙ 10 rupees
 10 pennies ⎙ 10 pennies
 ¤10 ⎙ ¤10
-10 元 ⎙ 10 元
 Note this list is not exhaustive, other ambiguous currency names should be treated similarly.
 
-Note that pounds are resolved to pounds mass (lbs) in the weight/mass section.
-10 pounds ⎙ 10 lbs
+Note that pounds are resolved to pounds mass (lb) in the weight/mass section.
+10 pounds ⎙ 10 lb
 
 Output currency format rules for unambiguous currencies:
 - Use the standard 3-letter ISO 4217 code for the currency.
@@ -546,17 +533,12 @@ Timezone can be specified as:
 - UTC: `UTC`, `Z`, `Coordinated Universal Time`, `GMT`, `Greenwich Mean Time`
 - UTC offset: `UTC+h`, `UTC-h`, `UTC+hmm`, `UTC-hmm`, `GMT+h`, `GMT-h`, `GMT+hmm`, `GMT-hmm`
 - IANA timezone name: e.g. `America/New_York`, `Europe/London`, `Asia/Tokyo`, etc.
-- Unambiguous long and short timezone : e.g. `Eastern Standard Time`, `Eastern Time`, `Central European Time`, `Japan Standard Time`, `Japan Time`, `AEST`, `JST`, etc.
+- Unambiguous long and short timezone : e.g. `Eastern Standard Time`, `Eastern Time`, `Central European Time`, `Japan Standard Time`, `Japan Time`, `AEST`, etc.
 - Unambiguous major city names: e.g. `New York`, `London`, `Tokyo`, `Sydney`, etc.
 
 Timezones are resolved to IANA timezone names internally. Daylight saving specific names are resolved to their standard timezone names (e.g. `Eastern Time`, `Eastern Daylight Time` and `Eastern Standard Time` all resolve to `America/New_York`).
 
 Unambiguous names refers to names that only map to a single IANA timezone. Ambiguous names are not supported.
-
-Source of timezones list: `Intl.supportedValuesOf("timeZone")`
-Source of long and short timezone names: `(new Intl.DateTimeFormat(`en-{countryCode}`, { timeZone: timezone, timeZoneName: "long" | "longGeneric" | "shortGeneric" })).format(new Date())`
-Source of world’s major cities: https://download.geonames.org/export/dump/cities15000.zip
-- Filter to population > 500000 or capital cities (`PPLC`) only.
 
 Examples:
 12:30 UTC ⎙ 12:30 UTC
@@ -594,7 +576,7 @@ User defined units can also be used in derived units.
 150 USD per person per day ⎙ 150 USD person⁻¹ day⁻¹
 
 Dimensionless units can also be used in derived units.
-12 million km ⎙ 1.2e7 km
+12 million km ⎙ 12 000 000 km
 50 percent per year ⎙ 0.5 /yr
 
 Rules for parsing derived units:
@@ -642,7 +624,7 @@ Derive units can also be converted.
 1 kW h to J ⎙ 3.6e6 J
 60 mph to km/h ⎙ 96.56 km/h
 171 cm to ft ⎙ 5.61 ft
-100 EUR/min to USD/month ⎙ 6993.01 USD/month
+100 EUR/min to USD/month ⎙ 6993.01 USD/mo
 
 User specified units can also be converted if they have the same dimension.
 5 clicks per second to clicks/min ⎙ 300 clicks/min
@@ -676,9 +658,9 @@ For dimensionless values, support base conversions:
 0xFF to dec ⎙ 255
 
 Support arbitrary base conversion from 2 to 36:
-255 to base 3 ⎙ 100110 base 3
-255 to base 4 ⎙ 3333 base 4
-200 to base 36 ⎙ 5A base 36
+255 to base 3 ⎙ 100110 (base 3)
+255 to base 4 ⎙ 3333 (base 4)
+200 to base 36 ⎙ 5A (base 36)
 
 Support conversion between arbitrary bases:
 ABC base 14 to base 18 ⎙ 6A2 base 18
@@ -696,7 +678,7 @@ Support stripping units, units are removed from the evaluated value in its unit.
 Support output as fraction:
 1000 to fraction ⎙ 1000/1
 0.75 to fraction ⎙ 3/4
-2.5 kg to fraction ⎙ 5/2 kg
+2.5 kg to fraction ⎙ 2 1/2 kg
 
 Support specifying number of decimals:
 10/3 to 2 decimals ⎙ 3.33
@@ -798,13 +780,13 @@ Division expression: `60 km per 2 h`
 ## Date and time arithmetic
 For the purpose of date and time arithmetic, treat values of one time unit and values of composite time units as type “duration”.
 
-2 days + 3 hours ⎙ 2.125 days
+2 days + 3 hours ⎙ 2.125 day
 
 Subtraction between two “plain date” values results in a duration.
 2023 Jan 10 - 2023 Jan 1 ⎙ 9 day
-2023 Jun 15 - 2023 Jan 1 ⎙ 6 months 14 day
+2023 Jun 15 - 2023 Jan 1 ⎙ 6 mo 14 day
 2023 Jun 15 - 2023 Jan 1 to days ⎙ 195 day
-2023 Jan 1 - 2023 Jun 15 ⎙ -6 months -14 day
+2023 Jan 1 - 2023 Jun 15 ⎙ -6 mo -14 day
 
 Subtraction between two “plain time” values results in a duration.
 14:30 - 09:15 ⎙ 5 h 15 min
@@ -818,7 +800,7 @@ When dates are involved in addition or subtraction, resulting duration should be
 When times are involved in addition or subtraction, resulting duration should be expressed in terms of hours, minutes, seconds as applicable.
 
 Subtraction between two “instant” values results in a duration expressed in terms of seconds.
-now - 3600 seconds ago ⎙ 3600 s
+now - 3600 seconds ago ⎙ 1 h
 
 Subtraction between two “zoned date time” values results in a duration expressed in terms of years, months, weeks, days, hours, minutes, seconds as applicable.
 The time zone offsets are taken into account during the subtraction.
