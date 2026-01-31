@@ -792,7 +792,7 @@ describe('Parser', () => {
     it('should record LexerError on unknown characters', () => {
       // Unknown characters should be recorded in errors array
       const result = parseWithErrors('this is just @#$ invalid &^% text');
-      expect(result.errors).toHaveLength(0); // Parser errors, not lexer errors for this input
+      expect(result.errors.length).toBeGreaterThan(0); // Parser error for invalid syntax
       // The lexer will catch the @ character
       // Let's check lexer errors directly
       const lexer = new Lexer('this is just @#$ invalid &^% text', dataLoader);
@@ -860,7 +860,7 @@ describe('Parser', () => {
       expect(date.day).toBe(28);
     });
 
-    describe('Time Literals (Phase 2.5)', () => {
+    describe('Time Literal', () => {
       it('should parse H:MM as PlainTimeLiteral', () => {
         const expr = parseExpression('10:30');
         expect(expr.type).toBe('PlainTimeLiteral');
@@ -988,40 +988,60 @@ describe('Parser', () => {
 
       describe('Unconventional 12-hour times (strict validation)', () => {
         it('should reject 13:00 am (hour out of 1-12 range)', () => {
-          const expr = parseExpression('13:00 am');
-          expect(expr.type).not.toBe('PlainTimeLiteral');
-          // Should not be parsed as time literal
+          const doc = parse('13:00 am');
+          expect(doc.lines.length).toBeGreaterThan(0);
+          const line = doc.lines[0];
+          // Invalid syntax with leftover tokens - should be PlainText
+          expect(line.type).toBe('PlainText');
         });
 
         it('should reject 14:20:05 pm (hour out of 1-12 range)', () => {
-          const expr = parseExpression('14:20:05 pm');
-          expect(expr.type).not.toBe('PlainTimeLiteral');
+          const doc = parse('14:20:05 pm');
+          expect(doc.lines.length).toBeGreaterThan(0);
+          const line = doc.lines[0];
+          // Invalid syntax with leftover tokens - should be PlainText
+          expect(line.type).toBe('PlainText');
         });
 
         it('should reject 0:00 am (hour 0 invalid in 12-hour format)', () => {
-          const expr = parseExpression('0:00 am');
-          expect(expr.type).not.toBe('PlainTimeLiteral');
+          const doc = parse('0:00 am');
+          expect(doc.lines.length).toBeGreaterThan(0);
+          const line = doc.lines[0];
+          // Invalid syntax with leftover tokens - should be PlainText
           // Midnight must be written as "12:00 am"
+          expect(line.type).toBe('PlainText');
         });
 
         it('should reject 00:15 am (hour 0 invalid in 12-hour format)', () => {
-          const expr = parseExpression('00:15 am');
-          expect(expr.type).not.toBe('PlainTimeLiteral');
+          const doc = parse('00:15 am');
+          expect(doc.lines.length).toBeGreaterThan(0);
+          const line = doc.lines[0];
+          // Invalid syntax with leftover tokens - should be PlainText
+          expect(line.type).toBe('PlainText');
         });
 
         it('should reject 0:30 pm (hour 0 invalid in 12-hour format)', () => {
-          const expr = parseExpression('0:30 pm');
-          expect(expr.type).not.toBe('PlainTimeLiteral');
+          const doc = parse('0:30 pm');
+          expect(doc.lines.length).toBeGreaterThan(0);
+          const line = doc.lines[0];
+          // Invalid syntax with leftover tokens - should be PlainText
+          expect(line.type).toBe('PlainText');
         });
 
         it('should reject 23:59 pm (hour out of 1-12 range)', () => {
-          const expr = parseExpression('23:59 pm');
-          expect(expr.type).not.toBe('PlainTimeLiteral');
+          const doc = parse('23:59 pm');
+          expect(doc.lines.length).toBeGreaterThan(0);
+          const line = doc.lines[0];
+          // Invalid syntax with leftover tokens - should be PlainText
+          expect(line.type).toBe('PlainText');
         });
 
         it('should reject 15:00 am (hour out of 1-12 range)', () => {
-          const expr = parseExpression('15:00 am');
-          expect(expr.type).not.toBe('PlainTimeLiteral');
+          const doc = parse('15:00 am');
+          expect(doc.lines.length).toBeGreaterThan(0);
+          const line = doc.lines[0];
+          // Invalid syntax with leftover tokens - should be PlainText
+          expect(line.type).toBe('PlainText');
         });
 
         it('should accept valid 12-hour times (1-12 with AM/PM)', () => {

@@ -1474,8 +1474,8 @@ result = if x > 5 then 100 else 50`;
   });
 
   describe('Complex Multi-Line Calculations', () => {
-    it.skip('should handle mixed calculations', () => {
-      // TODO: Full multi-line with comments and conversions may have formatting differences
+    it('should handle mixed calculations', () => {
+      // TODO: result.results.length should be 7, currently 6.
       const input = `# Distance calculation
 speed = 60 km/h
 time = 2.5 h
@@ -1559,8 +1559,8 @@ distance to m`;
       expect(result.results[0].result).toBe(null);
     });
 
-    it.skip('should fail on invalid expressions gracefully', () => {
-      // TODO: Error handling
+    it('should fail on invalid expressions gracefully', () => {
+      // TODO: result.results.length should be 3, currently 5.
       const input = `This is just text
 5 + 5
 More text here`;
@@ -1569,6 +1569,80 @@ More text here`;
       // Second line should calculate
       expect(result.results[1].result).toBe('10');
       expect(result.results[1].hasError).toBe(false);
+    });
+
+    it('should generate results for multiple consecutive empty lines', () => {
+      const input = `5 + 5
+
+
+10 * 2`;
+      const result = calculator.calculate(input);
+
+      // Should have 4 results: expression, empty, empty, expression
+      expect(result.results.length).toBe(4);
+      expect(result.results[0].result).toBe('10');
+      expect(result.results[1].type).toBe('EmptyLine');
+      expect(result.results[1].result).toBe(null);
+      expect(result.results[2].type).toBe('EmptyLine');
+      expect(result.results[2].result).toBe(null);
+      expect(result.results[3].result).toBe('20');
+    });
+
+    it('should handle empty lines at document boundaries', () => {
+      const input = "\n\n5 + 5\n\n";
+      const result = calculator.calculate(input);
+
+      // Should have 4 results: empty, empty, expression, empty
+      // (The template string creates 2 leading newlines)
+      expect(result.results.length).toBe(4);
+      expect(result.results[0].type).toBe('EmptyLine');
+      expect(result.results[1].type).toBe('EmptyLine');
+      expect(result.results[2].result).toBe('10');
+      expect(result.results[3].type).toBe('EmptyLine');
+    });
+
+    it('should parse single word as valid identifier expression', () => {
+      const input = `x = 5
+x
+y`;
+      const result = calculator.calculate(input);
+
+      // Should have 3 results
+      expect(result.results.length).toBe(3);
+      expect(result.results[0].result).toBe('5'); // x = 5
+      expect(result.results[1].result).toBe('5'); // x (variable reference)
+      expect(result.results[2].hasError).toBe(true); // y (undefined variable)
+      expect(result.results[2].result).toContain('Undefined variable');
+    });
+
+    it('should treat multi-word plain text as single line', () => {
+      const input = `Hello world this is text
+5 + 5
+Another plain text line`;
+      const result = calculator.calculate(input);
+
+      // Should have exactly 3 results (not split into multiple)
+      expect(result.results.length).toBe(3);
+      expect(result.results[0].type).toBe('PlainText');
+      expect(result.results[0].hasError).toBe(true); // Parser error recorded
+      expect(result.results[1].result).toBe('10'); // Second line: 5 + 5
+      expect(result.results[2].type).toBe('PlainText');
+      expect(result.results[2].hasError).toBe(true);
+    });
+
+    it('should still correctly parse multi-token expressions', () => {
+      const input = `(5 + 3) * 2
+100 km / 2 h
+x = 10 + 20`;
+      const result = calculator.calculate(input);
+
+      expect(result.results.length).toBe(3);
+      expect(result.results[0].result).toBe('16');
+      expect(result.results[1].result).toContain('50');
+      expect(result.results[2].result).toBe('30');
+      expect(result.results[0].hasError).toBe(false);
+      expect(result.results[1].hasError).toBe(false);
+      expect(result.results[2].hasError).toBe(false);
     });
   });
 });

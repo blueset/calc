@@ -156,9 +156,13 @@ export class Parser {
     this.lineErrors.clear();  // Reset errors for each parse
 
     while (!this.isAtEnd()) {
-      // Skip newlines
-      while (this.match(TokenType.NEWLINE)) {
-        // Just consume
+      // Consume leading empty lines (create EmptyLine nodes for them)
+      // An empty line is represented by a NEWLINE token that appears before any content
+      while (this.check(TokenType.NEWLINE) && !this.isAtEnd()) {
+        const emptyLineStart = this.currentToken().start;
+        const emptyLineEnd = this.currentToken().end;
+        this.advance(); // consume NEWLINE
+        lines.push(createEmptyLine(emptyLineStart, emptyLineEnd));
       }
 
       if (this.isAtEnd()) break;
@@ -167,10 +171,31 @@ export class Parser {
       const line = this.parseLine();
       lines.push(line);
 
-      // Expect newline or EOF after each line
-      if (!this.isAtEnd() && !this.check(TokenType.NEWLINE)) {
-        // Error: missing newline, but continue
-        this.advance();
+      // Consume the trailing NEWLINE after the line (if present)
+      // This NEWLINE is part of the line we just parsed, not an empty line
+      if (this.match(TokenType.NEWLINE)) {
+        // Successfully consumed line ending
+      } else if (!this.isAtEnd()) {
+        // Safety net: consume all tokens until NEWLINE and record error
+        // This should rarely execute with Fix 2, but prevents infinite loops
+        const errorStart = this.currentToken().start;
+
+        while (!this.check(TokenType.NEWLINE) && !this.isAtEnd()) {
+          this.advance();
+        }
+
+        const errorEnd = this.previous().end;
+        const parserError = new ParserError(
+          'Unexpected tokens after line',
+          errorStart,
+          errorEnd
+        );
+        this.lineErrors.set(lineNumber, parserError);
+
+        // Also consume the NEWLINE if we found one
+        if (this.check(TokenType.NEWLINE)) {
+          this.advance();
+        }
       }
     }
 
@@ -252,13 +277,55 @@ export class Parser {
           // Track this variable for context-aware derived unit parsing
           this.definedVariables.add(name);
 
+          // Skip any COMMENT tokens after the variable definition
+          while (this.check(TokenType.COMMENT)) {
+            this.advance();
+          }
+
           return createVariableDefinition(name, value, start, end);
         }
       }
 
       // Otherwise, parse as expression
+      const lineStartPos = this.current;
       const expression = this.parseExpression();
       const end = this.previous().end;
+
+      // Validate that we consumed all tokens on this line (ignoring comments)
+      // Skip any COMMENT tokens after the expression
+      while (this.check(TokenType.COMMENT)) {
+        this.advance();
+      }
+
+      if (!this.check(TokenType.NEWLINE) && !this.isAtEnd()) {
+        // Tokens remaining = invalid expression, treat as plain text
+
+        // Backtrack to line start
+        this.current = lineStartPos;
+
+        // Consume all tokens as plain text
+        const lineNumber = start.line;
+        const textTokens: string[] = [];
+
+        while (!this.check(TokenType.NEWLINE) && !this.isAtEnd()) {
+          textTokens.push(this.currentToken().value);
+          this.advance();
+        }
+
+        const text = textTokens.join(' ');
+        const finalEnd = this.previous().end;
+
+        // Record parser error for this line
+        const parserError = new ParserError(
+          `Invalid expression syntax`,
+          start,
+          finalEnd
+        );
+        this.lineErrors.set(lineNumber, parserError);
+
+        return createPlainText(text, start, finalEnd);
+      }
+
       return createExpressionLine(expression, start, end);
 
     } catch (error) {
