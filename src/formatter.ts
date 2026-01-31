@@ -56,9 +56,23 @@ export class Formatter {
    * Format a number value (with optional unit)
    */
   private formatNumberValue(value: NumberValue): string {
-    const numStr = this.formatNumber(value.value);
+    // Check if this is a currency that should use currency-specific precision
+    const useCurrencyPrecision = this.settings.precision === -1
+                                  && value.unit
+                                  && this.isCurrencyUnit(value.unit);
+
+    const numStr = useCurrencyPrecision
+                    ? this.formatCurrencyNumber(value.value, value.unit!)
+                    : this.formatNumber(value.value);
+
     if (value.unit) {
       const unitStr = this.formatUnit(value.unit);
+
+      // For ambiguous currencies (e.g., $, £, ¥), place symbol before value
+      if (this.isAmbiguousCurrency(value.unit)) {
+        return `${unitStr}${numStr}`;
+      }
+
       return `${numStr} ${unitStr}`;
     }
     return numStr;
@@ -68,7 +82,17 @@ export class Formatter {
    * Format a derived unit value (e.g., "50 km/h", "9.8 m/s²")
    */
   private formatDerivedUnitValue(value: DerivedUnitValue): string {
-    const numStr = this.formatNumber(value.value);
+    // Check if there's exactly one unit with positive exponent and it's a currency
+    const positiveTerms = value.terms.filter(t => t.exponent > 0);
+    const shouldUseCurrencyPrecision =
+      this.settings.precision === -1 &&
+      positiveTerms.length === 1 &&
+      this.isCurrencyUnit(positiveTerms[0].unit);
+
+    const numStr = shouldUseCurrencyPrecision
+      ? this.formatCurrencyNumber(value.value, positiveTerms[0].unit)
+      : this.formatNumber(value.value);
+
     const unitStr = this.formatDerivedUnit(value.terms);
     return `${numStr} ${unitStr}`;
   }
@@ -123,6 +147,72 @@ export class Formatter {
    */
   private formatErrorValue(value: ErrorValue): string {
     return `Error: ${value.error.message}`;
+  }
+
+  /**
+   * Check if a unit represents a currency
+   */
+  private isCurrencyUnit(unit: Unit): boolean {
+    if (!this.dataLoader) return false;
+
+    // Check unambiguous currency
+    if (this.dataLoader.getCurrencyByCode(unit.id)) {
+      return true;
+    }
+
+    // Check ambiguous currency dimension
+    if (unit.dimension === 'currency' || unit.dimension?.startsWith('currency_symbol_')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if a unit is an ambiguous currency (e.g., $, £, ¥)
+   */
+  private isAmbiguousCurrency(unit: Unit): boolean {
+    return unit.dimension?.startsWith('currency_symbol_') || false;
+  }
+
+  /**
+   * Format number with currency-specific decimal places
+   */
+  private formatCurrencyNumber(num: number, unit: Unit): string {
+    const currency = this.dataLoader?.getCurrencyByCode(unit.id);
+    if (!currency) {
+      // Ambiguous currency - use default precision
+      return this.formatNumber(num);
+    }
+
+    const decimalPlaces = currency.minorUnits;
+    let formatted = num.toFixed(decimalPlaces);
+
+    // Apply decimal separator (formatNumber uses '.' by default)
+    const decimalSep = this.settings.decimalSeparator;
+    if (decimalSep === ',') {
+      formatted = formatted.replace('.', ',');
+    }
+
+    // Apply digit grouping if enabled
+    if (this.settings.digitGroupingSeparator !== '' && this.settings.digitGroupingSize !== 'off') {
+      formatted = this.applyDigitGrouping(formatted, decimalSep);
+    }
+
+    return formatted;
+  }
+
+  /**
+   * Get display symbol for ambiguous currency
+   */
+  private getAmbiguousSymbol(dimension: string): string {
+    if (!this.dataLoader) return dimension;
+
+    const allAmbiguous = this.dataLoader.getAllAmbiguousCurrencies();
+    return [
+      ...allAmbiguous.symbolAdjacent,
+      ...allAmbiguous.symbolSpaced
+    ].find(amb => amb.dimension === dimension)?.symbol ?? dimension;
   }
 
   /**
@@ -303,6 +393,11 @@ export class Formatter {
    * Format a unit (display name based on settings)
    */
   private formatUnit(unit: Unit): string {
+    // Check ambiguous currency first - display as symbol not dimension
+    if (unit.dimension?.startsWith('currency_symbol_')) {
+      return this.getAmbiguousSymbol(unit.dimension);
+    }
+
     if (this.settings.unitDisplayStyle === 'symbol') {
       return unit.displayName.symbol;
     } else {

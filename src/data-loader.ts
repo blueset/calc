@@ -162,6 +162,7 @@ export class DataLoader {
   private currencyBySpacedSymbol = new Map<string, UnambiguousCurrency>();
   private ambiguousCurrencyByAdjacentSymbol = new Map<string, AmbiguousCurrency>();
   private ambiguousCurrencyBySpacedSymbol = new Map<string, AmbiguousCurrency>();
+  private ambiguousCurrencyByDimension = new Map<string, AmbiguousCurrency>();
 
   // Timezone data
   private timezones: Timezone[] = [];
@@ -275,9 +276,11 @@ export class DataLoader {
     // Build ambiguous currency lookups
     for (const ambiguous of this.ambiguousCurrencies.symbolAdjacent) {
       this.ambiguousCurrencyByAdjacentSymbol.set(ambiguous.symbol, ambiguous);
+      this.ambiguousCurrencyByDimension.set(ambiguous.dimension, ambiguous);
     }
     for (const ambiguous of this.ambiguousCurrencies.symbolSpaced) {
       this.ambiguousCurrencyBySpacedSymbol.set(ambiguous.symbol, ambiguous);
+      this.ambiguousCurrencyByDimension.set(ambiguous.dimension, ambiguous);
     }
   }
 
@@ -428,6 +431,14 @@ export class DataLoader {
    */
   getAmbiguousCurrencyBySpacedSymbol(symbol: string): AmbiguousCurrency | undefined {
     return this.ambiguousCurrencyBySpacedSymbol.get(symbol);
+  }
+
+  /**
+   * Get ambiguous currency by dimension ID (e.g., "currency_symbol_0024" for "$")
+   * Used by parser to resolve ambiguous currency dimensions to their symbols
+   */
+  getAmbiguousCurrencyByDimension(dimension: string): AmbiguousCurrency | undefined {
+    return this.ambiguousCurrencyByDimension.get(dimension);
   }
 
   /**

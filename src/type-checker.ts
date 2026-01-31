@@ -1076,6 +1076,20 @@ export class TypeChecker {
     if (unit.type === 'SimpleUnit') {
       const unitData = this.dataLoader.getUnitByName(unit.name);
       if (!unitData) {
+        // Check if it's an unambiguous currency
+        const currency = this.dataLoader.getCurrencyByCode(unit.unitId);
+        if (currency) {
+          return { kind: 'physical', dimension: 'currency' }; // All unambiguous currencies share dimension
+        }
+
+        // Check if it's an ambiguous currency
+        if (unit.unitId.startsWith('currency_symbol_')) {
+          const ambiguous = this.dataLoader.getAmbiguousCurrencyByAdjacentSymbol(unit.name);
+          if (ambiguous) {
+            return { kind: 'physical', dimension: ambiguous.dimension }; // Unique per symbol
+          }
+        }
+
         // User-defined unit - treat as its own unique dimension
         return { kind: 'physical', dimension: `user_defined_${unit.unitId}` };
       }

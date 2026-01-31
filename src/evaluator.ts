@@ -623,7 +623,6 @@ export class Evaluator {
           return this.createError(`Cannot ${op === '+' ? 'add' : 'subtract'} values with different dimensions`);
         }
 
-        // Convert right to left's unit
         try {
           const convertedRight = this.unitConverter.convert(rightValue, right.unit, left.unit);
           const result = op === '+' ? leftValue + convertedRight : leftValue - convertedRight;
@@ -1801,7 +1800,7 @@ export class Evaluator {
    * Resolve a unit expression to a Unit object from the data loader
    *
    * Returns:
-   * - For SimpleUnit: the resolved Unit object from data loader, or pseudo-unit for user-defined units
+   * - For SimpleUnit: the resolved Unit object from data loader, currency unit, or pseudo-unit for user-defined units
    * - For DerivedUnit: null (caller should check unitExpr.type and handle separately)
    *
    * Note: DerivedUnit AST nodes are now created by the parser in conversion targets.
@@ -1809,10 +1808,66 @@ export class Evaluator {
    */
   private resolveUnit(unitExpr: AST.UnitExpression): Unit | null {
     if (unitExpr.type === 'SimpleUnit') {
+      // STEP 1: Try regular unit database first
       const unit = this.dataLoader.getUnitById(unitExpr.unitId);
       if (unit) return unit;
 
-      // User-defined unit - create pseudo-unit on-the-fly
+      // STEP 2: Check unambiguous currency (ISO code)
+      const currency = this.dataLoader.getCurrencyByCode(unitExpr.unitId);
+      if (currency) {
+        // Get exchange rate relative to USD (base currency for 'currency' dimension)
+        // This allows currencies to work like regular units with conversion factors
+        let exchangeRate: number;
+
+        if (currency.code === 'USD') {
+          // USD is the base currency
+          exchangeRate = 1.0;
+        } else {
+          try {
+            // Convert 1 unit of this currency to USD to get the conversion factor
+            const converted = this.currencyConverter.convert(
+              { amount: 1.0, currencyCode: currency.code },
+              'USD'
+            );
+            exchangeRate = converted.amount;
+          } catch (e) {
+            // Exchange rates not loaded - return null to trigger error
+            return null;
+          }
+        }
+
+        return {
+          id: unitExpr.unitId,
+          dimension: 'currency', // ALL unambiguous currencies share "currency" dimension
+          names: [currency.code, ...currency.names],
+          conversion: { type: 'linear', factor: exchangeRate }, // Dynamic factor based on exchange rate!
+          displayName: {
+            symbol: currency.code,
+            singular: currency.displayName.singular,
+            plural: currency.displayName.plural || currency.displayName.singular
+          }
+        };
+      }
+
+      // STEP 3: Check ambiguous currency symbol ($, £, ¥)
+      if (unitExpr.unitId.startsWith('currency_symbol_')) {
+        const ambiguous = this.dataLoader.getAmbiguousCurrencyByAdjacentSymbol(unitExpr.name);
+        if (ambiguous) {
+          return {
+            id: unitExpr.unitId,
+            dimension: ambiguous.dimension, // e.g., "currency_symbol_0024" (unique per symbol)
+            names: [ambiguous.symbol],
+            conversion: { type: 'linear', factor: 1.0 },
+            displayName: {
+              symbol: ambiguous.symbol,
+              singular: ambiguous.symbol,
+              plural: ambiguous.symbol
+            }
+          };
+        }
+      }
+
+      // STEP 4: User-defined unit fallback
       // Each user-defined unit gets its own unique dimension
       return {
         id: unitExpr.unitId,
@@ -1923,6 +1978,15 @@ export class Evaluator {
           dimensionMap.set(term.unit.dimension, currentExp + term.exponent);
           continue;
         }
+
+        // Handle currency dimensions (not in units database)
+        // Currency dimension or ambiguous currency dimensions (currency_symbol_*)
+        if (term.unit.dimension === 'currency' || term.unit.dimension.startsWith('currency_symbol_')) {
+          const currentExp = dimensionMap.get(term.unit.dimension) || 0;
+          dimensionMap.set(term.unit.dimension, currentExp + term.exponent);
+          continue;
+        }
+
         throw new Error(`Unknown dimension: ${term.unit.dimension}`);
       }
 

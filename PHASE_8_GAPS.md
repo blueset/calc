@@ -498,41 +498,76 @@ The `/` character in derived units (like `kg/m²`) was being interpreted as an *
 ## Phase 5: Evaluation Engine (18 tests)
 
 ### Feature: Currency Unit Resolution
-- **Tests**:
-  - `should handle currency ISO codes` (evaluation part)
-  - `should handle currency names` (evaluation part)
-  - `should handle unambiguous currency symbols` (evaluation part)
-- **Examples**:
-  - `100 USD` → evaluates successfully
-  - `100 US dollars` → evaluates successfully
-  - `US$100` → evaluates successfully
-- **Work Required**:
-  - Evaluator's `resolveUnit()` currently only checks unit database
-  - Add fallback to check currency database when unit lookup fails
-  - Convert currency to Unit format for evaluation (use currency as dimension)
-  - **Ambiguous currency handling**:
-    - For unambiguous currencies: use currency code as dimension (e.g., "USD")
-    - For ambiguous symbols ($, £, ¥): use special dimension from `ambiguous.symbolAdjacent` entry
-    - Example: `$` has `dimension: "currency_symbol_0024"` (hex for U+0024)
-    - Operations between different ambiguous dimensions should error
-    - Operations between same ambiguous dimension are allowed (e.g., `$10 + $5`)
-    - Conversions between ambiguous currencies should error with helpful message
-- **Ambiguous Currency Data Structure**:
-  ```json
-  "ambiguous": {
-    "symbolAdjacent": [
-      {"symbol": "$", "dimension": "currency_symbol_0024"},
-      {"symbol": "£", "dimension": "currency_symbol_00A3"},
-      {"symbol": "¥", "dimension": "currency_symbol_00A5"}
-    ],
-    "symbolSpaced": []  // Typically empty; ISO codes are unambiguous
-  }
-  ```
-- **Effort**: Medium (2-3 hours)
-- **Files**:
-  - `src/evaluator.ts` (enhance `resolveUnit()` to check currencies, handle ambiguous dimensions)
-  - `src/data-loader.ts` (add methods for ambiguous currency lookup)
-  - `src/type-checker.ts` (may need updates for ambiguous currency dimension checking)
+
+**Status**: ✅ **COMPLETED** (all 37 currency tests passing)
+
+- **Tests Passing**:
+  - ✅ `should handle currency ISO codes` (USD, EUR, GBP, JPY)
+  - ✅ `should handle currency names` (euros, dollars, pounds)
+  - ✅ `should handle multi-word names` (US Dollars, Hong Kong Dollars)
+  - ✅ `should handle unambiguous currency symbols` (US$, €, CA$)
+  - ✅ `should allow same ambiguous currency arithmetic` ($10 + $5)
+  - ✅ `should error on different ambiguous currency arithmetic` ($10 + £5)
+  - ✅ 27 comprehensive currency conversion tests
+  - ✅ 14 currency formatting tests
+
+- **Implementation Summary**:
+
+  **1. Parser Updates** (`src/parser.ts:471-523, 867-921`):
+  - Currency-before-number pattern recognizes both unambiguous and ambiguous currencies
+  - Checks `getCurrencyByCode()` for ISO codes (USD, JPY, EUR)
+  - Checks `getCurrenciesByName()` for single-word names (euros, dollars)
+  - Checks `getAmbiguousCurrencyByDimension()` for ambiguous symbols ($, £, ¥)
+  - Multi-word parsing handles "US Dollars", "Hong Kong Dollars" automatically
+
+  **2. DataLoader Updates** (`src/data-loader.ts:164-165, 278-285, 435-444`):
+  - Added `ambiguousCurrencyByDimension` map for dimension → symbol lookup
+  - Added `getAmbiguousCurrencyByDimension()` method
+  - Populated map during currency initialization
+
+  **3. Evaluator Updates** (`src/evaluator.ts:1811-1889, 2000-2017`):
+  - `resolveUnit()` checks currency database after unit database
+  - Unambiguous currencies: all share dimension "currency" with dynamic exchange rate factors
+  - Ambiguous currencies: each gets unique dimension (currency_symbol_0024 for "$")
+  - Added handling for currency dimensions in derived unit dimension calculation
+  - Currency dimensions treated as base dimensions (like user-defined units)
+
+  **4. Formatter Updates** (`src/formatter.ts:58-95, 139-200`):
+  - Added `isCurrencyUnit()` and `isAmbiguousCurrency()` helper methods
+  - `formatNumberValue()` places ambiguous symbols before value: "$15" not "15 $"
+  - `formatDerivedUnitValue()` applies currency precision when currency is only positive exponent
+  - `formatCurrencyNumber()` uses `currency.minorUnits` for decimal places:
+    - USD: 2 decimals (123.456 → 123.46)
+    - JPY: 0 decimals (123.456 → 123)
+    - EUR: 2 decimals (99.999 → 100.00)
+
+- **Shared Dimension Design**:
+  - **Why?** Enables natural currency conversion (USD ↔ EUR ↔ GBP)
+  - Type system allows operations between same-dimension units
+  - Exchange rates provide dynamic conversion factors
+  - **Alternative rejected**: Per-currency dimensions (would require explicit conversions, more verbose)
+
+- **Ambiguous Currency Handling**:
+  - Problem: "$" used by USD, CAD, AUD, SGD, HKD, etc.
+  - Solution: Unique dimensions prevent accidental mixing
+  - `$10 + $5` → works (same dimension)
+  - `$10 + £5` → type error (different dimensions)
+  - User must clarify: US$, CA$, AU$, or use ISO codes
+
+- **Files Modified**:
+  - `src/parser.ts` (currency recognition, dimension lookup)
+  - `src/data-loader.ts` (ambiguous currency map)
+  - `src/evaluator.ts` (currency resolution, dimension handling)
+  - `src/formatter.ts` (symbol placement, currency precision)
+  - `tests/integration.test.ts` (+27 tests)
+  - `tests/currency.test.ts` (+14 tests)
+
+- **Test Coverage**:
+  - Basic conversions (USD→EUR, EUR→USD, chain conversions)
+  - Ambiguous currency errors and arithmetic
+  - Derived units with currencies (USD/hour, USD/m²)
+  - Complex arithmetic and edge cases
+  - Currency-specific formatting and precision
 
 ### Feature: Dimensionless Unit Conversion (3 tests)
 

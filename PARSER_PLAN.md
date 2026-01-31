@@ -126,8 +126,19 @@
   - [x] Compute numeric results - integration with multiply/divide operations complete
   - [x] Handle unit conversions during simplification (cm² to m² factor: 10000)
   - [x] Tests re-enabled: lines 624-680 in integration.test.ts ✓
-- [ ] Currency unit resolution in evaluator (fallback from unit to currency lookup)
-- [ ] Ambiguous currency dimension handling ($ → "currency_symbol_0024", error on operations)
+- [x] Currency unit resolution in evaluator (fallback from unit to currency lookup)
+  - [x] ISO currency codes (USD, EUR, GBP, JPY) - parser checks by code
+  - [x] Currency names (dollars, euros, pounds) - parser checks by name
+  - [x] Multi-word names (US Dollars, Hong Kong Dollars) - multi-word unit parsing
+  - [x] Adjacent symbols ($10, €100, ¥1000) - lexer tokenizes, parser handles
+  - [x] Currency-specific formatting (USD: 2 decimals, JPY: 0 decimals)
+  - [x] Currency precision in derived units (50.123 USD/hour → 50.12 USD/h)
+- [x] Ambiguous currency dimension handling ($ → "currency_symbol_0024", error on operations)
+  - [x] Ambiguous symbols ($, £, ¥) get unique dimensions per symbol
+  - [x] Parser recognizes ambiguous currencies via dimension lookup
+  - [x] Formatter displays symbols before values: "$15" not "15 $"
+  - [x] Type system prevents mixing different ambiguous currencies ($10 + £5 → error)
+  - [x] Currency dimensions handled in derived unit conversions
 - [x] Dimensionless unit auto-conversion (5 dozen → 60, 100 percent → 1)
   - [x] Auto-convert dimensionless units to pure numbers (dozen, percent word form)
   - [x] Percent symbol (%) disambiguation - lexer now correctly distinguishes percent unit from modulo operator
@@ -752,6 +763,50 @@ Duration components (when materialized):
 - `22 pm` → 22 UNIT(picometers)
 - `10 PM` → DATETIME (time: 22:00:00)
 - `33 PM` → 33 UNIT(petameters)
+
+### 10. Currency Implementation
+
+**Architecture**: Shared dimension approach with dynamic conversion factors
+
+**Unambiguous Currencies** (USD, EUR, GBP, JPY, etc.):
+- All share dimension `"currency"` to enable conversion between them
+- Exchange rates provide dynamic conversion factors (e.g., USD→EUR: 0.85)
+- Parser recognizes via `getCurrencyByCode()` for ISO codes (USD, JPY)
+- Parser recognizes via `getCurrenciesByName()` for names (euros, dollars)
+- Multi-word names work via `tryParseMultiWordUnit()` (US Dollars → USD)
+
+**Ambiguous Currencies** ($, £, ¥):
+- Each symbol gets unique dimension: `currency_symbol_XXXX` (Unicode codepoint in hex)
+- Example: "$" → `currency_symbol_0024` (U+0024)
+- Prevents accidental mixing: `$10 + £5` → type error (different dimensions)
+- Parser checks via `getAmbiguousCurrencyByDimension()` for dimension lookup
+- Formatter displays symbol before value: `$15` not `15 $`
+
+**Currency-Specific Formatting** (when `precision=-1`):
+- Uses `currency.minorUnits` from currencies.json
+- USD: 2 decimals (123.456 → 123.46)
+- JPY: 0 decimals (123.456 → 123)
+- EUR: 2 decimals (99.999 → 100.00)
+- Applied in simple values and derived units where currency is the only positive exponent
+- User can override with explicit precision setting
+
+**Parser Behavior**:
+- Adjacent symbols: `$10` (no space allowed between symbol and number)
+- Spaced symbols: `USD 100` (space required between code and number)
+- Multi-word: `100 US Dollars` (collects up to 4 UNIT/IDENTIFIER tokens)
+- Currency-before-number pattern (lines 471-498 in parser.ts)
+
+**Key Files**:
+- Lexer: `src/lexer.ts:123-128, 395-504` (tokenization)
+- Parser: `src/parser.ts:471-523, 913-988` (recognition & multi-word)
+- Evaluator: `src/evaluator.ts:1811-1889, 1995-2020` (dimension handling)
+- Formatter: `src/formatter.ts:58-79, 84-95, 139-200` (precision & symbol placement)
+- Data: `data/currencies.json, data/generate-currencies.ts`
+
+**Design Trade-off**:
+- Alternative considered: Per-currency dimensions (USD has dimension "USD", EUR has dimension "EUR")
+- Rejected because: Would require explicit conversion declarations, more verbose, less intuitive
+- Chosen approach: Shared dimension allows natural unit-like behavior with automatic conversion
 
 ---
 

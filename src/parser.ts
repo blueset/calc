@@ -468,13 +468,13 @@ export class Parser {
       return createBooleanLiteral(value, start, this.previous().end);
     }
 
-    // Currency-before-number pattern (USD 100, EUR 50)
+    // Currency-before-number pattern (USD 100, EUR 50, $100)
     // Check if current token is a UNIT that represents a currency
     if (this.check(TokenType.UNIT)) {
       const unitToken = this.currentToken();
       // Look ahead for NUMBER token
       if (this.peekAhead(1)?.type === TokenType.NUMBER) {
-        // Check if this unit is actually a currency code
+        // Check if this unit is actually a currency code (unambiguous)
         const currency = this.dataLoader.getCurrencyByCode(unitToken.value);
         if (currency) {
           // This is a currency-before-number pattern
@@ -493,6 +493,27 @@ export class Parser {
 
           // Return as NumberWithUnit (number after currency)
           return createNumberWithUnit(value, currencyUnit, numberToken.value, start, end);
+        }
+
+        // Check if this is an ambiguous currency symbol by dimension
+        const ambiguousCurrency = this.dataLoader.getAmbiguousCurrencyByDimension(unitToken.value);
+        if (ambiguousCurrency) {
+          // This is an ambiguous currency-before-number pattern ($100, €50)
+          this.advance(); // consume UNIT
+          const numberToken = this.currentToken();
+          this.advance(); // consume NUMBER
+
+          const value = parseFloat(numberToken.value);
+
+          // Create SimpleUnit with dimension as unitId and symbol as name
+          const currencyUnit = createSimpleUnit(
+            ambiguousCurrency.dimension,  // unitId: "currency_symbol_0024"
+            ambiguousCurrency.symbol,     // name: "$"
+            unitToken.start,
+            unitToken.end
+          );
+
+          return createNumberWithUnit(value, currencyUnit, numberToken.value, start, numberToken.end);
         }
       }
     }
@@ -876,6 +897,22 @@ export class Parser {
       }
 
       const unitData = this.dataLoader.getUnitByName(unitName);
+
+      // Also check currency database for currency codes and names
+      if (!unitData) {
+        // First try by code (e.g., "USD", "JPY", "EUR")
+        const currencyByCode = this.dataLoader.getCurrencyByCode(unitName);
+        if (currencyByCode) {
+          return createSimpleUnit(currencyByCode.code, unitName, start, unitToken.end);
+        }
+
+        // Then try by name (e.g., "euros", "dollars")
+        const currencyMatches = this.dataLoader.getCurrenciesByName(unitName);
+        if (currencyMatches.length > 0) {
+          const currency = currencyMatches[0];
+          return createSimpleUnit(currency.code, unitName, start, unitToken.end);
+        }
+      }
 
       // Use the unit ID if found, otherwise use the name as-is (user-defined)
       const unitId = unitData ? unitData.id : unitName;

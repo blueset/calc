@@ -5,7 +5,7 @@ import { LexerError, ParserError, RuntimeError, LineError } from './error-handli
 import { Document, Line } from './ast';
 import { Evaluator, Value, ErrorValue } from './evaluator';
 import { Formatter } from './formatter';
-import { Settings, defaultSettings } from './settings';
+import { Settings, createSettings, defaultSettings } from './settings';
 
 /**
  * Result of a single line calculation
@@ -38,13 +38,21 @@ export class Calculator {
   private evaluator: Evaluator;
   private formatter: Formatter;
 
-  constructor(dataLoader: DataLoader, settings: Settings = defaultSettings) {
+  constructor(dataLoader: DataLoader, settings: Partial<Settings> = {}) {
     this.dataLoader = dataLoader;
+    const mergedSettings: Settings = createSettings(settings);
     this.evaluator = new Evaluator(dataLoader, {
-      variant: settings.imperialUnits,
-      angleUnit: settings.angleUnit
+      variant: mergedSettings.imperialUnits,
+      angleUnit: mergedSettings.angleUnit
     });
-    this.formatter = new Formatter(settings, dataLoader);
+    this.formatter = new Formatter(mergedSettings, dataLoader);
+  }
+
+  /**
+   * Load exchange rates for currency conversion
+   */
+  loadExchangeRates(rates: any): void {
+    this.evaluator.loadExchangeRates(rates);
   }
 
   /**
