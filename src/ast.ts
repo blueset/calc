@@ -275,7 +275,8 @@ export type ConversionTarget =
   | CompositeUnitTarget
   | PresentationTarget
   | PropertyTarget
-  | TimezoneTarget;
+  | TimezoneTarget
+  | BaseTarget;
 
 export interface UnitTarget extends ASTNode {
   type: 'UnitTarget';
@@ -320,6 +321,14 @@ export type DateTimeProperty =
 export interface TimezoneTarget extends ASTNode {
   type: 'TimezoneTarget';
   timezone: string; // IANA timezone or timezone name
+}
+
+/**
+ * Base conversion target (e.g., "to base 7", "to base 16")
+ */
+export interface BaseTarget extends ASTNode {
+  type: 'BaseTarget';
+  base: number;  // 2-36
 }
 
 /**

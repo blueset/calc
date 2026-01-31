@@ -2,7 +2,7 @@
  * Formatter - converts evaluation results to formatted strings
  */
 
-import type { Value, NumberValue, DerivedUnitValue, CompositeUnitValue, DateTimeValue, BooleanValue, ErrorValue } from './evaluator';
+import type { Value, NumberValue, DerivedUnitValue, CompositeUnitValue, DateTimeValue, BooleanValue, ErrorValue, PresentationValue } from './evaluator';
 import type { Settings } from './settings';
 import { defaultSettings } from './settings';
 import type { Unit } from '../types/types';
@@ -27,6 +27,11 @@ export class Formatter {
    * Main entry point: format any value to string
    */
   format(value: Value): string {
+    // Handle presentation wrapper FIRST
+    if (value.kind === 'presentation') {
+      return this.formatPresentationValue(value);
+    }
+
     switch (value.kind) {
       case 'number':
         return this.formatNumberValue(value);
@@ -50,6 +55,55 @@ export class Formatter {
         const _exhaustive: never = value;
         return String(_exhaustive);
     }
+  }
+
+  /**
+   * Format a value with specific presentation format or base
+   * Preserves units, derived units, and composite structures
+   */
+  private formatPresentationValue(value: PresentationValue): string {
+    const innerValue = value.innerValue;
+    const format = value.format;
+    const formatName = typeof format === 'number' ? `base ${format}` : format;
+
+    // Handle different value types
+    if (innerValue.kind === 'number') {
+      // Number with optional unit: format value, append unit
+      const formattedNumber = typeof format === 'number'
+        ? this.formatBase(innerValue.value, format)
+        : this.formatPresentation(innerValue.value, format);
+
+      if (innerValue.unit) {
+        const unitStr = this.formatUnit(innerValue.unit);
+        return `${formattedNumber} ${unitStr}`;
+      }
+      return formattedNumber;
+    }
+
+    if (innerValue.kind === 'derivedUnit') {
+      // Derived unit: format value, append derived unit expression
+      const formattedNumber = typeof format === 'number'
+        ? this.formatBase(innerValue.value, format)
+        : this.formatPresentation(innerValue.value, format);
+
+      const unitStr = this.formatDerivedUnit(innerValue.terms);
+      return `${formattedNumber} ${unitStr}`;
+    }
+
+    if (innerValue.kind === 'composite') {
+      // Composite: format each component's value, preserve units
+      const parts: string[] = [];
+      for (const comp of innerValue.components) {
+        const formattedValue = typeof format === 'number'
+          ? this.formatBase(comp.value, format)
+          : this.formatPresentation(comp.value, format);
+        const unitStr = this.formatUnit(comp.unit);
+        parts.push(`${formattedValue} ${unitStr}`);
+      }
+      return parts.join(' ');
+    }
+
+    return `Error: Cannot apply ${formatName} format to ${innerValue.kind}`;
   }
 
   /**
@@ -705,6 +759,16 @@ export class Formatter {
    * Format a number in a specific presentation format
    */
   formatPresentation(value: number, format: PresentationFormat): string {
+    // Handle infinity/NaN before format-specific logic
+    if (!isFinite(value)) {
+      if (isNaN(value)) return 'NaN';
+      if (format === 'binary' || format === 'octal' || format === 'hex' || format === 'ordinal') {
+        return `Error: ${format} format requires finite integer value`;
+      }
+      // For fraction and scientific, show infinity
+      return value > 0 ? 'Infinity' : '-Infinity';
+    }
+
     switch (format) {
       case 'binary':
         return this.formatBinary(value);
@@ -728,33 +792,21 @@ export class Formatter {
    * Format as binary (0b...)
    */
   private formatBinary(value: number): string {
-    if (!Number.isInteger(value)) {
-      return `Error: Binary format requires integer value`;
-    }
-    const binary = (value >>> 0).toString(2); // >>> 0 converts to unsigned 32-bit
-    return `0b${binary}`;
+    return this.formatBase(value, 2);
   }
 
   /**
    * Format as octal (0o...)
    */
   private formatOctal(value: number): string {
-    if (!Number.isInteger(value)) {
-      return `Error: Octal format requires integer value`;
-    }
-    const octal = (value >>> 0).toString(8);
-    return `0o${octal}`;
+    return this.formatBase(value, 8);
   }
 
   /**
    * Format as hexadecimal (0x...)
    */
   private formatHex(value: number): string {
-    if (!Number.isInteger(value)) {
-      return `Error: Hexadecimal format requires integer value`;
-    }
-    const hex = (value >>> 0).toString(16).toUpperCase();
-    return `0x${hex}`;
+    return this.formatBase(value, 16);
   }
 
   /**
@@ -823,7 +875,10 @@ export class Formatter {
    * Format in scientific notation
    */
   private formatScientific(value: number): string {
-    return value.toExponential(this.settings.precision);
+    // toExponential requires precision between 0 and 100
+    // If precision is -1 (auto), use undefined to let JS choose
+    const precision = this.settings.precision === -1 ? undefined : this.settings.precision;
+    return value.toExponential(precision);
   }
 
   /**
@@ -849,5 +904,49 @@ export class Formatter {
 
     const suffix = suffixes[rule] || 'th';
     return `${value}${suffix}`;
+  }
+
+  /**
+   * Convert number to arbitrary base (2-36) with fractional part support
+   *
+   * Uses JavaScript's built-in Number.prototype.toString(base) which handles:
+   *   - Integer and fractional parts
+   *   - Negative numbers
+   *   - Trailing zero removal
+   *
+   * Rendering rules:
+   *   - Base 10: Render as-is (no prefix/suffix)
+   *   - Base 2, 8, 16: Use prefixes 0b, 0o, 0x
+   *   - Other bases: Use suffix " (base N)"
+   *   - Negative sign with prefix: "0x-A" not "-0xA"
+   *
+   * Examples:
+   *   formatBase(100, 10) → "100"
+   *   formatBase(10.625, 2) → "0b1010.101"
+   *   formatBase(255, 8) → "0o377"
+   *   formatBase(255, 16) → "0xFF"
+   *   formatBase(-10, 16) → "0x-A"
+   *   formatBase(1000, 35) → "W93 (base 35)"
+   */
+  private formatBase(value: number, base: number): string {
+    if (!isFinite(value)) {
+      return isNaN(value) ? 'NaN' : (value > 0 ? 'Infinity' : '-Infinity');
+    }
+
+    // JavaScript's toString(base) handles integers, fractions, and negatives correctly
+    const digits = value.toString(base).toUpperCase();
+
+    // Apply prefix or suffix based on base
+    if (base === 10) {
+      return digits;                          // "100"
+    } else if (base === 2) {
+      return '0b' + digits;                   // "0b1010.101" or "0b-A"
+    } else if (base === 8) {
+      return '0o' + digits;                   // "0o377"
+    } else if (base === 16) {
+      return '0x' + digits;                   // "0xFF" or "0x-A"
+    } else {
+      return digits + ` (base ${base})`;      // "202 (base 7)"
+    }
   }
 }

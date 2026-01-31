@@ -546,19 +546,19 @@ describe('Formatter', () => {
       expect(formatter.formatPresentation(101, 'ordinal')).toBe('101st');
     });
 
-    it('should reject binary format for non-integers', () => {
+    it('should format binary with fractional parts', () => {
       const formatter = new Formatter();
-      expect(formatter.formatPresentation(3.14, 'binary')).toContain('Error');
+      expect(formatter.formatPresentation(3.75, 'binary')).toBe('0b11.11');
     });
 
-    it('should reject octal format for non-integers', () => {
+    it('should format octal with fractional parts', () => {
       const formatter = new Formatter();
-      expect(formatter.formatPresentation(3.14, 'octal')).toContain('Error');
+      expect(formatter.formatPresentation(10.625, 'octal')).toBe('0o12.5');
     });
 
-    it('should reject hex format for non-integers', () => {
+    it('should format hex with fractional parts', () => {
       const formatter = new Formatter();
-      expect(formatter.formatPresentation(3.14, 'hex')).toContain('Error');
+      expect(formatter.formatPresentation(10.625, 'hex')).toBe('0xA.A');
     });
 
     it('should reject ordinal format for non-integers', () => {

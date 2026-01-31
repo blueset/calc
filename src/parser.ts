@@ -57,6 +57,7 @@ import {
   PresentationTarget,
   PropertyTarget,
   TimezoneTarget,
+  BaseTarget,
   DateTimeProperty,
   PresentationFormat
 } from './ast';
@@ -1119,6 +1120,30 @@ export class Parser {
    */
   private parseConversionTarget(): ConversionTarget {
     const start = this.currentToken().start;
+
+    // Check for "base N" pattern (BASE keyword)
+    if (this.check(TokenType.BASE)) {
+      this.advance(); // consume 'base'
+
+      if (!this.check(TokenType.NUMBER)) {
+        throw new Error(`Expected number after 'base' at ${this.currentToken().start.line}:${this.currentToken().start.column}`);
+      }
+
+      const baseToken = this.advance();
+      const base = parseInt(baseToken.value);
+
+      if (base < 2 || base > 36) {
+        throw new Error(`Invalid base ${base}. Base must be between 2 and 36 at ${baseToken.start.line}:${baseToken.start.column}`);
+      }
+
+      const target: BaseTarget = {
+        type: 'BaseTarget',
+        base,
+        start,
+        end: this.previous().end
+      };
+      return target;
+    }
 
     // Check for presentation formats
     if (this.check(TokenType.IDENTIFIER)) {

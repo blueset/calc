@@ -176,14 +176,18 @@
 - [x] Implement presentation target formatting (binary, hex, etc.)
 - [x] Write unit tests for formatter (52 tests passing)
 
-**Phase 6 Gaps** (see @PHASE_8_GAPS.md for details, 9-12 hours):
-- [ ] Presentation conversion: to binary (255 to binary → 0b11111111)
-- [ ] Presentation conversion: to octal (255 to octal → 0o377)
-- [ ] Presentation conversion: to hexadecimal (255 to hex → 0xFF)
-- [ ] Presentation conversion: to fraction (0.75 to fraction → 3/4)
-- [ ] Presentation conversion: to scientific (5000 to scientific → 5e3)
-- [ ] Infinity display handling
-- [ ] Angle unit display for inverse trig functions
+**Phase 6 Gaps** (see @PHASE_8_GAPS.md for details, 9-12 hours): ✅ **COMPLETED**
+- [x] Presentation conversion: to binary (255 to binary → 0b11111111)
+- [x] Presentation conversion: to octal (255 to octal → 0o377)
+- [x] Presentation conversion: to hexadecimal (255 to hex → 0xFF)
+- [x] Presentation conversion: to fraction (0.75 to fraction → 3/4)
+- [x] Presentation conversion: to scientific (5000 to scientific → 5e3)
+- [x] Infinity display handling
+- [x] Angle unit display for inverse trig functions (asin(0.5) → 30 °)
+- [x] Arbitrary base conversion (100 to base 7 → 202 (base 7))
+- [x] Fractional base conversions (10.625 to base 2 → 0b1010.101)
+- [x] Presentations with units (5000 km to scientific → 5e3 km)
+- [x] Presentations with composite units (5 ft 7.5 in to fraction → 5 ft 7 1/2 in)
 
 ### Phase 6.5: Temporal API Integration
 
@@ -226,8 +230,8 @@
 
 
 **Test Coverage Summary**:
-- **Total Tests**: 914 passing, 0 failed, 19 skipped (933 total) - **98.0% pass rate**
-- **Integration**: 153 tests (133 passing, 0 failed, 19 skipped - comprehensive SPECS.md coverage)
+- **Total Tests**: 1025 passing, 0 failed, 9 skipped (1034 total) - **99.1% pass rate**
+- **Integration**: 210 tests (201 passing, 0 failed, 9 skipped - comprehensive SPECS.md coverage)
   - All timezone tests passing including `2023.06.15 09:00 London` with YYYY.MM.DD format
 - **Lexer**: 124 tests (all token types, disambiguation rules including percent/modulo, error recording, underscore separators, base prefixes)
 - **Parser**: 155 tests (AST generation, operator precedence, composite units, error recovery, base keyword, caret notation, named units, plain date time literals, timezone parsing)

@@ -954,6 +954,13 @@ export class TypeChecker {
         }
         return sourceType;
 
+      case 'BaseTarget':
+        // Base conversions (e.g., "to base 7") are always valid for numeric types
+        if (!this.isPhysicalType(sourceType)) {
+          return this.createError('Base conversion requires numeric value', expr);
+        }
+        return sourceType;
+
       case 'PropertyTarget':
         return this.checkPropertyExtraction(sourceType, expr.target, expr);
 

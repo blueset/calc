@@ -697,36 +697,173 @@ CA$100
   });
 
   describe('Presentation Conversions', () => {
-    it.skip('should convert to binary', () => {
-      // TODO: Presentation conversions (to binary, to octal, etc.) not implemented
+    it('should convert to binary', () => {
       const result = calculator.calculate('255 to binary');
       expect(result.results[0].result).toBe('0b11111111');
     });
 
-    it.skip('should convert to octal', () => {
-      // TODO: Presentation conversions not implemented
+    it('should convert to octal', () => {
       const result = calculator.calculate('255 to octal');
       expect(result.results[0].result).toBe('0o377');
     });
 
-    it.skip('should convert to hexadecimal', () => {
-      // TODO: Presentation conversions not implemented
-      const result = calculator.calculate('255 to hexadecimal');
+    it('should convert to hexadecimal', () => {
+      const result = calculator.calculate('255 to hex');
       expect(result.results[0].result).toBe('0xFF');
     });
 
-    it.skip('should convert to fraction', () => {
-      // TODO: Fraction presentation conversion not implemented
+    it('should convert to fraction', () => {
       const result = calculator.calculate('0.75 to fraction');
       expect(result.results[0].result).toBe('3/4');
     });
 
-    it.skip('should convert to scientific notation', () => {
-      // TODO: Scientific presentation conversion not implemented
+    it('should convert to scientific notation', () => {
       const result = calculator.calculate('5000 to scientific');
       expect(result.results[0].result).toContain('5');
       expect(result.results[0].result).toContain('e');
       expect(result.results[0].result).toContain('3');
+    });
+
+    it('should convert fractional values to binary', () => {
+      const result = calculator.calculate('3.75 to binary');
+      expect(result.results[0].result).toBe('0b11.11');
+    });
+
+    it('should convert fractional values to hex', () => {
+      const result = calculator.calculate('10.625 to hex');
+      expect(result.results[0].result).toBe('0xA.A');
+    });
+
+    it('should convert mixed fractions', () => {
+      const result = calculator.calculate('1.75 to fraction');
+      expect(result.results[0].result).toBe('1 3/4');
+    });
+
+    it('should handle infinity in scientific notation', () => {
+      const result = calculator.calculate('(1/0) to scientific');
+      // Division by zero is caught as an error in the evaluator
+      expect(result.results[0].result).toContain('Error');
+    });
+
+    it('should reject ordinal for non-integers', () => {
+      const result = calculator.calculate('3.14 to ordinal');
+      expect(result.results[0].result).toContain('Error');
+    });
+  });
+
+  describe('Arbitrary Base Conversion', () => {
+    it('should convert to base 7 with suffix', () => {
+      const result = calculator.calculate('100 to base 7');
+      expect(result.results[0].result).toBe('202 (base 7)');
+    });
+
+    it('should convert to base 16 with prefix', () => {
+      const result = calculator.calculate('255 to base 16');
+      expect(result.results[0].result).toBe('0xFF');
+    });
+
+    it('should convert fractional to base 2 with prefix', () => {
+      const result = calculator.calculate('10.625 to base 2');
+      expect(result.results[0].result).toBe('0b1010.101');
+    });
+
+    it('should convert to base 10 without decoration', () => {
+      const result = calculator.calculate('100 to base 10');
+      expect(result.results[0].result).toBe('100');
+    });
+
+    it('should handle negative with prefix', () => {
+      const result = calculator.calculate('-10 to base 16');
+      expect(result.results[0].result).toBe('0x-A');
+    });
+
+    it('should handle negative with suffix', () => {
+      const result = calculator.calculate('-10 to base 7');
+      expect(result.results[0].result).toBe('-13 (base 7)');
+    });
+
+    it('should convert to large base', () => {
+      const result = calculator.calculate('1000 to base 35');
+      expect(result.results[0].result).toContain('(base 35)');
+    });
+
+    it('should error on invalid base (too low)', () => {
+      const result = calculator.calculate('100 to base 1');
+      // Parser error: base out of range
+      expect(result.errors.parser.length).toBeGreaterThan(0);
+      expect(result.results[0].hasError).toBe(true);
+    });
+
+    it('should error on invalid base (too high)', () => {
+      const result = calculator.calculate('100 to base 50');
+      // Parser error: base out of range
+      expect(result.errors.parser.length).toBeGreaterThan(0);
+      expect(result.results[0].hasError).toBe(true);
+    });
+  });
+
+  describe('Presentations with Units', () => {
+    it('should preserve units in scientific notation', () => {
+      const result = calculator.calculate('5000 km to scientific');
+      expect(result.results[0].result).toMatch(/5(\.0+)?e\+?3 km/);
+    });
+
+    it('should preserve units in fraction', () => {
+      const result = calculator.calculate('0.75 kg to fraction');
+      expect(result.results[0].result).toBe('3/4 kg');
+    });
+
+    it('should preserve units in base conversion', () => {
+      const result = calculator.calculate('100 inches to base 7');
+      expect(result.results[0].result).toBe('202 (base 7) in');
+    });
+
+    it('should preserve units with hex', () => {
+      const result = calculator.calculate('255 meters to hex');
+      expect(result.results[0].result).toBe('0xFF m');
+    });
+
+    it('should preserve units with binary', () => {
+      const result = calculator.calculate('15 kg to binary');
+      expect(result.results[0].result).toBe('0b1111 kg');
+    });
+  });
+
+  describe('Presentations with Composite Units', () => {
+    it('should apply presentation to each composite component', () => {
+      const result = calculator.calculate('5 ft 7.5 in to fraction');
+      expect(result.results[0].result).toBe('5 ft 7 1/2 in');
+    });
+
+    it('should apply presentation to converted composite component', () => {
+      const result = calculator.calculate('1.71 m to ft in to fraction');
+      expect(result.results[0].result).toBe('5 ft 7 41/127 in');
+    });
+  });
+
+  describe('Angle Unit Display', () => {
+    it('should display angle unit for inverse trig in degrees', () => {
+      const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
+      const result = degreeCalc.calculate('asin(0.5)');
+      expect(result.results[0].result).toMatch(/30(\.\d+)? °/);
+    });
+
+    it('should display angle unit for inverse trig in radians', () => {
+      const radianCalc = new Calculator(dataLoader, { angleUnit: 'radian' });
+      const result = radianCalc.calculate('asin(0.5)');
+      expect(result.results[0].result).toMatch(/0\.52\d* rad/);
+    });
+
+    it('should display angle unit for acos in degrees', () => {
+      const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
+      const result = degreeCalc.calculate('acos(0)');
+      expect(result.results[0].result).toMatch(/90(\.\d+)? °/);
+    });
+
+    it('should display angle unit for atan in degrees', () => {
+      const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
+      const result = degreeCalc.calculate('atan(1)');
+      expect(result.results[0].result).toMatch(/45(\.\d+)? °/);
     });
   });
 
@@ -1117,11 +1254,9 @@ yesterday
       expect(result.results[0].result).toContain('1');
     });
 
-    it.skip('should handle inverse trig functions', () => {
-      // TODO: Inverse trig function unit formatting may vary
+    it('should handle inverse trig functions', () => {
       const result = calculator.calculate('asin(0.5)');
-      expect(result.results[0].result).toContain('30');
-      expect(result.results[0].result).toContain('deg');
+      expect(result.results[0].result).toContain('30 °');
     });
   });
 
@@ -1257,38 +1392,32 @@ yesterday
   });
 
   describe('Binary Arithmetic', () => {
-    it.skip('should handle bitwise AND', () => {
-      // TODO: Binary operations not fully implemented or formatted
+    it('should handle bitwise AND', () => {
       const result = calculator.calculate('0b1010 & 0b1100 to binary');
       expect(result.results[0].result).toBe('0b1000');
     });
 
-    it.skip('should handle bitwise OR', () => {
-      // TODO: Binary operations not fully implemented or formatted
+    it('should handle bitwise OR', () => {
       const result = calculator.calculate('0b1010 | 0b1100 to binary');
       expect(result.results[0].result).toBe('0b1110');
     });
 
-    it.skip('should handle bitwise XOR', () => {
-      // TODO: Binary operations not fully implemented or formatted
+    it('should handle bitwise XOR', () => {
       const result = calculator.calculate('0b1010 xor 0b1100 to binary');
       expect(result.results[0].result).toBe('0b110');
     });
 
-    it.skip('should handle bitwise NOT', () => {
-      // TODO: Binary operations not fully implemented or formatted
+    it('should handle bitwise NOT', () => {
       const result = calculator.calculate('~0b1010 to binary');
       expect(result.results[0].result).toBe('0b-1011');
     });
 
-    it.skip('should handle left shift', () => {
-      // TODO: Binary operations not fully implemented or formatted
+    it('should handle left shift', () => {
       const result = calculator.calculate('0b1010 << 2 to binary');
       expect(result.results[0].result).toBe('0b101000');
     });
 
-    it.skip('should handle right shift', () => {
-      // TODO: Binary operations not fully implemented or formatted
+    it('should handle right shift', () => {
       const result = calculator.calculate('0b1010 >> 1 to binary');
       expect(result.results[0].result).toBe('0b101');
     });

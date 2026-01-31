@@ -20,7 +20,18 @@ export type Value =
   | CompositeUnitValue
   | DateTimeValue
   | BooleanValue
-  | ErrorValue;
+  | ErrorValue
+  | PresentationValue;
+
+/**
+ * Presentation wrapper - wraps any value with presentation format or base
+ * Applies formatting to numeric values while preserving units
+ */
+export interface PresentationValue {
+  kind: 'presentation';
+  format: AST.PresentationFormat | number;  // Format string OR base number (2-36)
+  innerValue: Value;  // Can be NumberValue, DerivedUnitValue, or CompositeUnitValue
+}
 
 /**
  * Number value (with optional unit)
@@ -428,6 +439,9 @@ export class Evaluator {
 
       case 'PresentationTarget':
         return this.convertToPresentation(value, target.format);
+
+      case 'BaseTarget':
+        return this.convertToPresentation(value, target.base);
 
       case 'PropertyTarget':
         return this.extractProperty(value, target.property);
@@ -1298,9 +1312,21 @@ export class Evaluator {
       return this.createError(result.error);
     }
 
-    // For inverse trig functions, convert result from radians to degrees if needed
-    if (this.settings.angleUnit === 'degree' && this.isInverseTrigFunction(expr.name)) {
-      return { kind: 'number', value: this.radiansToDegrees(result.value) };
+    // For inverse trig functions, convert result and attach angle unit
+    if (this.isInverseTrigFunction(expr.name)) {
+      const angleUnit = this.settings.angleUnit === 'degree'
+        ? this.dataLoader.getUnitByName('degree')
+        : this.dataLoader.getUnitByName('radian');
+
+      const numericValue = this.settings.angleUnit === 'degree'
+        ? this.radiansToDegrees(result.value)
+        : result.value;
+
+      if (angleUnit) {
+        return { kind: 'number', value: numericValue, unit: angleUnit };
+      }
+
+      return { kind: 'number', value: numericValue };
     }
 
     // Return result with preserved unit if applicable
@@ -1554,12 +1580,53 @@ export class Evaluator {
   }
 
   /**
-   * Convert value to presentation format
+   * Convert value to presentation format or base
+   * Accepts format string (binary, hex, etc.) OR numeric base (2-36)
+   * Preserves units - only formats the numeric value(s)
    */
-  private convertToPresentation(value: Value, format: AST.PresentationFormat): Value {
-    // For now, presentation is handled in formatting phase
-    // Return value as-is (formatter will handle display)
-    return value;
+  private convertToPresentation(value: Value, format: AST.PresentationFormat | number): Value {
+    // Don't wrap error values
+    if (value.kind === 'error') {
+      return value;
+    }
+
+    // Validate that value is numeric type (number, derivedUnit, or composite)
+    if (value.kind !== 'number' && value.kind !== 'derivedUnit' && value.kind !== 'composite') {
+      const formatName = typeof format === 'number' ? `base ${format}` : format;
+      return this.createError(`${formatName} format requires a numeric value`);
+    }
+
+    // Validate base range for numeric base conversions
+    if (typeof format === 'number') {
+      if (format < 2 || format > 36) {
+        return this.createError(`Base must be between 2 and 36, got ${format}`);
+      }
+    }
+
+    // Ordinal format requires integers
+    if (format === 'ordinal') {
+      if (value.kind === 'number' && !Number.isInteger(value.value)) {
+        return this.createError('ordinal format requires integer values');
+      } else if (value.kind === 'derivedUnit' && !Number.isInteger(value.value)) {
+        return this.createError('ordinal format requires integer values');
+      } else if (value.kind === 'composite') {
+        for (const comp of value.components) {
+          if (!Number.isInteger(comp.value)) {
+            return this.createError('ordinal format requires integer values');
+          }
+        }
+      }
+    }
+
+    // All other formats (binary, octal, hex, fraction, scientific, base N) accept any numeric value
+
+    // Wrap the value with presentation format
+    // Units and derived units are preserved - formatting applies only to numeric values
+    return {
+      kind: 'presentation',
+      format,
+      innerValue: value
+    };
   }
 
   /**
