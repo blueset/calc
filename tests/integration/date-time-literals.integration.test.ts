@@ -54,6 +54,17 @@ describe('Integration Tests - Date and Time Literals', () => {
       expect(result.results[5].result).toBe('1970-01-01 Thu 23:59 UTC+8');
     });
 
+    it('should handle zoned date times with respect to user region', () => {
+      calculator.setUserLocale('en-US');
+      let result = calculator.calculate('2023 Jan 01 14:00 Central Time to RFC 9557\n2023 Jan 01 14:00 PST to RFC 9557');
+      expect(result.results[0].result).toBe('2023-01-01T14:00:00-06:00[America/Chicago]');
+      expect(result.results[1].result).toBe('2023-01-01T14:00:00-08:00[America/Los_Angeles]');
+      calculator.setUserLocale('en-CA');
+      result = calculator.calculate('2023 Jan 01 14:00 Central Time to RFC 9557\n2023 Jan 01 14:00 PST to RFC 9557');
+      expect(result.results[0].result).toBe('2023-01-01T14:00:00-06:00[America/Winnipeg]');
+      expect(result.results[1].result).toBe('2023-01-01T14:00:00-08:00[America/Vancouver]');
+    });
+
     it('should handle zoned date times with offsets', () => {
       const result = calculator.calculate(`12:30 Z
 12:30 UTC+1
@@ -76,7 +87,7 @@ describe('Integration Tests - Date and Time Literals', () => {
       expect(result.results[0].result).toBe('05:00');
       expect(result.results[1].result).toBe('05:00 UTC');
       expect(result.results[2].result).toBe('1 h 30 min');
-      expect(result.results[3].result).toBe('-1 day -6 h -30 min'); // zonedDateTime - plainTime: 05:00 UTC - 03:30 (local time)
+      expect(result.results[3].result).toBe('17 h 30 min'); // zonedDateTime - plainTime: 05:00 UTC - 03:30 (local time)
       expect(result.results[4].hasError).toBe(true); // date time add date time is not supported.
     });
 

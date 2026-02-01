@@ -56,6 +56,13 @@ export class Calculator {
   }
 
   /**
+   * Set user region for locale-specific parsing/formatting
+   */
+  setUserLocale(region: string): void {
+    this.dataLoader.setUserLocale(region);
+  }
+
+  /**
    * Calculate the input string
    * Returns results for all lines and collects all errors
    */

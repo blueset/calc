@@ -86,11 +86,29 @@ const CONSTANT_DEFINITIONS: Constant[] = [
  */
 const CONSTANT_LOOKUP = new Map<string, number>();
 
-// Build lookup map including all aliases
+// Build lookup map including all aliases and lowercase versions
 for (const constant of CONSTANT_DEFINITIONS) {
+  // Add exact name
   CONSTANT_LOOKUP.set(constant.name, constant.value);
+
+  // Add lowercase version of name for case-insensitive matching
+  const lowerName = constant.name.toLowerCase();
+  if (lowerName !== constant.name) {
+    CONSTANT_LOOKUP.set(lowerName, constant.value);
+  }
+
+  // Add all aliases (keep symbols case-sensitive)
   for (const alias of constant.aliases) {
     CONSTANT_LOOKUP.set(alias, constant.value);
+
+    // Add lowercase version of alias if it's a word (not a symbol)
+    // Symbols are single or few characters with no lowercase variant
+    if (alias.length > 2 || /^[a-zA-Z]/.test(alias)) {
+      const lowerAlias = alias.toLowerCase();
+      if (lowerAlias !== alias) {
+        CONSTANT_LOOKUP.set(lowerAlias, constant.value);
+      }
+    }
   }
 }
 
@@ -104,16 +122,33 @@ for (const constant of CONSTANT_DEFINITIONS) {
 
 /**
  * Check if a name is a constant (including aliases)
+ * Case-insensitive for named constants (pi, e, nan, infinity)
+ * Case-sensitive for symbols (π, φ, ∞, √2, √½)
  */
 export function isConstant(name: string): boolean {
-  return CONSTANT_LOOKUP.has(name);
+  // Try exact match first (for symbols and correct case)
+  if (CONSTANT_LOOKUP.has(name)) {
+    return true;
+  }
+
+  // Try case-insensitive match for named constants
+  return CONSTANT_LOOKUP.has(name.toLowerCase());
 }
 
 /**
  * Get constant value by name or alias
+ * Case-insensitive for named constants (pi, e, nan, infinity)
+ * Case-sensitive for symbols (π, φ, ∞, √2, √½)
  */
 export function getConstant(name: string): number | undefined {
-  return CONSTANT_LOOKUP.get(name);
+  // Try exact match first (for symbols and correct case)
+  const exactValue = CONSTANT_LOOKUP.get(name);
+  if (exactValue !== undefined) {
+    return exactValue;
+  }
+
+  // Try case-insensitive match for named constants
+  return CONSTANT_LOOKUP.get(name.toLowerCase());
 }
 
 /**

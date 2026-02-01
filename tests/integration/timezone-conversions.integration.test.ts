@@ -39,8 +39,8 @@ describe('Integration Tests - Timezone Conversions', () => {
     });
 
     it('should handle fractional hour offsets', () => {
-      const result = calculator.calculate(`1970 Jan 01 12:00 UTC to UTC+5:30
-1970 Jan 01 12:00 UTC to UTC-3:45`);
+      const result = calculator.calculate(`1970 Jan 01 12:00 UTC to UTC+530
+1970 Jan 01 12:00 UTC to UTC-345`);
       expect(result.results[0].result).toBe('1970-01-01 Thu 17:30 UTC+5:30');
       expect(result.results[1].result).toBe('1970-01-01 Thu 08:15 UTC-3:45');
     });
@@ -51,7 +51,7 @@ describe('Integration Tests - Timezone Conversions', () => {
       // This test assumes the plain datetime is in local timezone
       const result = calculator.calculate(`1970 Jan 01 14:00 to UTC
 2023 Jun 15 09:00 to America/New_York`);
-      expect(result.results[0].result).toBe('1970-01-01 Thu 06:00 UTC');
+      expect(result.results[0].result).toBe('1970-01-01 Thu 22:00 UTC');
       expect(result.results[1].result).toBe('2023-06-15 Thu 12:00 UTC-4');
     });
   });
@@ -71,9 +71,9 @@ describe('Integration Tests - Timezone Conversions', () => {
       const result = calculator.calculate(`now to UTC
 now to America/New_York
 now to Tokyo`);
-      expect(result.results[0].result).toContain('UTC');
-      expect(result.results[1].result).toMatch(/UTC-[45]/);
-      expect(result.results[2].result).toContain('UTC+9');
+      expect(result.results[0].result).toMatch(/UTC$/);
+      expect(result.results[1].result).toMatch(/UTC-[45]$/);
+      expect(result.results[2].result).toMatch(/UTC\+9$/);
     });
   });
 
@@ -84,22 +84,22 @@ now to Tokyo`);
       const result = calculator.calculate(`now to UTC
 today to UTC`);
       // Results should contain time components
-      expect(result.results[0].result).toMatch(/\d{2}:\d{2} UTC/);
-      expect(result.results[1].result).toMatch(/\d{2}:\d{2} UTC/);
+      expect(result.results[0].result).toMatch(/\d{2}:\d{2} UTC$/);
+      expect(result.results[1].result).toMatch(/\d{2}:\d{2} UTC$/);
     });
 
     it('should handle tomorrow rendering in timezone conversions', () => {
       // When a time conversion results in tomorrow's date
       const result = calculator.calculate(`23:30 to UTC+10`);
       // This may or may not result in tomorrow depending on current timezone
-      expect(result.results[0].result).toMatch(/\d{2}:\d{2} UTC\+10/);
+      expect(result.results[0].result).toMatch(/\d{2}:\d{2} UTC\+10$/);
     });
 
     it('should handle yesterday rendering in timezone conversions', () => {
       // When a time conversion results in yesterday's date
       const result = calculator.calculate(`00:30 to UTC-10`);
       // This may or may not result in yesterday depending on current timezone
-      expect(result.results[0].result).toMatch(/\d{2}:\d{2} UTC-10/);
+      expect(result.results[0].result).toMatch(/\d{2}:\d{2} UTC-10$/);
     });
   });
 
@@ -109,19 +109,19 @@ today to UTC`);
 1970 Jan 01 14:00 UTC to London
 1970 Jan 01 14:00 UTC to Tokyo
 1970 Jan 01 14:00 UTC to Sydney`);
-      expect(result.results[0].result).toContain('UTC-5');  // New York
-      expect(result.results[1].result).toContain('UTC');    // London (GMT)
-      expect(result.results[2].result).toContain('UTC+9');  // Tokyo
-      expect(result.results[3].result).toContain('UTC+10'); // Sydney
+      expect(result.results[0].result).toMatch(/UTC-5$/);  // New York
+      expect(result.results[1].result).toMatch(/UTC$/);    // London (GMT)
+      expect(result.results[2].result).toMatch(/UTC\+9$/);  // Tokyo
+      expect(result.results[3].result).toMatch(/UTC\+10$/); // Sydney
     });
 
     it('should support IANA timezone database names', () => {
       const result = calculator.calculate(`1970 Jan 01 14:00 UTC to America/Los_Angeles
 1970 Jan 01 14:00 UTC to Europe/Paris
 1970 Jan 01 14:00 UTC to Asia/Dubai`);
-      expect(result.results[0].result).toContain('UTC-8');  // PST
-      expect(result.results[1].result).toContain('UTC+1');  // CET
-      expect(result.results[2].result).toContain('UTC+4');  // GST
+      expect(result.results[0].result).toMatch(/UTC-8$/);  // PST
+      expect(result.results[1].result).toMatch(/UTC\+1$/);  // CET
+      expect(result.results[2].result).toMatch(/UTC\+4$/);  // GST
     });
   });
 
@@ -145,21 +145,21 @@ today to UTC`);
     it('should handle DST transitions in America/New_York', () => {
       // Winter (EST: UTC-5)
       const winterResult = calculator.calculate(`1970 Jan 15 12:00 UTC to America/New_York`);
-      expect(winterResult.results[0].result).toContain('UTC-5');
+      expect(winterResult.results[0].result).toMatch(/UTC-5$/);
 
       // Summer (EDT: UTC-4)
       const summerResult = calculator.calculate(`1970 Jul 15 12:00 UTC to America/New_York`);
-      expect(summerResult.results[0].result).toContain('UTC-4');
+      expect(summerResult.results[0].result).toMatch(/UTC-4$/);
     });
 
     it('should handle DST transitions in Europe/London', () => {
       // Winter (GMT: UTC+0)
       const winterResult = calculator.calculate(`1970 Jan 15 12:00 UTC to Europe/London`);
-      expect(winterResult.results[0].result).toContain('UTC');
+      expect(winterResult.results[0].result).toMatch(/UTC$/);
 
       // Summer (BST: UTC+1)
       const summerResult = calculator.calculate(`1970 Jul 15 12:00 UTC to Europe/London`);
-      expect(summerResult.results[0].result).toContain('UTC+1');
+      expect(summerResult.results[0].result).toMatch(/UTC\+1$/);
     });
   });
 

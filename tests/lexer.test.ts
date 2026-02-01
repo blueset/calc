@@ -941,8 +941,7 @@ describe('Lexer', () => {
       expect(tokenizeWithErrors('\\').errors).toHaveLength(1);
       expect(tokenizeWithErrors(';').errors).toHaveLength(1);
       expect(tokenizeWithErrors(':').errors).toHaveLength(1);
-      expect(tokenizeWithErrors('"').errors).toHaveLength(1);
-      expect(tokenizeWithErrors("'").errors).toHaveLength(1);
+      // Note: " and ' are now valid DOUBLE_PRIME and PRIME tokens, not unknown characters
     });
 
     it('should record error with correct position information', () => {

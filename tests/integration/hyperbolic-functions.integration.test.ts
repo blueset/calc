@@ -19,8 +19,6 @@ describe('Integration Tests - Hyperbolic Functions', () => {
     calculator = new Calculator(dataLoader);
   });
 
-  // TODO: Hyperbolic function shouldn’t involve degrees and radians conversions
-
   describe('Hyperbolic Sine (sinh)', () => {
     it('should calculate sinh for various values', () => {
       const result = calculator.calculate(`sinh(0)
@@ -28,19 +26,19 @@ sinh(1)
 sinh(-1)
 sinh(2)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(1.1752011936, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(1.1752011936, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(-1.1752011936, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(-1.1752011936, 5);
       expect(result.results[3].hasError).toBe(false);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(3.6268604078, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(3.6268604078, 5);
     });
 
     it('should handle large values', () => {
       const result = calculator.calculate('sinh(10)');
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(11013.2329201, 2);
+      expect(result.results[0].result).toMatch(/11 013\.232\d+/);
     });
   });
 
@@ -51,13 +49,13 @@ cosh(1)
 cosh(-1)
 cosh(2)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(1, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(1, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(1.5430806348, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(1.5430806348, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(1.5430806348, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(1.5430806348, 5);
       expect(result.results[3].hasError).toBe(false);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(3.7621956910, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(3.7621956910, 5);
     });
 
     it('should be symmetric (even function)', () => {
@@ -74,22 +72,22 @@ tanh(1)
 tanh(-1)
 tanh(2)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(0.7615941559, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(0.7615941559, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(-0.7615941559, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(-0.7615941559, 5);
       expect(result.results[3].hasError).toBe(false);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(0.9640275801, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(0.9640275801, 5);
     });
 
     it('should approach ±1 for large values', () => {
       const result = calculator.calculate(`tanh(10)
 tanh(-10)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(1, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(1, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(-1, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(-1, 5);
     });
   });
 
@@ -100,13 +98,13 @@ asinh(1)
 asinh(-1)
 asinh(2)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(0.8813735870, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(0.8813735870, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(-0.8813735870, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(-0.8813735870, 5);
       expect(result.results[3].hasError).toBe(false);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(1.4436354751, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(1.4436354751, 5);
     });
 
     it('should support arsinh alias', () => {
@@ -114,11 +112,11 @@ asinh(2)`);
 arsinh(1)
 arsinh(2)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(0.8813735870, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(0.8813735870, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(1.4436354751, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(1.4436354751, 5);
     });
 
     it('should be inverse of sinh', () => {
@@ -126,10 +124,10 @@ arsinh(2)`);
 asinh(sinh(2))
 sinh(asinh(0.5))
 sinh(asinh(2))`);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0.5, 5);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(2, 5);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(0.5, 5);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(2, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0.5, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(2, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(0.5, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(2, 5);
     });
   });
 
@@ -140,13 +138,13 @@ acosh(2)
 acosh(5)
 acosh(10)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(1.3169578969, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(1.3169578969, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(2.2924316695, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(2.2924316695, 5);
       expect(result.results[3].hasError).toBe(false);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(2.9932228461, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(2.9932228461, 5);
     });
 
     it('should error for values < 1', () => {
@@ -163,11 +161,11 @@ acosh(-1)`);
 arcosh(2)
 arcosh(5)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(1.3169578969, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(1.3169578969, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(2.2924316695, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(2.2924316695, 5);
     });
 
     it('should be inverse of cosh for positive results', () => {
@@ -175,10 +173,10 @@ arcosh(5)`);
 acosh(cosh(2))
 cosh(acosh(2))
 cosh(acosh(5))`);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0.5, 5);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(2, 5);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(2, 5);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(5, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0.5, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(2, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(2, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(5, 5);
     });
   });
 
@@ -189,13 +187,13 @@ atanh(0.5)
 atanh(-0.5)
 atanh(0.9)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(0.5493061443, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(0.5493061443, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(-0.5493061443, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(-0.5493061443, 5);
       expect(result.results[3].hasError).toBe(false);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(1.4722194895, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(1.4722194895, 5);
     });
 
     it('should error for values outside (-1, 1)', () => {
@@ -214,11 +212,11 @@ atanh(-2)`);
 artanh(0.5)
 artanh(0.9)`);
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0, 5);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(0.5493061443, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(0.5493061443, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(1.4722194895, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(1.4722194895, 5);
     });
 
     it('should be inverse of tanh', () => {
@@ -226,10 +224,10 @@ artanh(0.9)`);
 atanh(tanh(1))
 tanh(atanh(0.5))
 tanh(atanh(0.9))`);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(0.5, 5);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(1, 5);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(0.5, 5);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(0.9, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(0.5, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(1, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(0.5, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(0.9, 5);
     });
   });
 
@@ -237,8 +235,8 @@ tanh(atanh(0.9))`);
     it('should satisfy cosh²(x) - sinh²(x) = 1', () => {
       const result = calculator.calculate(`cosh(2)^2 - sinh(2)^2
 cosh(5)^2 - sinh(5)^2`);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(1, 5);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(1, 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(1, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(1, 5);
     });
 
     it('should satisfy tanh(x) = sinh(x) / cosh(x)', () => {
@@ -246,8 +244,8 @@ cosh(5)^2 - sinh(5)^2`);
 sinh(2) / cosh(2)
 tanh(3)
 sinh(3) / cosh(3)`);
-      expect(parseFloat(result.results[0].result)).toBeCloseTo(parseFloat(result.results[1].result), 5);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(parseFloat(result.results[3].result), 5);
+      expect(parseFloat(result.results[0].result ?? "Infinity")).toBeCloseTo(parseFloat(result.results[1].result ?? "Infinity"), 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(parseFloat(result.results[3].result ?? "Infinity"), 5);
     });
   });
 
@@ -267,11 +265,11 @@ sinh(x)
 cosh(x)
 tanh(x)`);
       expect(result.results[1].hasError).toBe(false);
-      expect(parseFloat(result.results[1].result)).toBeCloseTo(3.6268604078, 5);
+      expect(parseFloat(result.results[1].result ?? "Infinity")).toBeCloseTo(3.6268604078, 5);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(3.7621956910, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(3.7621956910, 5);
       expect(result.results[3].hasError).toBe(false);
-      expect(parseFloat(result.results[3].result)).toBeCloseTo(0.9640275801, 5);
+      expect(parseFloat(result.results[3].result ?? "Infinity")).toBeCloseTo(0.9640275801, 5);
     });
 
     it('should compose with other functions', () => {
@@ -281,7 +279,7 @@ abs(tanh(-3))`);
       expect(result.results[0].hasError).toBe(false);
       expect(result.results[1].hasError).toBe(false);
       expect(result.results[2].hasError).toBe(false);
-      expect(parseFloat(result.results[2].result)).toBeCloseTo(0.9950547537, 5);
+      expect(parseFloat(result.results[2].result ?? "Infinity")).toBeCloseTo(0.9950547537, 5);
     });
   });
 });

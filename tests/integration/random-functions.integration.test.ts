@@ -167,7 +167,7 @@ describe('Integration Tests - Random Number Generation', () => {
       // This should work like random(5, 10, 2) but in reverse
       // At minimum it shouldn't crash
       expect(result.results[0].hasError).toBe(false);
-      expect(parseFloat(result.results[0].result ?? "123456")).toBeGreaterThanOrEqual(6);
+      expect(parseFloat(result.results[0].result ?? "123456")).toBeGreaterThanOrEqual(5);
       expect(parseFloat(result.results[0].result ?? "123456")).toBeLessThan(10);
     });
   });

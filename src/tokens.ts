@@ -68,6 +68,8 @@ export enum TokenType {
   RPAREN = 'RPAREN',          // )
   COMMA = 'COMMA',            // ,
   DOT = 'DOT',                // .
+  PRIME = 'PRIME',            // ' or ′ (context-sensitive: arcminute or foot)
+  DOUBLE_PRIME = 'DOUBLE_PRIME', // " or ″ or '' (context-sensitive: arcsecond or inch)
 
   // Structural
   NEWLINE = 'NEWLINE',        // \n

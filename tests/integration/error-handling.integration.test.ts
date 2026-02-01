@@ -159,7 +159,7 @@ ABC base 50 to decimal
     });
 
     it('should error on invalid digits for base', () => {
-      const result = calculator.calculate(`123 base 2 to decimal
+      const result = calculator.calculate(`23 base 2 to decimal
 ABC base 10 to decimal
 GHI base 16 to decimal`);
       expect(result.results[0].hasError).toBe(true); // 2, 3 invalid in base 2
@@ -350,7 +350,7 @@ sqrt(-1)
     it('should error on extremely large numbers', () => {
       const result = calculator.calculate('10^1000');
       // May error or return infinity
-      expect(result.results[0].hasError || result.results[0].result.includes('Infinity')).toBe(true);
+      expect(result.results[0].hasError || result.results[0].result?.includes('Infinity')).toBe(true);
     });
 
     it('should error on extremely small numbers', () => {

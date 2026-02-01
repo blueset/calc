@@ -179,11 +179,14 @@ export class Lexer {
         this.advance();
         return this.createToken(TokenType.MINUS, '-', start, this.currentLocation());
       case '*':
+      case '×':  // U+00D7 MULTIPLICATION SIGN
+      case '·':  // U+00B7 MIDDLE DOT
         this.advance();
-        return this.createToken(TokenType.STAR, '*', start, this.currentLocation());
+        return this.createToken(TokenType.STAR, char, start, this.currentLocation());
       case '/':
+      case '÷':  // U+00F7 DIVISION SIGN
         this.advance();
-        return this.createToken(TokenType.SLASH, '/', start, this.currentLocation());
+        return this.createToken(TokenType.SLASH, char, start, this.currentLocation());
       case '%':
         this.advance();
         const percentType = this.disambiguatePercent();
@@ -227,6 +230,28 @@ export class Lexer {
       case '→':
         this.advance();
         return this.createToken(TokenType.ARROW, '→', start, this.currentLocation());
+
+      // Prime symbols (context-sensitive: arcminute/foot or arcsecond/inch)
+      case '′':  // U+2032 PRIME
+        this.advance();
+        return this.createToken(TokenType.PRIME, '′', start, this.currentLocation());
+
+      case '″':  // U+2033 DOUBLE PRIME
+        this.advance();
+        return this.createToken(TokenType.DOUBLE_PRIME, '″', start, this.currentLocation());
+
+      case "'":  // U+0027 APOSTROPHE (can be PRIME or part of DOUBLE_PRIME if doubled)
+        this.advance();
+        // Check if next character is also an apostrophe ('' = double prime)
+        if (this.peek() === "'") {
+          this.advance();
+          return this.createToken(TokenType.DOUBLE_PRIME, "''", start, this.currentLocation());
+        }
+        return this.createToken(TokenType.PRIME, "'", start, this.currentLocation());
+
+      case '"':  // U+0022 QUOTATION MARK (DOUBLE_PRIME)
+        this.advance();
+        return this.createToken(TokenType.DOUBLE_PRIME, '"', start, this.currentLocation());
     }
 
     // Identifiers, keywords, or date/time literals
@@ -434,6 +459,16 @@ export class Lexer {
    */
   private scanIdentifierOrDateTime(start: SourceLocation): Token {
     let value = '';
+
+    // Special case: if this starts with °, check if next char is a digit
+    // If so, return just ° as a unit token (for composite angles like 45°30′)
+    if (this.peek() === '°' && this.position + 1 < this.input.length) {
+      const nextChar = this.input[this.position + 1];
+      if (/\d/.test(nextChar)) {
+        value = this.advance(); // Just consume the °
+        return this.createToken(TokenType.UNIT, value, start, this.currentLocation());
+      }
+    }
 
     // Scan alphanumeric characters, underscores, Unicode superscripts, and special unit characters
     while (!this.isAtEnd() && (this.isXIDContinue(this.peek()) || this.peek() === '_' || this.isSuperscript(this.peek()) || this.peek() === '°' || this.peek() === 'Å' || this.peek() === '‰')) {

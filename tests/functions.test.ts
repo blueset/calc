@@ -297,9 +297,19 @@ describe('MathFunctions', () => {
       expect(result3.value).toBe(0);
     });
 
-    it('should require exactly 1 argument for number functions', () => {
+    it('should require 1 or 2 arguments for number functions', () => {
       const result = functions.execute('abs', []);
-      expect(result.error).toContain('1 argument');
+      expect(result.error).toContain('1 or 2 arguments');
+
+      // Should accept 1 argument
+      const result1 = functions.execute('abs', [-5]);
+      expect(result1.error).toBeUndefined();
+      expect(result1.value).toBe(5);
+
+      // Should accept 2 arguments for round/floor/ceil/trunc
+      const result2 = functions.execute('round', [3.7, 2]);
+      expect(result2.error).toBeUndefined();
+      expect(result2.value).toBe(4);
     });
   });
 
@@ -311,9 +321,26 @@ describe('MathFunctions', () => {
       expect(result.value).toBeLessThan(1);
     });
 
-    it('should require no arguments', () => {
-      const result = functions.execute('random', [1]);
-      expect(result.error).toContain('0 arguments');
+    it('should accept 0-3 arguments', () => {
+      // 0 arguments: random() → [0, 1)
+      const result0 = functions.execute('random', []);
+      expect(result0.error).toBeUndefined();
+
+      // 1 argument: random(max) → [0, max)
+      const result1 = functions.execute('random', [10]);
+      expect(result1.error).toBeUndefined();
+
+      // 2 arguments: random(min, max) → [min, max)
+      const result2 = functions.execute('random', [5, 10]);
+      expect(result2.error).toBeUndefined();
+
+      // 3 arguments: random(min, max, step)
+      const result3 = functions.execute('random', [0, 10, 2]);
+      expect(result3.error).toBeUndefined();
+
+      // More than 3 arguments should error
+      const result4 = functions.execute('random', [1, 2, 3, 4]);
+      expect(result4.error).toContain('0-3 arguments');
     });
 
     it('should generate different values', () => {

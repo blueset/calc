@@ -967,6 +967,13 @@ export class TypeChecker {
       case 'TimezoneTarget':
         return this.checkTimezoneConversion(sourceType, expr.target, expr);
 
+      case 'PrecisionTarget':
+        // Precision conversions (e.g., "to 2 decimal places") are always valid for numeric types
+        if (!this.isPhysicalType(sourceType)) {
+          return this.createError('Precision conversion requires numeric value', expr);
+        }
+        return sourceType;
+
       default:
         const exhaustive: never = expr.target;
         return this.createError(`Unknown conversion target: ${(exhaustive as any).type}`, expr);

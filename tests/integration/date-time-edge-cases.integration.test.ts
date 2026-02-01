@@ -349,7 +349,7 @@ date + 3 months`);
       const result = calculator.calculate(`2023 Jan 1 - 2023 Jan 15
 abs(2023 Jan 1 - 2023 Jan 15)`);
       expect(result.results[0].result).toContain('-14 day');
-      expect(result.results[1].result).toContain('14 day');
+      expect(result.results[1].result).toContain('14 day'); // Duration should be implicitly converted to NumberWithUnit or CompositeValue
     });
   });
 

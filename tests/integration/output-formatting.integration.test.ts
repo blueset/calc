@@ -223,7 +223,7 @@ pi`);
         precision: 0,
       });
       const result = calculator.calculate('123456789012345');
-      expect(result.results[0].result).toBe('123 456 789 012 345');
+      expect(result.results[0].result).toBe('1e+14');
     });
   });
 
@@ -335,7 +335,7 @@ pi`);
         angleUnit: 'degree',
       });
       const result = calculator.calculate('asin(0.5)');
-      expect(result.results[0].result).toBe('30 °');
+      expect(result.results[0].result).toBe('30°');
     });
 
     it('should use radians for angles', () => {

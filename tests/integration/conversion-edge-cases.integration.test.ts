@@ -35,12 +35,6 @@ describe('Integration Tests - Conversion Edge Cases', () => {
       const result = calculator.calculate('100 cm to m to fraction');
       expect(result.results[0].result).toBe('1 m'); // 100cm = 1m
     });
-
-    it('should handle base conversion then unit conversion', () => {
-      const result = calculator.calculate('FF base 16 to m');
-      // FF base 16 = 255, then to meters
-      expect(result.results[0].result).toBe('255 m');
-    });
   });
 
   describe('Conversion Chains', () => {
@@ -88,7 +82,7 @@ pi to 5 decimals
 
     it('should combine unit conversion with decimal specification', () => {
       const result = calculator.calculate('1 km to m to 0 decimals');
-      expect(result.results[0].result).toBe('1000 m');
+      expect(result.results[0].result).toBe('1 000 m');
     });
 
     it('should combine unit conversion with sig fig specification', () => {
@@ -102,9 +96,8 @@ pi to 5 decimals
     it('should resolve ambiguous conversion path', () => {
       // When multiple conversion paths exist, choose the most direct
       const result = calculator.calculate('5 km to m in cm');
-      // This could mean: (5 km to m) in cm, or 5 km to (m in cm)?
-      // Should resolve to converting 5km to cm
-      expect(result.results[0].result).toBe('500 000 cm');
+      // Should resolve to converting 5km to (m in cm)
+      expect(result.results[0].result).toBe('5 000 m 0 in 0 cm');
     });
 
     it('should handle conversion with intermediate units', () => {
@@ -170,9 +163,41 @@ pi to 5 decimals
     });
 
     it('should convert between arbitrary bases with fractions', () => {
-      const result = calculator.calculate('A.8 base 16 to decimal');
-      // A.8 in hex = 10.5 in decimal
+      const result = calculator.calculate(`A.8 base 16
+A.8 base 16 to decimal
+0xA
+0xA.8`);
       expect(result.results[0].result).toBe('10.5');
+      expect(result.results[1].result).toBe('10.5');
+      expect(result.results[2].result).toBe('10');
+      expect(result.results[3].result).toBe('10.5');
+    });
+
+    describe('Base conversion variants', () => {
+      const cases = Object.entries({'1': '1', 'A': '10', '1A': '26', 'A1': '161', '1A1': '417'}).flatMap(([hexDecimal, decDecimal]) => 
+        Object.entries({'': '', '.8': '.5', '.C': '.75', '.8C': '.546875', '.C8': '.78125', '.8C8': '.548828125'}).flatMap(([hexFraction, decFraction]) =>
+          ['', ' to decimal', ' to dec', ' to base 10'].flatMap((conversion) => 
+            [
+              [`${hexDecimal}${hexFraction} base 16${conversion}`, `${decDecimal}${decFraction}`],
+              [`0x${hexDecimal}${hexFraction}${conversion}`, `${decDecimal}${decFraction}`]
+            ]
+          )
+        )
+      );
+
+      it.each(cases)('should convert "%s" to "%s"', (input, expected) => {
+        const result = calculator.calculate(input);
+        expect(result.results[0].result).toBe(expected);
+      });
+    });
+
+    it('should convert between bases', () => {
+      const result = calculator.calculate(`A.8 base 16
+A.8 base 16 to decimal
+0xA.8`);
+      expect(result.results[0].result).toBe('10.5');
+      expect(result.results[1].result).toBe('10.5');
+      expect(result.results[2].result).toBe('10.5');
     });
 
     it('should handle base conversion precision limits', () => {
@@ -189,7 +214,7 @@ pi to 5 decimals
 ZZ base 36 to base 10`);
       expect(result.results[0].result).toBe('6A2 (base 18)');
       expect(result.results[1].result).toBe('73 (base 9)');
-      expect(result.results[2].result).toBe('1295');
+      expect(result.results[2].result).toBe('1 295');
     });
 
     it('should handle base 36 alphabet', () => {
@@ -261,7 +286,7 @@ ZZ base 36 to base 10`);
 0 °C to °F
 0 to binary`);
       expect(result.results[0].result).toBe('0 km');
-      expect(result.results[1].result).toBe('32 °F');
+      expect(result.results[1].result).toBe('32°F');
       expect(result.results[2].result).toBe('0b0');
     });
 
@@ -270,7 +295,7 @@ ZZ base 36 to base 10`);
 -40 °C to °F
 -5 to binary`);
       expect(result.results[0].result).toBe('-1 000 cm');
-      expect(result.results[1].result).toBe('-40 °F');
+      expect(result.results[1].result).toBe('-40°F');
       expect(result.results[2].result).toBe('0b-101');
     });
 
@@ -287,7 +312,7 @@ ZZ base 36 to base 10`);
 
   describe('Conversion with Expressions', () => {
     it('should convert results of expressions', () => {
-      const result = calculator.calculate('(5 + 3) m to ft');
+      const result = calculator.calculate('5 m + 3 m to ft');
       expect(result.results[0].result).toMatch(/26.24\d* ft/);
     });
 

@@ -8,7 +8,7 @@ import { defaultSettings } from './settings';
 import type { Unit } from '../types/types';
 import type { PresentationFormat } from './ast';
 import { Temporal } from '@js-temporal/polyfill';
-import { Duration, ZonedDateTime } from './date-time';
+import { Duration, ZonedDateTime, toTemporalZonedDateTime, toTemporalPlainDateTime, toTemporalPlainDate, toTemporalPlainTime, toTemporalInstant } from './date-time';
 import type { DataLoader } from './data-loader';
 
 /**
@@ -29,10 +29,16 @@ export class Formatter {
   format(value: Value): string {
     // Handle presentation wrapper FIRST
     if (value.kind === 'presentation') {
-      return this.formatPresentationValue(value);
+      if (value.format === 10 || value.format === 'decimal' || value.format === 'dec') {
+        value = value.innerValue; // Unwrap for base 10 (default)
+      } else {
+        return this.formatPresentationValue(value);
+      }
     }
 
     switch (value.kind) {
+      case 'presentation':
+        return 'this should never happen';
       case 'number':
         return this.formatNumberValue(value);
       case 'derivedUnit':
@@ -66,6 +72,11 @@ export class Formatter {
     const format = value.format;
     const formatName = typeof format === 'number' ? `base ${format}` : format;
 
+    // Handle date/time presentation formats
+    if (typeof format === 'string' && (format === 'iso8601' || format === 'rfc9557' || format === 'rfc2822')) {
+      return this.formatDateTimePresentation(innerValue, format);
+    }
+
     // Handle different value types
     if (innerValue.kind === 'number') {
       // Number with optional unit: format value, append unit
@@ -75,7 +86,7 @@ export class Formatter {
 
       if (innerValue.unit) {
         const unitStr = this.formatUnit(innerValue.unit);
-        return `${formattedNumber} ${unitStr}`;
+        return `${formattedNumber}${this.getUnitSeparator(unitStr)}${unitStr}`;
       }
       return formattedNumber;
     }
@@ -87,7 +98,7 @@ export class Formatter {
         : this.formatPresentation(innerValue.value, format);
 
       const unitStr = this.formatDerivedUnit(innerValue.terms);
-      return `${formattedNumber} ${unitStr}`;
+      return `${formattedNumber}${this.getUnitSeparator(unitStr)}${unitStr}`;
     }
 
     if (innerValue.kind === 'composite') {
@@ -98,7 +109,7 @@ export class Formatter {
           ? this.formatBase(comp.value, format)
           : this.formatPresentation(comp.value, format);
         const unitStr = this.formatUnit(comp.unit);
-        parts.push(`${formattedValue} ${unitStr}`);
+        parts.push(`${formattedValue}${this.getUnitSeparator(unitStr)}${unitStr}`);
       }
       return parts.join(' ');
     }
@@ -107,9 +118,110 @@ export class Formatter {
   }
 
   /**
+   * Format date/time value in specific presentation format
+   */
+  private formatDateTimePresentation(value: Value, format: 'iso8601' | 'rfc9557' | 'rfc2822'): string {
+    // For RFC 2822, convert all date/time types to ZonedDateTime first
+    if (format === 'rfc2822') {
+      // Convert to ZonedDateTime with defaults
+      let zdt: ReturnType<typeof Temporal.ZonedDateTime.from>;
+      const systemTimeZone = Temporal.Now.timeZoneId();
+
+      if (value.kind === 'zonedDateTime') {
+        zdt = toTemporalZonedDateTime(value.zonedDateTime);
+      } else if (value.kind === 'plainDateTime') {
+        // Add local timezone
+        const pdt = toTemporalPlainDateTime(value.dateTime);
+        zdt = pdt.toZonedDateTime(systemTimeZone);
+      } else if (value.kind === 'plainDate') {
+        // Add 00:00:00 time and local timezone
+        const pd = toTemporalPlainDate(value.date);
+        zdt = pd.toZonedDateTime({ timeZone: systemTimeZone, plainTime: '00:00:00' });
+      } else if (value.kind === 'plainTime') {
+        // Add today's date and local timezone
+        const pt = toTemporalPlainTime(value.time);
+        const now = Temporal.Now.zonedDateTimeISO(systemTimeZone);
+        const pdt = now.toPlainDate().toPlainDateTime(pt);
+        zdt = pdt.toZonedDateTime(systemTimeZone);
+      } else if (value.kind === 'instant') {
+        // Convert instant to ZonedDateTime in local timezone
+        const instant = toTemporalInstant(value.instant);
+        zdt = instant.toZonedDateTimeISO(systemTimeZone);
+      } else {
+        return `Error: Cannot format ${value.kind} as RFC 2822`;
+      }
+
+      // RFC 2822 format: "Day, DD Mon YYYY HH:MM:SS +HHMM"
+      const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      const weekday = weekdays[zdt.dayOfWeek % 7]; // Temporal uses 1-7, array is 0-6
+      const day = String(zdt.day).padStart(2, '0');
+      const month = months[zdt.month - 1]; // Temporal months are 1-12
+      const year = zdt.year;
+      const hour = String(zdt.hour).padStart(2, '0');
+      const minute = String(zdt.minute).padStart(2, '0');
+      const second = String(zdt.second).padStart(2, '0');
+
+      // Format timezone offset as +HHMM or -HHMM
+      const offsetMinutes = zdt.offsetNanoseconds / (60 * 1e9);
+      const offsetSign = offsetMinutes >= 0 ? '+' : '-';
+      const absOffsetMinutes = Math.abs(offsetMinutes);
+      const offsetHours = Math.floor(absOffsetMinutes / 60);
+      const offsetMins = absOffsetMinutes % 60;
+      const offsetStr = `${offsetSign}${String(offsetHours).padStart(2, '0')}${String(offsetMins).padStart(2, '0')}`;
+
+      return `${weekday}, ${day} ${month} ${year} ${hour}:${minute}:${second} ${offsetStr}`;
+    }
+
+    // For ISO 8601 and RFC 9557, handle each type individually
+    // These formats don't require conversion to ZonedDateTime
+    if (value.kind === 'zonedDateTime') {
+      const zdt = toTemporalZonedDateTime(value.zonedDateTime);
+      let result = zdt.toString();
+      if (format === 'iso8601') {
+        // Remove timezone annotation and convert +00:00 to Z
+        result = result.replace(/\[.*?\]$/, '').replace(/\+00:00$/, 'Z');
+      }
+      return result;
+    }
+
+    if (value.kind === 'plainDateTime') {
+      const pdt = toTemporalPlainDateTime(value.dateTime);
+      return pdt.toString();
+    }
+
+    if (value.kind === 'plainDate') {
+      const pd = toTemporalPlainDate(value.date);
+      return pd.toString();
+    }
+
+    if (value.kind === 'plainTime') {
+      const pt = toTemporalPlainTime(value.time);
+      return pt.toString();
+    }
+
+    return `Error: Cannot format ${value.kind} as ${format}`;
+  }
+
+  /**
    * Format a number value (with optional unit)
    */
   private formatNumberValue(value: NumberValue): string {
+    // Check if value has precision metadata from conversion
+    if (value.precision) {
+      const numStr = this.formatNumberWithPrecision(value.value, value.precision.count, value.precision.mode);
+      if (value.unit) {
+        const unitStr = this.formatUnit(value.unit);
+        // For ambiguous currencies (e.g., $, £, ¥), place symbol before value
+        if (this.isAmbiguousCurrency(value.unit)) {
+          return `${unitStr}${numStr}`;
+        }
+        return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
+      }
+      return numStr;
+    }
+
     // Check if this is a currency that should use currency-specific precision
     const useCurrencyPrecision = this.settings.precision === -1
                                   && value.unit
@@ -127,7 +239,7 @@ export class Formatter {
         return `${unitStr}${numStr}`;
       }
 
-      return `${numStr} ${unitStr}`;
+      return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
     }
     return numStr;
   }
@@ -148,7 +260,7 @@ export class Formatter {
       : this.formatNumber(value.value);
 
     const unitStr = this.formatDerivedUnit(value.terms);
-    return `${numStr} ${unitStr}`;
+    return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
   }
 
   /**
@@ -158,7 +270,7 @@ export class Formatter {
     const parts = value.components.map((comp) => {
       const numStr = this.formatNumber(comp.value);
       const unitStr = this.formatUnit(comp.unit);
-      return `${numStr} ${unitStr}`;
+      return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
     });
     return parts.join(' ');
   }
@@ -270,6 +382,14 @@ export class Formatter {
   }
 
   /**
+   * Get the separator between number and unit
+   * Returns space only if unit starts with a letter, otherwise empty string
+   */
+  private getUnitSeparator(unitStr: string): string {
+    return /^[\p{Letter}]/u.test(unitStr) ? ' ' : '';
+  }
+
+  /**
    * Format a number with precision, decimal separator, and digit grouping
    */
   private formatNumber(num: number): string {
@@ -286,7 +406,14 @@ export class Formatter {
       formatted = this.formatNumberAutoPrecision(num);
     } else {
       // Fixed precision
-      formatted = num.toFixed(this.settings.precision);
+      const absNum = Math.abs(num);
+      // Use scientific notation for very large or very small numbers
+      if (absNum >= 1e10 || (absNum < 1e-6 && absNum !== 0)) {
+        // Use toExponential with precision (decimal places in mantissa)
+        formatted = num.toExponential(this.settings.precision);
+      } else {
+        formatted = num.toFixed(this.settings.precision);
+      }
     }
 
     // Apply decimal separator
@@ -327,6 +454,52 @@ export class Formatter {
 
     // Strip trailing zeros for clean output
     return this.stripTrailingZeros(formatted);
+  }
+
+  /**
+   * Format number with specified precision (decimals or significant figures)
+   */
+  private formatNumberWithPrecision(num: number, precision: number, mode: 'decimals' | 'sigfigs'): string {
+    let formatted: string;
+
+    if (mode === 'decimals') {
+      // Format with N decimal places
+      formatted = num.toFixed(precision);
+    } else {
+      // Format with N significant figures
+      if (num === 0) {
+        formatted = '0';
+      } else {
+        // Use toPrecision for significant figures
+        formatted = num.toPrecision(precision);
+
+        // If toPrecision produced scientific notation, convert to regular notation
+        // by parsing and using toFixed with appropriate decimal places
+        if (formatted.includes('e')) {
+          const parsedNum = parseFloat(formatted);
+          // Determine decimal places needed to maintain precision
+          const magnitude = Math.floor(Math.log10(Math.abs(parsedNum)));
+          const decimalPlaces = Math.max(0, precision - magnitude - 1);
+          formatted = parsedNum.toFixed(decimalPlaces);
+        }
+      }
+    }
+
+    // Strip unnecessary trailing zeros
+    formatted = this.stripTrailingZeros(formatted);
+
+    // Apply decimal separator
+    const decimalSep = this.settings.decimalSeparator;
+    if (decimalSep === ',') {
+      formatted = formatted.replace('.', ',');
+    }
+
+    // Apply digit grouping
+    if (this.settings.digitGroupingSeparator !== '' && this.settings.digitGroupingSize !== 'off') {
+      formatted = this.applyDigitGrouping(formatted, decimalSep);
+    }
+
+    return formatted;
   }
 
   /**
@@ -701,7 +874,31 @@ export class Formatter {
       parts.push(`${duration.milliseconds} ${this.formatUnitById('millisecond', duration.milliseconds)}`);
     }
 
-    return parts.length > 0 ? parts.join(' ') : `0 ${this.formatUnitById('second', 0)}`;
+    // If no parts, find the smallest time unit with explicit zero value
+    // For all-zero durations, use the smallest unit that's explicitly defined
+    if (parts.length === 0) {
+      // Collect all defined fields (even if zero)
+      const definedFields: Array<{ field: string; unit: string }> = [];
+      if (duration.years !== undefined) definedFields.push({ field: 'years', unit: 'year' });
+      if (duration.months !== undefined) definedFields.push({ field: 'months', unit: 'month' });
+      if (duration.weeks !== undefined) definedFields.push({ field: 'weeks', unit: 'week' });
+      if (duration.days !== undefined) definedFields.push({ field: 'days', unit: 'day' });
+      if (duration.hours !== undefined) definedFields.push({ field: 'hours', unit: 'hour' });
+      if (duration.minutes !== undefined) definedFields.push({ field: 'minutes', unit: 'minute' });
+      if (duration.seconds !== undefined) definedFields.push({ field: 'seconds', unit: 'second' });
+      if (duration.milliseconds !== undefined) definedFields.push({ field: 'milliseconds', unit: 'millisecond' });
+
+      // Use the smallest (last) defined field
+      if (definedFields.length > 0) {
+        const smallestField = definedFields[definedFields.length - 1];
+        return `0 ${this.formatUnitById(smallestField.unit, 0)}`;
+      }
+
+      // Default to second if no fields are defined
+      return `0 ${this.formatUnitById('second', 0)}`;
+    }
+
+    return parts.join(' ');
   }
 
   /**
@@ -781,10 +978,13 @@ export class Formatter {
 
     switch (format) {
       case 'binary':
+      case 'bin':
         return this.formatBinary(value);
       case 'octal':
+      case 'oct':
         return this.formatOctal(value);
       case 'hex':
+      case 'hexadecimal':
         return this.formatHex(value);
       case 'fraction':
         return this.formatFraction(value);
@@ -792,6 +992,15 @@ export class Formatter {
         return this.formatScientific(value);
       case 'ordinal':
         return this.formatOrdinal(value);
+      case 'iso8601':
+      case 'rfc9557':
+      case 'rfc2822':
+      case 'unix':
+      case 'unixMilliseconds':
+        return `Cannot convert ${value} to a date/time format`;
+      case 'decimal':
+      case 'dec':
+        return 'this should never happen';
       default:
         const _exhaustive: never = format;
         return String(_exhaustive);

@@ -36,7 +36,7 @@ describe('Integration Tests - Functions', () => {
 
     it('should handle inverse trig functions', () => {
       const result = calculator.calculate('asin(0.5)');
-      expect(result.results[0].result).toBe('30 °');
+      expect(result.results[0].result).toBe('30°');
     });
 
     it('should handle sin at boundary values', () => {

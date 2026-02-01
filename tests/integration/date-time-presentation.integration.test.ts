@@ -23,7 +23,7 @@ describe('Integration Tests - Date/Time Presentation Conversions', () => {
     it('should convert zoned date times to ISO 8601', () => {
       const result = calculator.calculate(`1970 Jan 01 01:00 UTC to ISO 8601
 1970 Jan 01 01:00 UTC+5 to ISO 8601
-1970 Jan 01 01:00 UTC-3:30 to ISO 8601`);
+1970 Jan 01 01:00 UTC-330 to ISO 8601`);
       expect(result.results[0].result).toBe('1970-01-01T01:00:00Z');
       expect(result.results[1].result).toBe('1970-01-01T01:00:00+05:00');
       expect(result.results[2].result).toBe('1970-01-01T01:00:00-03:30');
@@ -57,7 +57,7 @@ describe('Integration Tests - Date/Time Presentation Conversions', () => {
     it('should convert zoned date times to RFC 9557', () => {
       const result = calculator.calculate(`1970 Jan 01 01:00 UTC to RFC 9557
 1970 Jan 01 01:00 UTC+5 to RFC 9557
-1970 Jan 01 01:00 UTC-3:30 to RFC 9557`);
+1970 Jan 01 01:00 UTC-330 to RFC 9557`);
       expect(result.results[0].result).toBe('1970-01-01T01:00:00+00:00[Etc/UTC]');
       expect(result.results[1].result).toBe('1970-01-01T01:00:00+05:00[+05:00]');
       expect(result.results[2].result).toBe('1970-01-01T01:00:00-03:30[-03:30]');
@@ -91,7 +91,7 @@ describe('Integration Tests - Date/Time Presentation Conversions', () => {
     it('should convert zoned date times to RFC 2822', () => {
       const result = calculator.calculate(`1970 Jan 01 01:00 UTC to RFC 2822
 1970 Jan 01 01:00 UTC+5 to RFC 2822
-1970 Jan 01 01:00 UTC-3:30 to RFC 2822`);
+1970 Jan 01 01:00 UTC-330 to RFC 2822`);
       expect(result.results[0].result).toBe('Thu, 01 Jan 1970 01:00:00 +0000');
       expect(result.results[1].result).toBe('Thu, 01 Jan 1970 01:00:00 +0500');
       expect(result.results[2].result).toBe('Thu, 01 Jan 1970 01:00:00 -0330');

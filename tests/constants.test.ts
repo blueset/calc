@@ -103,10 +103,16 @@ describe('Constants', () => {
       expect(isConstant('')).toBe(false);
     });
 
-    it('should be case-sensitive', () => {
+    it('should be case-insensitive for named constants', () => {
       expect(isConstant('pi')).toBe(true);
-      expect(isConstant('PI')).toBe(false);
-      expect(isConstant('Pi')).toBe(false);
+      expect(isConstant('PI')).toBe(true);
+      expect(isConstant('Pi')).toBe(true);
+      expect(isConstant('NaN')).toBe(true);
+      expect(isConstant('nan')).toBe(true);
+      expect(isConstant('NAN')).toBe(true);
+      // But case-sensitive for symbols
+      expect(isConstant('π')).toBe(true);
+      expect(isConstant('φ')).toBe(true);
     });
   });
 
@@ -148,9 +154,13 @@ describe('Constants', () => {
       expect(getConstant('')).toBeUndefined();
     });
 
-    it('should be case-sensitive', () => {
+    it('should be case-insensitive for named constants', () => {
       expect(getConstant('pi')).toBeDefined();
-      expect(getConstant('PI')).toBeUndefined();
+      expect(getConstant('PI')).toBeDefined();
+      expect(getConstant('pi')).toBe(getConstant('PI'));
+      expect(getConstant('NaN')).toBeDefined();
+      expect(getConstant('nan')).toBeDefined();
+      expect(Number.isNaN(getConstant('nan')!)).toBe(true);
     });
   });
 

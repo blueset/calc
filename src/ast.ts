@@ -276,7 +276,8 @@ export type ConversionTarget =
   | PresentationTarget
   | PropertyTarget
   | TimezoneTarget
-  | BaseTarget;
+  | BaseTarget
+  | PrecisionTarget;
 
 export interface UnitTarget extends ASTNode {
   type: 'UnitTarget';
@@ -295,11 +296,21 @@ export interface PresentationTarget extends ASTNode {
 
 export type PresentationFormat =
   | 'binary'
+  | 'bin'
   | 'octal'
+  | 'oct'
+  | 'decimal'
+  | 'dec'
   | 'hex'
+  | 'hexadecimal'
   | 'fraction'
   | 'scientific'
-  | 'ordinal';
+  | 'ordinal'
+  | 'iso8601'
+  | 'rfc9557'
+  | 'rfc2822'
+  | 'unix'
+  | 'unixMilliseconds';
 
 export interface PropertyTarget extends ASTNode {
   type: 'PropertyTarget';
@@ -316,7 +327,8 @@ export type DateTimeProperty =
   | 'millisecond'
   | 'dayOfWeek'
   | 'dayOfYear'
-  | 'weekOfYear';
+  | 'weekOfYear'
+  | 'offset';
 
 export interface TimezoneTarget extends ASTNode {
   type: 'TimezoneTarget';
@@ -329,6 +341,12 @@ export interface TimezoneTarget extends ASTNode {
 export interface BaseTarget extends ASTNode {
   type: 'BaseTarget';
   base: number;  // 2-36
+}
+
+export interface PrecisionTarget extends ASTNode {
+  type: 'PrecisionTarget';
+  precision: number;
+  mode: 'decimals' | 'sigfigs';
 }
 
 /**

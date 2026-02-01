@@ -99,7 +99,7 @@ export class MathFunctions {
   }
 
   private isNumberFunction(name: string): boolean {
-    const numberFunctions = ['abs', 'round', 'floor', 'ceil', 'trunc', 'frac'];
+    const numberFunctions = ['abs', 'round', 'floor', 'ceil', 'trunc', 'frac', 'sign'];
     return numberFunctions.includes(name);
   }
 
@@ -268,37 +268,44 @@ export class MathFunctions {
   // Number functions
 
   private executeNumber(name: string, args: number[]): FunctionResult {
-    if (args.length !== 1) {
-      return { value: 0, error: `${name} requires 1 argument, got ${args.length}` };
+    if (args.length < 1 || args.length > 2) {
+      return { value: 0, error: `${name} requires 1 or 2 arguments, got ${args.length}` };
     }
 
     const x = args[0];
+    const nearest = args.length === 2 ? args[1] : 1;
     let result: number;
 
     switch (name) {
       case 'abs':
+        // abs doesn't use nearest parameter
         result = Math.abs(x);
         break;
 
       case 'round':
-        result = Math.round(x);
+        result = Math.round(x / nearest) * nearest;
         break;
 
       case 'floor':
-        result = Math.floor(x);
+        result = Math.floor(x / nearest) * nearest;
         break;
 
       case 'ceil':
-        result = Math.ceil(x);
+        result = Math.ceil(x / nearest) * nearest;
         break;
 
       case 'trunc':
-        result = Math.trunc(x);
+        result = Math.trunc(x / nearest) * nearest;
         break;
 
       case 'frac':
-        // Fractional part: x - trunc(x)
+        // frac doesn't use nearest parameter
         result = x - Math.trunc(x);
+        break;
+
+      case 'sign':
+        // sign doesn't use nearest parameter
+        result = Math.sign(x);
         break;
 
       default:
@@ -311,11 +318,42 @@ export class MathFunctions {
   // Random function
 
   private random(args: number[]): FunctionResult {
-    if (args.length !== 0) {
-      return { value: 0, error: `random requires 0 arguments, got ${args.length}` };
+    if (args.length === 0) {
+      // random() → [0, 1)
+      return { value: Math.random() };
     }
 
-    return { value: Math.random() };
+    if (args.length === 1) {
+      // random(max) → [0, max) as integer
+      const max = Math.floor(args[0]);
+      return { value: Math.floor(Math.random() * max) };
+    }
+
+    if (args.length === 2) {
+      // random(min, max) → [min, max) as integer
+      const min = Math.floor(args[0]);
+      const max = Math.floor(args[1]);
+      return { value: Math.floor(Math.random() * (max - min)) + min };
+    }
+
+    if (args.length === 3) {
+      // random(min, max, step) → random value from [min, max) stepping by step
+      let min = args[0];
+      let max = args[1];
+      let step = args[2];
+
+      // Handle negative step by swapping min/max and making step positive
+      if (step < 0) {
+        [min, max] = [max, min];
+        step = -step;
+      }
+
+      // Calculate number of steps and generate random value
+      const steps = Math.floor((max - min) / step);
+      return { value: min + Math.floor(Math.random() * steps) * step };
+    }
+
+    return { value: 0, error: `random requires 0-3 arguments, got ${args.length}` };
   }
 
   // Combinatoric functions

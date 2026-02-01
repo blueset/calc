@@ -214,6 +214,8 @@ const dimensions: Dimension[] = [
     hasNamedUnits: true,
   },
   { id: "current", name: "Electric Current", baseUnit: "ampere" },
+  { id: "voltage", name: "Electric Potential", baseUnit: "volt" },
+  { id: "resistance", name: "Electrical Resistance", baseUnit: "ohm" },
   { id: "luminous_intensity", name: "Luminous Intensity", baseUnit: "candela" },
   { id: "printing", name: "Printing/Display", baseUnit: "dot" },
   { id: "operation", name: "Operation", baseUnit: "operation" },
@@ -1048,6 +1050,13 @@ const staticUnits: Unit[] = [
     conversion: { type: "linear", factor: 1 },
     isBaseUnit: true,
   },
+  {
+    id: "pixel",
+    dimension: "printing",
+    displayName: { symbol: "px", singular: "pixel", plural: "pixels" },
+    names: ["px", "pixel", "pixels"],
+    conversion: { type: "linear", factor: 1 }, // 1 pixel = 1 dot
+  },
 ];
 
 // ============================================================================
@@ -1124,6 +1133,16 @@ function generateAllUnits(): Unit[] {
       "luminous_intensity",
       1
     )
+  );
+
+  // Volt with all SI prefixes
+  units.push(
+    ...generateSIPrefixedUnits("volt", "V", "volt", "volts", "voltage", 1)
+  );
+
+  // Ohm with all SI prefixes
+  units.push(
+    ...generateSIPrefixedUnits("ohm", "Ω", "ohm", "ohms", "resistance", 1)
   );
 
   // Data units (bit and byte)

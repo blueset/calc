@@ -59,7 +59,8 @@ import {
   TimezoneTarget,
   BaseTarget,
   DateTimeProperty,
-  PresentationFormat
+  PresentationFormat,
+  PrecisionTarget
 } from './ast';
 import { DataLoader } from './data-loader';
 import { isConstant, getConstant } from './constants';
@@ -92,6 +93,9 @@ export class Parser {
     '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
     '⁻': '-'
   };
+
+  // Presentation format keywords (includes short aliases: bin, oct, dec, hex)
+  private static readonly PRESENTATION_FORMATS = ['binary', 'bin', 'octal', 'oct', 'decimal', 'dec', 'hex', 'hexadecimal', 'fraction', 'scientific', 'ordinal'];
 
   constructor(tokens: Token[], dataLoader: DataLoader, input?: string) {
     this.tokens = tokens;
@@ -688,6 +692,30 @@ export class Parser {
       return numericDate;
     }
 
+    // Check for Unix timestamp: NUMBER unix [seconds|s|milliseconds|ms]
+    // Examples: "3600 unix", "3600 unix seconds", "3600000 unix milliseconds"
+    if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.UNIT)) {
+      const savedPosition = this.current;
+      const nextToken = this.currentToken();
+      const nextValue = nextToken.value.toLowerCase();
+
+      if (nextValue === 'unix') {
+        this.advance(); // consume 'unix'
+
+        // Check for optional unit specifier (seconds/s or milliseconds/ms)
+        const timeUnit = this.tryParseUnixTimeUnit();
+
+        // Convert to milliseconds (default: seconds)
+        const timestampMilliseconds = timeUnit === 'milliseconds' ? value : value * 1000;
+
+        const end = this.previous().end;
+        return createInstantLiteral(timestampMilliseconds, start, end);
+      }
+
+      // Not a unix timestamp, restore position
+      this.current = savedPosition;
+    }
+
     // Check for date pattern: YYYY MONTH D (e.g., "2024 Jan 15")
     if (this.check(TokenType.DATETIME)) {
       const monthToken = this.currentToken();
@@ -742,6 +770,30 @@ export class Parser {
       }
     }
 
+    // Check for AM/PM time parsing
+    // The lexer tokenizes "am"/"pm" as DATETIME when preceded by integers 1-12
+    // Example: "10 am" → NUMBER(10) + DATETIME(am) → 10:00
+    if (this.check(TokenType.DATETIME)) {
+      const datetimeToken = this.currentToken();
+      const datetimeValue = datetimeToken.value.toLowerCase();
+
+      // Check if this is an am/pm indicator
+      if (datetimeValue === 'am' || datetimeValue === 'pm') {
+        this.advance(); // consume am/pm token
+
+        // Convert to 24-hour format
+        let hour = Math.floor(value);
+        if (datetimeValue === 'pm' && hour !== 12) {
+          hour += 12;
+        } else if (datetimeValue === 'am' && hour === 12) {
+          hour = 0; // 12 AM is midnight
+        }
+
+        const end = this.previous().end;
+        return createPlainTimeLiteral(hour, 0, 0, undefined, start, end);
+      }
+    }
+
     // Check for named square/cubic units (prefix pattern: "square meter", "cubic meter")
     let namedExponent: number | null = null;
     if (this.check(TokenType.SQUARE) || this.check(TokenType.CUBIC)) {
@@ -751,7 +803,10 @@ export class Parser {
     }
 
     // Check for unit after number (or identifier that might be part of a multi-word unit/currency)
-    if (this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER) || namedExponent !== null) {
+    // Also check for PRIME/DOUBLE_PRIME which are context-sensitive units
+    if (this.check(TokenType.UNIT) || this.check(TokenType.IDENTIFIER) ||
+        this.check(TokenType.PRIME) || this.check(TokenType.DOUBLE_PRIME) ||
+        namedExponent !== null) {
       // Try multi-word unit/currency parsing first for identifiers
       if (this.check(TokenType.IDENTIFIER)) {
         const multiWord = this.tryParseMultiWordUnit();
@@ -783,14 +838,40 @@ export class Parser {
       const units: Array<{ value: number; unit: UnitExpression }> = [];
 
       // First value-unit pair
-      // Extract Unicode superscripts at parse time for consistency
-      // This treats m² and lb³ uniformly (both become [meter:2] and [pound:3])
-      const unitToken = this.currentToken();
-      const unitOriginalValue = unitToken.value;
-      const [, unicodeExponent] = this.extractSuperscript(unitOriginalValue);
+      let firstUnit: UnitExpression;
+      let isAngleContext = false;
+      let unicodeExponent: number | null = null;
+      let unitOriginalValue = '';
 
-      // Parse unit with extraction enabled (strips superscript from name)
-      let firstUnit: UnitExpression = this.parseUnit(true);
+      // Handle PRIME/DOUBLE_PRIME tokens first
+      // If we see PRIME/DOUBLE_PRIME as the first token (no degree context), treat as foot/inch
+      if (this.check(TokenType.PRIME) || this.check(TokenType.DOUBLE_PRIME)) {
+        const primeToken = this.currentToken();
+        this.advance();
+
+        const unitId = primeToken.type === TokenType.PRIME ? 'foot' : 'inch';
+        const unitName = primeToken.type === TokenType.PRIME ? 'ft' : 'in';
+
+        firstUnit = createSimpleUnit(unitId, unitName, primeToken.start, primeToken.end);
+      } else {
+        // Extract Unicode superscripts at parse time for consistency
+        // This treats m² and lb³ uniformly (both become [meter:2] and [pound:3])
+        const unitToken = this.currentToken();
+        unitOriginalValue = unitToken.value;
+        [, unicodeExponent] = this.extractSuperscript(unitOriginalValue);
+
+        // Check if first unit is a degree symbol (for angle context tracking)
+        // If so, subsequent PRIME/DOUBLE_PRIME are arcminute/arcsecond
+        if (this.check(TokenType.UNIT)) {
+          const unitData = this.dataLoader.getUnitByName(unitToken.value);
+          if (unitData && unitData.id === 'degree') {
+            isAngleContext = true;
+          }
+        }
+
+        // Parse unit with extraction enabled (strips superscript from name)
+        firstUnit = this.parseUnit(true);
+      }
 
       // Handle prefix pattern (square/cubic was already consumed above)
       if (namedExponent !== null) {
@@ -899,15 +980,38 @@ export class Parser {
 
       // Check for additional value-unit pairs (composite unit)
       // Pattern: NUMBER UNIT NUMBER UNIT ...
-      // Special case: IN keyword can be "inches" in composite unit context
+      // Special cases:
+      // - IN keyword can be "inches" in composite unit context
+      // - PRIME/DOUBLE_PRIME interpreted based on angle context
       while (this.check(TokenType.NUMBER)) {
         const nextNumberToken = this.currentToken();
         this.advance();
         const nextValue = parseFloat(nextNumberToken.value);
 
+        let nextUnit: UnitExpression | null = null;
+
+        // Check if next is PRIME/DOUBLE_PRIME (context-sensitive)
+        if (this.check(TokenType.PRIME) || this.check(TokenType.DOUBLE_PRIME)) {
+          const primeToken = this.currentToken();
+          this.advance();
+
+          if (isAngleContext) {
+            // After degree: PRIME = arcminute, DOUBLE_PRIME = arcsecond
+            const unitId = primeToken.type === TokenType.PRIME ? 'arcminute' : 'arcsecond';
+            const unitSymbol = primeToken.type === TokenType.PRIME ? '′' : '″';
+            nextUnit = createSimpleUnit(unitId, unitSymbol, primeToken.start, primeToken.end);
+          } else {
+            // Without degree context: PRIME = foot, DOUBLE_PRIME = inch
+            const unitId = primeToken.type === TokenType.PRIME ? 'foot' : 'inch';
+            const unitName = primeToken.type === TokenType.PRIME ? 'ft' : 'in';
+            nextUnit = createSimpleUnit(unitId, unitName, primeToken.start, primeToken.end);
+          }
+
+          units.push({ value: nextValue, unit: nextUnit });
+        }
         // Check if next is UNIT or IN (which could be "inches" in this context)
-        if (this.check(TokenType.UNIT) || this.check(TokenType.IN)) {
-          const nextUnit = this.parseUnit();
+        else if (this.check(TokenType.UNIT) || this.check(TokenType.IN)) {
+          nextUnit = this.parseUnit();
           units.push({ value: nextValue, unit: nextUnit });
         } else {
           // Not a composite unit, backtrack
@@ -1212,10 +1316,112 @@ export class Parser {
       return target;
     }
 
-    // Check for presentation formats
-    if (this.check(TokenType.IDENTIFIER)) {
+    // Check for "N decimals" or "N sig figs" / "N significant figures" patterns
+    if (this.check(TokenType.NUMBER)) {
+      const savedPosition = this.current;
+      const numberToken = this.advance();
+      const precision = parseInt(numberToken.value);
+
+      // Check next token for "decimals", "sig", or "significant"
+      if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.UNIT)) {
+        const keyword = this.currentToken().value.toLowerCase();
+
+        if (keyword === 'decimals' || keyword === 'decimal') {
+          this.advance(); // consume 'decimals'
+          const target: PrecisionTarget = {
+            type: 'PrecisionTarget',
+            precision,
+            mode: 'decimals',
+            start,
+            end: this.previous().end
+          };
+          return target;
+        } else if (keyword === 'sig' || keyword === 'significant') {
+          this.advance(); // consume 'sig' or 'significant'
+
+          // Check for optional 'figs' or 'figures'
+          if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.UNIT)) {
+            const nextKeyword = this.currentToken().value.toLowerCase();
+            if (nextKeyword === 'figs' || nextKeyword === 'fig' || nextKeyword === 'figures' || nextKeyword === 'figure') {
+              this.advance(); // consume 'figs' or 'figures'
+            }
+          }
+
+          const target: PrecisionTarget = {
+            type: 'PrecisionTarget',
+            precision,
+            mode: 'sigfigs',
+            start,
+            end: this.previous().end
+          };
+          return target;
+        }
+      }
+
+      // Not a precision pattern, restore position
+      this.current = savedPosition;
+    }
+
+    // Check for presentation formats and properties (IDENTIFIER or UNIT tokens)
+    if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.UNIT)) {
       const name = this.currentToken().value.toLowerCase();
-      const presentationFormats = ['binary', 'octal', 'hex', 'fraction', 'scientific', 'ordinal'];
+
+      // Check for multi-word date/time formats first
+      // ISO 8601, RFC 9557, RFC 2822
+      if (name === 'iso' || name === 'rfc') {
+        const savedPosition = this.current;
+        this.advance(); // consume 'iso' or 'rfc'
+
+        // Check if next token is a number
+        if (!this.isAtEnd() && this.currentToken().type === TokenType.NUMBER) {
+          const numberStr = this.currentToken().value;
+          let format: PresentationFormat | null = null;
+
+          if (name === 'iso' && numberStr === '8601') {
+            format = 'iso8601';
+          } else if (name === 'rfc' && numberStr === '9557') {
+            format = 'rfc9557';
+          } else if (name === 'rfc' && numberStr === '2822') {
+            format = 'rfc2822';
+          }
+
+          if (format) {
+            this.advance(); // consume number
+            const target: PresentationTarget = {
+              type: 'PresentationTarget',
+              format,
+              start,
+              end: this.previous().end
+            };
+            return target;
+          }
+        }
+
+        // Not a recognized multi-word format, restore position
+        this.current = savedPosition;
+      }
+
+      // Check for Unix timestamp formats
+      // Unix, Unix seconds, Unix second, Unix s, Unix milliseconds, Unix millisecond, Unix ms
+      if (name === 'unix') {
+        this.advance(); // consume 'unix'
+
+        // Check for optional unit specifier (seconds/s or milliseconds/ms)
+        const timeUnit = this.tryParseUnixTimeUnit();
+
+        // Determine format (default: seconds)
+        const format: PresentationFormat = timeUnit === 'milliseconds' ? 'unixMilliseconds' : 'unix';
+
+        const target: PresentationTarget = {
+          type: 'PresentationTarget',
+          format,
+          start,
+          end: this.previous().end
+        };
+        return target;
+      }
+
+      const presentationFormats = Parser.PRESENTATION_FORMATS;
 
       if (presentationFormats.includes(name)) {
         this.advance();
@@ -1229,11 +1435,64 @@ export class Parser {
         return target;
       }
 
-      // Check for date/time properties
-      const properties = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'dayOfWeek', 'dayOfYear', 'weekOfYear'];
-      if (properties.includes(name)) {
+      // Check for multi-word properties like "day of year" BEFORE single-word
+      if (name === 'day' || name === 'week') {
+        const savedPosition = this.current;
+        this.advance(); // consume 'day' or 'week'
+
+        // Check if next token is 'of'
+        if (!this.isAtEnd()) {
+          const nextTokenType = this.currentToken().type;
+          const nextValue = (nextTokenType === TokenType.IDENTIFIER || nextTokenType === TokenType.UNIT)
+            ? this.currentToken().value.toLowerCase()
+            : '';
+
+          if (nextValue === 'of') {
+            this.advance(); // consume 'of'
+
+            // Check if next token is 'year'
+            if (!this.isAtEnd()) {
+              const thirdTokenType = this.currentToken().type;
+              const thirdValue = (thirdTokenType === TokenType.IDENTIFIER || thirdTokenType === TokenType.UNIT)
+                ? this.currentToken().value.toLowerCase()
+                : '';
+
+              if (thirdValue === 'year') {
+                this.advance(); // consume 'year'
+                const property: DateTimeProperty = name === 'day' ? 'dayOfYear' : 'weekOfYear';
+                const target: PropertyTarget = {
+                  type: 'PropertyTarget',
+                  property,
+                  start,
+                  end: this.previous().end
+                };
+                return target;
+              }
+            }
+          }
+        }
+
+        // Not a multi-word property, restore position
+        this.current = savedPosition;
+        // Fall through to check as single-word property below
+      }
+
+      // Check for date/time properties (single word)
+      const singleWordProperties: Record<string, DateTimeProperty> = {
+        'year': 'year',
+        'month': 'month',
+        'day': 'day',
+        'hour': 'hour',
+        'minute': 'minute',
+        'second': 'second',
+        'millisecond': 'millisecond',
+        'weekday': 'dayOfWeek',  // alias for dayOfWeek
+        'offset': 'offset'
+      };
+
+      if (name in singleWordProperties) {
         this.advance();
-        const property = name as DateTimeProperty;
+        const property = singleWordProperties[name];
         const target: PropertyTarget = {
           type: 'PropertyTarget',
           property,
@@ -1244,27 +1503,45 @@ export class Parser {
       }
 
       // Check for timezone (use DataLoader to resolve timezone names)
-      const resolvedTimezone = this.dataLoader.resolveTimezone(name);
-      if (resolvedTimezone) {
-        this.advance();
-        const target: TimezoneTarget = {
-          type: 'TimezoneTarget',
-          timezone: resolvedTimezone,  // Use resolved IANA timezone
-          start,
-          end: this.previous().end
-        };
-        return target;
+      // Only for IDENTIFIER tokens, not UNIT tokens
+      if (this.check(TokenType.IDENTIFIER)) {
+        const resolvedTimezone = this.dataLoader.resolveTimezone(name);
+        if (resolvedTimezone) {
+          this.advance();
+          const target: TimezoneTarget = {
+            type: 'TimezoneTarget',
+            timezone: resolvedTimezone,  // Use resolved IANA timezone
+            start,
+            end: this.previous().end
+          };
+          return target;
+        }
       }
     }
 
     // Parse the first unit (extract superscripts in conversion target context)
-    const firstUnitToken = this.currentToken();
-    const firstUnitOriginalValue = firstUnitToken.value;
-    const firstUnit = this.parseUnit(true);  // extractSuperscript=true
+    let firstUnit: UnitExpression;
+    let firstUnitOriginalValue = '';
+    let hasFirstUnitSuperscript = false;
 
-    // Check if the first unit token had a Unicode superscript (e.g., "m²")
-    const [, firstUnitSuperscript] = this.extractSuperscript(firstUnitOriginalValue);
-    const hasFirstUnitSuperscript = firstUnitSuperscript !== null;
+    // Handle PRIME/DOUBLE_PRIME as first token (e.g., "to ′ ″" for feet and inches)
+    if (this.check(TokenType.PRIME) || this.check(TokenType.DOUBLE_PRIME)) {
+      const primeToken = this.currentToken();
+      this.advance();
+
+      // Without any preceding unit, PRIME = foot, DOUBLE_PRIME = inch
+      const unitId = primeToken.type === TokenType.PRIME ? 'foot' : 'inch';
+      const unitName = primeToken.type === TokenType.PRIME ? 'ft' : 'in';
+      firstUnit = createSimpleUnit(unitId, unitName, primeToken.start, primeToken.end);
+    } else {
+      const firstUnitToken = this.currentToken();
+      firstUnitOriginalValue = firstUnitToken.value;
+      firstUnit = this.parseUnit(true);  // extractSuperscript=true
+
+      // Check if the first unit token had a Unicode superscript (e.g., "m²")
+      const [, firstUnitSuperscript] = this.extractSuperscript(firstUnitOriginalValue);
+      hasFirstUnitSuperscript = firstUnitSuperscript !== null;
+    }
 
     // Check if this is a derived unit expression by looking ahead
     // Derived units have operators: *, /, ^, Unicode superscripts, or implicit multiplication followed by /
@@ -1275,22 +1552,45 @@ export class Parser {
       return createUnitTarget(derivedUnit, start, derivedUnit.end);
     }
 
-    // Check if there are more units (for composite unit like "ft in")
+    // Check if there are more units (for composite unit like "ft in" or "° ′")
     const units: UnitExpression[] = [firstUnit];
 
-    while (this.check(TokenType.UNIT) || this.check(TokenType.IN) || this.check(TokenType.IDENTIFIER)) {
+    while (this.check(TokenType.UNIT) || this.check(TokenType.IN) || this.check(TokenType.IDENTIFIER) ||
+           this.check(TokenType.PRIME) || this.check(TokenType.DOUBLE_PRIME)) {
       // Stop if we hit a keyword or operator
       if (this.check(TokenType.IDENTIFIER)) {
         const name = this.currentToken().value.toLowerCase();
         // Check if this is a presentation format or property (not a unit)
-        const presentationFormats = ['binary', 'octal', 'hex', 'fraction', 'scientific', 'ordinal'];
+        const presentationFormats = Parser.PRESENTATION_FORMATS;
         const properties = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'dayOfWeek', 'dayOfYear', 'weekOfYear'];
         if (presentationFormats.includes(name) || properties.includes(name)) {
           break;
         }
       }
 
-      units.push(this.parseUnit());
+      // Handle PRIME/DOUBLE_PRIME tokens (context-sensitive: check if first unit is degree)
+      if (this.check(TokenType.PRIME) || this.check(TokenType.DOUBLE_PRIME)) {
+        const primeToken = this.currentToken();
+        this.advance();
+
+        // Determine if we're in angle context by checking first unit
+        const firstUnitData = this.dataLoader.getUnitByName(firstUnit.name);
+        const isAngleContext = firstUnitData && firstUnitData.id === 'degree';
+
+        if (isAngleContext) {
+          // After degree: PRIME = arcminute, DOUBLE_PRIME = arcsecond
+          const unitId = primeToken.type === TokenType.PRIME ? 'arcminute' : 'arcsecond';
+          const unitSymbol = primeToken.type === TokenType.PRIME ? '′' : '″';
+          units.push(createSimpleUnit(unitId, unitSymbol, primeToken.start, primeToken.end));
+        } else {
+          // Without degree context: PRIME = foot, DOUBLE_PRIME = inch
+          const unitId = primeToken.type === TokenType.PRIME ? 'foot' : 'inch';
+          const unitName = primeToken.type === TokenType.PRIME ? 'ft' : 'in';
+          units.push(createSimpleUnit(unitId, unitName, primeToken.start, primeToken.end));
+        }
+      } else {
+        units.push(this.parseUnit());
+      }
     }
 
     const end = this.previous().end;
@@ -1460,7 +1760,7 @@ export class Parser {
       if (this.check(TokenType.IDENTIFIER)) {
         const name = this.currentToken().value;
         const nameLower = name.toLowerCase();
-        const presentationFormats = ['binary', 'octal', 'hex', 'fraction', 'scientific', 'ordinal'];
+        const presentationFormats = Parser.PRESENTATION_FORMATS;
         const properties = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'dayOfWeek', 'dayOfYear', 'weekOfYear'];
 
         // Check if this identifier is a defined variable - if so, stop parsing the derived unit
@@ -2243,6 +2543,32 @@ export class Parser {
       dateTimeLiteral.start,
       dateTimeLiteral.end
     );
+  }
+
+  /**
+   * Parse optional Unix timestamp unit specifier (seconds/s or milliseconds/ms)
+   * Returns 'seconds' or 'milliseconds', or null if no valid specifier found
+   * Consumes the token if a valid specifier is found
+   */
+  private tryParseUnixTimeUnit(): 'seconds' | 'milliseconds' | null {
+    if (this.isAtEnd()) {
+      return null;
+    }
+
+    const token = this.currentToken();
+    const value = (token.type === TokenType.IDENTIFIER || token.type === TokenType.UNIT)
+      ? token.value.toLowerCase()
+      : '';
+
+    if (value === 'millisecond' || value === 'milliseconds' || value === 'ms') {
+      this.advance();
+      return 'milliseconds';
+    } else if (value === 'second' || value === 'seconds' || value === 's') {
+      this.advance();
+      return 'seconds';
+    }
+
+    return null;
   }
 
   /**

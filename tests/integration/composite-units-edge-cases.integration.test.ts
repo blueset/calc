@@ -22,22 +22,21 @@ describe('Integration Tests - Composite Units Edge Cases', () => {
     it('should handle arcminutes after degrees', () => {
       // After degree symbol, ′ is arcminutes
       const result = calculator.calculate('45°30′');
-      // 45 degrees 30 arcminutes = 45.5 degrees
-      expect(result.results[0].result).toMatch("45.5 °");
+      expect(result.results[0].result).toBe("45° 30′");
     });
 
     it('should handle arcseconds after degrees', () => {
       // After degree symbol, ″ is arcseconds
       const result = calculator.calculate('45°30″');
       // 45 degrees 30 arcseconds = 45 + 30/3600 = 45.00833... degrees
-      expect(result.results[0].result).toBe(/45\.008\d* °/);
+      expect(result.results[0].result).toBe('45° 30″');
     });
 
     it('should handle degrees, arcminutes, and arcseconds', () => {
       // Complete angle notation
       const result = calculator.calculate('45°30′15″');
       // 45 + 30/60 + 15/3600 = 45.50416... degrees
-      expect(result.results[0].result).toMatch(/45\.504\d* °/);
+      expect(result.results[0].result).toBe('45° 30′ 15″');
     });
 
     it('should handle prime symbol as feet outside degree context', () => {
@@ -80,12 +79,17 @@ describe('Integration Tests - Composite Units Edge Cases', () => {
   describe('Composite Unit Conversions', () => {
     it('should convert composite angles to decimal degrees', () => {
       const result = calculator.calculate('45°30′ to degrees');
-      expect(result.results[0].result).toMatch(/45.166\d* °/);
+      expect(result.results[0].result).toBe('45.5°');
     });
 
     it('should convert decimal degrees to composite angle notation', () => {
       const result = calculator.calculate('45.5 degrees to ° ′');
-      expect(result.results[0].result).toBe('45 ° 30 ′');
+      expect(result.results[0].result).toBe('45° 30′');
+    });
+
+    it('should convert decimal feet to composite length notation', () => {
+      const result = calculator.calculate('45.5 ft to ′ ″');
+      expect(result.results[0].result).toBe('45 ft 6 in');
     });
 
     it('should convert between composite length units', () => {

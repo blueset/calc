@@ -182,6 +182,16 @@
       "baseUnit": "ampere"
     },
     {
+      "id": "voltage",
+      "name": "Electric Potential",
+      "baseUnit": "volt"
+    },
+    {
+      "id": "resistance",
+      "name": "Electrical Resistance",
+      "baseUnit": "ohm"
+    },
+    {
       "id": "luminous_intensity",
       "name": "Luminous Intensity",
       "baseUnit": "candela"
@@ -1893,6 +1903,24 @@
         "factor": 1
       },
       "isBaseUnit": true
+    },
+    {
+      "id": "pixel",
+      "dimension": "printing",
+      "displayName": {
+        "symbol": "px",
+        "singular": "pixel",
+        "plural": "pixels"
+      },
+      "names": [
+        "px",
+        "pixel",
+        "pixels"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      }
     },
     {
       "id": "quettameter",
@@ -6822,6 +6850,908 @@
         "qcd",
         "quectocandela",
         "quectocandelas"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettavolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "QV",
+        "singular": "quettavolt",
+        "plural": "quettavolts"
+      },
+      "names": [
+        "QV",
+        "quettavolt",
+        "quettavolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnavolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "RV",
+        "singular": "ronnavolt",
+        "plural": "ronnavolts"
+      },
+      "names": [
+        "RV",
+        "ronnavolt",
+        "ronnavolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottavolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "YV",
+        "singular": "yottavolt",
+        "plural": "yottavolts"
+      },
+      "names": [
+        "YV",
+        "yottavolt",
+        "yottavolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettavolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "ZV",
+        "singular": "zettavolt",
+        "plural": "zettavolts"
+      },
+      "names": [
+        "ZV",
+        "zettavolt",
+        "zettavolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exavolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "EV",
+        "singular": "exavolt",
+        "plural": "exavolts"
+      },
+      "names": [
+        "EV",
+        "exavolt",
+        "exavolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petavolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "PV",
+        "singular": "petavolt",
+        "plural": "petavolts"
+      },
+      "names": [
+        "PV",
+        "petavolt",
+        "petavolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "teravolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "TV",
+        "singular": "teravolt",
+        "plural": "teravolts"
+      },
+      "names": [
+        "TV",
+        "teravolt",
+        "teravolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigavolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "GV",
+        "singular": "gigavolt",
+        "plural": "gigavolts"
+      },
+      "names": [
+        "GV",
+        "gigavolt",
+        "gigavolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megavolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "MV",
+        "singular": "megavolt",
+        "plural": "megavolts"
+      },
+      "names": [
+        "MV",
+        "megavolt",
+        "megavolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "kV",
+        "singular": "kilovolt",
+        "plural": "kilovolts"
+      },
+      "names": [
+        "kV",
+        "kilovolt",
+        "kilovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "hV",
+        "singular": "hectovolt",
+        "plural": "hectovolts"
+      },
+      "names": [
+        "hV",
+        "hectovolt",
+        "hectovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekavolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "daV",
+        "singular": "dekavolt",
+        "plural": "dekavolts"
+      },
+      "names": [
+        "daV",
+        "dekavolt",
+        "dekavolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "volt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "V",
+        "singular": "volt",
+        "plural": "volts"
+      },
+      "names": [
+        "V",
+        "volt",
+        "volts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "decivolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "dV",
+        "singular": "decivolt",
+        "plural": "decivolts"
+      },
+      "names": [
+        "dV",
+        "decivolt",
+        "decivolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centivolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "cV",
+        "singular": "centivolt",
+        "plural": "centivolts"
+      },
+      "names": [
+        "cV",
+        "centivolt",
+        "centivolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "millivolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "mV",
+        "singular": "millivolt",
+        "plural": "millivolts"
+      },
+      "names": [
+        "mV",
+        "millivolt",
+        "millivolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "microvolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "μV",
+        "singular": "microvolt",
+        "plural": "microvolts"
+      },
+      "names": [
+        "μV",
+        "microvolt",
+        "microvolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "nV",
+        "singular": "nanovolt",
+        "plural": "nanovolts"
+      },
+      "names": [
+        "nV",
+        "nanovolt",
+        "nanovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "pV",
+        "singular": "picovolt",
+        "plural": "picovolts"
+      },
+      "names": [
+        "pV",
+        "picovolt",
+        "picovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "fV",
+        "singular": "femtovolt",
+        "plural": "femtovolts"
+      },
+      "names": [
+        "fV",
+        "femtovolt",
+        "femtovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "aV",
+        "singular": "attovolt",
+        "plural": "attovolts"
+      },
+      "names": [
+        "aV",
+        "attovolt",
+        "attovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "zV",
+        "singular": "zeptovolt",
+        "plural": "zeptovolts"
+      },
+      "names": [
+        "zV",
+        "zeptovolt",
+        "zeptovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "yV",
+        "singular": "yoctovolt",
+        "plural": "yoctovolts"
+      },
+      "names": [
+        "yV",
+        "yoctovolt",
+        "yoctovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "rV",
+        "singular": "rontovolt",
+        "plural": "rontovolts"
+      },
+      "names": [
+        "rV",
+        "rontovolt",
+        "rontovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectovolt",
+      "dimension": "voltage",
+      "displayName": {
+        "symbol": "qV",
+        "singular": "quectovolt",
+        "plural": "quectovolts"
+      },
+      "names": [
+        "qV",
+        "quectovolt",
+        "quectovolts"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-30
+      }
+    },
+    {
+      "id": "quettaohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "QΩ",
+        "singular": "quettaohm",
+        "plural": "quettaohms"
+      },
+      "names": [
+        "QΩ",
+        "quettaohm",
+        "quettaohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnaohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "RΩ",
+        "singular": "ronnaohm",
+        "plural": "ronnaohms"
+      },
+      "names": [
+        "RΩ",
+        "ronnaohm",
+        "ronnaohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottaohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "YΩ",
+        "singular": "yottaohm",
+        "plural": "yottaohms"
+      },
+      "names": [
+        "YΩ",
+        "yottaohm",
+        "yottaohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettaohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "ZΩ",
+        "singular": "zettaohm",
+        "plural": "zettaohms"
+      },
+      "names": [
+        "ZΩ",
+        "zettaohm",
+        "zettaohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exaohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "EΩ",
+        "singular": "exaohm",
+        "plural": "exaohms"
+      },
+      "names": [
+        "EΩ",
+        "exaohm",
+        "exaohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petaohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "PΩ",
+        "singular": "petaohm",
+        "plural": "petaohms"
+      },
+      "names": [
+        "PΩ",
+        "petaohm",
+        "petaohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "teraohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "TΩ",
+        "singular": "teraohm",
+        "plural": "teraohms"
+      },
+      "names": [
+        "TΩ",
+        "teraohm",
+        "teraohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigaohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "GΩ",
+        "singular": "gigaohm",
+        "plural": "gigaohms"
+      },
+      "names": [
+        "GΩ",
+        "gigaohm",
+        "gigaohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megaohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "MΩ",
+        "singular": "megaohm",
+        "plural": "megaohms"
+      },
+      "names": [
+        "MΩ",
+        "megaohm",
+        "megaohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kiloohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "kΩ",
+        "singular": "kiloohm",
+        "plural": "kiloohms"
+      },
+      "names": [
+        "kΩ",
+        "kiloohm",
+        "kiloohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "hectoohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "hΩ",
+        "singular": "hectoohm",
+        "plural": "hectoohms"
+      },
+      "names": [
+        "hΩ",
+        "hectoohm",
+        "hectoohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 100
+      }
+    },
+    {
+      "id": "dekaohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "daΩ",
+        "singular": "dekaohm",
+        "plural": "dekaohms"
+      },
+      "names": [
+        "daΩ",
+        "dekaohm",
+        "dekaohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 10
+      }
+    },
+    {
+      "id": "ohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "Ω",
+        "singular": "ohm",
+        "plural": "ohms"
+      },
+      "names": [
+        "Ω",
+        "ohm",
+        "ohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "deciohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "dΩ",
+        "singular": "deciohm",
+        "plural": "deciohms"
+      },
+      "names": [
+        "dΩ",
+        "deciohm",
+        "deciohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.1
+      }
+    },
+    {
+      "id": "centiohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "cΩ",
+        "singular": "centiohm",
+        "plural": "centiohms"
+      },
+      "names": [
+        "cΩ",
+        "centiohm",
+        "centiohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.01
+      }
+    },
+    {
+      "id": "milliohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "mΩ",
+        "singular": "milliohm",
+        "plural": "milliohms"
+      },
+      "names": [
+        "mΩ",
+        "milliohm",
+        "milliohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.001
+      }
+    },
+    {
+      "id": "microohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "μΩ",
+        "singular": "microohm",
+        "plural": "microohms"
+      },
+      "names": [
+        "μΩ",
+        "microohm",
+        "microohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 0.000001
+      }
+    },
+    {
+      "id": "nanoohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "nΩ",
+        "singular": "nanoohm",
+        "plural": "nanoohms"
+      },
+      "names": [
+        "nΩ",
+        "nanoohm",
+        "nanoohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-9
+      }
+    },
+    {
+      "id": "picoohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "pΩ",
+        "singular": "picoohm",
+        "plural": "picoohms"
+      },
+      "names": [
+        "pΩ",
+        "picoohm",
+        "picoohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-12
+      }
+    },
+    {
+      "id": "femtoohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "fΩ",
+        "singular": "femtoohm",
+        "plural": "femtoohms"
+      },
+      "names": [
+        "fΩ",
+        "femtoohm",
+        "femtoohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-15
+      }
+    },
+    {
+      "id": "attoohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "aΩ",
+        "singular": "attoohm",
+        "plural": "attoohms"
+      },
+      "names": [
+        "aΩ",
+        "attoohm",
+        "attoohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-18
+      }
+    },
+    {
+      "id": "zeptoohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "zΩ",
+        "singular": "zeptoohm",
+        "plural": "zeptoohms"
+      },
+      "names": [
+        "zΩ",
+        "zeptoohm",
+        "zeptoohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-21
+      }
+    },
+    {
+      "id": "yoctoohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "yΩ",
+        "singular": "yoctoohm",
+        "plural": "yoctoohms"
+      },
+      "names": [
+        "yΩ",
+        "yoctoohm",
+        "yoctoohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-24
+      }
+    },
+    {
+      "id": "rontoohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "rΩ",
+        "singular": "rontoohm",
+        "plural": "rontoohms"
+      },
+      "names": [
+        "rΩ",
+        "rontoohm",
+        "rontoohms"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e-27
+      }
+    },
+    {
+      "id": "quectoohm",
+      "dimension": "resistance",
+      "displayName": {
+        "symbol": "qΩ",
+        "singular": "quectoohm",
+        "plural": "quectoohms"
+      },
+      "names": [
+        "qΩ",
+        "quectoohm",
+        "quectoohms"
       ],
       "conversion": {
         "type": "linear",

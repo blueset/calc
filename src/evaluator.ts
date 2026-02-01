@@ -1,7 +1,7 @@
 import * as AST from './ast';
 import { DataLoader } from './data-loader';
 import { UnitConverter, ConversionSettings } from './unit-converter';
-import { DateTimeEngine, Duration, PlainDate, PlainTime, PlainDateTime, Instant, ZonedDateTime } from './date-time';
+import { DateTimeEngine, Duration, PlainDate, PlainTime, PlainDateTime, Instant, ZonedDateTime, toTemporalZonedDateTime, toTemporalPlainDateTime, toTemporalPlainDate, toTemporalInstant } from './date-time';
 import { CurrencyConverter, CurrencyValue } from './currency';
 import { MathFunctions } from './functions';
 import { createErrorResult, ErrorResult } from './error-handling';
@@ -40,6 +40,7 @@ export interface NumberValue {
   kind: 'number';
   value: number;
   unit?: Unit; // undefined = dimensionless
+  precision?: { count: number; mode: 'decimals' | 'sigfigs' }; // For formatting
 }
 
 /**
@@ -449,6 +450,9 @@ export class Evaluator {
       case 'TimezoneTarget':
         return this.convertToTimezone(value, target.timezone);
 
+      case 'PrecisionTarget':
+        return this.applyPrecision(value, target.precision, target.mode);
+
       default:
         return this.createError(`Unknown conversion target: ${(target as any).type}`);
     }
@@ -597,10 +601,25 @@ export class Evaluator {
       return this.evaluateDateTimeArithmetic(op, convertedLeft, convertedRight);
     }
 
+    // Convert composite units to single units for arithmetic
+    // This allows operations like: 10 ft - (5 ft 6 in)
+    if (left.kind === 'composite') {
+      convertedLeft = this.convertCompositeToSingleUnit(left);
+      if (convertedLeft.kind === 'error') {
+        return convertedLeft;
+      }
+    }
+    if (right.kind === 'composite') {
+      convertedRight = this.convertCompositeToSingleUnit(right);
+      if (convertedRight.kind === 'error') {
+        return convertedRight;
+      }
+    }
+
     // Handle number and derived unit arithmetic
     const isNumeric = (v: Value) => v.kind === 'number' || v.kind === 'derivedUnit';
-    if (isNumeric(left) && isNumeric(right)) {
-      return this.evaluateNumberArithmetic(op, left as NumberValue | DerivedUnitValue, right as NumberValue | DerivedUnitValue);
+    if (isNumeric(convertedLeft) && isNumeric(convertedRight)) {
+      return this.evaluateNumberArithmetic(op, convertedLeft as NumberValue | DerivedUnitValue, convertedRight as NumberValue | DerivedUnitValue);
     }
 
     return this.createError(`Cannot perform ${op} on ${left.kind} and ${right.kind}`);
@@ -1284,8 +1303,10 @@ export class Evaluator {
     // Evaluate all arguments
     const args: number[] = [];
     let firstArgUnit: Unit | undefined;
+    let secondArgUnit: Unit | undefined;
 
-    for (const argExpr of expr.arguments) {
+    for (let i = 0; i < expr.arguments.length; i++) {
+      const argExpr = expr.arguments[i];
       const argValue = this.evaluateExpression(argExpr, context);
       if (argValue.kind === 'error') return argValue;
 
@@ -1294,12 +1315,30 @@ export class Evaluator {
       }
 
       // Capture the first argument's unit if the function preserves units
-      if (preservesUnits && args.length === 0 && 'unit' in argValue) {
+      if (preservesUnits && i === 0 && 'unit' in argValue) {
         firstArgUnit = argValue.unit;
       }
 
+      // For functions with "nearest" parameter (round, floor, ceil, trunc),
+      // convert subsequent arguments with units to match the first argument's unit
+      if (preservesUnits && i > 0 && firstArgUnit && 'unit' in argValue && argValue.unit) {
+        // Capture the second argument's unit for result conversion
+        if (i === 1) {
+          secondArgUnit = argValue.unit;
+        }
+        try {
+          const convertedValue = this.unitConverter.convert(
+            argValue.value,
+            argValue.unit,
+            firstArgUnit
+          );
+          args.push(convertedValue);
+        } catch (error) {
+          return this.createError(`Cannot convert ${argValue.unit.displayName.singular} to ${firstArgUnit.displayName.singular} in function call`);
+        }
+      }
       // For trig functions, convert angle to radians if needed
-      if (this.settings.angleUnit === 'degree' && this.isTrigFunction(expr.name)) {
+      else if ((argValue.unit?.id || this.settings.angleUnit) === 'degree' && this.isTrigFunction(expr.name)) {
         args.push(this.degreesToRadians(argValue.value));
       } else {
         args.push(argValue.value);
@@ -1331,6 +1370,21 @@ export class Evaluator {
 
     // Return result with preserved unit if applicable
     if (firstArgUnit) {
+      // If there's a second argument with units (nearest parameter),
+      // convert result to that unit for better readability
+      if (secondArgUnit) {
+        try {
+          const convertedValue = this.unitConverter.convert(
+            result.value,
+            firstArgUnit,
+            secondArgUnit
+          );
+          return { kind: 'number', value: convertedValue, unit: secondArgUnit };
+        } catch (error) {
+          // If conversion fails, fall back to first argument's unit
+          return { kind: 'number', value: result.value, unit: firstArgUnit };
+        }
+      }
       return { kind: 'number', value: result.value, unit: firstArgUnit };
     }
 
@@ -1590,6 +1644,27 @@ export class Evaluator {
       return value;
     }
 
+    // Handle date/time presentation formats
+    const dateTimeFormats: AST.PresentationFormat[] = ['iso8601', 'rfc9557', 'rfc2822', 'unix', 'unixMilliseconds'];
+    if (typeof format === 'string' && dateTimeFormats.includes(format)) {
+      // Unix timestamps: convert date/time to numeric value (seconds or milliseconds since epoch)
+      if (format === 'unix' || format === 'unixMilliseconds') {
+        return this.convertToUnixTimestamp(value, format === 'unixMilliseconds');
+      }
+
+      // String formats (ISO 8601, RFC 9557, RFC 2822): wrap date/time value for special formatting
+      if (value.kind === 'plainDate' || value.kind === 'plainTime' || value.kind === 'plainDateTime' ||
+          value.kind === 'zonedDateTime' || value.kind === 'instant') {
+        return {
+          kind: 'presentation',
+          format,
+          innerValue: value
+        };
+      }
+
+      return this.createError(`${format} format requires a date/time value`);
+    }
+
     // Validate that value is numeric type (number, derivedUnit, or composite)
     if (value.kind !== 'number' && value.kind !== 'derivedUnit' && value.kind !== 'composite') {
       const formatName = typeof format === 'number' ? `base ${format}` : format;
@@ -1630,11 +1705,55 @@ export class Evaluator {
   }
 
   /**
+   * Convert date/time value to Unix timestamp (seconds or milliseconds since epoch)
+   */
+  private convertToUnixTimestamp(value: Value, milliseconds: boolean): Value {
+    let instant: Temporal.Instant;
+
+    if (value.kind === 'zonedDateTime') {
+      // Convert ZonedDateTime to Instant
+      const zdt = toTemporalZonedDateTime(value.zonedDateTime);
+      instant = zdt.toInstant();
+    } else if (value.kind === 'instant') {
+      // Convert custom Instant to Temporal.Instant
+      instant = toTemporalInstant(value.instant);
+    } else if (value.kind === 'plainDateTime') {
+      // For PlainDateTime, assume local timezone (system timezone)
+      const systemTimeZone = Temporal.Now.timeZoneId();
+      const pdt = toTemporalPlainDateTime(value.dateTime);
+      const zdt = pdt.toZonedDateTime(systemTimeZone);
+      instant = zdt.toInstant();
+    } else if (value.kind === 'plainDate') {
+      // For PlainDate, assume 00:00:00 in local timezone
+      const systemTimeZone = Temporal.Now.timeZoneId();
+      const pd = toTemporalPlainDate(value.date);
+      const zdt = pd.toZonedDateTime({ timeZone: systemTimeZone, plainTime: '00:00:00' });
+      instant = zdt.toInstant();
+    } else {
+      return this.createError(`Cannot convert ${value.kind} to Unix timestamp`);
+    }
+
+    // Convert to seconds or milliseconds since epoch
+    const epochNanoseconds = instant.epochNanoseconds;
+    const result = milliseconds
+      ? Number(epochNanoseconds / 1_000_000n)  // Convert to milliseconds
+      : Number(epochNanoseconds / 1_000_000_000n);  // Convert to seconds
+
+    return { kind: 'number', value: result };
+  }
+
+  /**
    * Extract property from date/time value
    */
   private extractProperty(value: Value, property: AST.DateTimeProperty): Value {
     if (value.kind === 'plainDate') {
       const date = value.date;
+      const temporal = Temporal.PlainDate.from({
+        year: date.year,
+        month: date.month,
+        day: date.day
+      });
+
       switch (property) {
         case 'year':
           return { kind: 'number', value: date.year };
@@ -1642,6 +1761,12 @@ export class Evaluator {
           return { kind: 'number', value: date.month };
         case 'day':
           return { kind: 'number', value: date.day };
+        case 'dayOfWeek':
+          return { kind: 'number', value: temporal.dayOfWeek };
+        case 'dayOfYear':
+          return { kind: 'number', value: temporal.dayOfYear };
+        case 'weekOfYear':
+          return { kind: 'number', value: temporal.weekOfYear ?? 0 };
         default:
           return this.createError(`Cannot extract ${property} from PlainDate`);
       }
@@ -1656,8 +1781,106 @@ export class Evaluator {
           return { kind: 'number', value: time.minute };
         case 'second':
           return { kind: 'number', value: time.second };
+        case 'millisecond':
+          return { kind: 'number', value: time.millisecond || 0 };
         default:
           return this.createError(`Cannot extract ${property} from PlainTime`);
+      }
+    }
+
+    if (value.kind === 'plainDateTime') {
+      const dt = value.dateTime;
+      const temporal = Temporal.PlainDateTime.from({
+        year: dt.date.year,
+        month: dt.date.month,
+        day: dt.date.day,
+        hour: dt.time.hour,
+        minute: dt.time.minute,
+        second: dt.time.second,
+        millisecond: dt.time.millisecond || 0
+      });
+
+      switch (property) {
+        case 'year':
+          return { kind: 'number', value: dt.date.year };
+        case 'month':
+          return { kind: 'number', value: dt.date.month };
+        case 'day':
+          return { kind: 'number', value: dt.date.day };
+        case 'hour':
+          return { kind: 'number', value: dt.time.hour };
+        case 'minute':
+          return { kind: 'number', value: dt.time.minute };
+        case 'second':
+          return { kind: 'number', value: dt.time.second };
+        case 'millisecond':
+          return { kind: 'number', value: dt.time.millisecond || 0 };
+        case 'dayOfWeek':
+          return { kind: 'number', value: temporal.dayOfWeek };
+        case 'dayOfYear':
+          return { kind: 'number', value: temporal.dayOfYear };
+        case 'weekOfYear':
+          return { kind: 'number', value: temporal.weekOfYear ?? 0 };
+        default:
+          return this.createError(`Cannot extract ${property} from PlainDateTime`);
+      }
+    }
+
+    if (value.kind === 'zonedDateTime') {
+      const zdt = value.zonedDateTime;
+      const temporal = Temporal.ZonedDateTime.from({
+        year: zdt.dateTime.date.year,
+        month: zdt.dateTime.date.month,
+        day: zdt.dateTime.date.day,
+        hour: zdt.dateTime.time.hour,
+        minute: zdt.dateTime.time.minute,
+        second: zdt.dateTime.time.second,
+        millisecond: zdt.dateTime.time.millisecond || 0,
+        timeZone: zdt.timezone
+      });
+
+      switch (property) {
+        case 'year':
+          return { kind: 'number', value: zdt.dateTime.date.year };
+        case 'month':
+          return { kind: 'number', value: zdt.dateTime.date.month };
+        case 'day':
+          return { kind: 'number', value: zdt.dateTime.date.day };
+        case 'hour':
+          return { kind: 'number', value: zdt.dateTime.time.hour };
+        case 'minute':
+          return { kind: 'number', value: zdt.dateTime.time.minute };
+        case 'second':
+          return { kind: 'number', value: zdt.dateTime.time.second };
+        case 'millisecond':
+          return { kind: 'number', value: zdt.dateTime.time.millisecond || 0 };
+        case 'dayOfWeek':
+          return { kind: 'number', value: temporal.dayOfWeek };
+        case 'dayOfYear':
+          return { kind: 'number', value: temporal.dayOfYear };
+        case 'weekOfYear':
+          return { kind: 'number', value: temporal.weekOfYear ?? 0 };
+        case 'offset': {
+          // Return offset as a duration or number with minute unit
+          const offsetNanoseconds = temporal.offsetNanoseconds;
+          // Special case: when offset is 0, return as number with minute unit for proper formatting
+          if (offsetNanoseconds === 0) {
+            const minuteUnit = this.dataLoader.getUnitById('minute');
+            if (!minuteUnit) {
+              return this.createError('Minute unit not found');
+            }
+            return { kind: 'number', value: 0, unit: minuteUnit };
+          }
+          try {
+            const duration = Temporal.Duration.from({ nanoseconds: offsetNanoseconds });
+            const rounded = duration.round({ largestUnit: 'hour', smallestUnit: 'minute' });
+            return { kind: 'duration', duration: rounded };
+          } catch (error) {
+            return this.createError(`Error creating duration for offset: ${error}`);
+          }
+        }
+        default:
+          return this.createError(`Cannot extract ${property} from ZonedDateTime`);
       }
     }
 
@@ -1709,6 +1932,41 @@ export class Evaluator {
     }
 
     return this.createError(`Cannot convert ${value.kind} to timezone`);
+  }
+
+  /**
+   * Apply precision specification (decimals or significant figures)
+   */
+  private applyPrecision(value: Value, precision: number, mode: 'decimals' | 'sigfigs'): Value {
+    // Only apply precision to numbers
+    if (value.kind !== 'number') {
+      return this.createError(`Cannot apply precision to ${value.kind}`);
+    }
+
+    let roundedValue: number;
+
+    if (mode === 'decimals') {
+      // Round to N decimal places
+      const multiplier = Math.pow(10, precision);
+      roundedValue = Math.round(value.value * multiplier) / multiplier;
+    } else {
+      // Round to N significant figures
+      if (value.value === 0) {
+        roundedValue = 0;
+      } else {
+        const magnitude = Math.floor(Math.log10(Math.abs(value.value)));
+        const scale = Math.pow(10, magnitude - precision + 1);
+        roundedValue = Math.round(value.value / scale) * scale;
+      }
+    }
+
+    return {
+      kind: 'number',
+      value: roundedValue,
+      unit: value.unit,
+      // Store precision metadata for formatter
+      precision: { count: precision, mode }
+    };
   }
 
   // Helper methods
@@ -1981,18 +2239,20 @@ export class Evaluator {
   }
 
   /**
-   * Check if function name is a trig function
+   * Check if function name is a trig function for radian/degree conversion
    */
   private isTrigFunction(name: string): boolean {
-    const trigFunctions = ['sin', 'cos', 'tan', 'sinh', 'cosh', 'tanh'];
+    // Only regular trig functions (NOT hyperbolic) work with angles
+    const trigFunctions = ['sin', 'cos', 'tan'];
     return trigFunctions.includes(name.toLowerCase());
   }
 
   /**
-   * Check if function name is an inverse trig function
+   * Check if function name is an inverse trig function for radian/degree conversion
    */
   private isInverseTrigFunction(name: string): boolean {
-    const inverseTrigFunctions = ['asin', 'acos', 'atan', 'arcsin', 'arccos', 'arctan', 'asinh', 'acosh', 'atanh', 'arsinh', 'arcosh', 'artanh'];
+    // Only regular inverse trig functions (NOT hyperbolic) return angles
+    const inverseTrigFunctions = ['asin', 'acos', 'atan', 'arcsin', 'arccos', 'arctan'];
     return inverseTrigFunctions.includes(name.toLowerCase());
   }
 
@@ -2107,6 +2367,51 @@ export class Evaluator {
     // Base unit for time is second
     const valueInSeconds = this.unitConverter.toBaseUnit(value, unit);
     return this.dateTimeEngine.createDuration({ seconds: valueInSeconds });
+  }
+
+  /**
+   * Convert a composite unit to a single unit value for arithmetic
+   * Example: (5 ft 6 in) → 5.5 ft
+   */
+  private convertCompositeToSingleUnit(composite: CompositeUnitValue): NumberValue | DerivedUnitValue | ErrorValue {
+    if (composite.components.length === 0) {
+      return this.createError('Empty composite unit');
+    }
+
+    // Use the first component's unit as the target unit
+    const targetUnit = composite.components[0].unit;
+    let totalValue = 0;
+
+    // Convert all components to the target unit and sum them
+    for (const component of composite.components) {
+      try {
+        const convertedValue = this.unitConverter.convert(
+          component.value,
+          component.unit,
+          targetUnit
+        );
+        totalValue += convertedValue;
+      } catch (error) {
+        return this.createError(`Cannot convert ${component.unit.displayName.singular} to ${targetUnit.displayName.singular}`);
+      }
+    }
+
+    // Return as NumberValue (simple unit) or DerivedUnitValue (derived unit)
+    if (targetUnit.dimension) {
+      // Simple unit with dimension
+      return {
+        kind: 'number',
+        value: totalValue,
+        unit: targetUnit
+      };
+    } else {
+      // Dimensionless or derived unit
+      return {
+        kind: 'number',
+        value: totalValue,
+        unit: targetUnit
+      };
+    }
   }
 
   /**

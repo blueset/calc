@@ -38,8 +38,8 @@ describe('Integration Tests - Conversions', () => {
     it('should convert between temperature units', () => {
       const result = calculator.calculate(`77 deg F to deg C
 275 K to deg C`);
-      expect(result.results[0].result).toBe('25 °C');
-      expect(result.results[1].result).toBe('1.85 °C');
+      expect(result.results[0].result).toBe('25°C');
+      expect(result.results[1].result).toBe('1.85°C');
     });
 
     it('should convert derived units', () => {
@@ -163,7 +163,7 @@ describe('Integration Tests - Conversions', () => {
     it('should display angle unit for inverse trig in degrees', () => {
       const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
       const result = degreeCalc.calculate('asin(0.5)');
-      expect(result.results[0].result).toBe('30 °');
+      expect(result.results[0].result).toBe('30°');
     });
 
     it('should display angle unit for inverse trig in radians', () => {
@@ -175,13 +175,13 @@ describe('Integration Tests - Conversions', () => {
     it('should display angle unit for acos in degrees', () => {
       const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
       const result = degreeCalc.calculate('acos(0)');
-      expect(result.results[0].result).toBe('90 °');
+      expect(result.results[0].result).toBe('90°');
     });
 
     it('should display angle unit for atan in degrees', () => {
       const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
       const result = degreeCalc.calculate('atan(1)');
-      expect(result.results[0].result).toBe('45 °');
+      expect(result.results[0].result).toBe('45°');
     });
   });
 });

@@ -16,6 +16,15 @@ describe('Integration Tests - Basic Units', () => {
     await dataLoader.load(path.join(__dirname, '../..', 'data'));
 
     calculator = new Calculator(dataLoader);
+
+    // Load mock exchange rates for currency tests
+    const mockExchangeRates = {
+      date: '2024-01-01',
+      usd: {
+        cup: 24.0  // Cuban Peso
+      }
+    };
+    calculator.loadExchangeRates(mockExchangeRates);
   });
 
   describe('Dimensionless Units', () => {
@@ -414,12 +423,12 @@ describe('Integration Tests - Basic Units', () => {
   describe('Temperature Units', () => {
     it('should handle temperature units with degree symbol', () => {
       const result = calculator.calculate('25 °C');
-      expect(result.results[0].result).toBe('25 °C');
+      expect(result.results[0].result).toBe('25°C');
     });
 
     it('should handle temperature units', () => {
       const result = calculator.calculate('25 Celsius');
-      expect(result.results[0].result).toBe('25 °C');
+      expect(result.results[0].result).toBe('25°C');
     });
   });
 

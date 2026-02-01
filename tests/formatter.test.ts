@@ -454,7 +454,7 @@ describe('Formatter', () => {
           milliseconds: 0
         }
       };
-      expect(formatter.format(value)).toBe('0 seconds');
+      expect(formatter.format(value)).toBe('0 milliseconds');
     });
   });
 

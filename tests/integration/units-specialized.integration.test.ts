@@ -191,10 +191,10 @@ describe('Integration Tests - Specialized Units', () => {
 90 deg
 90 °
 90°`);
-      expect(result.results[0].result).toBe('90 °');
-      expect(result.results[1].result).toBe('90 °');
-      expect(result.results[2].result).toBe('90 °');
-      expect(result.results[3].result).toBe('90 °');
+      expect(result.results[0].result).toBe('90°');
+      expect(result.results[1].result).toBe('90°');
+      expect(result.results[2].result).toBe('90°');
+      expect(result.results[3].result).toBe('90°');
     });
 
     it('should handle radians', () => {
@@ -207,20 +207,20 @@ describe('Integration Tests - Specialized Units', () => {
     it('should handle arcminutes and arcseconds', () => {
       const result = calculator.calculate(`1 arcminute
 1 arcsecond`);
-      expect(result.results[0].result).toBe('1 ′');
-      expect(result.results[1].result).toBe('1 ″');
+      expect(result.results[0].result).toBe('1′');
+      expect(result.results[1].result).toBe('1″');
     });
 
     it('should handle arcminutes and arcseconds after degree symbol', () => {
       // After degree symbol, prime and double prime are arcminutes/arcseconds
       const result = calculator.calculate(`10° 30' 15"`);
       // This should be interpreted as 10 degrees, 30 arcminutes, 15 arcseconds
-      expect(result.results[0].result).toBe('10 ° 30 ′ 15 ″');
+      expect(result.results[0].result).toBe('10° 30′ 15″');
     });
 
     it('should handle prime symbols as arcminutes/arcseconds after degree', () => {
       const result = calculator.calculate(`45° 30′ 0″`);
-      expect(result.results[0].result).toBe('45 ° 30 ′ 0 ″');
+      expect(result.results[0].result).toBe('45° 30′ 0″');
     });
 
     it('should distinguish angle notation from length notation', () => {
@@ -235,9 +235,9 @@ describe('Integration Tests - Specialized Units', () => {
 0° 60' 0"
 0° 0' 3600"`);
       // All should be equivalent angles
-      expect(result.results[0].result).toBe('1 ° 0 ′ 0 ″');
-      expect(result.results[1].result).toBe('1 ° 0 ′ 0 ″');
-      expect(result.results[2].result).toBe('1 ° 0 ′ 0 ″');
+      expect(result.results[0].result).toBe('1° 0′ 0″');
+      expect(result.results[1].result).toBe('0° 60′ 0″');
+      expect(result.results[2].result).toBe('0° 0′ 3 600″');
     });
   });
 

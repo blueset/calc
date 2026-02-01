@@ -63,6 +63,67 @@ export interface ZonedDateTime {
 }
 
 /**
+ * Convert internal ZonedDateTime to Temporal.ZonedDateTime
+ */
+export function toTemporalZonedDateTime(zdt: ZonedDateTime): Temporal.ZonedDateTime {
+  return Temporal.ZonedDateTime.from({
+    year: zdt.dateTime.date.year,
+    month: zdt.dateTime.date.month,
+    day: zdt.dateTime.date.day,
+    hour: zdt.dateTime.time.hour,
+    minute: zdt.dateTime.time.minute,
+    second: zdt.dateTime.time.second,
+    millisecond: zdt.dateTime.time.millisecond,
+    timeZone: zdt.timezone
+  });
+}
+
+/**
+ * Convert internal PlainDateTime to Temporal.PlainDateTime
+ */
+export function toTemporalPlainDateTime(pdt: PlainDateTime): Temporal.PlainDateTime {
+  return Temporal.PlainDateTime.from({
+    year: pdt.date.year,
+    month: pdt.date.month,
+    day: pdt.date.day,
+    hour: pdt.time.hour,
+    minute: pdt.time.minute,
+    second: pdt.time.second,
+    millisecond: pdt.time.millisecond
+  });
+}
+
+/**
+ * Convert internal PlainDate to Temporal.PlainDate
+ */
+export function toTemporalPlainDate(pd: PlainDate): Temporal.PlainDate {
+  return Temporal.PlainDate.from({
+    year: pd.year,
+    month: pd.month,
+    day: pd.day
+  });
+}
+
+/**
+ * Convert internal PlainTime to Temporal.PlainTime
+ */
+export function toTemporalPlainTime(pt: PlainTime): Temporal.PlainTime {
+  return Temporal.PlainTime.from({
+    hour: pt.hour,
+    minute: pt.minute,
+    second: pt.second,
+    millisecond: pt.millisecond
+  });
+}
+
+/**
+ * Convert internal Instant to Temporal.Instant
+ */
+export function toTemporalInstant(instant: Instant): Temporal.Instant {
+  return Temporal.Instant.fromEpochMilliseconds(instant.timestamp);
+}
+
+/**
  * Date/Time arithmetic engine
  * Implements Temporal-spec arithmetic operations
  */
