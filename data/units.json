@@ -1482,6 +1482,44 @@
       }
     },
     {
+      "id": "watt_hour",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "W h",
+        "singular": "watt hour",
+        "plural": "watt hours"
+      },
+      "names": [
+        "Wh",
+        "watthour",
+        "watt hour",
+        "watt hours"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 3600
+      }
+    },
+    {
+      "id": "kilowatt_hour",
+      "dimension": "energy",
+      "displayName": {
+        "symbol": "kW h",
+        "singular": "kilowatt hour",
+        "plural": "kilowatt hours"
+      },
+      "names": [
+        "kWh",
+        "kilowatthour",
+        "kilowatt hour",
+        "kilowatt hours"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 3600000
+      }
+    },
+    {
       "id": "meter_per_second",
       "dimension": "speed",
       "displayName": {

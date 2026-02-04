@@ -15,7 +15,7 @@ let evaluator: Evaluator;
 
 beforeAll(async () => {
   dataLoader = new DataLoader();
-  await dataLoader.load(path.join(__dirname, '..', 'data'));
+  dataLoader.load();
   evaluator = new Evaluator(dataLoader, { variant: 'us', angleUnit: 'radian' });
 });
 

@@ -8,19 +8,24 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "dev:nearley": "nodemon --watch src/nearley --ext ne --exec \"nearleyc -o ./src/nearley/grammar.ts ./src/nearley/grammar.ne\""
   },
   "devDependencies": {
+    "@types/moo": "^0.5.10",
+    "@types/nearley": "^2.11.5",
     "@types/node": "^25.0.10",
     "cldr": "^8.0.0",
     "fast-xml-parser": "^5.3.3",
     "icu": "^2.1.0",
+    "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "tzdata": "^1.0.47",
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "@js-temporal/polyfill": "^0.5.1"
+    "@js-temporal/polyfill": "^0.5.1",
+    "nearley": "^2.20.1"
   }
 }

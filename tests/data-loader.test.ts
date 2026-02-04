@@ -8,7 +8,7 @@ describe('DataLoader', () => {
   beforeAll(async () => {
     dataLoader = new DataLoader();
     // Load data files from the data directory
-    await dataLoader.load(path.join(__dirname, '..', 'data'));
+    dataLoader.load();
   });
 
   describe('Unit Loading and Lookup', () => {

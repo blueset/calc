@@ -14,7 +14,7 @@ describe('Integration Tests - Timezone Conversions', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '../..', 'data'));
+    dataLoader.load();
 
     calculator = new Calculator(dataLoader);
   });

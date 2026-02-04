@@ -13,7 +13,7 @@ describe('Integration Tests - Functions', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '../..', 'data'));
+    dataLoader.load();
 
     calculator = new Calculator(dataLoader);
   });

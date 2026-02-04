@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Calculator } from '../../src/calculator';
 import { DataLoader } from '../../src/data-loader';
-import * as path from 'path';
 
 /**
  * Integration tests for specialized units
@@ -14,7 +13,7 @@ describe('Integration Tests - Specialized Units', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '../..', 'data'));
+    dataLoader.load();
 
     calculator = new Calculator(dataLoader);
   });

@@ -9,7 +9,7 @@ describe('Calculator - Error Recording Integration', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '..', 'data'));
+    dataLoader.load();
     calculator = new Calculator(dataLoader);
   });
 
@@ -206,7 +206,7 @@ describe('Calculator - Full Calculation Pipeline', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '..', 'data'));
+    dataLoader.load();
     calculator = new Calculator(dataLoader);
   });
 

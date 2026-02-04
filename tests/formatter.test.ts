@@ -15,7 +15,7 @@ let hourUnit: Unit;
 
 beforeAll(async () => {
   dataLoader = new DataLoader();
-  await dataLoader.load('data');
+  await dataLoader.load();
 
   // Get commonly used units
   meterUnit = dataLoader.getUnitById('meter')!;

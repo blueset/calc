@@ -9,7 +9,7 @@ describe('UnitConverter', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '..', 'data'));
+    dataLoader.load();
     converter = new UnitConverter(dataLoader);
   });
 

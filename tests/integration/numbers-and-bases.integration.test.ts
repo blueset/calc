@@ -13,7 +13,7 @@ describe('Integration Tests - Numbers and Bases', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '../..', 'data'));
+    dataLoader.load();
 
     calculator = new Calculator(dataLoader);
   });

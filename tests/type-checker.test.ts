@@ -11,7 +11,7 @@ describe('TypeChecker', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '..', 'data'));
+    dataLoader.load();
     typeChecker = new TypeChecker(dataLoader);
   });
 

@@ -23,7 +23,7 @@ describe('CurrencyConverter', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '..', 'data'));
+    dataLoader.load();
     converter = new CurrencyConverter(dataLoader);
     converter.loadExchangeRates(mockExchangeRates);
   });
@@ -314,7 +314,7 @@ describe('Currency Formatting Tests', () => {
 
   beforeAll(async () => {
     dataLoader = new DataLoader();
-    await dataLoader.load(path.join(__dirname, '..', 'data'));
+    dataLoader.load();
 
     const mockExchangeRates = {
       date: '2024-01-01',

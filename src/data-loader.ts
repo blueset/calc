@@ -1,5 +1,7 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import units from "../data/units.json"
+import currencies from "../data/currencies.json"
+import timezones from "../data/timezones.json"
+
 import type {
   Unit,
   Dimension,
@@ -175,10 +177,10 @@ export class DataLoader {
   /**
    * Load all data files
    */
-  async load(dataDir: string = '.'): Promise<void> {
-    await this.loadUnits(path.join(dataDir, 'units.json'));
-    await this.loadCurrencies(path.join(dataDir, 'currencies.json'));
-    await this.loadTimezones(path.join(dataDir, 'timezones.json'));
+  load(): void {
+    this.loadUnits(units as UnitsDatabase);
+    this.loadCurrencies(currencies as CurrenciesDatabase);
+    this.loadTimezones(timezones as TimezonesDatabase);
   }
 
   /**
@@ -194,9 +196,7 @@ export class DataLoader {
   /**
    * Load units from JSON file
    */
-  private async loadUnits(filePath: string): Promise<void> {
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as UnitsDatabase;
-
+  private loadUnits(data: UnitsDatabase): void {
     this.dimensions = data.dimensions;
     this.units = data.units;
 
@@ -234,9 +234,7 @@ export class DataLoader {
   /**
    * Load currencies from JSON file
    */
-  private async loadCurrencies(filePath: string): Promise<void> {
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as CurrenciesDatabase;
-
+  private loadCurrencies(data: CurrenciesDatabase): void {
     this.unambiguousCurrencies = data.unambiguous;
     this.ambiguousCurrencies = data.ambiguous;
 
@@ -287,9 +285,7 @@ export class DataLoader {
   /**
    * Load timezones from JSON file
    */
-  private async loadTimezones(filePath: string): Promise<void> {
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as TimezonesDatabase;
-
+  private loadTimezones(data: TimezonesDatabase): void {
     this.timezones = data.timezones;
 
     // Build timezone lookup with territory support

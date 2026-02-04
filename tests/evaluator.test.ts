@@ -11,7 +11,7 @@ let evaluator: Evaluator;
 
 beforeAll(async () => {
   dataLoader = new DataLoader();
-  await dataLoader.load('data');
+  await dataLoader.load();
   evaluator = new Evaluator(dataLoader, { variant: 'us', angleUnit: 'radian' });
 
   // Load exchange rates (mock data)

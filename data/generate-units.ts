@@ -865,6 +865,20 @@ const staticUnits: Unit[] = [
     names: ["BTU", "BTUs", "Btu", "British thermal unit", "British thermal units"],
     conversion: { type: "linear", factor: 1055.06 }, // joules
   },
+  {
+    id: "watt_hour",
+    dimension: "energy",
+    displayName: { symbol: "W h", singular: "watt hour", plural: "watt hours" },
+    names: ["Wh", "watthour", "watt hour", "watt hours"],
+    conversion: { type: "linear", factor: 3600 }, // joules (1 Wh = 3600 J)
+  },
+  {
+    id: "kilowatt_hour",
+    dimension: "energy",
+    displayName: { symbol: "kW h", singular: "kilowatt hour", plural: "kilowatt hours" },
+    names: ["kWh", "kilowatthour", "kilowatt hour", "kilowatt hours"],
+    conversion: { type: "linear", factor: 3600000 }, // joules (1 kWh = 3,600,000 J)
+  },
 
   // ---- Speed ----
   {
