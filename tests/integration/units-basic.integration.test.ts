@@ -15,7 +15,7 @@ describe('Integration Tests - Basic Units', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
 
     // Load mock exchange rates for currency tests
     const mockExchangeRates = {
@@ -132,7 +132,7 @@ describe('Integration Tests - Basic Units', () => {
       expect(result.results[1].result).toBe('10.5 am');
       expect(result.results[2].result).toBe('10 pm'); // picometers
       expect(result.results[3].result).toBe('10.5 pm');
-      expect(result.results[4].result).toBe('10 PM'); // petameters
+      expect(result.results[4].result).toBe('10 Pm'); // petameters
     });
 
     it('should handle prime symbols for feet and inches', () => {

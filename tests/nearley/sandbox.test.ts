@@ -1,7 +1,9 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll } from "vitest";
 import nearley from "nearley";
 import grammar from "../../src/nearley/grammar";
 import { lexer } from "../../src/nearley/lexer";
+import { DataLoader } from "../../src/data-loader";
+import { Calculator } from "../../src/calculator";
 
 function lexString(input: string) {
   lexer.reset(input);
@@ -86,7 +88,7 @@ function toString(node: any, indent: number = 0): string {
     } else if (type === "PlainTime") {
       return `${node.hour.toString().padStart(2, '0')}:${node.minute.toString().padStart(2, '0')}:${node.second.toString().padStart(2, '0')}`;
     } else if (type === "PlainDateTime") {
-      return `${toString(node.date, 0)}T${toString(node.time, 0)}`;
+      return `${node.date ? toString(node.date, 0) : 'Today'}T${toString(node.time, 0)}`;
     } else if (type === "ZonedDateTime") {
       return `${toString(node.dateTime, 0)}${toString(node.timezone, 0)}`;
     } else if (type === "BinaryExpression") {
@@ -128,9 +130,53 @@ function debugParse(input: string) {
 
 describe("Nearley Parser Sandbox Tests", () => {
   let parser: nearley.Parser;
+  let calculator: Calculator;
+  let dataLoader: DataLoader;
+
+  beforeAll(() => {
+    dataLoader = new DataLoader();
+    dataLoader.load();
+    calculator = new Calculator(dataLoader, {}, true); // Nearley parser
+  });
 
   beforeEach(() => {
     parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
+  });
+
+  it.skip('should debug exponentiation', () => {
+    debugParse('2^3');
+    debugParse('2 ^ 3');
+    const result = calculator.calculate('2 ^ 3');
+    console.log('\n=== Exponentiation (2 ^ 3) ===');
+    console.log('Full result:', JSON.stringify(result, null, 2));
+    console.log('Result 0:', result.results[0]);
+    console.log('Has error:', result.results[0]?.hasError);
+    console.log('Result value:', result.results[0]?.result);
+  });
+
+  it.skip('should debug degree primes', () => {
+    console.log('\n=== Degree + Prime parsing ===');
+    debugParse("30° 15'");
+    debugParse("45 deg 30'");
+    debugParse("5'");
+  });
+
+  it('should parse conditionals', () => {
+    // debugParse("if 5 > 3 then 10 m else 20 m");
+    // debugParse("1e-100");
+    // debugParse("random(a)");
+    // debugParse("1.8 base 16");
+    debugParse("US$100");
+    debugParse("2023 Jan 15 14:30 UTC + 2 hours");
+    debugParse("value to m to cm to mm to m to km");
+    debugParse("123.456 to 3 sig figs");
+    debugParse("0xa.8");
+    debugParse("10 in in cm");
+    debugParse("5 km to m in cm");
+    debugParse("12:30 UTC-515");
+    debugParse("05:00 UTC-3:30 to ISO 8601");
+    debugParse("05:00 UTC-3:30 to unix");
+    debugParse("05:00 UTC-3:30 to Unix s");
   });
 
   it.skip("should parse a simple expression", () => {

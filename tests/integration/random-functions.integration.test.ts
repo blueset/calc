@@ -16,7 +16,7 @@ describe('Integration Tests - Random Number Generation', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Basic Random Function', () => {

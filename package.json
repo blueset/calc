@@ -15,6 +15,7 @@
     "@types/moo": "^0.5.10",
     "@types/nearley": "^2.11.5",
     "@types/node": "^25.0.10",
+    "@vitest/ui": "^4.0.18",
     "cldr": "^8.0.0",
     "fast-xml-parser": "^5.3.3",
     "icu": "^2.1.0",

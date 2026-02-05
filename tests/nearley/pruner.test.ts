@@ -595,7 +595,7 @@ describe('Pruner Unit Tests', () => {
         };
 
         const result = pruneInvalidCandidates([candidate], context);
-        expect(result).toHaveLength(1);
+        expect(result).toHaveLength(0);
       });
 
       it('should validate Timezone targets', () => {

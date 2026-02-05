@@ -16,7 +16,7 @@ describe('Integration Tests - Timezone Conversions', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Zoned DateTime to Different Timezone', () => {
@@ -109,19 +109,19 @@ today to UTC`);
 1970 Jan 01 14:00 UTC to London
 1970 Jan 01 14:00 UTC to Tokyo
 1970 Jan 01 14:00 UTC to Sydney`);
-      expect(result.results[0].result).toMatch(/UTC-5$/);  // New York
-      expect(result.results[1].result).toMatch(/UTC$/);    // London (GMT)
-      expect(result.results[2].result).toMatch(/UTC\+9$/);  // Tokyo
-      expect(result.results[3].result).toMatch(/UTC\+10$/); // Sydney
+      expect(result.results[0].result).toBe('1970-01-01 Thu 09:00 UTC-5');  // New York
+      expect(result.results[1].result).toBe('1970-01-01 Thu 15:00 UTC+1');  // London (GMT)
+      expect(result.results[2].result).toBe('1970-01-01 Thu 23:00 UTC+9');  // Tokyo
+      expect(result.results[3].result).toBe('1970-01-02 Fri 00:00 UTC+10'); // Sydney
     });
 
     it('should support IANA timezone database names', () => {
       const result = calculator.calculate(`1970 Jan 01 14:00 UTC to America/Los_Angeles
 1970 Jan 01 14:00 UTC to Europe/Paris
 1970 Jan 01 14:00 UTC to Asia/Dubai`);
-      expect(result.results[0].result).toMatch(/UTC-8$/);  // PST
-      expect(result.results[1].result).toMatch(/UTC\+1$/);  // CET
-      expect(result.results[2].result).toMatch(/UTC\+4$/);  // GST
+      expect(result.results[0].result).toBe('1970-01-01 Thu 06:00 UTC-8');  // PST
+      expect(result.results[1].result).toBe('1970-01-01 Thu 15:00 UTC+1');  // CET
+      expect(result.results[2].result).toBe('1970-01-01 Thu 18:00 UTC+4');  // GST
     });
   });
 
@@ -154,12 +154,12 @@ today to UTC`);
 
     it('should handle DST transitions in Europe/London', () => {
       // Winter (GMT: UTC+0)
-      const winterResult = calculator.calculate(`1970 Jan 15 12:00 UTC to Europe/London`);
-      expect(winterResult.results[0].result).toMatch(/UTC$/);
+      const winterResult = calculator.calculate(`2000 Jan 15 12:00 UTC to Europe/London`);
+      expect(winterResult.results[0].result).toBe('2000-01-15 Sat 12:00 UTC');
 
       // Summer (BST: UTC+1)
-      const summerResult = calculator.calculate(`1970 Jul 15 12:00 UTC to Europe/London`);
-      expect(summerResult.results[0].result).toMatch(/UTC\+1$/);
+      const summerResult = calculator.calculate(`2000 Jul 15 12:00 UTC to Europe/London`);
+      expect(summerResult.results[0].result).toBe('2000-07-15 Sat 13:00 UTC+1');
     });
   });
 
@@ -173,7 +173,7 @@ today to UTC`);
 
     it('should handle conversion chains', () => {
       const result = calculator.calculate(`1970 Jan 01 00:00 UTC to America/New_York to Tokyo`);
-      expect(result.results[0].result).toBe('1970-01-01 Thu 9:00 UTC+9');
+      expect(result.results[0].result).toBe('1970-01-01 Thu 09:00 UTC+9');
     });
   });
 });

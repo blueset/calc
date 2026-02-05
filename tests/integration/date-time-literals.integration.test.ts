@@ -15,7 +15,7 @@ describe('Integration Tests - Date and Time Literals', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Date and Time Literals', () => {
@@ -66,7 +66,7 @@ describe('Integration Tests - Date and Time Literals', () => {
     });
 
     it('should handle zoned date times with offsets', () => {
-      const result = calculator.calculate(`12:30 Z
+      const result = calculator.calculate(`12:30 Zulu
 12:30 UTC+1
 12:30 UTC+01
 12:30 UTC-515
@@ -83,12 +83,14 @@ describe('Integration Tests - Date and Time Literals', () => {
 05:00 UTC
 05:00-3:30
 05:00 UTC-3:30
+05:00 UTC - 3:30
 05:00 UTC+3:30`);
       expect(result.results[0].result).toBe('05:00');
       expect(result.results[1].result).toBe('05:00 UTC');
       expect(result.results[2].result).toBe('1 h 30 min');
-      expect(result.results[3].result).toBe('17 h 30 min'); // zonedDateTime - plainTime: 05:00 UTC - 03:30 (local time)
-      expect(result.results[4].hasError).toBe(true); // date time add date time is not supported.
+      expect(result.results[3].result).toBe('05:00 UTC-3:30');
+      expect(result.results[4].result).toBe('-1 day -6 h -30 min');
+      expect(result.results[5].result).toBe('05:00 UTC+3:30');
     });
 
     it('should handle numeric date formats', () => {

@@ -3,7 +3,6 @@
 // Bypasses TS6133. Allow declared but unused functions.
 // @ts-ignore
 function id(d: any[]): any { return d[0]; }
-declare var identifier: any;
 declare var assign: any;
 declare var lparen: any;
 declare var rparen: any;
@@ -20,12 +19,16 @@ declare var kw_octal: any;
 declare var kw_decimal: any;
 declare var kw_hexadecimal: any;
 declare var decimalDigits: any;
-declare var kw_sig_figs: any;
+declare var sigFigs: any;
 declare var kw_decimals: any;
 declare var kw_base: any;
 declare var kw_scientific: any;
 declare var kw_fraction: any;
+declare var ISO8601: any;
+declare var RFC9557: any;
+declare var RFC2822: any;
 declare var kw_unix: any;
+declare var identifier: any;
 declare var dayOfYear: any;
 declare var weekOfYear: any;
 declare var or: any;
@@ -33,9 +36,9 @@ declare var and: any;
 declare var pipe: any;
 declare var kw_xor: any;
 declare var ampersand: any;
-declare var lt: any;
+declare var lessThan: any;
 declare var lessThanOrEqual: any;
-declare var gt: any;
+declare var greaterThan: any;
 declare var greaterThanOrEqual: any;
 declare var equals: any;
 declare var notEquals: any;
@@ -58,6 +61,10 @@ declare var kw_false: any;
 declare var constantSymbol: any;
 declare var currencySymbolAdjacent: any;
 declare var comma: any;
+declare var kw_square: any;
+declare var kw_squared: any;
+declare var kw_cubic: any;
+declare var kw_cubed: any;
 declare var degree: any;
 declare var prime: any;
 declare var doublePrime: any;
@@ -174,25 +181,33 @@ const grammar: Grammar = {
     {"name": "Line", "symbols": ["VariableAssignment"], "postprocess": id},
     {"name": "Line", "symbols": ["Expression"], "postprocess": id},
     {"name": "Line", "symbols": []},
-    {"name": "VariableAssignment", "symbols": [(lexer.has("identifier") ? {type: "identifier"} : identifier), "_", (lexer.has("assign") ? {type: "assign"} : assign), "_", "Expression"], "postprocess": 
-        (data, location) => ({ type: 'VariableAssignment', name: data[0].value, value: data[4], location })
+    {"name": "VariableAssignment", "symbols": ["Variable", "_", (lexer.has("assign") ? {type: "assign"} : assign), "_", "Expression"], "postprocess": 
+        (data, location) => ({ type: 'VariableAssignment', name: data[0].name, value: data[4], location })
         },
     {"name": "Expression", "symbols": ["ConditionalExpr"], "postprocess": id},
     {"name": "Expression", "symbols": ["ParenthesizedExpr"], "postprocess": id},
     {"name": "Expression", "symbols": ["Conversion"], "postprocess": id},
     {"name": "ParenthesizedExpr", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", "Expression", "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": (data) => data[2]},
-    {"name": "ConditionalExpr", "symbols": [(lexer.has("kw_if") ? {type: "kw_if"} : kw_if), "__", "LogicalOrExpr", (lexer.has("kw_then") ? {type: "kw_then"} : kw_then), "__", "Expression", "__", (lexer.has("kw_else") ? {type: "kw_else"} : kw_else), "__", "Expression"], "postprocess": 
+    {"name": "ConditionalExpr", "symbols": [(lexer.has("kw_if") ? {type: "kw_if"} : kw_if), "__", "LogicalOrExpr", "__", (lexer.has("kw_then") ? {type: "kw_then"} : kw_then), "__", "Expression", "__", (lexer.has("kw_else") ? {type: "kw_else"} : kw_else), "__", "Expression"], "postprocess": 
         (data, location) => ({ type: 'ConditionalExpr', condition: data[2], then: data[6], else: data[10], location })
         },
     {"name": "Conversion$ebnf$1$subexpression$1", "symbols": ["__", "ConversionOp", "__", "ConversionTarget"]},
-    {"name": "Conversion$ebnf$1", "symbols": ["Conversion$ebnf$1$subexpression$1"], "postprocess": id},
-    {"name": "Conversion$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "Conversion$ebnf$1", "symbols": ["Conversion$ebnf$1$subexpression$1"]},
+    {"name": "Conversion$ebnf$1$subexpression$2", "symbols": ["__", "ConversionOp", "__", "ConversionTarget"]},
+    {"name": "Conversion$ebnf$1", "symbols": ["Conversion$ebnf$1", "Conversion$ebnf$1$subexpression$2"], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "Conversion", "symbols": ["ConversionSource", "Conversion$ebnf$1"], "postprocess": 
-        (data, location) => 
-          data[1]?.[3] 
-          ? ({ type: 'Conversion', expression: data[0], operator: data[1][1].type, target: data[1][3], location })
-          : data[0]
+        (data, location) => {
+          // Reduce multiple conversions into nested Conversion nodes
+          // e.g., "1.71 m to ft in to fraction" becomes Conversion(Conversion(1.71 m, to ft in), to fraction)
+          return data[1].reduce((expr: any, conversion: any) => {
+            const target = conversion[3];
+            // Use target's location for each conversion node
+            const conversionLocation = target.location;
+            return { type: 'Conversion', expression: expr, operator: conversion[1].type, target, location: conversionLocation };
+          }, data[0]);
+        }
         },
+    {"name": "Conversion", "symbols": ["ConversionSource"], "postprocess": id},
     {"name": "ConversionSource", "symbols": ["LogicalOrExpr"], "postprocess": id},
     {"name": "ConversionSource", "symbols": ["ConditionalExpr"], "postprocess": id},
     {"name": "ConversionOp", "symbols": [(lexer.has("kw_to") ? {type: "kw_to"} : kw_to)], "postprocess": id},
@@ -217,7 +232,7 @@ const grammar: Grammar = {
     {"name": "PresentationTarget", "symbols": [(lexer.has("kw_hexadecimal") ? {type: "kw_hexadecimal"} : kw_hexadecimal)], "postprocess": 
         (data, location) => ({ type: 'PresentationFormat', format: 'base', base: 16, location })
                             },
-    {"name": "PresentationTarget", "symbols": [(lexer.has("decimalDigits") ? {type: "decimalDigits"} : decimalDigits), "__", (lexer.has("kw_sig_figs") ? {type: "kw_sig_figs"} : kw_sig_figs)], "postprocess": 
+    {"name": "PresentationTarget", "symbols": [(lexer.has("decimalDigits") ? {type: "decimalDigits"} : decimalDigits), "__", (lexer.has("sigFigs") ? {type: "sigFigs"} : sigFigs)], "postprocess": 
         (data, location) => ({ type: 'PresentationFormat', format: 'sigFigs', sigFigs: parseInt(data[0].value.replaceAll('_', '')), location })
                             },
     {"name": "PresentationTarget$subexpression$1", "symbols": [(lexer.has("kw_decimals") ? {type: "kw_decimals"} : kw_decimals)]},
@@ -233,6 +248,15 @@ const grammar: Grammar = {
                             },
     {"name": "PresentationTarget", "symbols": [(lexer.has("kw_fraction") ? {type: "kw_fraction"} : kw_fraction)], "postprocess": 
         (data, location) => ({ type: 'PresentationFormat', format: 'fraction', location })
+                            },
+    {"name": "PresentationTarget", "symbols": [(lexer.has("ISO8601") ? {type: "ISO8601"} : ISO8601)], "postprocess": 
+        (data, location) => ({ type: 'PresentationFormat', format: 'ISO 8601', location })
+                            },
+    {"name": "PresentationTarget", "symbols": [(lexer.has("RFC9557") ? {type: "RFC9557"} : RFC9557)], "postprocess": 
+        (data, location) => ({ type: 'PresentationFormat', format: 'RFC 9557', location })
+                            },
+    {"name": "PresentationTarget", "symbols": [(lexer.has("RFC2822") ? {type: "RFC2822"} : RFC2822)], "postprocess": 
+        (data, location) => ({ type: 'PresentationFormat', format: 'RFC 2822', location })
                             },
     {"name": "PresentationTarget$ebnf$1$subexpression$1", "symbols": ["__", (lexer.has("identifier") ? {type: "identifier"} : identifier)]},
     {"name": "PresentationTarget$ebnf$1", "symbols": ["PresentationTarget$ebnf$1$subexpression$1"], "postprocess": id},
@@ -286,9 +310,9 @@ const grammar: Grammar = {
     {"name": "ComparisonExpr$ebnf$1", "symbols": ["ComparisonExpr$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "ComparisonExpr$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "ComparisonExpr", "symbols": ["BitShiftExpr", "ComparisonExpr$ebnf$1"], "postprocess": optionalBinaryOp},
-    {"name": "ComparisonOp", "symbols": [(lexer.has("lt") ? {type: "lt"} : lt)]},
+    {"name": "ComparisonOp", "symbols": [(lexer.has("lessThan") ? {type: "lessThan"} : lessThan)]},
     {"name": "ComparisonOp", "symbols": [(lexer.has("lessThanOrEqual") ? {type: "lessThanOrEqual"} : lessThanOrEqual)]},
-    {"name": "ComparisonOp", "symbols": [(lexer.has("gt") ? {type: "gt"} : gt)]},
+    {"name": "ComparisonOp", "symbols": [(lexer.has("greaterThan") ? {type: "greaterThan"} : greaterThan)]},
     {"name": "ComparisonOp", "symbols": [(lexer.has("greaterThanOrEqual") ? {type: "greaterThanOrEqual"} : greaterThanOrEqual)]},
     {"name": "ComparisonOp", "symbols": [(lexer.has("equals") ? {type: "equals"} : equals)]},
     {"name": "ComparisonOp", "symbols": [(lexer.has("notEquals") ? {type: "notEquals"} : notEquals)]},
@@ -319,13 +343,13 @@ const grammar: Grammar = {
     {"name": "UnaryExpr", "symbols": [(lexer.has("tilde") ? {type: "tilde"} : tilde), "UnaryExpr"], "postprocess": optionalUnaryOp(0, 1)},
     {"name": "UnaryExpr", "symbols": ["PowerExpr"], "postprocess": id},
     {"name": "UnaryExpr", "symbols": ["ValueWithUnits"], "postprocess": id},
-    {"name": "PowerExpr$ebnf$1$subexpression$1", "symbols": [(lexer.has("caret") ? {type: "caret"} : caret), "UnaryExpr"]},
+    {"name": "PowerExpr$ebnf$1$subexpression$1", "symbols": ["_", (lexer.has("caret") ? {type: "caret"} : caret), "_", "UnaryExpr"]},
     {"name": "PowerExpr$ebnf$1", "symbols": ["PowerExpr$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "PowerExpr$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "PowerExpr", "symbols": ["PostfixExpr", "PowerExpr$ebnf$1"], "postprocess":  
         (data, location) => 
           data[1] 
-          ? ({ type: 'BinaryExpression', subType: 'caret', operator: data[1][0].type, left: data[0], right: data[1][1], location })
+          ? ({ type: 'BinaryExpression', subType: 'caret', operator: data[1][1].type, left: data[0], right: data[1][3], location })
           : data[0] 
                      },
     {"name": "PowerExpr", "symbols": ["PostfixExpr", (lexer.has("superscript") ? {type: "superscript"} : superscript)], "postprocess":  
@@ -364,16 +388,10 @@ const grammar: Grammar = {
     {"name": "UnitlessPrimary", "symbols": ["BareNumber"], "postprocess": id},
     {"name": "BooleanLiteral", "symbols": [(lexer.has("kw_true") ? {type: "kw_true"} : kw_true)], "postprocess": (data, location) => ({ type: 'BooleanLiteral', value: true, location })},
     {"name": "BooleanLiteral", "symbols": [(lexer.has("kw_false") ? {type: "kw_false"} : kw_false)], "postprocess": (data, location) => ({ type: 'BooleanLiteral', value: false, location })},
-    {"name": "Variable", "symbols": [(lexer.has("identifier") ? {type: "identifier"} : identifier)], "postprocess":  (data, location, reject) => {
-          if (
-            isConstant(data[0].value) ||
-            dataLoader.getUnitsByCaseInsensitiveName(data[0].value)?.length || 
-            dataLoader.getCurrenciesByName(data[0].value)?.length ||
-            dataLoader.getCurrencyByCode(data[0].value)
-          ) {
-            return reject;
-          }
-          return ({ type: 'Variable', name: data[0].value, location })
+    {"name": "Variable$subexpression$1", "symbols": [(lexer.has("identifier") ? {type: "identifier"} : identifier)]},
+    {"name": "Variable$subexpression$1", "symbols": [(lexer.has("kw_value") ? {type: "kw_value"} : kw_value)]},
+    {"name": "Variable", "symbols": ["Variable$subexpression$1"], "postprocess":  (data, location, reject) => {
+          return ({ type: 'Variable', name: data[0][0].value, location });
         } },
     {"name": "Constant$subexpression$1", "symbols": [(lexer.has("identifier") ? {type: "identifier"} : identifier)]},
     {"name": "Constant$subexpression$1", "symbols": [(lexer.has("constantSymbol") ? {type: "constantSymbol"} : constantSymbol)]},
@@ -474,9 +492,29 @@ const grammar: Grammar = {
     {"name": "UnitWithExponent$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "UnitWithExponent", "symbols": ["Unit", "UnitWithExponent$ebnf$1"], "postprocess": 
         (data, location) => {
-          return { type: 'UnitWithExponent', unit: data[0], exponent: data[1] ?? 1, location };
+          return { type: 'UnitWithExponent', subType: 'numerical', unit: data[0], exponent: data[1] ?? 1, location };
         }
-        },
+                        },
+    {"name": "UnitWithExponent", "symbols": [(lexer.has("kw_square") ? {type: "kw_square"} : kw_square), "__", "Unit"], "postprocess": 
+        (data, location) => {
+          return { type: 'UnitWithExponent', subType: 'square', unit: data[2], exponent: 2, location };
+        }
+                        },
+    {"name": "UnitWithExponent", "symbols": ["Unit", "__", (lexer.has("kw_squared") ? {type: "kw_squared"} : kw_squared)], "postprocess": 
+        (data, location) => {
+          return { type: 'UnitWithExponent', subType: 'squared', unit: data[0], exponent: 2, location };
+        }
+                        },
+    {"name": "UnitWithExponent", "symbols": [(lexer.has("kw_cubic") ? {type: "kw_cubic"} : kw_cubic), "__", "Unit"], "postprocess": 
+        (data, location) => {
+          return { type: 'UnitWithExponent', subType: 'cubic', unit: data[2], exponent: 3, location };
+        }
+                        },
+    {"name": "UnitWithExponent", "symbols": ["Unit", "__", (lexer.has("kw_cubed") ? {type: "kw_cubed"} : kw_cubed)], "postprocess": 
+        (data, location) => {
+          return { type: 'UnitWithExponent', subType: 'cubed', unit: data[0], exponent: 3, location };
+        }
+                        },
     {"name": "Exponent$ebnf$1", "symbols": ["NumberSymbol"], "postprocess": id},
     {"name": "Exponent$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "Exponent", "symbols": [(lexer.has("caret") ? {type: "caret"} : caret), "Exponent$ebnf$1", (lexer.has("decimalDigits") ? {type: "decimalDigits"} : decimalDigits)], "postprocess": 
@@ -536,15 +574,15 @@ const grammar: Grammar = {
               },
     {"name": "NumericalValue", "symbols": [(lexer.has("hexNumber") ? {type: "hexNumber"} : hexNumber)], "postprocess":  (data, location) => ({
           type: 'NumberLiteral', subType: "0x", 
-          base: 16, value: data[0].value, location 
+          base: 16, value: data[0].value.substring(2), location 
         }) },
     {"name": "NumericalValue", "symbols": [(lexer.has("binaryNumber") ? {type: "binaryNumber"} : binaryNumber)], "postprocess":  (data, location) => ({
           type: 'NumberLiteral', subType: "0b", 
-          base: 2, value: data[0].value, location 
+          base: 2, value: data[0].value.substring(2), location 
         }) },
     {"name": "NumericalValue", "symbols": [(lexer.has("octalNumber") ? {type: "octalNumber"} : octalNumber)], "postprocess":  (data, location) => ({
           type: 'NumberLiteral', subType: "0o", 
-          base: 8, value: data[0].value, location 
+          base: 8, value: data[0].value.substring(2), location 
         }) },
     {"name": "NumericalValue", "symbols": ["PercentageNumber"], "postprocess": id},
     {"name": "NumericalValue", "symbols": ["ArbitraryBaseNumberWithBase"], "postprocess": id},
@@ -608,12 +646,11 @@ const grammar: Grammar = {
           return { type: 'NumberLiteral', subType: 'DecimalNumber', base: 10, value, location };
         }
         },
-    {"name": "ScientificNotation$subexpression$1$ebnf$1", "symbols": ["NumberSymbol"], "postprocess": id},
-    {"name": "ScientificNotation$subexpression$1$ebnf$1", "symbols": [], "postprocess": () => null},
-    {"name": "ScientificNotation$subexpression$1", "symbols": [(lexer.has("scienceExponential") ? {type: "scienceExponential"} : scienceExponential), "ScientificNotation$subexpression$1$ebnf$1", (lexer.has("decimalDigits") ? {type: "decimalDigits"} : decimalDigits)]},
-    {"name": "ScientificNotation", "symbols": ["ScientificNotation$subexpression$1"], "postprocess": 
+    {"name": "ScientificNotation$ebnf$1", "symbols": ["NumberSymbol"], "postprocess": id},
+    {"name": "ScientificNotation$ebnf$1", "symbols": [], "postprocess": () => null},
+    {"name": "ScientificNotation", "symbols": [(lexer.has("scienceExponential") ? {type: "scienceExponential"} : scienceExponential), "ScientificNotation$ebnf$1", (lexer.has("decimalDigits") ? {type: "decimalDigits"} : decimalDigits)], "postprocess": 
         (data) => {
-          const sign = data[1] ? (data[1][0].type === 'plus' ? 1 : -1) : 1;
+          const sign = data[1] ? (data[1].type === 'plus' ? 1 : -1) : 1;
           const exponent = parseInt(data[2].value.replaceAll('_', ''));
           return sign * exponent;
         }
@@ -624,8 +661,51 @@ const grammar: Grammar = {
     {"name": "DateTimeLiteral", "symbols": ["PlainDate"], "postprocess": id},
     {"name": "DateTimeLiteral", "symbols": ["PlainTime"], "postprocess": id},
     {"name": "ZonedDateTime", "symbols": ["PlainDateTime", "__", "Timezone"], "postprocess": 
-        (data, location) => ({ type: 'ZonedDateTime', dateTime: data[0], timezone: data[2], location })
-        },
+        (data, location) => ({ type: 'ZonedDateTime', subType: 'dateTime', dateTime: data[0], timezone: data[2], location })
+                      },
+    {"name": "ZonedDateTime", "symbols": ["PlainTime", "__", "Timezone"], "postprocess": 
+        (data, location) => {
+          return {
+            type: 'ZonedDateTime',
+            subType: 'plainTime',
+            dateTime: {
+              type: 'PlainDateTime',
+              subType: 'plainTimeZoned',
+              date: null,
+              time: data[0],
+              location: data[0].location
+            },
+            timezone: data[2],
+            location
+          };
+        }
+                      },
+    {"name": "ZonedDateTime", "symbols": ["PlainDate", "__", "Timezone"], "postprocess": 
+        (data, location) => {
+          // Create a PlainDateTime by combining PlainDate with 00:00:00 time
+          const plainTime = {
+            type: 'PlainTime',
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+            location: data[0].location
+          };
+          const plainDateTime = {
+            type: 'PlainDateTime',
+            subType: 'plainDate',
+            dateTime: {
+              type: 'PlainDateTime',
+              subType: 'plainDateZoned',
+              date: data[0],
+              time: plainTime,
+              location: data[0].location
+            },
+            location: data[0].location
+          };
+          return { type: 'ZonedDateTime', dateTime: plainDateTime, timezone: data[2], location };
+        }
+                      },
     {"name": "Instant", "symbols": [(lexer.has("kw_now") ? {type: "kw_now"} : kw_now)], "postprocess": (data, location) => ({ type: 'Instant', keyword: 'now', location })},
     {"name": "Instant", "symbols": [(lexer.has("kw_today") ? {type: "kw_today"} : kw_today)], "postprocess": (data, location) => ({ type: 'Instant', keyword: 'today', location })},
     {"name": "Instant", "symbols": [(lexer.has("kw_yesterday") ? {type: "kw_yesterday"} : kw_yesterday)], "postprocess": (data, location) => ({ type: 'Instant', keyword: 'yesterday', location })},
@@ -636,7 +716,7 @@ const grammar: Grammar = {
     {"name": "Instant$ebnf$1", "symbols": ["Instant$ebnf$1$subexpression$1"], "postprocess": id},
     {"name": "Instant$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "Instant", "symbols": ["NumericalValue", "__", (lexer.has("kw_unix") ? {type: "kw_unix"} : kw_unix), "Instant$ebnf$1"], "postprocess": 
-        (data, location) => ({ type: 'Instant', amount: data[0], unit: data[3]?.value ?? "second", direction: 'sinceEpoch', location })
+        (data, location) => ({ type: 'Instant', amount: data[0], unit: data[3]?.[1]?.value ?? "second", direction: 'sinceEpoch', location })
                  },
     {"name": "PlainDateTime", "symbols": ["PlainDate", "__", "PlainTime"], "postprocess": (data, location) => ({ type: 'PlainDateTime', subType: 'dateTime', date: data[0], time: data[2], location })},
     {"name": "PlainDateTime", "symbols": ["PlainTime", "__", "PlainDate"], "postprocess": (data, location) => ({ type: 'PlainDateTime', subType: 'timeDate', date: data[2], time: data[0], location })},
@@ -726,7 +806,7 @@ const grammar: Grammar = {
           const baseZone = data[0].value;
           if (!/^(UTC|GMT)$/i.test(baseZone)) { return reject; }
           const prefix = data[1].type === 'plus' ? '+' : '-';
-          const timeStr = data[2].value;
+          const timeStr = data[2].value.padStart(5, '0');
           return { type: 'UTCOffset', subType: 'time', offsetStr: prefix + timeStr, baseZone, location };
         }
                       },
@@ -736,7 +816,12 @@ const grammar: Grammar = {
           if (!/^(UTC|GMT)$/i.test(baseZone)) { return reject; }
           const prefix = data[1].type === 'plus' ? '+' : '-';
           const hour = parseInt(data[2].value.replaceAll('_', ''));
-          return { type: 'UTCOffset', subType: 'numerical', offsetStr: prefix + hour.toString(), baseZone, location };
+          const offsetStr = prefix + (
+            hour >= 100 ?
+              hour.toString().slice(0, -2).padStart(2, '0') + ":" + hour.toString().slice(-2)
+              : hour.toString().padStart(2, '0') + ":00"
+          );
+          return { type: 'UTCOffset', subType: 'numerical', offsetStr, baseZone, location };
         }
                       },
     {"name": "TimezoneName$ebnf$1$subexpression$1$ebnf$1$subexpression$1", "symbols": [(lexer.has("slash") ? {type: "slash"} : slash), (lexer.has("identifier") ? {type: "identifier"} : identifier)]},

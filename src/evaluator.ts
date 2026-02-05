@@ -1305,10 +1305,19 @@ export class Evaluator {
     let firstArgUnit: Unit | undefined;
     let secondArgUnit: Unit | undefined;
 
+    // Special handling for duration arguments with preservesUnits functions
+    let durationArg: DurationValue | undefined;
+
     for (let i = 0; i < expr.arguments.length; i++) {
       const argExpr = expr.arguments[i];
-      const argValue = this.evaluateExpression(argExpr, context);
+      let argValue = this.evaluateExpression(argExpr, context);
       if (argValue.kind === 'error') return argValue;
+
+      // For abs, round, floor, ceil, trunc, frac on duration: handle directly
+      if (preservesUnits && i === 0 && argValue.kind === 'duration') {
+        durationArg = argValue;
+        break; // Duration functions only take one argument
+      }
 
       if (argValue.kind !== 'number') {
         return this.createError(`Function argument must be a number, got ${argValue.kind}`);
@@ -1343,6 +1352,28 @@ export class Evaluator {
       } else {
         args.push(argValue.value);
       }
+    }
+
+    // Handle duration argument
+    if (durationArg) {
+      const funcName = expr.name.toLowerCase();
+      if (funcName === 'abs') {
+        // abs(duration) → make all components positive
+        return {
+          kind: 'duration',
+          duration: {
+            years: Math.abs(durationArg.duration.years),
+            months: Math.abs(durationArg.duration.months),
+            weeks: Math.abs(durationArg.duration.weeks),
+            days: Math.abs(durationArg.duration.days),
+            hours: Math.abs(durationArg.duration.hours),
+            minutes: Math.abs(durationArg.duration.minutes),
+            seconds: Math.abs(durationArg.duration.seconds),
+            milliseconds: Math.abs(durationArg.duration.milliseconds)
+          }
+        };
+      }
+      return this.createError(`Function ${expr.name} does not support duration arguments`);
     }
 
     // Execute function
@@ -1690,7 +1721,14 @@ export class Evaluator {
     }
 
     // Handle date/time presentation formats
-    const dateTimeFormats: AST.PresentationFormat[] = ['iso8601', 'rfc9557', 'rfc2822', 'unix', 'unixMilliseconds'];
+    // Accept both lowercase and grammar-produced format names (with spaces, mixed case)
+    const dateTimeFormats: AST.PresentationFormat[] = [
+      'iso8601', 'ISO 8601',    // Accept both variants
+      'rfc9557', 'RFC 9557',
+      'rfc2822', 'RFC 2822',
+      'unix',                   // Already normalized by ast-adapter
+      'unixMilliseconds'        // Already normalized by ast-adapter
+    ];
     if (typeof format === 'string' && dateTimeFormats.includes(format)) {
       // Unix timestamps: convert date/time to numeric value (seconds or milliseconds since epoch)
       if (format === 'unix' || format === 'unixMilliseconds') {

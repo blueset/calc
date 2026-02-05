@@ -309,6 +309,9 @@ export type PresentationFormat =
   | 'iso8601'
   | 'rfc9557'
   | 'rfc2822'
+  | 'ISO 8601'
+  | 'RFC 9557'
+  | 'RFC 2822'
   | 'unix'
   | 'unixMilliseconds';
 

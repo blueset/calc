@@ -15,7 +15,7 @@ describe('Integration Tests - Composite Units Edge Cases', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Arcminutes and Arcseconds Disambiguation', () => {

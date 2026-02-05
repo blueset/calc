@@ -1393,9 +1393,9 @@ describe('AST Adapter Unit Tests', () => {
       it('should map comparison operators (<, <=, >, >=, ==, !=)', () => {
         // Test comparison operators
         const operators: Array<[NearleyAST.BinaryOperator, OldAST.BinaryOperator]> = [
-          ['lt', '<'],
+          ['lessThan', '<'],
           ['lessThanOrEqual', '<='],
-          ['gt', '>'],
+          ['greaterThan', '>'],
           ['greaterThanOrEqual', '>='],
           ['equals', '=='],
           ['notEquals', '!=']
@@ -2327,10 +2327,7 @@ describe('AST Adapter Unit Tests', () => {
 
           const adapted = adaptLine(instant, 0, keyword);
           if (adapted.type === 'ExpressionLine') {
-            expect(adapted.expression.type).toBe('ConstantLiteral');
-            if (adapted.expression.type === 'ConstantLiteral') {
-              expect(adapted.expression.name).toBe(keyword);
-            }
+            expect(adapted.expression.type).toBe('RelativeInstantExpression');
           }
         }
       });
@@ -2576,6 +2573,7 @@ describe('AST Adapter Unit Tests', () => {
         const zonedDateTime: NearleyAST.ZonedDateTimeNode = {
           type: 'ZonedDateTime',
           location: 0,
+          subType: 'dateTime',
           dateTime: {
             type: 'PlainDateTime',
             location: 0,
@@ -2617,6 +2615,7 @@ describe('AST Adapter Unit Tests', () => {
         const zonedDateTime: NearleyAST.ZonedDateTimeNode = {
           type: 'ZonedDateTime',
           location: 0,
+          subType: 'dateTime',
           dateTime: {
             type: 'PlainDateTime',
             location: 0,
@@ -2660,6 +2659,7 @@ describe('AST Adapter Unit Tests', () => {
         const zonedDateTime: NearleyAST.ZonedDateTimeNode = {
           type: 'ZonedDateTime',
           location: 0,
+          subType: 'dateTime',
           dateTime: {
             type: 'PlainDateTime',
             location: 0,
@@ -2692,7 +2692,7 @@ describe('AST Adapter Unit Tests', () => {
         if (adapted.type === 'ExpressionLine' && adapted.expression.type === 'ZonedDateTimeLiteral') {
           // Timezone should be a string in the old AST
           expect(typeof adapted.expression.timezone).toBe('string');
-          expect(adapted.expression.timezone).toBe('UTC');
+          expect(adapted.expression.timezone).toBe('Etc/UTC');
         }
       });
     });

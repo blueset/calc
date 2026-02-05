@@ -93,11 +93,11 @@ Line -> VariableAssignment {% id %}
       | Expression {% id %}
       | null
 
-VariableAssignment -> %identifier _ %assign _ Expression {%
-  (data, location) => ({ type: 'VariableAssignment', name: data[0].value, value: data[4], location })
+VariableAssignment -> Variable _ %assign _ Expression {%
+  (data, location) => ({ type: 'VariableAssignment', name: data[0].name, value: data[4], location })
 %}
 
-Expression ->  ConditionalExpr {% id %}
+Expression -> ConditionalExpr {% id %}
             | ParenthesizedExpr {% id %}
             | Conversion {% id %}
 
@@ -105,16 +105,23 @@ ParenthesizedExpr -> %lparen _ Expression _ %rparen {% (data) => data[2] %}
 
 ### Conversion Targets
 
-ConditionalExpr -> %kw_if __ LogicalOrExpr %kw_then __ Expression __ %kw_else __ Expression {%
+ConditionalExpr -> %kw_if __ LogicalOrExpr __ %kw_then __ Expression __ %kw_else __ Expression {%
   (data, location) => ({ type: 'ConditionalExpr', condition: data[2], then: data[6], else: data[10], location })
 %}
 
-Conversion -> ConversionSource ( __ ConversionOp __ ConversionTarget ):? {%
-  (data, location) => 
-    data[1]?.[3] 
-    ? ({ type: 'Conversion', expression: data[0], operator: data[1][1].type, target: data[1][3], location })
-    : data[0]
+Conversion -> ConversionSource ( __ ConversionOp __ ConversionTarget ):+ {%
+  (data, location) => {
+    // Reduce multiple conversions into nested Conversion nodes
+    // e.g., "1.71 m to ft in to fraction" becomes Conversion(Conversion(1.71 m, to ft in), to fraction)
+    return data[1].reduce((expr: any, conversion: any) => {
+      const target = conversion[3];
+      // Use target's location for each conversion node
+      const conversionLocation = target.location;
+      return { type: 'Conversion', expression: expr, operator: conversion[1].type, target, location: conversionLocation };
+    }, data[0]);
+  }
 %}
+           | ConversionSource {% id %}
 
 ConversionSource -> LogicalOrExpr {% id %}
                   | ConditionalExpr {% id %}
@@ -144,7 +151,7 @@ PresentationTarget -> %kw_value {% (data, location) => ({ type: 'PresentationFor
                     | %kw_hexadecimal {%
                       (data, location) => ({ type: 'PresentationFormat', format: 'base', base: 16, location })
                     %}
-                    | %decimalDigits __ %kw_sig_figs {%
+                    | %decimalDigits __ %sigFigs {%
                       (data, location) => ({ type: 'PresentationFormat', format: 'sigFigs', sigFigs: parseInt(data[0].value.replaceAll('_', '')), location })
                     %}
                     | %decimalDigits __ (%kw_decimals | %kw_decimal) {%
@@ -158,6 +165,15 @@ PresentationTarget -> %kw_value {% (data, location) => ({ type: 'PresentationFor
                     %}
                     | %kw_fraction {%
                       (data, location) => ({ type: 'PresentationFormat', format: 'fraction', location })
+                    %}
+                    | %ISO8601 {%
+                      (data, location) => ({ type: 'PresentationFormat', format: 'ISO 8601', location })
+                    %}
+                    | %RFC9557 {%
+                      (data, location) => ({ type: 'PresentationFormat', format: 'RFC 9557', location })
+                    %}
+                    | %RFC2822 {%
+                      (data, location) => ({ type: 'PresentationFormat', format: 'RFC 2822', location })
                     %}
                     | %kw_unix (__ %identifier):? {%
                       (data, location, reject) => 
@@ -194,7 +210,7 @@ BitwiseOrExpr -> BitwiseXorExpr ( _ %pipe _ BitwiseXorExpr ):* {% optionalBinary
 BitwiseXorExpr -> BitwiseAndExpr ( _ %kw_xor _ BitwiseAndExpr ):* {% optionalBinaryOp %}
 BitwiseAndExpr -> ComparisonExpr ( _ %ampersand _ ComparisonExpr ):* {% optionalBinaryOp %}
 ComparisonExpr -> BitShiftExpr ( _ ComparisonOp _ BitShiftExpr ):? {% optionalBinaryOp %}
-ComparisonOp -> %lt | %lessThanOrEqual | %gt | %greaterThanOrEqual | %equals | %notEquals
+ComparisonOp -> %lessThan | %lessThanOrEqual | %greaterThan | %greaterThanOrEqual | %equals | %notEquals
 
 ### Arithmetic Expressions
 
@@ -207,10 +223,10 @@ UnaryExpr -> %minus UnaryExpr {% optionalUnaryOp(0, 1) %}
             | %tilde UnaryExpr {% optionalUnaryOp(0, 1) %}
             | PowerExpr {% id %}
             | ValueWithUnits {% id %}
-PowerExpr -> PostfixExpr ( %caret UnaryExpr ):? {% 
+PowerExpr -> PostfixExpr ( _ %caret _ UnaryExpr ):? {% 
                 (data, location) => 
                   data[1] 
-                  ? ({ type: 'BinaryExpression', subType: 'caret', operator: data[1][0].type, left: data[0], right: data[1][1], location })
+                  ? ({ type: 'BinaryExpression', subType: 'caret', operator: data[1][1].type, left: data[0], right: data[1][3], location })
                   : data[0] 
              %}
            | PostfixExpr %superscript {% 
@@ -251,16 +267,8 @@ UnitlessPrimary -> Constant {% id %}
 BooleanLiteral -> %kw_true {% (data, location) => ({ type: 'BooleanLiteral', value: true, location }) %}
                 | %kw_false {% (data, location) => ({ type: 'BooleanLiteral', value: false, location }) %}
 
-Variable -> %identifier {% (data, location, reject) => {
-            if (
-              isConstant(data[0].value) ||
-              dataLoader.getUnitsByCaseInsensitiveName(data[0].value)?.length || 
-              dataLoader.getCurrenciesByName(data[0].value)?.length ||
-              dataLoader.getCurrencyByCode(data[0].value)
-            ) {
-              return reject;
-            }
-            return ({ type: 'Variable', name: data[0].value, location })
+Variable -> ( %identifier | %kw_value ) {% (data, location, reject) => {
+            return ({ type: 'Variable', name: data[0][0].value, location });
           } %}
 
 Constant -> ( %identifier | %constantSymbol ) {% (data, location, reject) => isConstant(data[0][0].value) ? ({ type: 'Constant', name: data[0][0].value, location }) : reject %}
@@ -346,10 +354,30 @@ UnitsDenominatorList -> %lparen _ UnitsList _ %rparen {% (data) => data[2] %}
                       | UnitWithExponent {% (data) => [data[0]] %}
 
 UnitWithExponent -> Unit ( Exponent {% id %} ):? {%
-  (data, location) => {
-    return { type: 'UnitWithExponent', unit: data[0], exponent: data[1] ?? 1, location };
-  }
-%}
+                  (data, location) => {
+                    return { type: 'UnitWithExponent', subType: 'numerical', unit: data[0], exponent: data[1] ?? 1, location };
+                  }
+                %}
+               | %kw_square __ Unit {%
+                  (data, location) => {
+                    return { type: 'UnitWithExponent', subType: 'square', unit: data[2], exponent: 2, location };
+                  }
+                %}
+               | Unit __ %kw_squared {%
+                  (data, location) => {
+                    return { type: 'UnitWithExponent', subType: 'squared', unit: data[0], exponent: 2, location };
+                  }
+                %}
+               | %kw_cubic __ Unit {%
+                  (data, location) => {
+                    return { type: 'UnitWithExponent', subType: 'cubic', unit: data[2], exponent: 3, location };
+                  }
+                %}
+               | Unit __ %kw_cubed {%
+                  (data, location) => {
+                    return { type: 'UnitWithExponent', subType: 'cubed', unit: data[0], exponent: 3, location };
+                  }
+                %}
 
 Exponent -> %caret NumberSymbol:? %decimalDigits {%
   (data) => {
@@ -401,15 +429,15 @@ Unit -> ( %degree %identifier:? | %prime | %doublePrime ) {%
 
 NumericalValue -> %hexNumber {% (data, location) => ({
                     type: 'NumberLiteral', subType: "0x", 
-                    base: 16, value: data[0].value, location 
+                    base: 16, value: data[0].value.substring(2), location 
                   }) %}
                  | %binaryNumber {% (data, location) => ({
                     type: 'NumberLiteral', subType: "0b", 
-                    base: 2, value: data[0].value, location 
+                    base: 2, value: data[0].value.substring(2), location 
                   }) %}
                  | %octalNumber {% (data, location) => ({
                     type: 'NumberLiteral', subType: "0o", 
-                    base: 8, value: data[0].value, location 
+                    base: 8, value: data[0].value.substring(2), location 
                   }) %}
                  | PercentageNumber {% id %}
                  | ArbitraryBaseNumberWithBase {% id %}
@@ -463,9 +491,9 @@ DecimalNumber -> NumberSymbol:? %decimalDigits ( %dot %decimalDigits ):? ( Scien
   }
 %}
 
-ScientificNotation -> ( %scienceExponential NumberSymbol:? %decimalDigits ) {%
+ScientificNotation -> %scienceExponential NumberSymbol:? %decimalDigits {%
   (data) => {
-    const sign = data[1] ? (data[1][0].type === 'plus' ? 1 : -1) : 1;
+    const sign = data[1] ? (data[1].type === 'plus' ? 1 : -1) : 1;
     const exponent = parseInt(data[2].value.replaceAll('_', ''));
     return sign * exponent;
   }
@@ -480,8 +508,51 @@ DateTimeLiteral -> ZonedDateTime {% id %}
                  | PlainTime {% id %}
 
 ZonedDateTime -> PlainDateTime __ Timezone {%
-  (data, location) => ({ type: 'ZonedDateTime', dateTime: data[0], timezone: data[2], location })
-%}
+                (data, location) => ({ type: 'ZonedDateTime', subType: 'dateTime', dateTime: data[0], timezone: data[2], location })
+              %}
+               | PlainTime __ Timezone {%
+                (data, location) => {
+                  return {
+                    type: 'ZonedDateTime',
+                    subType: 'plainTime',
+                    dateTime: {
+                      type: 'PlainDateTime',
+                      subType: 'plainTimeZoned',
+                      date: null,
+                      time: data[0],
+                      location: data[0].location
+                    },
+                    timezone: data[2],
+                    location
+                  };
+                }
+              %}
+               | PlainDate __ Timezone {%
+                (data, location) => {
+                  // Create a PlainDateTime by combining PlainDate with 00:00:00 time
+                  const plainTime = {
+                    type: 'PlainTime',
+                    hour: 0,
+                    minute: 0,
+                    second: 0,
+                    millisecond: 0,
+                    location: data[0].location
+                  };
+                  const plainDateTime = {
+                    type: 'PlainDateTime',
+                    subType: 'plainDate',
+                    dateTime: {
+                      type: 'PlainDateTime',
+                      subType: 'plainDateZoned',
+                      date: data[0],
+                      time: plainTime,
+                      location: data[0].location
+                    },
+                    location: data[0].location
+                  };
+                  return { type: 'ZonedDateTime', dateTime: plainDateTime, timezone: data[2], location };
+                }
+              %}
 
 Instant -> %kw_now {% (data, location) => ({ type: 'Instant', keyword: 'now', location }) %}
          | %kw_today {% (data, location) => ({ type: 'Instant', keyword: 'today', location }) %}
@@ -490,7 +561,7 @@ Instant -> %kw_now {% (data, location) => ({ type: 'Instant', keyword: 'now', lo
          | NumericalValue __ %identifier __ %kw_ago {% (data, location) => ({ type: 'Instant', amount: data[0], unit: data[2].value, direction: 'ago', location }) %}
          | NumericalValue __ %identifier __ %kw_from __ %kw_now {% (data, location) => ({ type: 'Instant', amount: data[0], unit: data[2].value, direction: 'fromNow', location }) %}
          | NumericalValue __ %kw_unix (__ %identifier):? {%
-           (data, location) => ({ type: 'Instant', amount: data[0], unit: data[3]?.value ?? "second", direction: 'sinceEpoch', location })
+           (data, location) => ({ type: 'Instant', amount: data[0], unit: data[3]?.[1]?.value ?? "second", direction: 'sinceEpoch', location })
          %}
 
 PlainDateTime -> PlainDate __ PlainTime {% (data, location) => ({ type: 'PlainDateTime', subType: 'dateTime', date: data[0], time: data[2], location }) %}
@@ -585,7 +656,7 @@ UTCOffset -> %identifier NumberSymbol %plainTime {%
                   const baseZone = data[0].value;
                   if (!/^(UTC|GMT)$/i.test(baseZone)) { return reject; }
                   const prefix = data[1].type === 'plus' ? '+' : '-';
-                  const timeStr = data[2].value;
+                  const timeStr = data[2].value.padStart(5, '0');
                   return { type: 'UTCOffset', subType: 'time', offsetStr: prefix + timeStr, baseZone, location };
                 }
               %}
@@ -595,7 +666,12 @@ UTCOffset -> %identifier NumberSymbol %plainTime {%
                   if (!/^(UTC|GMT)$/i.test(baseZone)) { return reject; }
                   const prefix = data[1].type === 'plus' ? '+' : '-';
                   const hour = parseInt(data[2].value.replaceAll('_', ''));
-                  return { type: 'UTCOffset', subType: 'numerical', offsetStr: prefix + hour.toString(), baseZone, location };
+                  const offsetStr = prefix + (
+                    hour >= 100 ?
+                      hour.toString().slice(0, -2).padStart(2, '0') + ":" + hour.toString().slice(-2)
+                      : hour.toString().padStart(2, '0') + ":00"
+                  );
+                  return { type: 'UTCOffset', subType: 'numerical', offsetStr, baseZone, location };
                 }
               %}
 

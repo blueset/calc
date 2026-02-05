@@ -32,7 +32,7 @@ interface Node {
 type BinaryOperator =
   | 'or' | 'and'                                                          // Logical
   | 'pipe' | 'kw_xor' | 'ampersand'                                       // Bitwise
-  | 'lt' | 'lessThanOrEqual' | 'gt' | 'greaterThanOrEqual' | 'equals' | 'notEquals'  // Comparison
+  | 'lessThan' | 'lessThanOrEqual' | 'greaterThan' | 'greaterThanOrEqual' | 'equals' | 'notEquals'  // Comparison
   | 'lShift' | 'rShift'                                                   // Bit shift
   | 'plus' | 'minus'                                                      // Additive
   | 'times' | 'slash' | 'divide' | 'kw_per' | 'percent' | 'kw_mod'        // Multiplicative
@@ -233,6 +233,7 @@ interface PlainDateTimeNode<F extends TransformTypeFn = Id> extends Node {
 
 interface ZonedDateTimeNode<F extends TransformTypeFn = Id> extends Node {
   readonly type: 'ZonedDateTime';
+  readonly subType: string;
   readonly dateTime: Apply<F, PlainDateTimeNode<F>>;
   readonly timezone: Apply<F, TimezoneNode>;
 }

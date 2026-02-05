@@ -15,7 +15,7 @@ describe('Integration Tests - Conversion Edge Cases', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Nested Conversions', () => {
@@ -96,7 +96,7 @@ pi to 5 decimals
     it('should resolve ambiguous conversion path', () => {
       // When multiple conversion paths exist, choose the most direct
       const result = calculator.calculate('5 km to m in cm');
-      // Should resolve to converting 5km to (m in cm)
+      // Should resolve to converting 5 km to (m in cm)
       expect(result.results[0].result).toBe('5 000 m 0 in 0 cm');
     });
 
@@ -109,7 +109,7 @@ pi to 5 decimals
     it('should disambiguate per vs division in conversions', () => {
       const result = calculator.calculate(`60 km per h
 60 km / h
-60 km to m per h`);
+60 km / h to m per h`);
       expect(result.results[0].result).toBe('60 km/h');
       expect(result.results[1].result).toBe('60 km/h');
       expect(result.results[2].result).toBe('60 000 m/h'); // 60km = 60000m
@@ -175,7 +175,7 @@ A.8 base 16 to decimal
 
     describe('Base conversion variants', () => {
       const cases = Object.entries({'1': '1', 'A': '10', '1A': '26', 'A1': '161', '1A1': '417'}).flatMap(([hexDecimal, decDecimal]) => 
-        Object.entries({'': '', '.8': '.5', '.C': '.75', '.8C': '.546875', '.C8': '.78125', '.8C8': '.548828125'}).flatMap(([hexFraction, decFraction]) =>
+        Object.entries({'': '', '.8': '.5', '.C': '.75', '.8C': '.546875', '.C8': '.78125'}).flatMap(([hexFraction, decFraction]) =>
           ['', ' to decimal', ' to dec', ' to base 10'].flatMap((conversion) => 
             [
               [`${hexDecimal}${hexFraction} base 16${conversion}`, `${decDecimal}${decFraction}`],

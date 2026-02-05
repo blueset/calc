@@ -16,7 +16,7 @@ describe('Integration Tests - Hyperbolic Functions', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Hyperbolic Sine (sinh)', () => {

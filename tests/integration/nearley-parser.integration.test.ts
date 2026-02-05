@@ -137,12 +137,11 @@ y = x + 5`;
   describe('error handling', () => {
     it('should handle invalid syntax as plain text', () => {
       const input = 'this is not valid @ $ %%';
-      const oldResult = oldCalculator.calculate(input);
       const nearleyResult = nearleyCalculator.calculate(input);
 
       expect(nearleyResult.results[0].type).toBe('PlainText');
-      expect(nearleyResult.results[0].result).toBe(null);
-      expect(nearleyResult.results[0].type).toBe(oldResult.results[0].type);
+      expect(nearleyResult.results[0].result).toBeTruthy();
+      expect(nearleyResult.results[0].hasError).toBe(true);
     });
 
     it('should continue after error', () => {

@@ -146,10 +146,13 @@ export class Calculator {
       let hasError = false;
 
       // Check if this line has lexer or parser errors
-      const hasLexerError = lexerErrors.some(e => e.start.line === lineNumber);
-      const hasParserError = parserErrors.some(e => e.line === lineNumber);
-      if (hasLexerError || hasParserError) {
+      const lexerError = lexerErrors.find(e => e.start.line === lineNumber);
+      const parserError = parserErrors.find(e => e.line === lineNumber);
+      if (lexerError || parserError) {
         hasError = true;
+        // Set result to the error message
+        const errorMsg = parserError?.error.message || lexerError?.message || 'Parse error';
+        result = `Parsing Error: ${errorMsg}`;
       }
 
       // Check if the value is an error
@@ -179,7 +182,7 @@ export class Calculator {
               line.end
             )
           );
-          result = `Error: ${errorMessage}`;
+          result = `Formatting Error: ${errorMessage}`;
         }
       }
 

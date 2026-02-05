@@ -698,7 +698,7 @@ describe('Parser', () => {
     });
 
     it('should parse derived unit with negative Unicode superscript (m⁻¹)', () => {
-      const expr = parseExpression('5 to m⁻¹');
+      const expr = parseExpression('5 km⁻¹ to m⁻¹');
       expect(expr.type).toBe('ConversionExpression');
       const convExpr = expr as ConversionExpression;
       expect(convExpr.target.type).toBe('UnitTarget');

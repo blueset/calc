@@ -6,6 +6,7 @@
  * 2. Prefer in-database units over user-defined units
  * 3. Prefer variables over user-defined units (when identifier could be either)
  * 4. Prefer shorter parse trees (fewer AST nodes)
+ * 5. Prefer fewer conversion operations (simpler structure)
  */
 
 import * as NearleyAST from './types';
@@ -58,6 +59,17 @@ export function scoreCandidate(node: NearleyAST.LineNode, context: PruningContex
   // Rule 4: Prefer shorter parse trees (fewer nodes)
   const nodeCount = countNodes(node);
   score += 100 * (1 / (1 + nodeCount / 10));
+
+  // Rule 5: Prefer fewer conversion operations (simpler structure)
+  // 0 conversions: 0 points (don't reward non-conversions)
+  // 1 conversion: 2000 points (best)
+  // 2+ conversions: decreasing score (penalize nested conversions)
+  const conversionCount = countConversions(node);
+  if (conversionCount === 0) {
+    score += 0; // No bonus for expressions without conversions
+  } else {
+    score += 2000 / conversionCount; // Fewer conversions = higher score
+  }
 
   return score;
 }
@@ -231,6 +243,35 @@ export function countNodes(node: any): number {
       count += value.reduce((sum, item) => sum + countNodes(item), 0);
     } else if (typeof value === 'object' && value !== null) {
       count += countNodes(value);
+    }
+  }
+
+  return count;
+}
+
+/**
+ * Count total Conversion nodes in the parse tree
+ * Used by Rule 5 to prefer fewer conversion operations
+ */
+export function countConversions(node: any): number {
+  if (!node || typeof node !== 'object') {
+    return 0;
+  }
+
+  let count = 0;
+
+  // Count this node if it's a Conversion
+  if (node.type === 'Conversion') {
+    count += 1;
+  }
+
+  // Recurse into children
+  for (const key of Object.keys(node)) {
+    const value = node[key];
+    if (Array.isArray(value)) {
+      count += value.reduce((sum, item) => sum + countConversions(item), 0);
+    } else if (typeof value === 'object' && value !== null) {
+      count += countConversions(value);
     }
   }
 

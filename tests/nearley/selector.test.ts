@@ -3,14 +3,6 @@
  *
  * Tests the parse tree selector logic that chooses the best candidate from
  * valid parses after pruning.
- *
- * Test Coverage (44 tests across 6 categories):
- * - A. Core Selection Logic (6 tests)
- * - B. Scoring System (8 tests)
- * - C. Unit Analysis (8 tests)
- * - D. Variable Preference (6 tests)
- * - E. Complexity Analysis (4 tests)
- * - F. Integration Tests (12 tests)
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -18,7 +10,8 @@ import { DataLoader } from '../../src/data-loader';
 import {
   selectBestCandidate,
   scoreCandidate,
-  countNodes
+  countNodes,
+  countConversions
 } from '../../src/nearley/selector';
 import { PruningContext } from '../../src/nearley/pruner';
 import * as NearleyAST from '../../src/nearley/types';
@@ -146,7 +139,42 @@ describe('Selector Unit Tests', () => {
     };
   }
 
-  describe('A. Core Selection Logic', () => {
+  /**
+   * Helper to create a Conversion node
+   */
+  function createConversion(
+    expression: NearleyAST.ExpressionNode,
+    operator: 'to' | 'in',
+    target: NearleyAST.ConversionTargetNode
+  ): NearleyAST.ConversionNode {
+    return {
+      type: 'Conversion',
+      location: 0,
+      expression,
+      operator,
+      target
+    };
+  }
+
+  /**
+   * Helper to create a Units node for conversion targets
+   */
+  function createUnits(unitNames: string[]): NearleyAST.UnitsNode {
+    return {
+      type: 'Units',
+      location: 0,
+      subType: unitNames.length > 1 ? 'composite' : 'simple',
+      numerators: unitNames.map(name => ({
+        type: 'UnitWithExponent',
+        location: 0,
+        unit: { type: 'Unit', location: 0, name, matched: 'unit' },
+        exponent: 1
+      })),
+      denominators: []
+    };
+  }
+
+  describe('Core Selection Logic', () => {
     describe('selectBestCandidate() - Main selection function', () => {
       it('should select simpler candidate when given multiple options', () => {
         const context = createContext();
@@ -241,7 +269,7 @@ describe('Selector Unit Tests', () => {
     });
   });
 
-  describe('B. Scoring System', () => {
+  describe('Scoring System', () => {
     describe('scoreCandidate() - Candidate scoring (tested via selectBestCandidate)', () => {
       it('should apply Rule 1: Simpler unit expressions score higher (+1000 per fewer term)', () => {
         const context = createContext();
@@ -421,10 +449,111 @@ describe('Selector Unit Tests', () => {
         // No units (complexTree) should win over simple unit due to Rule 1 weight
         expect(result).toBe(complexTree);
       });
+
+      it('should apply Rule 5: Fewer conversions score higher, but 0 conversions get no bonus', () => {
+        const context = createContext();
+
+        // No conversions (Rule 5 score = 0, no bonus)
+        const noConv = createValue('42', 'km');
+        const noConvScore = scoreCandidate(noConv, context);
+
+        // One conversion (Rule 5 score = 2000 / 1 = 2000)
+        const oneConv = createConversion(
+          createValue('42', 'km'),
+          'to',
+          createUnits(['m'])
+        );
+        const oneConvScore = scoreCandidate(oneConv, context);
+
+        // Two conversions (Rule 5 score = 2000 / 2 = 1000)
+        const twoConv = createConversion(
+          createConversion(
+            createValue('42', 'km'),
+            'to',
+            createUnits(['m'])
+          ),
+          'in',
+          createUnits(['cm'])
+        );
+        const twoConvScore = scoreCandidate(twoConv, context);
+
+        // Verify score ordering: one conversion > two conversions > no conversions
+        expect(oneConvScore).toBeGreaterThan(twoConvScore);
+        expect(oneConvScore).toBeGreaterThan(noConvScore);
+
+        // Two conversions may be better or worse than no conversions depending on other rules
+        // but the Rule 5 component should favor conversions over no conversions
+
+        // Check approximate Rule 5 score differences
+        expect(oneConvScore - twoConvScore).toBeGreaterThan(900); // ~1000 difference from Rule 5
+      });
+
+      it('should prefer actual conversion over no conversion (1+ vs 0)', () => {
+        const context = createContext();
+
+        // Parse 1: No conversion - just a value with compound units
+        // e.g., "10 [in in cm]" interpreted as units, not conversion
+        const noConv = createValue('10', 'in'); // Simplified - no conversion
+        const noConvScore = scoreCandidate(noConv, context);
+
+        // Parse 2: Actual conversion - "10 in" converted to "cm"
+        const withConv = createConversion(
+          createValue('10', 'in'),
+          'to',
+          createUnits(['cm'])
+        );
+        const withConvScore = scoreCandidate(withConv, context);
+
+        const candidates: NearleyAST.LineNode[] = [noConv, withConv];
+        const result = selectBestCandidate(candidates, context);
+
+        // Conversion should win over no conversion
+        // Rule 5: 2000 (with conv) vs 0 (no conv) = +2000 for conversion
+        expect(withConvScore).toBeGreaterThan(noConvScore);
+        expect(result).toBe(withConv);
+      });
+
+      it('should have Rule 5 outweigh Rule 1 for composite vs nested conversions', () => {
+        const context = createContext();
+
+        // Parse 1: Nested conversions (2 conversions)
+        // "5 km to m" then "result in cm"
+        const nested = createConversion(
+          createConversion(
+            createValue('5', 'km'),
+            'to',
+            createUnits(['m'])
+          ),
+          'in',
+          createUnits(['cm'])
+        );
+        const nestedScore = scoreCandidate(nested, context);
+
+        // Parse 2: Composite target (1 conversion)
+        // "5 km to [m in cm]"
+        const composite = createConversion(
+          createValue('5', 'km'),
+          'to',
+          createUnits(['m', 'in', 'cm'])
+        );
+        const compositeScore = scoreCandidate(composite, context);
+
+        const candidates: NearleyAST.LineNode[] = [nested, composite];
+        const result = selectBestCandidate(candidates, context);
+
+        // Composite should win due to Rule 5 (fewer conversions)
+        expect(compositeScore).toBeGreaterThan(nestedScore);
+        expect(result).toBe(composite);
+
+        // Score difference should be significant (Rule 5: 2000 vs 1000 = 1000 difference)
+        // Rule 1 penalty: 200 vs 250 = -50 difference
+        // Net: ~950 in favor of composite
+        expect(compositeScore - nestedScore).toBeGreaterThan(850);
+      });
     });
   });
 
-  describe('C. Unit Analysis', () => {
+  describe('Unit Analysis', () => {
     describe('countUnitTerms() - Unit complexity (tested via scoring)', () => {
       it('should count numerators and denominators correctly in scoring', () => {
         const context = createContext();
@@ -618,7 +747,7 @@ describe('Selector Unit Tests', () => {
     });
   });
 
-  describe('E. Complexity Analysis', () => {
+  describe('Complexity Analysis', () => {
     describe('countNodes() - AST complexity', () => {
       it('should count nodes accurately', () => {
         // Simple value: 1 Value node + 1 NumberLiteral = 2 nodes
@@ -658,7 +787,42 @@ describe('Selector Unit Tests', () => {
     });
   });
 
-  describe('F. Integration Tests', () => {
+  describe('Conversion Depth Analysis', () => {
+    describe('countConversions() - Conversion counting', () => {
+      it('should count zero conversions in simple expressions', () => {
+        const simple = createValue('42', 'km');
+        const count = countConversions(simple);
+        expect(count).toBe(0);
+      });
+
+      it('should count one conversion in simple conversion', () => {
+        const oneConv = createConversion(
+          createValue('5', 'km'),
+          'to',
+          createUnits(['m'])
+        );
+        const count = countConversions(oneConv);
+        expect(count).toBe(1);
+      });
+
+      it('should count nested conversions correctly', () => {
+        // "5 km to m" then "result in cm" = 2 conversions
+        const nested = createConversion(
+          createConversion(
+            createValue('5', 'km'),
+            'to',
+            createUnits(['m'])
+          ),
+          'in',
+          createUnits(['cm'])
+        );
+        const count = countConversions(nested);
+        expect(count).toBe(2);
+      });
+    });
+  });
+
+  describe('Integration Tests', () => {
     describe('Real-world selection scenarios', () => {
       it('should prefer "m" as variable when defined', () => {
         const context = createContext(['m']); // m defined as variable
@@ -942,6 +1106,47 @@ describe('Selector Unit Tests', () => {
         // Database unit version should score higher
         expect(dbPlusVarScore).toBeGreaterThan(userPlusVarScore);
         expect(result).toBe(dbPlusVar);
+      });
+
+      it('should prefer composite target over nested conversions (5 km to m in cm)', () => {
+        const context = createContext();
+
+        // Parse 1: Nested conversions - Convert(Convert(5["km"], to, ["m"]), in, ["cm"])
+        // Result: "500 000 cm" (2 conversions, 3 unit terms: km, m, cm)
+        const nested = createConversion(
+          createConversion(
+            createValue('5', 'km'),
+            'to',
+            createUnits(['m'])
+          ),
+          'in',
+          createUnits(['cm'])
+        );
+        const nestedScore = scoreCandidate(nested, context);
+
+        // Parse 2: Composite target - Convert(5["km"], to, ["m" "in" "cm"])
+        // Result: "5 000 m 0 in 0 cm" (1 conversion, 4 unit terms: km, m, in, cm)
+        const composite = createConversion(
+          createValue('5', 'km'),
+          'to',
+          createUnits(['m', 'in', 'cm'])
+        );
+        const compositeScore = scoreCandidate(composite, context);
+
+        const candidates: NearleyAST.LineNode[] = [nested, composite];
+        const result = selectBestCandidate(candidates, context);
+
+        // Composite target should win due to Rule 5 (fewer conversions)
+        // Rule 5 difference: 2000/1 - 2000/2 = 2000 - 1000 = 1000
+        // Rule 1 penalty: 1000/(1+4) - 1000/(1+3) = 200 - 250 = -50
+        // Net: 1000 - 50 = 950 in favor of composite
+        expect(compositeScore).toBeGreaterThan(nestedScore);
+        expect(result).toBe(composite);
+
+        // Verify the score difference is approximately 950 points
+        const scoreDiff = compositeScore - nestedScore;
+        expect(scoreDiff).toBeGreaterThan(850);
+        expect(scoreDiff).toBeLessThan(1050);
       });
     });
   });

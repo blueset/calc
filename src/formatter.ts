@@ -73,8 +73,12 @@ export class Formatter {
     const formatName = typeof format === 'number' ? `base ${format}` : format;
 
     // Handle date/time presentation formats
-    if (typeof format === 'string' && (format === 'iso8601' || format === 'rfc9557' || format === 'rfc2822')) {
-      return this.formatDateTimePresentation(innerValue, format);
+    // Accept both lowercase and grammar-produced format names (with spaces, mixed case)
+    const normalizedFormat = typeof format === 'string'
+      ? format.toLowerCase().replace(/\s+/g, '')
+      : format;
+    if (normalizedFormat === 'iso8601' || normalizedFormat === 'rfc9557' || normalizedFormat === 'rfc2822') {
+      return this.formatDateTimePresentation(innerValue, normalizedFormat as 'iso8601' | 'rfc9557' | 'rfc2822');
     }
 
     // Handle different value types

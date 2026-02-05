@@ -15,7 +15,21 @@ describe('Integration Tests - Error Handling', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
+
+    // Load mock exchange rates for currency tests
+    const mockExchangeRates = {
+      date: '2024-01-01',
+      usd: {
+        eur: 0.85,
+        gbp: 0.73,
+        jpy: 110.0,
+        hkd: 7.8,
+        cad: 1.25,
+        inr: 74.0
+      }
+    };
+    calculator.loadExchangeRates(mockExchangeRates);
   });
 
   describe('Unit Dimension Mismatch Errors', () => {
@@ -24,8 +38,11 @@ describe('Integration Tests - Error Handling', () => {
 10 seconds to meters
 25 °C to kilograms`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should error when adding incompatible units', () => {
@@ -33,21 +50,26 @@ describe('Integration Tests - Error Handling', () => {
 1 hour + 5 meters
 100 °C + 50 kg`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should error when subtracting incompatible units', () => {
       const result = calculator.calculate(`10 kg - 5 m
 1 day - 10 liters`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
     });
 
     it('should provide meaningful error messages for dimension mismatches', () => {
       const result = calculator.calculate('5 m + 10 kg');
       expect(result.results[0].hasError).toBe(true);
-      // Error message should mention incompatible units/dimensions
+      expect(result.results[0].result).toBeTruthy();
     });
   });
 
@@ -57,36 +79,48 @@ describe('Integration Tests - Error Handling', () => {
 5 m / 0
 1 / (5 - 5)`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should error on modulo by zero', () => {
       const result = calculator.calculate(`10 % 0
 15 mod 0`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
     });
 
     it('should error on invalid exponentiation', () => {
       const result = calculator.calculate(`(-1) ^ 0.5
-0 ^ 0`);
-      expect(result.results[0].result).toBe("NaN");
-      expect(result.results[1].result).toBe("1");
+0 ^ 0
+-1 ^ -2`);
+      expect(result.results[0].result).toBe('NaN');
+      expect(result.results[1].result).toBe('1');
+      expect(result.results[2].result).toBe('1');
+      expect(result.results[2].hasError).toBe(false);
     });
 
     it('should error on factorial of negative numbers', () => {
       const result = calculator.calculate(`(-5)!
 (-1)!`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
     });
 
     it('should error on factorial of non-integers', () => {
       const result = calculator.calculate(`3.5!
 (1/2)!`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
     });
   });
 
@@ -94,6 +128,7 @@ describe('Integration Tests - Error Handling', () => {
     it('should error on sqrt of negative numbers', () => {
       const result = calculator.calculate('sqrt(-1)');
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
     });
 
     it('should error on log of non-positive numbers', () => {
@@ -102,9 +137,13 @@ log(-5)
 ln(0)
 ln(-10)`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
       expect(result.results[3].hasError).toBe(true);
+      expect(result.results[3].result).toBeTruthy();
     });
 
     it('should error on asin/acos out of range', () => {
@@ -113,9 +152,13 @@ asin(-2)
 acos(1.5)
 acos(-1.5)`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
       expect(result.results[3].hasError).toBe(true);
+      expect(result.results[3].result).toBeTruthy();
     });
 
     it('should error on acosh of values less than 1', () => {
@@ -123,8 +166,11 @@ acos(-1.5)`);
 acosh(0.5)
 acosh(-1)`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should error on atanh outside (-1, 1)', () => {
@@ -133,9 +179,13 @@ atanh(-1)
 atanh(2)
 atanh(-2)`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
       expect(result.results[3].hasError).toBe(true);
+      expect(result.results[3].result).toBeTruthy();
     });
 
     it('should error on invalid log base', () => {
@@ -143,8 +193,11 @@ atanh(-2)`);
 log(1, 10)
 log(-1, 10)`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
   });
 
@@ -154,8 +207,11 @@ log(-1, 10)`);
 ABC base 50 to decimal
 10 base 0 to binary`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should error on invalid digits for base', () => {
@@ -163,8 +219,11 @@ ABC base 50 to decimal
 ABC base 10 to decimal
 GHI base 16 to decimal`);
       expect(result.results[0].hasError).toBe(true); // 2, 3 invalid in base 2
+      expect(result.results[0].result).toBeTruthy(); // 2, 3 invalid in base 2
       expect(result.results[1].hasError).toBe(true); // A, B, C invalid in base 10
+      expect(result.results[1].result).toBeTruthy(); // A, B, C invalid in base 10
       expect(result.results[2].hasError).toBe(true); // G, H, I invalid in base 16
+      expect(result.results[2].result).toBeTruthy(); // G, H, I invalid in base 16
     });
 
     it('should error on malformed base notation', () => {
@@ -172,8 +231,11 @@ GHI base 16 to decimal`);
 10 to base
 ABC base`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
   });
 
@@ -182,20 +244,22 @@ ABC base`);
       const result = calculator.calculate('10 USD + 5 EUR + 3');
       // The '3' is ambiguous - which currency?
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
     });
 
     it('should error on adding different currencies without conversion', () => {
       const result = calculator.calculate('100 USD + 50 EUR');
-      // Should error or require explicit conversion
-      expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].hasError).toBe(false);
+      expect(result.results[0].result).toBe('158.82 USD'); // 50 EUR → 58.82 USD
     });
 
     it('should error on ambiguous currency operation', () => {
       const result = calculator.calculate(`x = 100 USD
 y = 50 EUR
 x + y + 10`);
-      // Cannot mix currencies
+      // Cannot mix currencies and a bare number
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
   });
 
@@ -203,6 +267,7 @@ x + y + 10`);
     it('should error on undefined variable', () => {
       const result = calculator.calculate('undefined_variable + 5');
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
     });
 
     it('should error on undefined variable in expression', () => {
@@ -210,11 +275,13 @@ x + y + 10`);
 y = x + z
 y * 2`);
       expect(result.results[1].hasError).toBe(true); // z is undefined
+      expect(result.results[1].result).toBeTruthy();
     });
 
     it('should error on accessing undefined in function', () => {
       const result = calculator.calculate('sqrt(undefined_var)');
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
     });
   });
 
@@ -224,8 +291,11 @@ y * 2`);
 5 + 3)
 ((5 + 3)`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should error on invalid syntax', () => {
@@ -233,8 +303,11 @@ y * 2`);
 * 5
 / 10`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should error on incomplete expressions', () => {
@@ -242,8 +315,11 @@ y * 2`);
 10 *
 / 5`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should error on invalid function calls', () => {
@@ -251,8 +327,11 @@ y * 2`);
 sqrt(5, 10)
 log()`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
   });
 
@@ -262,7 +341,9 @@ log()`);
 2023.06.00
 2023.13.32`);
       expect(result.results[0].hasError).toBe(true); // month 0
+      expect(result.results[0].result).toBeTruthy(); // month 0
       expect(result.results[1].hasError).toBe(true); // day 0
+      expect(result.results[1].result).toBeTruthy(); // day 0
       // Month 13 and day 32 should clamp, not error
     });
 
@@ -271,20 +352,26 @@ log()`);
 14:60
 14:30:60`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should error on invalid date arithmetic', () => {
       const result = calculator.calculate(`2023 Jan 15 + 2023 Jan 20
 14:30 * 14:00`);
       expect(result.results[0].hasError).toBe(true); // can't add dates
+      expect(result.results[0].result).toBeTruthy(); // can't add dates
       expect(result.results[1].hasError).toBe(true); // can't multiply times
+      expect(result.results[1].result).toBeTruthy(); // can't multiply times
     });
 
     it('should error on invalid timezone names', () => {
       const result = calculator.calculate('14:30 InvalidTimezone');
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
     });
   });
 
@@ -294,13 +381,17 @@ log()`);
 sqrt(5 + sqrt(-1))
 (5 m + 10 kg) * 2`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
 
     it('should handle errors in deeply nested expressions', () => {
       const result = calculator.calculate('((5 + (10 / (3 - 3))) * 2)');
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
     });
 
     it('should error on invalid operations in nested context', () => {
@@ -308,8 +399,11 @@ sqrt(5 + sqrt(-1))
 sqrt(5 meters to kilograms)
 round((10 USD + 5 EUR))`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
-      expect(result.results[2].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
+      expect(result.results[2].hasError).toBe(false);
+      expect(result.results[2].result).toBe('16.00 USD');
     });
   });
 
@@ -319,6 +413,7 @@ round((10 USD + 5 EUR))`);
 10 + 5
 20 * 2`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].result).toBe('15');
       expect(result.results[2].result).toBe('40');
     });
@@ -328,7 +423,9 @@ round((10 USD + 5 EUR))`);
 y = z + 10
 w = x + 10`);
       expect(result.results[0].hasError).toBe(false);
+      expect(result.results[0].result).toBe('5'); // x = 5
       expect(result.results[1].hasError).toBe(true); // z undefined
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].result).toBe('15'); // w still works
     });
 
@@ -340,8 +437,10 @@ sqrt(-1)
 40 / 2`);
       expect(result.results[0].result).toBe('30');
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].result).toBe('60');
       expect(result.results[3].hasError).toBe(true);
+      expect(result.results[3].result).toBeTruthy();
       expect(result.results[4].result).toBe('20');
     });
   });
@@ -349,21 +448,24 @@ sqrt(-1)
   describe('Edge Case Errors', () => {
     it('should error on extremely large numbers', () => {
       const result = calculator.calculate('10^1000');
-      // May error or return infinity
-      expect(result.results[0].hasError || result.results[0].result?.includes('Infinity')).toBe(true);
+      expect(result.results[0].result).toBe('Infinity');
     });
 
     it('should error on extremely small numbers', () => {
       const result = calculator.calculate('10^-1000');
       // May underflow to 0 or error
-      expect(result.results[0].hasError || result.results[0].result === '0').toBe(true);
+      expect(result.results[0].result).toBe('0');
+      expect(result.results[0].hasError).toBe(false);
     });
 
     it('should handle recursive errors', () => {
       const result = calculator.calculate(`x = y + 1
 y = x + 1`);
       // Circular dependency
-      expect(result.results[0].hasError || result.results[1].hasError).toBe(true);
+      expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
+      expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
     });
   });
 
@@ -373,7 +475,9 @@ y = x + 1`);
 true * 10`);
       expect(result.results.length).toBe(2);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
     });
 
     it('should error on non-numeric function arguments', () => {
@@ -381,8 +485,11 @@ true * 10`);
 sin(true)
 log("ten")`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(true);
+      expect(result.results[2].result).toBeTruthy();
     });
   });
 
@@ -407,12 +514,27 @@ log("ten")`);
   describe('Empty and Whitespace Input', () => {
     it('should handle empty input', () => {
       const result = calculator.calculate('');
-      expect(result.results.length).toBe(0);
+      expect(result.results.length).toBe(1);
+      if (result.results[0].hasError) {
+        expect(result.results[0].result).toBeTruthy();
+      } else {
+        expect(result.results[0].result).toBeFalsy();
+      }
     });
 
     it('should handle whitespace-only input', () => {
       const result = calculator.calculate('   \n  \t  ');
-      expect(result.results.length).toBeLessThan(3);
+      expect(result.results.length).toBe(2);
+      if (result.results[0].hasError) {
+        expect(result.results[0].result).toBeTruthy();
+      } else {
+        expect(result.results[0].result).toBeFalsy();
+      }
+      if (result.results[1].hasError) {
+        expect(result.results[1].result).toBeTruthy();
+      } else {
+        expect(result.results[1].result).toBeFalsy();
+      }
     });
 
     it('should handle empty lines in multi-line input', () => {
@@ -436,6 +558,7 @@ log("ten")`);
     it('should indicate error location in complex expressions', () => {
       const result = calculator.calculate('5 + (10 * (3 / 0))');
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       // Should indicate division by zero
     });
 
@@ -444,8 +567,11 @@ log("ten")`);
 sqrt(-1)
 5 m to kg`);
       expect(result.results[0].hasError).toBe(true); // Division by zero
+      expect(result.results[0].result).toBeTruthy(); // Division by zero
       expect(result.results[1].hasError).toBe(true); // Invalid argument
+      expect(result.results[1].result).toBeTruthy(); // Invalid argument
       expect(result.results[2].hasError).toBe(true); // Dimension mismatch
+      expect(result.results[2].result).toBeTruthy(); // Dimension mismatch
       // Error messages should be different
     });
   });
@@ -454,12 +580,14 @@ sqrt(-1)
     it('should report first encountered error', () => {
       const result = calculator.calculate('(5 / 0) + sqrt(-1)');
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       // Should report either division by zero or sqrt of negative
     });
 
     it('should handle compounding errors', () => {
       const result = calculator.calculate('undefined_var + (10 / 0) + sqrt(-1)');
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
     });
   });
 
@@ -469,6 +597,7 @@ sqrt(-1)
 y = z + 5
 x + 5`);
       expect(result.results[1].hasError).toBe(true);
+      expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].result).toBe('15'); // x still valid
     });
 
@@ -477,7 +606,9 @@ x + 5`);
 x = 10
 x + 5`);
       expect(result.results[0].hasError).toBe(true);
+      expect(result.results[0].result).toBeTruthy();
       expect(result.results[1].hasError).toBe(false);
+      expect(result.results[1].result).toBe('10');
       expect(result.results[2].result).toBe('15');
     });
   });

@@ -15,7 +15,7 @@ describe('Integration Tests - Numbers and Bases', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Numbers and Number Bases', () => {
@@ -210,14 +210,14 @@ PHI`);
     it('should error on invalid base (too low)', () => {
       const result = calculator.calculate('100 to base 1');
       // Parser error: base out of range
-      expect(result.errors.parser.length).toBeGreaterThan(0);
+      expect(result.errors.runtime.length).toBeGreaterThan(0);
       expect(result.results[0].hasError).toBe(true);
     });
 
     it('should error on invalid base (too high)', () => {
       const result = calculator.calculate('100 to base 50');
       // Parser error: base out of range
-      expect(result.errors.parser.length).toBeGreaterThan(0);
+      expect(result.errors.runtime.length).toBeGreaterThan(0);
       expect(result.results[0].hasError).toBe(true);
     });
   });

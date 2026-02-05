@@ -15,7 +15,7 @@ describe('Integration Tests - Conversions', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Unit Conversions', () => {
@@ -161,25 +161,25 @@ describe('Integration Tests - Conversions', () => {
 
   describe('Angle Unit Display', () => {
     it('should display angle unit for inverse trig in degrees', () => {
-      const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
+      const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' }, true);
       const result = degreeCalc.calculate('asin(0.5)');
       expect(result.results[0].result).toBe('30°');
     });
 
     it('should display angle unit for inverse trig in radians', () => {
-      const radianCalc = new Calculator(dataLoader, { angleUnit: 'radian' });
+      const radianCalc = new Calculator(dataLoader, { angleUnit: 'radian' }, true);
       const result = radianCalc.calculate('asin(0.5)');
       expect(result.results[0].result).toMatch(/0\.52\d* rad/);
     });
 
     it('should display angle unit for acos in degrees', () => {
-      const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
+      const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' }, true);
       const result = degreeCalc.calculate('acos(0)');
       expect(result.results[0].result).toBe('90°');
     });
 
     it('should display angle unit for atan in degrees', () => {
-      const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' });
+      const degreeCalc = new Calculator(dataLoader, { angleUnit: 'degree' }, true);
       const result = degreeCalc.calculate('atan(1)');
       expect(result.results[0].result).toBe('45°');
     });

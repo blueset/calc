@@ -100,14 +100,20 @@ export class NearleyParser {
 
     // Handle expression lines
     try {
-      const candidates = this.parseExpression(content, lineNumber);
+      const parseResult = this.parseExpression(content, lineNumber);
+      const candidates = parseResult.candidates;
 
       if (candidates.length === 0) {
-        // No valid parse - return as plain text
+        // No valid parse - return as plain text with error
         const loc = this.createSourceLocation(lineNumber, 0, originalText.length);
+        const errorMessage = parseResult.parseError || 'Unable to parse expression';
         return {
           line: createPlainText(originalText, loc.start, loc.end),
-          error: null
+          error: {
+            line: lineNumber,
+            error: new ParserError(errorMessage, loc.start, loc.end),
+            rawText: originalText
+          }
         };
       }
 
@@ -121,11 +127,19 @@ export class NearleyParser {
       const validCandidates = pruneInvalidCandidates(candidates, context);
 
       if (validCandidates.length === 0) {
-        // All candidates invalid - return as plain text
+        // All candidates invalid - return as plain text with error
         const loc = this.createSourceLocation(lineNumber, 0, originalText.length);
+
+        // Try to determine why candidates were rejected
+        const errorMessage = this.diagnoseRejectionReason(candidates, context, originalText);
+
         return {
           line: createPlainText(originalText, loc.start, loc.end),
-          error: null
+          error: {
+            line: lineNumber,
+            error: new ParserError(errorMessage, loc.start, loc.end),
+            rawText: originalText
+          }
         };
       }
 
@@ -160,9 +174,12 @@ export class NearleyParser {
 
   /**
    * Parse an expression line using Nearley
-   * Returns all candidate parses
+   * Returns all candidate parses and any parse error
    */
-  private parseExpression(content: string, lineNumber: number): NearleyAST.LineNode[] {
+  private parseExpression(content: string, lineNumber: number): {
+    candidates: NearleyAST.LineNode[];
+    parseError: string | null;
+  } {
     // Create a new parser instance for this line
     const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
 
@@ -172,10 +189,11 @@ export class NearleyParser {
       // Get all parse results (may have multiple due to ambiguity)
       const results = parser.results as NearleyAST.LineNode[];
 
-      return results;
+      return { candidates: results, parseError: null };
     } catch (error) {
-      // Parse error - return empty array
-      return [];
+      // Parse error - return empty array with error message
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { candidates: [], parseError: errorMessage };
     }
   }
 
@@ -205,5 +223,74 @@ export class NearleyParser {
       start: loc.start,
       end: loc.end
     };
+  }
+
+  /**
+   * Diagnose why all candidates were rejected during pruning
+   * Returns a helpful error message
+   */
+  private diagnoseRejectionReason(
+    candidates: NearleyAST.LineNode[],
+    context: PruningContext,
+    originalText: string
+  ): string {
+    // Check for undefined variables across all candidates
+    const allUndefinedVars = new Set<string>();
+
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+
+      // Collect variables from this candidate
+      const vars = this.collectVariablesFromNode(candidate);
+      for (const varName of vars) {
+        if (!context.definedVariables.has(varName)) {
+          allUndefinedVars.add(varName);
+        }
+      }
+    }
+
+    // If we found undefined variables, that's likely the issue
+    if (allUndefinedVars.size > 0) {
+      const varList = Array.from(allUndefinedVars).join(', ');
+      if (allUndefinedVars.size === 1) {
+        return `Undefined variable: ${varList}`;
+      } else {
+        return `Undefined variables: ${varList}`;
+      }
+    }
+
+    // Generic fallback message
+    return `Unable to parse expression: ${originalText}`;
+  }
+
+  /**
+   * Collect all variable names from a node
+   */
+  private collectVariablesFromNode(node: any): Set<string> {
+    const variables = new Set<string>();
+
+    const traverse = (n: any) => {
+      if (!n || typeof n !== 'object') return;
+
+      // Check if this is a Variable node
+      if (n.type === 'Variable' && n.name) {
+        variables.add(n.name);
+      }
+
+      // Traverse all properties
+      for (const key in n) {
+        if (key === 'type' || key === 'location') continue;
+        const value = n[key];
+
+        if (Array.isArray(value)) {
+          value.forEach(item => traverse(item));
+        } else if (typeof value === 'object' && value !== null) {
+          traverse(value);
+        }
+      }
+    };
+
+    traverse(node);
+    return variables;
   }
 }

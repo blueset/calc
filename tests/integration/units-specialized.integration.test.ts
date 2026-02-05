@@ -15,7 +15,7 @@ describe('Integration Tests - Specialized Units', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Current Units (Ampere)', () => {
@@ -165,7 +165,7 @@ describe('Integration Tests - Specialized Units', () => {
 1 GB
 1 TB
 1 PB`);
-      expect(result.results[0].result).toBe('1 KB');
+      expect(result.results[0].result).toBe('1 kB');
       expect(result.results[1].result).toBe('1 MB');
       expect(result.results[2].result).toBe('1 GB');
       expect(result.results[3].result).toBe('1 TB');

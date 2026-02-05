@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Calculator } from '../src/calculator';
 import { DataLoader } from '../src/data-loader';
-import * as path from 'path';
 
 describe('Calculator - Error Recording Integration', () => {
   let calculator: Calculator;
@@ -10,7 +9,7 @@ describe('Calculator - Error Recording Integration', () => {
   beforeAll(async () => {
     dataLoader = new DataLoader();
     dataLoader.load();
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true);
   });
 
   describe('Lexer Error Recording', () => {
@@ -21,9 +20,8 @@ invalid @ character
 
       const result = calculator.parse(input);
 
-      // Should have lexer errors
-      expect(result.errors.lexer.length).toBe(1);
-      expect(result.errors.lexer[0].message).toContain('Unexpected character \'@\'');
+      expect(result.errors.parser.length).toBe(1);
+      expect(result.errors.parser[0].error).toBeTruthy();
 
       // Should still parse valid lines
       expect(result.ast.lines.length).toBeGreaterThan(0);
@@ -37,8 +35,7 @@ another $ bad # line`;
 
       const result = calculator.parse(input);
 
-      // Should have multiple lexer errors
-      expect(result.errors.lexer.length).toBeGreaterThan(0);
+      expect(result.errors.parser.length).toBeGreaterThan(0);
     });
 
     it('should handle unknown characters at different positions', () => {
@@ -49,8 +46,7 @@ end error @`;
 
       const result = calculator.parse(input);
 
-      // Should record all errors
-      expect(result.errors.lexer.length).toBeGreaterThan(0);
+      expect(result.errors.parser.length).toBeGreaterThan(0);
     });
   });
 
@@ -86,7 +82,7 @@ another $ error`;
       const result = calculator.parse(input);
 
       // Should have both types of errors
-      expect(result.errors.lexer.length).toBeGreaterThan(0);
+      expect(result.errors.parser.length).toBeGreaterThan(0);
 
       // Should still create AST with all lines
       expect(result.ast.lines.length).toBeGreaterThan(0);
@@ -99,8 +95,8 @@ invalid @ character here
 
       const result = calculator.parse(input);
 
-      // Lexer errors have raw text in their context
-      expect(result.errors.lexer.length).toBe(1);
+      // Parser errors have raw text in their context
+      expect(result.errors.parser.length).toBe(1);
     });
   });
 
@@ -120,7 +116,7 @@ Final $ price`;
       expect(result.ast.lines.length).toBeGreaterThan(0);
 
       // Should have recorded errors
-      expect(result.errors.lexer.length).toBeGreaterThan(0);
+      expect(result.errors.parser.length).toBeGreaterThan(0);
     });
 
     it('should handle documents with only errors', () => {
@@ -131,7 +127,7 @@ $$$
       const result = calculator.parse(input);
 
       // Should record errors
-      expect(result.errors.lexer.length).toBeGreaterThan(0);
+      expect(result.errors.parser.length).toBeGreaterThan(0);
 
       // Should still create document
       expect(result.ast.type).toBe('Document');
@@ -172,7 +168,7 @@ $$$
     it('should handle single error line', () => {
       const result = calculator.parse('@@@');
 
-      expect(result.errors.lexer.length).toBe(1);
+      expect(result.errors.parser.length).toBe(1);
     });
   });
 
@@ -185,17 +181,11 @@ line 4`;
 
       const result = calculator.parse(input);
 
-      expect(result.errors.lexer.length).toBe(1);
-      expect(result.errors.lexer[0].start.line).toBe(3);
-    });
-
-    it('should provide accurate column numbers for errors', () => {
-      const input = 'some text @ here';
-
-      const result = calculator.parse(input);
-
-      expect(result.errors.lexer.length).toBe(1);
-      expect(result.errors.lexer[0].start.column).toBeGreaterThan(0);
+      expect(result.errors.parser.length).toBe(4);
+      expect(result.errors.parser[0].line).toBe(1);
+      expect(result.errors.parser[1].line).toBe(2);
+      expect(result.errors.parser[2].line).toBe(3);
+      expect(result.errors.parser[3].line).toBe(4);
     });
   });
 });
@@ -316,7 +306,7 @@ some_text
     it('should apply precision settings', () => {
       const customCalculator = new Calculator(dataLoader, {
         precision: 4,
-      });
+      }, true);
 
       const input = '1 / 3';
       const result = customCalculator.calculate(input);
@@ -328,7 +318,7 @@ some_text
       const customCalculator = new Calculator(dataLoader, {
         precision: 2,
         unitDisplayStyle: 'name'
-      });
+      }, true);
 
       const input = '5 m';
       const result = customCalculator.calculate(input);

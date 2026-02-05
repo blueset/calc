@@ -9,10 +9,19 @@ import * as NearleyAST from './types';
 import * as OldAST from '../ast';
 import { SourceLocation } from '../tokens';
 import { DataLoader } from '../data-loader';
+import { Temporal } from '@js-temporal/polyfill';
 
 // Global DataLoader instance for unit resolution
 // Set by the parser before adaptation
 let globalDataLoader: DataLoader | null = null;
+
+/**
+ * Context for tracking degree units in composite values
+ * Used for context-aware prime/doublePrime conversion
+ */
+type AdaptationContext = {
+  hasDegreeUnit: boolean; // True if a degree unit appears earlier in the composite value
+};
 
 /**
  * Set the DataLoader instance for unit resolution
@@ -162,9 +171,9 @@ function adaptBinaryOperator(op: NearleyAST.BinaryOperator): OldAST.BinaryOperat
     'pipe': '|',
     'kw_xor': 'xor',
     'ampersand': '&',
-    'lt': '<',
+    'lessThan': '<',
     'lessThanOrEqual': '<=',
-    'gt': '>',
+    'greaterThan': '>',
     'greaterThanOrEqual': '>=',
     'equals': '==',
     'notEquals': '!=',
@@ -229,6 +238,13 @@ function adaptPostfixExpression(node: NearleyAST.PostfixExpressionNode): OldAST.
  * Adapt ValueNode to NumberWithUnit or NumberLiteral
  */
 function adaptValue(node: NearleyAST.ValueNode): OldAST.NumberWithUnit | OldAST.NumberLiteral {
+  return adaptValueWithContext(node, { hasDegreeUnit: false });
+}
+
+/**
+ * Adapt ValueNode with context for prime/doublePrime conversion
+ */
+function adaptValueWithContext(node: NearleyAST.ValueNode, context: AdaptationContext): OldAST.NumberWithUnit | OldAST.NumberLiteral {
   const numericalValue = adaptNumericalValue(node.value);
   const loc = createLocation(node.location, 0);
 
@@ -239,7 +255,7 @@ function adaptValue(node: NearleyAST.ValueNode): OldAST.NumberWithUnit | OldAST.
 
   // Number with unit
   const unit = node.unit.type === 'Units'
-    ? adaptUnits(node.unit)
+    ? adaptUnitsWithContext(node.unit, context)
     : adaptCurrencyUnit(node.unit);
 
   return OldAST.createNumberWithUnit(numericalValue.value, unit, numericalValue.raw, loc.start, loc.end);
@@ -262,12 +278,55 @@ function adaptNumericalValue(node: NearleyAST.NumericalValueNode): { value: numb
 }
 
 /**
- * Parse number string according to base
+ * Parse number string according to base (supports decimals for all bases 2-36)
  */
 function parseNumber(str: string, base: number): number {
+  // Validate base range
+  if (base < 2 || base > 36) {
+    throw new Error(`Invalid base: ${base}. Base must be between 2 and 36.`);
+  }
+
   // Remove underscores
   const cleaned = str.replace(/_/g, '');
-  return parseInt(cleaned, base);
+
+  // For base 10, use parseFloat for efficiency
+  if (base === 10) {
+    const value = parseFloat(cleaned);
+    if (isNaN(value)) {
+      throw new Error(`Invalid decimal number: "${str}"`);
+    }
+    return value;
+  }
+
+  // Validate digits are valid for this base
+  const validDigitsPattern = base <= 10
+    ? new RegExp(`^[+-]?[0-${base - 1}.]+$`, 'i')
+    : new RegExp(`^[+-]?[0-9a-${String.fromCharCode(96 + base - 10)}.]+$`, 'i');
+
+  if (!validDigitsPattern.test(cleaned)) {
+    throw new Error(`Invalid digits for base ${base}: "${str}"`);
+  }
+
+  // For other bases (2-36), manually parse integer and fractional parts
+  const parts = cleaned.split('.');
+
+  // Parse integer part
+  let result = parseInt(parts[0] || '0', base);
+
+  // Parse fractional part if present
+  if (parts.length > 1) {
+    const fractionalPart = parts[1];
+    let fractionalValue = 0;
+
+    for (let i = 0; i < fractionalPart.length; i++) {
+      const digit = parseInt(fractionalPart[i], base);
+      fractionalValue += digit / Math.pow(base, i + 1);
+    }
+
+    result += fractionalValue;
+  }
+
+  return result;
 }
 
 /**
@@ -275,6 +334,10 @@ function parseNumber(str: string, base: number): number {
  * Converts numerators/denominators structure to terms with signed exponents
  */
 function adaptUnits(node: NearleyAST.UnitsNode): OldAST.UnitExpression {
+  return adaptUnitsWithContext(node, { hasDegreeUnit: false });
+}
+
+function adaptUnitsWithContext(node: NearleyAST.UnitsNode, context: AdaptationContext): OldAST.UnitExpression {
   const loc = createLocation(node.location, 0);
 
   // Collect all terms with signed exponents
@@ -282,7 +345,7 @@ function adaptUnits(node: NearleyAST.UnitsNode): OldAST.UnitExpression {
 
   // Add numerators (positive exponents)
   for (const unitWithExp of node.numerators) {
-    const simpleUnit = adaptUnit(unitWithExp.unit);
+    const simpleUnit = adaptUnitWithContext(unitWithExp.unit, context);
     terms.push({
       unit: simpleUnit,
       exponent: unitWithExp.exponent
@@ -291,7 +354,7 @@ function adaptUnits(node: NearleyAST.UnitsNode): OldAST.UnitExpression {
 
   // Add denominators (negative exponents)
   for (const unitWithExp of node.denominators) {
-    const simpleUnit = adaptUnit(unitWithExp.unit);
+    const simpleUnit = adaptUnitWithContext(unitWithExp.unit, context);
     terms.push({
       unit: simpleUnit,
       exponent: -unitWithExp.exponent
@@ -312,47 +375,203 @@ function adaptUnits(node: NearleyAST.UnitsNode): OldAST.UnitExpression {
  * Resolves unit names to unit IDs from the database
  */
 function adaptUnit(node: NearleyAST.UnitNode): OldAST.SimpleUnit {
-  const loc = createLocation(node.location, 0);
-
-  let unitId = node.name; // Default to name
-  let displayName = node.name; // Default to input name
-
-  // Try to resolve unit name to unit ID using DataLoader
-  // Uses similarity-based fallback for case-insensitive matching
-  if (globalDataLoader) {
-    const unit = globalDataLoader.getUnitByNameWithFallback(node.name);
-    if (unit) {
-      unitId = unit.id;
-      // Use canonical symbol for display (e.g., "PG" → "Pg" for petagram)
-      displayName = unit.displayName.symbol;
-    }
-  }
-
-  return OldAST.createSimpleUnit(unitId, displayName, loc.start, loc.end);
+  return adaptUnitWithContext(node, { hasDegreeUnit: false });
 }
 
 /**
- * Adapt CurrencyUnitNode to SimpleUnit (treat currency as a special unit)
+ * Adapt UnitNode with context for prime/doublePrime conversion
+ */
+function adaptUnitWithContext(node: NearleyAST.UnitNode, context: AdaptationContext): OldAST.SimpleUnit {
+  const loc = createLocation(node.location, 0);
+  let name = node.name;
+
+  // Context-aware prime/doublePrime conversion
+  if (name === 'prime') {
+    // If in degree context (composite value with degree unit), convert to arcminute
+    // Otherwise, convert to foot (default)
+    name = context.hasDegreeUnit ? 'arcminute' : 'ft';
+  } else if (name === 'doublePrime') {
+    // If in degree context, convert to arcsecond
+    // Otherwise, convert to inch (default)
+    name = context.hasDegreeUnit ? 'arcsecond' : 'in';
+  }
+
+  if (globalDataLoader) {
+    // Step 1: Try exact case-sensitive matches (early return on match)
+
+    // Check units by exact case-sensitive name
+    const unitExact = globalDataLoader['unitByCaseSensitiveName']?.get(name);
+    if (unitExact) {
+      return OldAST.createSimpleUnit(
+        unitExact.id,
+        unitExact.displayName.symbol,
+        loc.start,
+        loc.end
+      );
+    }
+
+    // Check currency by exact code match
+    const currencyByCode = globalDataLoader.getCurrencyByCode(name);
+    if (currencyByCode && currencyByCode.code === name) {
+      return OldAST.createSimpleUnit(name, name, loc.start, loc.end);
+    }
+
+    // Check currency by exact name match
+    const currenciesByName = globalDataLoader.getCurrenciesByName(name);
+    for (const currency of currenciesByName) {
+      if (currency.names.includes(name)) {
+        return OldAST.createSimpleUnit(currency.code, currency.code, loc.start, loc.end);
+      }
+    }
+
+    // Step 2: No exact match - collect case-insensitive candidates with similarity scoring
+    type Candidate = {
+      id: string;
+      displayName: string;
+      matchingChars: number;
+    };
+
+    const candidates: Candidate[] = [];
+
+    // Case-insensitive unit candidates
+    const unitCandidates = globalDataLoader['unitByCaseInsensitiveName']?.get(name.toLowerCase());
+    if (unitCandidates) {
+      for (const unit of unitCandidates) {
+        candidates.push({
+          id: unit.id,
+          displayName: unit.displayName.symbol,
+          matchingChars: countMatchingChars(name, unit.displayName.symbol)
+        });
+      }
+    }
+
+    // Case-insensitive currency by code
+    if (currencyByCode) {
+      candidates.push({
+        id: currencyByCode.code,
+        displayName: currencyByCode.code,
+        matchingChars: countMatchingChars(name, currencyByCode.code)
+      });
+    }
+
+    // Case-insensitive currency by name
+    for (const currency of currenciesByName) {
+      const bestMatchingChars = Math.max(
+        ...currency.names.map(n => countMatchingChars(name, n)),
+        countMatchingChars(name, currency.code)
+      );
+      candidates.push({
+        id: currency.code,
+        displayName: currency.code,
+        matchingChars: bestMatchingChars
+      });
+    }
+
+    // Select best candidate by similarity
+    if (candidates.length > 0) {
+      candidates.sort((a, b) => b.matchingChars - a.matchingChars);
+      const best = candidates[0];
+      return OldAST.createSimpleUnit(best.id, best.displayName, loc.start, loc.end);
+    }
+  }
+
+  // Fallback: use name as-is
+  return OldAST.createSimpleUnit(name, name, loc.start, loc.end);
+}
+
+/**
+ * Count matching characters between two strings (case-sensitive)
+ */
+function countMatchingChars(a: string, b: string): number {
+  let count = 0;
+  const minLen = Math.min(a.length, b.length);
+  for (let i = 0; i < minLen; i++) {
+    if (a[i] === b[i]) count++;
+  }
+  return count;
+}
+
+/**
+ * Adapt CurrencyUnitNode to SimpleUnit
  */
 function adaptCurrencyUnit(node: NearleyAST.CurrencyUnitNode): OldAST.SimpleUnit {
   const loc = createLocation(node.location, 0);
-  // Currency units are handled as simple units with currency names
-  return OldAST.createSimpleUnit(node.name, node.name, loc.start, loc.end);
+
+  // Resolve currency based on subType
+  let currencyId: string;
+  let displayName: string;
+
+  if (!globalDataLoader) {
+    throw new Error('DataLoader not initialized. Call setDataLoader() before parsing.');
+  }
+
+  if (node.subType === 'symbolAdjacent') {
+    // Check if it's an unambiguous currency (US$, CA$, €, etc.)
+    const unambiguous = globalDataLoader.getCurrencyByAdjacentSymbol(node.name);
+    if (unambiguous) {
+      // Unambiguous currency: resolve to specific currency code
+      currencyId = unambiguous.code;
+      displayName = node.name; // Keep original symbol for display
+    } else {
+      // Ambiguous currency ($, ¥, etc.): use the dimension for the user-defined unit
+      const ambiguous = globalDataLoader.getAmbiguousCurrencyByAdjacentSymbol(node.name);
+      if (ambiguous && ambiguous.dimension) {
+        currencyId = ambiguous.dimension;
+        displayName = node.name; // Keep original symbol for display
+      } else {
+        // Fallback: use the raw symbol value
+        currencyId = node.name;
+        displayName = node.name;
+      }
+    }
+  } else if (node.subType === 'symbolSpaced') {
+    // Spaced symbol (like "USD 100")
+    const currency = globalDataLoader.getCurrencyBySpacedSymbol(node.name);
+    currencyId = currency ? currency.code : node.name;
+    displayName = node.name; // Keep original symbol for display
+  } else {
+    // Fallback: use name as-is
+    currencyId = node.name;
+    displayName = node.name;
+  }
+
+  return OldAST.createSimpleUnit(currencyId, displayName, loc.start, loc.end);
 }
 
 /**
  * Adapt CompositeValueNode to CompositeUnitLiteral
+ * Implements context-aware prime/doublePrime conversion for degree units
  */
 function adaptCompositeValue(node: NearleyAST.CompositeValueNode): OldAST.CompositeUnitLiteral {
   const loc = createLocation(node.location, 0);
+
+  // Track if we've seen a degree unit for context-aware prime conversion
+  let hasDegreeUnit = false;
+
   const components = node.values.map(valueNode => {
     const numericalValue = adaptNumericalValue(valueNode.value);
+
+    // Check if this component has a degree unit
+    const componentHasDegree = valueNode.unit &&
+      valueNode.unit.type === 'Units' &&
+      valueNode.unit.numerators.some(u => {
+        const name = u.unit.name;
+        return name === 'deg' || name === 'degree' || name === 'degrees';
+      });
+
+    // Adapt unit with context (if degree seen, subsequent primes are arcmin/arcsec)
+    const context: AdaptationContext = { hasDegreeUnit };
     const unit = valueNode.unit
-      ? (valueNode.unit.type === 'Units' ? adaptUnits(valueNode.unit) : adaptCurrencyUnit(valueNode.unit))
+      ? (valueNode.unit.type === 'Units' ? adaptUnitsWithContext(valueNode.unit, context) : adaptCurrencyUnit(valueNode.unit))
       : null;
 
     if (!unit) {
       throw new Error('CompositeValue component must have a unit');
+    }
+
+    // Update context for next component
+    if (componentHasDegree) {
+      hasDegreeUnit = true;
     }
 
     return { value: numericalValue.value, unit };
@@ -406,17 +625,94 @@ function adaptInstant(node: NearleyAST.InstantNode): OldAST.Expression {
   const loc = createLocation(node.location, 0);
 
   if ('keyword' in node) {
-    // InstantKeywordNode - map to constant literals
-    return OldAST.createConstantLiteral(node.keyword, loc.start, loc.end);
+    // InstantKeywordNode - map to RelativeInstantExpression
+    // 'now' and 'today' → instant value now (0 seconds)
+    // 'yesterday' → 24 hours ago (1 day ago)
+    // 'tomorrow' → 24 hours from now (1 day from now)
+    const unitMap: Record<string, string> = {
+      'now': 'second',
+      'today': 'second',
+      'yesterday': 'day',
+      'tomorrow': 'day'
+    };
+    const directionMap: Record<string, 'ago' | 'from_now'> = {
+      'now': 'from_now',
+      'today': 'from_now',
+      'yesterday': 'ago',
+      'tomorrow': 'from_now'
+    };
+    const amountMap: Record<string, number> = {
+      'now': 0,
+      'today': 0,
+      'yesterday': 1,
+      'tomorrow': 1
+    };
+
+    const keyword = node.keyword;
+    const unit = unitMap[keyword];
+    const direction = directionMap[keyword];
+    const amount = amountMap[keyword];
+
+    const unitLoc = createLocation(node.location, 0);
+    const timeUnit = OldAST.createSimpleUnit(unit, unit, unitLoc.start, unitLoc.end);
+    const amountExpr = OldAST.createNumberWithUnit(
+      amount,
+      timeUnit,
+      String(amount),
+      loc.start,
+      loc.end
+    );
+
+    return OldAST.createRelativeInstantExpression(amountExpr, direction, loc.start, loc.end);
   }
 
-  // InstantRelativeNode - convert to RelativeInstantExpression
+  // InstantRelativeNode - convert to RelativeInstantExpression or InstantLiteral
   const numericalValue = adaptNumericalValue(node.amount);
+
+  // Resolve unit name to unit ID (e.g., "days" → "day")
+  const unitLoc = createLocation(node.location, 0);
+  let unitId = node.unit;
+  let unitName = node.unit;
+
+  if (globalDataLoader) {
+    // Try exact match first
+    let unitExact = globalDataLoader['unitByCaseSensitiveName']?.get(node.unit);
+
+    // If not found and unit ends with 's', try singular form (handle plurals)
+    if (!unitExact && node.unit.endsWith('s') && node.unit.length > 1) {
+      const singular = node.unit.slice(0, -1);
+      unitExact = globalDataLoader['unitByCaseSensitiveName']?.get(singular);
+    }
+
+    if (unitExact) {
+      unitId = unitExact.id;
+      unitName = unitExact.displayName.symbol;
+    }
+  }
+
+  // For sinceEpoch, create an InstantLiteral with timestamp in milliseconds
+  if (node.direction === 'sinceEpoch') {
+    // Convert the amount to milliseconds based on the unit
+    let timestampMs = numericalValue.value;
+
+    // Convert to milliseconds based on unit (check more specific units first)
+    if (unitId.match(/^(milliseconds?|ms)$/i)) {
+      timestampMs = numericalValue.value;
+    } else if (unitId.match(/^(seconds?|s)$/i)) {
+      timestampMs = numericalValue.value * 1000;
+    } else if (unitId.match(/^(microseconds?|us|μs)$/i)) {
+      timestampMs = numericalValue.value / 1000;
+    } else if (unitId.match(/^(nanoseconds?|ns)$/i)) {
+      timestampMs = numericalValue.value / 1000000;
+    }
+
+    return OldAST.createInstantLiteral(timestampMs, loc.start, loc.end);
+  }
+
+  // For ago and from_now, create RelativeInstantExpression
   const direction = node.direction === 'ago' ? 'ago' : 'from_now';
 
-  // Create a NumberWithUnit for the amount
-  const unitLoc = createLocation(node.location, 0);
-  const timeUnit = OldAST.createSimpleUnit(node.unit, node.unit, unitLoc.start, unitLoc.end);
+  const timeUnit = OldAST.createSimpleUnit(unitId, unitName, unitLoc.start, unitLoc.end);
   const amountExpr = OldAST.createNumberWithUnit(
     numericalValue.value,
     timeUnit,
@@ -458,9 +754,43 @@ function adaptPlainDateTime(node: NearleyAST.PlainDateTimeNode): OldAST.PlainDat
  * Adapt ZonedDateTimeNode to ZonedDateTimeLiteral
  */
 function adaptZonedDateTime(node: NearleyAST.ZonedDateTimeNode): OldAST.ZonedDateTimeLiteral {
-  const dateTime = adaptPlainDateTime(node.dateTime);
-  const timezone = adaptTimezone(node.timezone);
   const loc = createLocation(node.location, 0);
+  const timezone = adaptTimezone(node.timezone);
+
+  // Handle special case: PlainTime + Timezone (subType: 'plainTime')
+  if (node.subType === 'plainTime') {
+    // Create a PlainDateTime by combining the time with today's date
+    // We use the current date at evaluation time
+    const time = adaptPlainTime(node.dateTime.time);
+
+    // Create a PlainDate representing today in the specified timezone.
+    let year = 0, month = 0, day = 0;
+    if (globalDataLoader) {
+      const now = Temporal.Now.zonedDateTimeISO(timezone);
+      year = now.year;
+      month = now.month;
+      day = now.day;
+    } else {
+      const now = new Date();
+      year = now.getFullYear();
+      month = now.getMonth() + 1; // JS months are 0-indexed
+      day = now.getDate();
+    }
+
+    const date = OldAST.createPlainDateLiteral(
+      year,
+      month,
+      day,
+      loc.start,
+      loc.end
+    );
+
+    const dateTime = OldAST.createPlainDateTimeLiteral(date, time, loc.start, loc.end);
+    return OldAST.createZonedDateTimeLiteral(dateTime, timezone, loc.start, loc.end);
+  }
+
+  // Standard case: PlainDateTime + Timezone
+  const dateTime = adaptPlainDateTime(node.dateTime);
   return OldAST.createZonedDateTimeLiteral(dateTime, timezone, loc.start, loc.end);
 }
 
@@ -469,10 +799,10 @@ function adaptZonedDateTime(node: NearleyAST.ZonedDateTimeNode): OldAST.ZonedDat
  */
 function adaptTimezone(node: NearleyAST.TimezoneNode): string {
   if (node.type === 'TimezoneName') {
-    return node.zoneName;
+    return globalDataLoader?.resolveTimezone(node.zoneName) ?? node.zoneName;
   } else {
     // UTCOffsetNode
-    return node.offsetStr;
+    return globalDataLoader?.resolveTimezone(node.offsetStr) ?? node.offsetStr;
   }
 }
 
@@ -495,8 +825,23 @@ function adaptConversionTarget(node: NearleyAST.ConversionTargetNode): OldAST.Co
 
     if (isComposite) {
       // Create CompositeUnitTarget with array of SimpleUnits
+      // Apply context-aware prime/doublePrime conversion for angle units
+      let hasDegreeUnit = false;
       const units = unitsNode.numerators.map(n => {
-        return adaptUnit(n.unit);
+        // Check if this unit is a degree unit
+        const unitName = n.unit.name;
+        const isDegreeUnit = unitName === 'deg' || unitName === 'degree' || unitName === 'degrees' || unitName === '°';
+
+        // Adapt unit with context
+        const context: AdaptationContext = { hasDegreeUnit };
+        const adaptedUnit = adaptUnitWithContext(n.unit, context);
+
+        // Update context for next unit
+        if (isDegreeUnit) {
+          hasDegreeUnit = true;
+        }
+
+        return adaptedUnit;
       });
       return OldAST.createCompositeUnitTarget(units, loc.start, loc.end);
     } else {
@@ -554,6 +899,17 @@ function adaptPresentationFormat(node: NearleyAST.PresentationFormatNode): OldAS
         end: loc.end
       };
 
+    case 'unix':
+      // Handle UnixFormatNode with unit field
+      const unixNode = node as NearleyAST.UnixFormatNode;
+      const isMilliseconds = /^(ms|milliseconds?)$/i.test(unixNode.unit);
+      return {
+        type: 'PresentationTarget',
+        format: isMilliseconds ? 'unixMilliseconds' : 'unix',
+        start: loc.start,
+        end: loc.end
+      };
+
     case 'namedFormat':
       const format = (node as NearleyAST.NamedFormatNode).name;
       return {
@@ -564,7 +920,8 @@ function adaptPresentationFormat(node: NearleyAST.PresentationFormatNode): OldAS
       };
 
     default:
-      // Other presentation formats map directly
+      // ISO 8601, RFC 9557, RFC 2822 fall through here
+      // Pass through as-is (no normalization)
       return {
         type: 'PresentationTarget',
         format: node.format as OldAST.PresentationFormat,

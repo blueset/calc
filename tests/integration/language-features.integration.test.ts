@@ -15,7 +15,7 @@ describe('Integration Tests - Language Features', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader);
+    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
   });
 
   describe('Variables', () => {
@@ -160,7 +160,7 @@ distance to m`;
   describe('Edge Cases', () => {
     it('should handle empty input', () => {
       const result = calculator.calculate('');
-      expect(result.results.length).toBe(0);
+      expect(result.results.length).toBe(1);
       expect(result.errors.lexer.length).toBe(0);
       expect(result.errors.runtime.length).toBe(0);
     });
@@ -178,12 +178,12 @@ distance to m`;
 
     it('should handle very large numbers', () => {
       const result = calculator.calculate('1e100');
-      expect(result.results[0].result).toContain('1e');
+      expect(result.results[0].result).toBe('1e+100');
     });
 
     it('should handle very small numbers', () => {
       const result = calculator.calculate('1e-100');
-      expect(result.results[0].result).toContain('1e');
+      expect(result.results[0].result).toBe('1e-100');
     });
   });
 
@@ -231,13 +231,12 @@ More text here`;
       const input = "\n\n5 + 5\n\n";
       const result = calculator.calculate(input);
 
-      // Should have 4 results: empty, empty, expression, empty
-      // (The template string creates 2 leading newlines)
-      expect(result.results.length).toBe(4);
+      expect(result.results.length).toBe(5);
       expect(result.results[0].type).toBe('EmptyLine');
       expect(result.results[1].type).toBe('EmptyLine');
       expect(result.results[2].result).toBe('10');
       expect(result.results[3].type).toBe('EmptyLine');
+      expect(result.results[4].type).toBe('EmptyLine');
     });
 
     it('should parse single word as valid identifier expression', () => {

@@ -133,7 +133,7 @@ function validateExpression(node: NearleyAST.ExpressionNode, context: PruningCon
     case 'Conversion':
       return (
         validateExpression(node.expression, context) &&
-        validateConversionTarget(node.target, context)
+        validateConversionTarget(node.expression, node.target, context)
       );
 
     case 'BinaryExpression':
@@ -180,11 +180,85 @@ function validateExpression(node: NearleyAST.ExpressionNode, context: PruningCon
  * Validate a conversion target
  */
 function validateConversionTarget(
+  expression: NearleyAST.ExpressionNode,
   target: NearleyAST.ConversionTargetNode,
   context: PruningContext
 ): boolean {
-  // All conversion targets are structurally valid if they parse
+  // Reject conversions of dimensionless values to value with units
+  if (target.type === 'Units') {
+    const unitCount = target.numerators.length + target.denominators.length;
+    const hasUnit = unitCount >= 1;
+
+    if (hasUnit && isDimensionless(expression)) {
+      return false;
+    }
+  }
+
   return true;
+}
+
+/**
+ * Check if an expression is dimensionless (no units attached)
+ */
+function isDimensionless(node: NearleyAST.ExpressionNode): boolean {
+  switch (node.type) {
+    case 'Value':
+      // A Value is dimensionless if it has no unit field, or if it has a Units node with no numerators/denominators
+      if (!node.unit) {
+        return true;
+      }
+      if (node.unit.type === 'Units') {
+        return node.unit.numerators.length === 0 && node.unit.denominators.length === 0;
+      }
+      // Currency units are not dimensionless
+      return false;
+
+    case 'BinaryExpression':
+      // For simplicity, consider binary expressions dimensionful if either operand has dimensions
+      // Full dimensional analysis would require evaluating the operation
+      return isDimensionless(node.left) && isDimensionless(node.right);
+
+    case 'UnaryExpression':
+      return isDimensionless(node.argument);
+
+    case 'PostfixExpression':
+      return isDimensionless(node.argument);
+
+    case 'BooleanLiteral':
+    case 'Variable':
+    case 'Constant':
+      // These could have dimensions depending on their values
+      // Conservative: assume they might have dimensions
+      return false;
+
+    case 'FunctionCall':
+      // Functions can return dimensionful values
+      return false;
+
+    case 'ConditionalExpr':
+      // Could have dimensions from either branch
+      return false;
+
+    case 'Conversion':
+      // Conversions always produce dimensionful results
+      return false;
+
+    case 'CompositeValue':
+      // Composite values are dimensionful
+      return false;
+
+    // Date-time nodes are not dimensionless (they're temporal values)
+    case 'Instant':
+    case 'PlainTime':
+    case 'PlainDate':
+    case 'PlainDateTime':
+    case 'ZonedDateTime':
+      return false;
+
+    default:
+      // Unknown types: conservative, assume dimensionful
+      return false;
+  }
 }
 
 /**

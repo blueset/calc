@@ -503,6 +503,11 @@ export class DataLoader {
    * 4. If multiple matches at same priority, use first match
    */
   resolveTimezone(name: string): string | undefined {
+    if (/^[+-]\d\d:?\d\d$/.test(name)) {
+      // Input is a UTC offset like "+02:00" or "-05:00", return as-is
+      return name;
+    }
+
     const matches = this.timezoneByName.get(name.toLowerCase());
 
     if (!matches || matches.length === 0) {

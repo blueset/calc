@@ -40,7 +40,7 @@ function buildNumberPattern(
   const leadingDigit = `[${digitChars}]`;
   const followingDigitChars = `0${digitChars}`;
   const integerDigitsWithUnderscore = `(?:${leadingDigit}[_${followingDigitChars}]*)`;
-  const fractionDigitsWithUnderscore = `(?:${followingDigitChars}[_${followingDigitChars}]*)`;
+  const fractionDigitsWithUnderscore = `(?:[${followingDigitChars}][_${followingDigitChars}]*)`;
   const optionalIntegerDigits = `(?:${integerDigitsWithUnderscore})?`;
   const optionalFractionDigits = `(?:${fractionDigitsWithUnderscore})?`;
   const exponentialPart = withExponential
@@ -58,7 +58,7 @@ function buildNumberPattern(
     `)` +
     exponentialPart;
   return new RegExp(pattern, "u");
-}
+};
 
 function buildAmPmTimePattern(): RegExp {
   const twelve = `(?:[1-9]|1[0-2])`;
@@ -123,8 +123,6 @@ export const lexer = moo.compile({
   tilde: "~",
   ampersand: "&",
   pipe: "|",
-  lt: "<",
-  gt: ">",
   comma: ",",
   prime: /['′]/u,
   degree: /[°º˚]/u,
@@ -137,6 +135,7 @@ export const lexer = moo.compile({
   ISO8601: /(?:iso|ISO|Iso) ?8601/u,
   RFC9557: /(?:rfc|RFC|Rfc) ?9557/u,
   RFC2822: /(?:rfc|RFC|Rfc) ?2822/u,
+  kw_unix: /(?:unix|Unix|UNIX)\b/u,
 
   identifier: {
     match: /\p{XID_Start}\p{XID_Continue}*/u,
@@ -168,7 +167,6 @@ export const lexer = moo.compile({
           "hexadecimal",
           "decimals",
           "scientific",
-          "unix",
           "fraction",
           // ---
           "now", "yesterday", "today", "tomorrow",
