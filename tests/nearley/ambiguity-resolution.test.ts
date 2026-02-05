@@ -352,11 +352,11 @@ describe('Phase 2: Ambiguity Resolution', () => {
       assert(best.type === 'Value');
       assert(!!best.unit);
       assert(best.unit.type === 'Units');
-      assert(best.unit.numerators.length === 4);
-      assert(best.unit.numerators[0].unit.name === 'pound force');
-      assert(best.unit.numerators[1].unit.name === 'person');
-      assert(best.unit.numerators[2].unit.name === 'hong kong dollar');
-      assert(best.unit.numerators[3].unit.name === 'nautical mile');
+      assert(best.unit.terms.length === 4);
+      assert(best.unit.terms[0].unit.name === 'pound force');
+      assert(best.unit.terms[1].unit.name === 'person');
+      assert(best.unit.terms[2].unit.name === 'hong kong dollar');
+      assert(best.unit.terms[3].unit.name === 'nautical mile');
     });
 
     it('should handle complex units with denominators', () => {
@@ -378,12 +378,12 @@ describe('Phase 2: Ambiguity Resolution', () => {
       assert(best.type === 'Value');
       assert(!!best.unit);
       assert(best.unit.type === 'Units');
-      assert(best.unit.numerators.length === 3);
-      assert(best.unit.denominators.length === 1);
-      assert(best.unit.numerators[0].unit.name === 'pound force');
-      assert(best.unit.numerators[1].unit.name === 'person');
-      assert(best.unit.numerators[2].unit.name === 'hong kong dollar');
-      assert(best.unit.denominators[0].unit.name === 'nautical mile');
+      assert(best.unit.terms.length === 4);
+      assert(best.unit.terms[0].unit.name === 'pound force');
+      assert(best.unit.terms[1].unit.name === 'person');
+      assert(best.unit.terms[2].unit.name === 'hong kong dollar');
+      assert(best.unit.terms[3].unit.name === 'nautical mile');
+      assert(best.unit.terms[3].exponent === -1); // denominator
     });
 
     it('should handle composite units', () => {

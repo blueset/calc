@@ -47,6 +47,13 @@ function optionalUnaryOp(opIndex: number, exprIndex: number) {
   };
 }
 
+function negateExponents(unitWithExpNodes: any[]): any[] {
+  return unitWithExpNodes.map((node: any) => ({
+    ...node,
+    exponent: -node.exponent
+  }));
+}
+
 function parseMonthName(name: string): number | null {
   const months: { [key: string]: number } = {
     'jan': 1, 'january': 1,
@@ -324,21 +331,29 @@ ArgumentList -> Expression ( _ %comma _ Expression ):* {% expandList(3) %}
 
 Units -> UnitsList:* (_ %slash _ UnitsDenominatorList ):+ {%
           (data, location) => {
-            const numerators = data[0]?.flat();
+            const numerators = data[0]?.flat() || [];
             const denominators = data[1].flatMap((item: any) => item[3]);
-            return { type: 'Units', subType: "slashDenominator", numerators, denominators, location };
+            const terms = [
+              ...numerators,
+              ...negateExponents(denominators)
+            ];
+            return { type: 'Units', subType: "slashDenominator", terms, location };
           }
         %}
         | UnitsList:* ( __ %kw_per __ UnitsDenominatorList ):+ {%
           (data, location) => {
-            const numerators = data[0]?.flat();
+            const numerators = data[0]?.flat() || [];
             const denominators = data[1].flatMap((item: any) => item[3]);
-            return { type: 'Units', subType: "perDenominator", numerators, denominators, location };
+            const terms = [
+              ...numerators,
+              ...negateExponents(denominators)
+            ];
+            return { type: 'Units', subType: "perDenominator", terms, location };
           }
         %}
         | UnitsList:+ {%
           (data, location) => {
-            return { type: 'Units', subType: "numerator", numerators: data[0]?.flat(), denominators: [], location };
+            return { type: 'Units', subType: "numerator", terms: data[0]?.flat(), location };
           }
         %}
 

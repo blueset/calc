@@ -129,6 +129,13 @@ function optionalUnaryOp(opIndex: number, exprIndex: number) {
   };
 }
 
+function negateExponents(unitWithExpNodes: any[]): any[] {
+  return unitWithExpNodes.map((node: any) => ({
+    ...node,
+    exponent: -node.exponent
+  }));
+}
+
 function parseMonthName(name: string): number | null {
   const months: { [key: string]: number } = {
     'jan': 1, 'january': 1,
@@ -450,9 +457,13 @@ const grammar: Grammar = {
     {"name": "Units$ebnf$2", "symbols": ["Units$ebnf$2", "Units$ebnf$2$subexpression$2"], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "Units", "symbols": ["Units$ebnf$1", "Units$ebnf$2"], "postprocess": 
         (data, location) => {
-          const numerators = data[0]?.flat();
+          const numerators = data[0]?.flat() || [];
           const denominators = data[1].flatMap((item: any) => item[3]);
-          return { type: 'Units', subType: "slashDenominator", numerators, denominators, location };
+          const terms = [
+            ...numerators,
+            ...negateExponents(denominators)
+          ];
+          return { type: 'Units', subType: "slashDenominator", terms, location };
         }
                 },
     {"name": "Units$ebnf$3", "symbols": []},
@@ -463,16 +474,20 @@ const grammar: Grammar = {
     {"name": "Units$ebnf$4", "symbols": ["Units$ebnf$4", "Units$ebnf$4$subexpression$2"], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "Units", "symbols": ["Units$ebnf$3", "Units$ebnf$4"], "postprocess": 
         (data, location) => {
-          const numerators = data[0]?.flat();
+          const numerators = data[0]?.flat() || [];
           const denominators = data[1].flatMap((item: any) => item[3]);
-          return { type: 'Units', subType: "perDenominator", numerators, denominators, location };
+          const terms = [
+            ...numerators,
+            ...negateExponents(denominators)
+          ];
+          return { type: 'Units', subType: "perDenominator", terms, location };
         }
                 },
     {"name": "Units$ebnf$5", "symbols": ["UnitsList"]},
     {"name": "Units$ebnf$5", "symbols": ["Units$ebnf$5", "UnitsList"], "postprocess": (d) => d[0].concat([d[1]])},
     {"name": "Units", "symbols": ["Units$ebnf$5"], "postprocess": 
         (data, location) => {
-          return { type: 'Units', subType: "numerator", numerators: data[0]?.flat(), denominators: [], location };
+          return { type: 'Units', subType: "numerator", terms: data[0]?.flat(), location };
         }
                 },
     {"name": "UnitsList$ebnf$1", "symbols": []},

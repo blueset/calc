@@ -186,7 +186,7 @@ function validateConversionTarget(
 ): boolean {
   // Reject conversions of dimensionless values to value with units
   if (target.type === 'Units') {
-    const unitCount = target.numerators.length + target.denominators.length;
+    const unitCount = target.terms.length;
     const hasUnit = unitCount >= 1;
 
     if (hasUnit && isDimensionless(expression)) {
@@ -203,12 +203,12 @@ function validateConversionTarget(
 function isDimensionless(node: NearleyAST.ExpressionNode): boolean {
   switch (node.type) {
     case 'Value':
-      // A Value is dimensionless if it has no unit field, or if it has a Units node with no numerators/denominators
+      // A Value is dimensionless if it has no unit field, or if it has a Units node with no terms
       if (!node.unit) {
         return true;
       }
       if (node.unit.type === 'Units') {
-        return node.unit.numerators.length === 0 && node.unit.denominators.length === 0;
+        return node.unit.terms.length === 0;
       }
       // Currency units are not dimensionless
       return false;

@@ -168,8 +168,7 @@ type NumericalValueNode = NumberLiteralNode | PercentageLiteralNode;
 interface UnitsNode<F extends TransformTypeFn = Id> extends Node {
   readonly type: 'Units';
   readonly subType: string;
-  readonly numerators: Apply<F, UnitWithExponentNode[]>;
-  readonly denominators: Apply<F, UnitWithExponentNode[]>;
+  readonly terms: Apply<F, UnitWithExponentNode[]>;
 }
 
 interface UnitWithExponentNode extends Node {

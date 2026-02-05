@@ -577,13 +577,12 @@ describe('Pruner Unit Tests', () => {
           type: 'Units',
           location: 0,
           subType: 'simple',
-          numerators: [{
+          terms: [{
             type: 'UnitWithExponent',
             location: 0,
             unit: { type: 'Unit', location: 0, name: 'm', matched: 'unit' },
             exponent: 1
-          }],
-          denominators: []
+          }]
         };
 
         const candidate: NearleyAST.ConversionNode = {

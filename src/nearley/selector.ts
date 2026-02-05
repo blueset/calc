@@ -86,7 +86,7 @@ function countUnitTerms(node: any): number {
 
   // Count units in UnitsNode
   if (node.type === 'Units') {
-    count += node.numerators.length + node.denominators.length;
+    count += node.terms.length;
   }
 
   // Recurse into children

@@ -47,13 +47,12 @@ describe('Selector Unit Tests', () => {
         type: 'Units',
         location: 0,
         subType: 'simple',
-        numerators: [{
+        terms: [{
           type: 'UnitWithExponent',
           location: 0,
           unit: { type: 'Unit', location: 0, name: unitName, matched: matched },
           exponent: 1
-        }],
-        denominators: []
+        }]
       };
     }
 
@@ -83,18 +82,20 @@ describe('Selector Unit Tests', () => {
       type: 'Units',
       location: 0,
       subType: 'derived',
-      numerators: numerators.map(name => ({
-        type: 'UnitWithExponent',
-        location: 0,
-        unit: { type: 'Unit', location: 0, name, matched: 'unit' },
-        exponent: 1
-      })),
-      denominators: denominators.map(name => ({
-        type: 'UnitWithExponent',
-        location: 0,
-        unit: { type: 'Unit', location: 0, name, matched: 'unit' },
-        exponent: 1
-      }))
+      terms: [
+        ...numerators.map(name => ({
+          type: 'UnitWithExponent' as const,
+          location: 0,
+          unit: { type: 'Unit' as const, location: 0, name, matched: 'unit' as const },
+          exponent: 1
+        })),
+        ...denominators.map(name => ({
+          type: 'UnitWithExponent' as const,
+          location: 0,
+          unit: { type: 'Unit' as const, location: 0, name, matched: 'unit' as const },
+          exponent: -1  // NEGATED for denominators
+        }))
+      ]
     };
 
     return {
@@ -164,13 +165,12 @@ describe('Selector Unit Tests', () => {
       type: 'Units',
       location: 0,
       subType: unitNames.length > 1 ? 'composite' : 'simple',
-      numerators: unitNames.map(name => ({
+      terms: unitNames.map(name => ({
         type: 'UnitWithExponent',
         location: 0,
         unit: { type: 'Unit', location: 0, name, matched: 'unit' },
         exponent: 1
-      })),
-      denominators: []
+      }))
     };
   }
 

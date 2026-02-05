@@ -340,24 +340,15 @@ function adaptUnits(node: NearleyAST.UnitsNode): OldAST.UnitExpression {
 function adaptUnitsWithContext(node: NearleyAST.UnitsNode, context: AdaptationContext): OldAST.UnitExpression {
   const loc = createLocation(node.location, 0);
 
-  // Collect all terms with signed exponents
+  // Collect all terms (already have signed exponents from grammar)
   const terms: OldAST.UnitTerm[] = [];
 
-  // Add numerators (positive exponents)
-  for (const unitWithExp of node.numerators) {
+  // Terms already have correct signed exponents (negative for denominators)
+  for (const unitWithExp of node.terms) {
     const simpleUnit = adaptUnitWithContext(unitWithExp.unit, context);
     terms.push({
       unit: simpleUnit,
-      exponent: unitWithExp.exponent
-    });
-  }
-
-  // Add denominators (negative exponents)
-  for (const unitWithExp of node.denominators) {
-    const simpleUnit = adaptUnitWithContext(unitWithExp.unit, context);
-    terms.push({
-      unit: simpleUnit,
-      exponent: -unitWithExp.exponent
+      exponent: unitWithExp.exponent,
     });
   }
 
@@ -554,7 +545,7 @@ function adaptCompositeValue(node: NearleyAST.CompositeValueNode): OldAST.Compos
     // Check if this component has a degree unit
     const componentHasDegree = valueNode.unit &&
       valueNode.unit.type === 'Units' &&
-      valueNode.unit.numerators.some(u => {
+      valueNode.unit.terms.some((u) => {
         const name = u.unit.name;
         return name === 'deg' || name === 'degree' || name === 'degrees';
       });
@@ -815,19 +806,18 @@ function adaptConversionTarget(node: NearleyAST.ConversionTargetNode): OldAST.Co
     const loc = createLocation(node.location, 0);
 
     // Detect if this should be a CompositeUnitTarget vs UnitTarget (derived unit)
-    // CompositeUnitTarget: multiple simple units with exponent 1, no denominators
+    // CompositeUnitTarget: multiple simple units with exponent 1, no negative exponents
     // Example: "ft in" → CompositeUnitTarget([ft, in])
     // UnitTarget: single unit or derived unit
     // Example: "km/h" → UnitTarget(DerivedUnit)
-    const isComposite = unitsNode.numerators.length > 1 &&
-                        unitsNode.denominators.length === 0 &&
-                        unitsNode.numerators.every(n => n.exponent === 1);
+    const isComposite = unitsNode.terms.length > 1 &&
+                        unitsNode.terms.every((n) => n.exponent === 1);
 
     if (isComposite) {
       // Create CompositeUnitTarget with array of SimpleUnits
       // Apply context-aware prime/doublePrime conversion for angle units
       let hasDegreeUnit = false;
-      const units = unitsNode.numerators.map(n => {
+      const units = unitsNode.terms.map((n) => {
         // Check if this unit is a degree unit
         const unitName = n.unit.name;
         const isDegreeUnit = unitName === 'deg' || unitName === 'degree' || unitName === 'degrees' || unitName === '°';

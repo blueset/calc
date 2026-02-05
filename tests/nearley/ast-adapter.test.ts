@@ -371,7 +371,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -381,8 +381,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'symbol'
               },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -420,7 +419,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 3,
             subType: 'derived',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 3,
               unit: {
@@ -430,8 +429,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'symbol'
               },
               exponent: 1
-            }],
-            denominators: [{
+            },{
               type: 'UnitWithExponent',
               location: 5,
               unit: {
@@ -440,7 +438,7 @@ describe('AST Adapter Unit Tests', () => {
                 name: 's',
                 matched: 'symbol'
               },
-              exponent: 1
+              exponent: -1
             }]
           }
         };
@@ -574,7 +572,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -584,8 +582,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'symbol'
               },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -617,7 +614,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'derived',
-            numerators: [
+            terms: [
               {
                 type: 'UnitWithExponent',
                 location: 2,
@@ -640,8 +637,7 @@ describe('AST Adapter Unit Tests', () => {
                 },
                 exponent: 1
               }
-            ],
-            denominators: []
+            ]
           }
         };
 
@@ -675,7 +671,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'derived',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -685,8 +681,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'symbol'
               },
               exponent: 1
-            }],
-            denominators: [{
+            },{
               type: 'UnitWithExponent',
               location: 4,
               unit: {
@@ -695,7 +690,7 @@ describe('AST Adapter Unit Tests', () => {
                 name: 's',
                 matched: 'symbol'
               },
-              exponent: 1
+              exponent: -1
             }]
           }
         };
@@ -730,7 +725,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'derived',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -740,8 +735,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'symbol'
               },
               exponent: 2
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -773,8 +767,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'derived',
-            numerators: [],
-            denominators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -783,7 +776,7 @@ describe('AST Adapter Unit Tests', () => {
                 name: 's',
                 matched: 'symbol'
               },
-              exponent: 1
+              exponent: -1
             }]
           }
         };
@@ -837,8 +830,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [],
-            denominators: []
+            terms: []
           }
         };
 
@@ -871,7 +863,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -881,8 +873,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'symbol'
               },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -900,7 +891,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -910,8 +901,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'symbol'
               },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -950,7 +940,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -960,8 +950,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'identifier'
               },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -993,7 +982,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -1003,8 +992,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'symbol'
               },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -1035,7 +1023,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: {
@@ -1045,8 +1033,7 @@ describe('AST Adapter Unit Tests', () => {
                 matched: 'symbol'
               },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -1084,7 +1071,7 @@ describe('AST Adapter Unit Tests', () => {
                 type: 'Units',
                 location: 2,
                 subType: 'simple',
-                numerators: [{
+                terms: [{
                   type: 'UnitWithExponent',
                   location: 2,
                   unit: {
@@ -1094,8 +1081,7 @@ describe('AST Adapter Unit Tests', () => {
                     matched: 'symbol'
                   },
                   exponent: 1
-                }],
-                denominators: []
+                }]
               }
             },
             {
@@ -1112,7 +1098,7 @@ describe('AST Adapter Unit Tests', () => {
                 type: 'Units',
                 location: 8,
                 subType: 'simple',
-                numerators: [{
+                terms: [{
                   type: 'UnitWithExponent',
                   location: 8,
                   unit: {
@@ -1122,8 +1108,7 @@ describe('AST Adapter Unit Tests', () => {
                     matched: 'symbol'
                   },
                   exponent: 1
-                }],
-                denominators: []
+                }]
               }
             }
           ]
@@ -1163,7 +1148,7 @@ describe('AST Adapter Unit Tests', () => {
                 type: 'Units',
                 location: 2,
                 subType: 'simple',
-                numerators: [{
+                terms: [{
                   type: 'UnitWithExponent',
                   location: 2,
                   unit: {
@@ -1173,8 +1158,7 @@ describe('AST Adapter Unit Tests', () => {
                     matched: 'symbol'
                   },
                   exponent: 1
-                }],
-                denominators: []
+                }]
               }
             },
             {
@@ -1191,7 +1175,7 @@ describe('AST Adapter Unit Tests', () => {
                 type: 'Units',
                 location: 9,
                 subType: 'simple',
-                numerators: [{
+                terms: [{
                   type: 'UnitWithExponent',
                   location: 9,
                   unit: {
@@ -1201,8 +1185,7 @@ describe('AST Adapter Unit Tests', () => {
                     matched: 'symbol'
                   },
                   exponent: 1
-                }],
-                denominators: []
+                }]
               }
             }
           ]
@@ -1277,13 +1260,12 @@ describe('AST Adapter Unit Tests', () => {
                 type: 'Units',
                 location: 2,
                 subType: 'simple',
-                numerators: [{
+                terms: [{
                   type: 'UnitWithExponent',
                   location: 2,
                   unit: { type: 'Unit', location: 2, name: 'ft', matched: 'symbol' },
                   exponent: 1
-                }],
-                denominators: []
+                }]
               }
             },
             {
@@ -1300,13 +1282,12 @@ describe('AST Adapter Unit Tests', () => {
                 type: 'Units',
                 location: 7,
                 subType: 'simple',
-                numerators: [{
+                terms: [{
                   type: 'UnitWithExponent',
                   location: 7,
                   unit: { type: 'Unit', location: 7, name: 'in', matched: 'symbol' },
                   exponent: 1
-                }],
-                denominators: []
+                }]
               }
             },
             {
@@ -1323,13 +1304,12 @@ describe('AST Adapter Unit Tests', () => {
                 type: 'Units',
                 location: 12,
                 subType: 'simple',
-                numerators: [{
+                terms: [{
                   type: 'UnitWithExponent',
                   location: 12,
                   unit: { type: 'Unit', location: 12, name: 'mm', matched: 'symbol' },
                   exponent: 1
-                }],
-                denominators: []
+                }]
               }
             }
           ]
@@ -1652,13 +1632,12 @@ describe('AST Adapter Unit Tests', () => {
                 type: 'Units',
                 location: 3,
                 subType: 'simple',
-                numerators: [{
+                terms: [{
                   type: 'UnitWithExponent',
                   location: 3,
                   unit: { type: 'Unit', location: 3, name: 'm', matched: 'symbol' },
                   exponent: 1
-                }],
-                denominators: []
+                }]
               }
             },
             operator: nearleyOp,
@@ -1666,13 +1645,12 @@ describe('AST Adapter Unit Tests', () => {
               type: 'Units',
               location: 8,
               subType: 'simple',
-              numerators: [{
+              terms: [{
                 type: 'UnitWithExponent',
                 location: 8,
                 unit: { type: 'Unit', location: 8, name: 'ft', matched: 'symbol' },
                 exponent: 1
-              }],
-              denominators: []
+              }]
             }
           };
 
@@ -1695,13 +1673,12 @@ describe('AST Adapter Unit Tests', () => {
               type: 'Units',
               location: 4,
               subType: 'simple',
-              numerators: [{
+              terms: [{
                 type: 'UnitWithExponent',
                 location: 4,
                 unit: { type: 'Unit', location: 4, name: 'km', matched: 'symbol' },
                 exponent: 1
-              }],
-              denominators: []
+              }]
             }
           },
           operator: 'arrow',
@@ -1709,13 +1686,12 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 9,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 9,
               unit: { type: 'Unit', location: 9, name: 'mi', matched: 'symbol' },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -1747,13 +1723,12 @@ describe('AST Adapter Unit Tests', () => {
               type: 'Units',
               location: 4,
               subType: 'simple',
-              numerators: [{
+              terms: [{
                 type: 'UnitWithExponent',
                 location: 4,
                 unit: { type: 'Unit', location: 4, name: 'cm', matched: 'symbol' },
                 exponent: 1
-              }],
-              denominators: []
+              }]
             }
           },
           operator: 'kw_to',
@@ -1761,13 +1736,12 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 10,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 10,
               unit: { type: 'Unit', location: 10, name: 'm', matched: 'symbol' },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -1793,13 +1767,12 @@ describe('AST Adapter Unit Tests', () => {
               type: 'Units',
               location: 3,
               subType: 'simple',
-              numerators: [{
+              terms: [{
                 type: 'UnitWithExponent',
                 location: 3,
                 unit: { type: 'Unit', location: 3, name: 'mph', matched: 'symbol' },
                 exponent: 1
-              }],
-              denominators: []
+              }]
             }
           },
           operator: 'kw_to',
@@ -1807,17 +1780,16 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 10,
             subType: 'derived',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 10,
               unit: { type: 'Unit', location: 10, name: 'm', matched: 'symbol' },
               exponent: 1
-            }],
-            denominators: [{
+            },{
               type: 'UnitWithExponent',
               location: 12,
               unit: { type: 'Unit', location: 12, name: 's', matched: 'symbol' },
-              exponent: 1
+              exponent: -1
             }]
           }
         };
@@ -1844,13 +1816,12 @@ describe('AST Adapter Unit Tests', () => {
               type: 'Units',
               location: 4,
               subType: 'simple',
-              numerators: [{
+              terms: [{
                 type: 'UnitWithExponent',
                 location: 4,
                 unit: { type: 'Unit', location: 4, name: 'cm', matched: 'symbol' },
                 exponent: 1
-              }],
-              denominators: []
+              }]
             }
           },
           operator: 'kw_to',
@@ -1858,7 +1829,7 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 10,
             subType: 'composite',
-            numerators: [
+            terms: [
               {
                 type: 'UnitWithExponent',
                 location: 10,
@@ -1871,8 +1842,7 @@ describe('AST Adapter Unit Tests', () => {
                 unit: { type: 'Unit', location: 13, name: 'in', matched: 'symbol' },
                 exponent: 1
               }
-            ],
-            denominators: []
+            ]
           }
         };
 
@@ -1894,7 +1864,7 @@ describe('AST Adapter Unit Tests', () => {
           type: 'Units',
           location: 0,
           subType: 'composite',
-          numerators: [
+          terms: [
             {
               type: 'UnitWithExponent',
               location: 0,
@@ -1907,8 +1877,7 @@ describe('AST Adapter Unit Tests', () => {
               unit: { type: 'Unit', location: 3, name: 'in', matched: 'symbol' },
               exponent: 1
             }
-          ],
-          denominators: []
+          ]
         };
 
         // Test derived detection (has exponent != 1)
@@ -1916,18 +1885,17 @@ describe('AST Adapter Unit Tests', () => {
           type: 'Units',
           location: 0,
           subType: 'derived',
-          numerators: [{
+          terms: [{
             type: 'UnitWithExponent',
             location: 0,
             unit: { type: 'Unit', location: 0, name: 'm', matched: 'symbol' },
             exponent: 2
-          }],
-          denominators: []
+          }]
         };
 
         // These would be used in conversions - the adapter distinguishes them correctly
-        expect(compositeTarget.numerators.length).toBe(2);
-        expect(derivedTarget.numerators[0].exponent).toBe(2);
+        expect(compositeTarget.terms.length).toBe(2);
+        expect(derivedTarget.terms[0].exponent).toBe(2);
       });
 
       it('should adapt presentation format targets', () => {
@@ -2725,13 +2693,12 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: { type: 'Unit', location: 2, name: 'unknownUnit', matched: 'identifier' },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -2815,13 +2782,12 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: { type: 'Unit', location: 2, name: 'm', matched: 'symbol' },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -2844,13 +2810,12 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: { type: 'Unit', location: 2, name: 'customUnit123', matched: 'identifier' },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -2872,13 +2837,12 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: { type: 'Unit', location: 2, name: 'pg', matched: 'symbol' },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 
@@ -2890,13 +2854,12 @@ describe('AST Adapter Unit Tests', () => {
             type: 'Units',
             location: 2,
             subType: 'simple',
-            numerators: [{
+            terms: [{
               type: 'UnitWithExponent',
               location: 2,
               unit: { type: 'Unit', location: 2, name: 'Pg', matched: 'symbol' },
               exponent: 1
-            }],
-            denominators: []
+            }]
           }
         };
 

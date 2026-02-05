@@ -25,7 +25,7 @@ describe("merger", () => {
           unit: {
             type: "Units",
             subType: "slashDenominator",
-            numerators: [
+            terms: [
               {
                 type: "UnitWithExponent",
                 unit: {
@@ -59,8 +59,6 @@ describe("merger", () => {
                 exponent: 1,
                 location: 6,
               },
-            ],
-            denominators: [
               {
                 type: "UnitWithExponent",
                 unit: {
@@ -69,7 +67,7 @@ describe("merger", () => {
                   matched: "identifier",
                   location: 8,
                 },
-                exponent: 1,
+                exponent: -1,
                 location: 8,
               },
             ],
@@ -89,7 +87,7 @@ describe("merger", () => {
           unit: {
             type: "Units",
             subType: "slashDenominator",
-            numerators: [
+            terms: [
               {
                 type: "UnitWithExponent",
                 unit: {
@@ -101,8 +99,6 @@ describe("merger", () => {
                 exponent: 1,
                 location: 2,
               },
-            ],
-            denominators: [
               {
                 type: "UnitWithExponent",
                 unit: {
@@ -111,7 +107,7 @@ describe("merger", () => {
                   matched: "identifier",
                   location: 8,
                 },
-                exponent: 1,
+                exponent: -1,
                 location: 8,
               },
             ],
@@ -134,7 +130,7 @@ describe("merger", () => {
             unit: {
               type: "Units",
               subType: "numerator",
-              numerators: [
+              terms: [
                 {
                   type: "UnitWithExponent",
                   unit: {
@@ -147,7 +143,6 @@ describe("merger", () => {
                   location: 2,
                 },
               ],
-              denominators: [],
               location: 2,
             },
             location: 0,
@@ -170,7 +165,7 @@ describe("merger", () => {
             unit: {
               type: "Units",
               subType: "numerator",
-              numerators: [
+              terms: [
                 {
                   type: "UnitWithExponent",
                   unit: {
@@ -205,7 +200,6 @@ describe("merger", () => {
                   location: 6,
                 },
               ],
-              denominators: [],
               location: 2,
             },
             location: 0,
@@ -233,7 +227,7 @@ describe("merger", () => {
               type: "Units",
               subType: "slashDenominator",
               location: 2,
-              numerators: [
+              terms: [
                 [
                   {
                     type: "UnitWithExponent",
@@ -268,6 +262,17 @@ describe("merger", () => {
                     exponent: 1,
                     location: 6,
                   },
+                  {
+                    type: "UnitWithExponent",
+                    unit: {
+                      type: "Unit",
+                      name: "compensation",
+                      matched: "identifier",
+                      location: 8,
+                    },
+                    exponent: -1,
+                    location: 8,
+                  },
                 ],
                 [
                   {
@@ -281,10 +286,6 @@ describe("merger", () => {
                     exponent: 1,
                     location: 2,
                   },
-                ],
-              ],
-              denominators: [
-                [
                   {
                     type: "UnitWithExponent",
                     unit: {
@@ -293,7 +294,7 @@ describe("merger", () => {
                       matched: "identifier",
                       location: 8,
                     },
-                    exponent: 1,
+                    exponent: -1,
                     location: 8,
                   },
                 ],
@@ -323,7 +324,7 @@ describe("merger", () => {
                   type: "Units",
                   subType: "numerator",
                   location: 2,
-                  numerators: [
+                  terms: [
                     [
                       {
                         type: "UnitWithExponent",
@@ -373,7 +374,6 @@ describe("merger", () => {
                       },
                     ],
                   ],
-                  denominators: [[]],
                 },
               ],
             },
