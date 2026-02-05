@@ -144,7 +144,7 @@ describe('Selector Unit Tests', () => {
    */
   function createConversion(
     expression: NearleyAST.ExpressionNode,
-    operator: 'to' | 'in',
+    operator: 'kw_to' | 'kw_in',
     target: NearleyAST.ConversionTargetNode
   ): NearleyAST.ConversionNode {
     return {
@@ -460,7 +460,7 @@ describe('Selector Unit Tests', () => {
         // One conversion (Rule 5 score = 2000 / 1 = 2000)
         const oneConv = createConversion(
           createValue('42', 'km'),
-          'to',
+          'kw_to',
           createUnits(['m'])
         );
         const oneConvScore = scoreCandidate(oneConv, context);
@@ -469,10 +469,10 @@ describe('Selector Unit Tests', () => {
         const twoConv = createConversion(
           createConversion(
             createValue('42', 'km'),
-            'to',
+            'kw_to',
             createUnits(['m'])
           ),
-          'in',
+          'kw_in',
           createUnits(['cm'])
         );
         const twoConvScore = scoreCandidate(twoConv, context);
@@ -499,7 +499,7 @@ describe('Selector Unit Tests', () => {
         // Parse 2: Actual conversion - "10 in" converted to "cm"
         const withConv = createConversion(
           createValue('10', 'in'),
-          'to',
+          'kw_to',
           createUnits(['cm'])
         );
         const withConvScore = scoreCandidate(withConv, context);
@@ -521,10 +521,10 @@ describe('Selector Unit Tests', () => {
         const nested = createConversion(
           createConversion(
             createValue('5', 'km'),
-            'to',
+            'kw_to',
             createUnits(['m'])
           ),
-          'in',
+          'kw_in',
           createUnits(['cm'])
         );
         const nestedScore = scoreCandidate(nested, context);
@@ -533,7 +533,7 @@ describe('Selector Unit Tests', () => {
         // "5 km to [m in cm]"
         const composite = createConversion(
           createValue('5', 'km'),
-          'to',
+          'kw_to',
           createUnits(['m', 'in', 'cm'])
         );
         const compositeScore = scoreCandidate(composite, context);
@@ -798,7 +798,7 @@ describe('Selector Unit Tests', () => {
       it('should count one conversion in simple conversion', () => {
         const oneConv = createConversion(
           createValue('5', 'km'),
-          'to',
+          'kw_to',
           createUnits(['m'])
         );
         const count = countConversions(oneConv);
@@ -810,10 +810,10 @@ describe('Selector Unit Tests', () => {
         const nested = createConversion(
           createConversion(
             createValue('5', 'km'),
-            'to',
+            'kw_to',
             createUnits(['m'])
           ),
-          'in',
+          'kw_in',
           createUnits(['cm'])
         );
         const count = countConversions(nested);
@@ -1116,10 +1116,10 @@ describe('Selector Unit Tests', () => {
         const nested = createConversion(
           createConversion(
             createValue('5', 'km'),
-            'to',
+            'kw_to',
             createUnits(['m'])
           ),
-          'in',
+          'kw_in',
           createUnits(['cm'])
         );
         const nestedScore = scoreCandidate(nested, context);
@@ -1128,7 +1128,7 @@ describe('Selector Unit Tests', () => {
         // Result: "5 000 m 0 in 0 cm" (1 conversion, 4 unit terms: km, m, in, cm)
         const composite = createConversion(
           createValue('5', 'km'),
-          'to',
+          'kw_to',
           createUnits(['m', 'in', 'cm'])
         );
         const compositeScore = scoreCandidate(composite, context);

@@ -9,7 +9,7 @@ describe('Calculator - Error Recording Integration', () => {
   beforeAll(async () => {
     dataLoader = new DataLoader();
     dataLoader.load();
-    calculator = new Calculator(dataLoader, {}, true);
+    calculator = new Calculator(dataLoader, {});
   });
 
   describe('Lexer Error Recording', () => {
@@ -256,10 +256,10 @@ x + y`;
       expect(result.results.length).toBeGreaterThanOrEqual(2);
       expect(result.results[0].result).toBe('4');
       expect(result.results[0].hasError).toBe(false);
-      // Second line has a lexer error
-      const errorLine = result.results.find((r, idx) => r.hasError && result.errors.lexer.some(e => e.start.line === idx + 1));
+      // Second line has a parser error
+      const errorLine = result.results.find((r, idx) => r.hasError && result.errors.parser.some(e => e.line === idx + 1));
       expect(errorLine).toBeDefined();
-      expect(result.errors.lexer.length).toBeGreaterThanOrEqual(1);
+      expect(result.errors.parser.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should handle runtime errors', () => {
@@ -306,7 +306,7 @@ some_text
     it('should apply precision settings', () => {
       const customCalculator = new Calculator(dataLoader, {
         precision: 4,
-      }, true);
+      });
 
       const input = '1 / 3';
       const result = customCalculator.calculate(input);
@@ -318,7 +318,7 @@ some_text
       const customCalculator = new Calculator(dataLoader, {
         precision: 2,
         unitDisplayStyle: 'name'
-      }, true);
+      });
 
       const input = '5 m';
       const result = customCalculator.calculate(input);

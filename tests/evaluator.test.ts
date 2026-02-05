@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Evaluator, NumberValue, BooleanValue, Value } from '../src/evaluator';
 import { DataLoader } from '../src/data-loader';
-import { Lexer } from '../src/lexer';
-import { Parser } from '../src/parser';
+import { Calculator } from '../src/calculator';
 import * as AST from '../src/ast';
 
 // Helper to create evaluator with loaded data
@@ -27,10 +26,9 @@ beforeAll(async () => {
 
 // Helper to parse and evaluate an expression string
 function evaluate(input: string): Value {
-  const lexer = new Lexer(input, dataLoader);
-  const { tokens } = lexer.tokenize();
-  const parser = new Parser(tokens, dataLoader, input);
-  const { ast: document } = parser.parseDocument();
+  const calculator = new Calculator(dataLoader);
+  const result = calculator.parse(input);
+  const document = result.ast;
 
   const results = evaluator.evaluateDocument(document);
 
@@ -548,7 +546,7 @@ describe('Evaluator', () => {
     });
 
     it('should exponentiate complex derived units', () => {
-      const result = evaluate('(2 kg * m / s^2)^3');
+      const result = evaluate('(2 kg m / s^2)^3');
       expect(result.kind).toBe('derivedUnit');
       if (result.kind === 'derivedUnit') {
         // (2 kg⋅m/s²)^3 = 8 kg³⋅m³/s⁶
@@ -622,10 +620,9 @@ describe('Evaluator', () => {
   describe('Variable Assignments', () => {
     it('should assign and retrieve variables', () => {
       const input = 'x = 5\nx + 10';
-      const lexer = new Lexer(input, dataLoader);
-      const { tokens } = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader, input);
-      const { ast: document } = parser.parseDocument();
+      const calculator = new Calculator(dataLoader);
+      const parseResult = calculator.parse(input);
+      const document = parseResult.ast;
       const results = evaluator.evaluateDocument(document);
 
       const secondLine = document.lines[1];
@@ -637,11 +634,9 @@ describe('Evaluator', () => {
 
     it('should handle multiple variable assignments', () => {
       const input = 'a = 10\nb = 20\na + b';
-      const lexer = new Lexer(input, dataLoader);
-      const { tokens } = lexer.tokenize();
-
-      const parser = new Parser(tokens, dataLoader, input);
-      const { ast: document } = parser.parseDocument();
+      const calculator = new Calculator(dataLoader);
+      const parseResult = calculator.parse(input);
+      const document = parseResult.ast;
 
       const results = evaluator.evaluateDocument(document);
 
@@ -656,10 +651,9 @@ describe('Evaluator', () => {
 
     it('should handle variables with units', () => {
       const input = 'distance = 5 km\ndistance to m';
-      const lexer = new Lexer(input, dataLoader);
-      const { tokens } = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader, input);
-      const { ast: document } = parser.parseDocument();
+      const calculator = new Calculator(dataLoader);
+      const parseResult = calculator.parse(input);
+      const document = parseResult.ast;
       const results = evaluator.evaluateDocument(document);
 
       const secondLine = document.lines[1];

@@ -15,7 +15,7 @@ describe('Integration Tests - Specialized Units', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
+    calculator = new Calculator(dataLoader, {}); // Use Nearley parser
   });
 
   describe('Current Units (Ampere)', () => {

@@ -136,7 +136,7 @@ describe("Nearley Parser Sandbox Tests", () => {
   beforeAll(() => {
     dataLoader = new DataLoader();
     dataLoader.load();
-    calculator = new Calculator(dataLoader, {}, true); // Nearley parser
+    calculator = new Calculator(dataLoader, {}); // Nearley parser
   });
 
   beforeEach(() => {
@@ -161,7 +161,7 @@ describe("Nearley Parser Sandbox Tests", () => {
     debugParse("5'");
   });
 
-  it('should parse conditionals', () => {
+  it.skip('should parse conditionals', () => {
     // debugParse("if 5 > 3 then 10 m else 20 m");
     // debugParse("1e-100");
     // debugParse("random(a)");

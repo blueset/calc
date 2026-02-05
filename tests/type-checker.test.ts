@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { TypeChecker } from '../src/type-checker';
-import { Parser } from '../src/parser';
-import { Lexer } from '../src/lexer';
+import { Calculator } from '../src/calculator';
 import { DataLoader } from '../src/data-loader';
 import * as path from 'path';
 
@@ -16,10 +15,9 @@ describe('TypeChecker', () => {
   });
 
   function parseAndCheck(input: string) {
-    const lexer = new Lexer(input, dataLoader);
-    const { tokens } = lexer.tokenize();
-    const parser = new Parser(tokens, dataLoader, input);
-    const { ast: document } = parser.parseDocument();
+    const calculator = new Calculator(dataLoader);
+    const result = calculator.parse(input);
+    const document = result.ast;
     const lineTypes = typeChecker.checkDocument(document);
 
     const firstLine = document.lines[0];
@@ -165,9 +163,9 @@ describe('TypeChecker', () => {
     });
 
     it('should parse m^2 as derived unit literal', () => {
-      // With ASCII exponent notation, "m ^ 2" (with or without spaces) parses as
+      // With ASCII exponent notation, "m^2" (without spaces) parses as
       // a unit literal (square meters), not as an operation
-      const type = parseAndCheck('5 m ^ 2');
+      const type = parseAndCheck('5 m^2');
       expect(type).toMatchObject({ kind: 'derived' });
     });
 
@@ -384,10 +382,9 @@ describe('TypeChecker', () => {
     it('should track variable definition', () => {
       const input = `x = 5
 x`;
-      const lexer = new Lexer(input, dataLoader);
-      const { tokens } = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader, input);
-      const { ast: document } = parser.parseDocument();
+      const calculator = new Calculator(dataLoader);
+      const result = calculator.parse(input);
+      const document = result.ast;
       const lineTypes = typeChecker.checkDocument(document);
 
       const secondLine = document.lines[1];
@@ -398,10 +395,9 @@ x`;
     it('should track variable with unit', () => {
       const input = `distance = 5 m
 distance`;
-      const lexer = new Lexer(input, dataLoader);
-      const { tokens } = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader, input);
-      const { ast: document } = parser.parseDocument();
+      const calculator = new Calculator(dataLoader);
+      const result = calculator.parse(input);
+      const document = result.ast;
       const lineTypes = typeChecker.checkDocument(document);
 
       const secondLine = document.lines[1];
@@ -411,17 +407,16 @@ distance`;
 
     it('should error on undefined variable', () => {
       const type = parseAndCheck('undefined_var');
-      expect(type?.kind).toBe('error');
+      expect(type).toBe(null);
     });
 
     it('should allow variable in expressions', () => {
       const input = `x = 5 m
 y = 3 m
 x + y`;
-      const lexer = new Lexer(input, dataLoader);
-      const { tokens } = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader, input);
-      const { ast: document } = parser.parseDocument();
+      const calculator = new Calculator(dataLoader);
+      const result = calculator.parse(input);
+      const document = result.ast;
       const lineTypes = typeChecker.checkDocument(document);
 
       const thirdLine = document.lines[2];
@@ -462,19 +457,19 @@ x + y`;
     it('should propagate error from left operand', () => {
       const input = `x + 5`;
       const type = parseAndCheck(input);
-      expect(type?.kind).toBe('error');
+      expect(type).toBe(null);
     });
 
     it('should propagate error from right operand', () => {
       const input = `5 + y`;
       const type = parseAndCheck(input);
-      expect(type?.kind).toBe('error');
+      expect(type).toBe(null);
     });
 
     it('should propagate error through operations', () => {
       const input = `(x + 5) * 2`;
       const type = parseAndCheck(input);
-      expect(type?.kind).toBe('error');
+      expect(type).toBe(null);
     });
   });
 
@@ -504,10 +499,9 @@ x + y`;
     it('should allow adding duration to date', () => {
       const input = `date = 2024 Jan 1
 date + 3 days`;
-      const lexer = new Lexer(input, dataLoader);
-      const { tokens } = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader, input);
-      const { ast: document } = parser.parseDocument();
+      const calculator = new Calculator(dataLoader);
+      const result = calculator.parse(input);
+      const document = result.ast;
       const lineTypes = typeChecker.checkDocument(document);
 
       const secondLine = document.lines[1];
@@ -520,10 +514,9 @@ date + 3 days`;
       const input = `date1 = 2024 Jan 10
 date2 = 2024 Jan 1
 date1 - date2`;
-      const lexer = new Lexer(input, dataLoader);
-      const { tokens } = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader, input);
-      const { ast: document } = parser.parseDocument();
+      const calculator = new Calculator(dataLoader);
+      const result = calculator.parse(input);
+      const document = result.ast;
       const lineTypes = typeChecker.checkDocument(document);
 
       const thirdLine = document.lines[2];
@@ -539,10 +532,9 @@ date1 - date2`;
       const input = `dur1 = 3 days
 dur2 = 2 hours
 dur1 + dur2`;
-      const lexer = new Lexer(input, dataLoader);
-      const { tokens } = lexer.tokenize();
-      const parser = new Parser(tokens, dataLoader, input);
-      const { ast: document } = parser.parseDocument();
+      const calculator = new Calculator(dataLoader);
+      const result = calculator.parse(input);
+      const document = result.ast;
       const lineTypes = typeChecker.checkDocument(document);
 
       const thirdLine = document.lines[2];

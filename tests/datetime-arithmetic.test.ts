@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Evaluator, Value, PlainDateValue, PlainTimeValue, PlainDateTimeValue, InstantValue, ZonedDateTimeValue, DurationValue } from '../src/evaluator';
 import { DataLoader } from '../src/data-loader';
-import { Lexer } from '../src/lexer';
-import { Parser } from '../src/parser';
+import { Calculator } from '../src/calculator';
 import * as path from 'path';
 
 /**
@@ -21,10 +20,9 @@ beforeAll(async () => {
 
 // Helper to parse and evaluate an expression string
 function evaluate(input: string): Value {
-  const lexer = new Lexer(input, dataLoader);
-  const { tokens } = lexer.tokenize();
-  const parser = new Parser(tokens, dataLoader, input);
-  const { ast: document } = parser.parseDocument();
+  const calculator = new Calculator(dataLoader);
+  const result = calculator.parse(input);
+  const document = result.ast;
 
   const results = evaluator.evaluateDocument(document);
 

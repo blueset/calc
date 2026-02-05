@@ -15,7 +15,7 @@ describe('Integration Tests - Basic Units', () => {
     dataLoader = new DataLoader();
     dataLoader.load();
 
-    calculator = new Calculator(dataLoader, {}, true); // Use Nearley parser
+    calculator = new Calculator(dataLoader, {}); // Use Nearley parser
 
     // Load mock exchange rates for currency tests
     const mockExchangeRates = {

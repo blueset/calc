@@ -330,7 +330,7 @@ describe('Currency Formatting Tests', () => {
       }
     };
 
-    calculator = new Calculator(dataLoader, { precision: -1 }, true);
+    calculator = new Calculator(dataLoader, { precision: -1 });
     calculator.loadExchangeRates(mockExchangeRates);
   });
 
@@ -351,7 +351,7 @@ describe('Currency Formatting Tests', () => {
     });
 
     it('should honor user precision over currency minorUnits', () => {
-      const calcWithPrecision = new Calculator(dataLoader, { precision: 4 }, true);
+      const calcWithPrecision = new Calculator(dataLoader, { precision: 4 });
       calcWithPrecision.loadExchangeRates({
         date: '2024-01-01',
         usd: { eur: 0.85, jpy: 110.0 }

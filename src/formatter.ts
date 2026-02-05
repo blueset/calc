@@ -997,8 +997,11 @@ export class Formatter {
       case 'ordinal':
         return this.formatOrdinal(value);
       case 'iso8601':
+      case 'ISO 8601':
       case 'rfc9557':
+      case 'RFC 9557':
       case 'rfc2822':
+      case 'RFC 2822':
       case 'unix':
       case 'unixMilliseconds':
         return `Cannot convert ${value} to a date/time format`;

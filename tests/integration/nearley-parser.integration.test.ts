@@ -17,8 +17,8 @@ describe('Nearley Parser Integration', () => {
   });
 
   beforeEach(() => {
-    oldCalculator = new Calculator(dataLoader, {}, false);
-    nearleyCalculator = new Calculator(dataLoader, {}, true);
+    oldCalculator = new Calculator(dataLoader, {});
+    nearleyCalculator = new Calculator(dataLoader, {});
   });
 
   describe('basic arithmetic', () => {

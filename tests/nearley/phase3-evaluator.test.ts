@@ -20,7 +20,7 @@ describe('Phase 3: Evaluator Enhancements', () => {
   });
 
   beforeEach(() => {
-    nearleyCalculator = new Calculator(dataLoader, {}, true); // Nearley parser
+    nearleyCalculator = new Calculator(dataLoader, {}); // Nearley parser
   });
 
   describe('Task 6: Case-Sensitive Unit Resolution', () => {
