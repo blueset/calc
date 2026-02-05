@@ -439,9 +439,10 @@ x + y`;
     it('should reject composite units with different dimensions', () => {
       // This would be caught during parsing, but if it gets through:
       // We'd need to construct an AST with mixed dimensions manually
-      // For now, this test just verifies the basic case works
       const type = parseAndCheck('5 m 3 cm');
       expect(type).toMatchObject({ kind: 'composite', dimension: 'length' });
+      const type2 = parseAndCheck('5 m 3 kg');
+      expect(type2).toMatchObject({ kind: 'error' });
     });
   });
 

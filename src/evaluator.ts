@@ -1602,11 +1602,12 @@ export class Evaluator {
    * Convert value to composite unit
    */
   private convertToCompositeUnit(value: Value, targetUnits: AST.UnitExpression[]): Value {
-    if (value.kind !== 'number') {
+    if (value.kind !== 'number' && value.kind !== 'derivedUnit') {
       return this.createError(`Cannot convert ${value.kind} to composite unit`);
     }
 
-    if (!value.unit) {
+    // For number values, must have a unit
+    if (value.kind === 'number' && !value.unit) {
       return this.createError('Cannot convert dimensionless value to composite unit');
     }
 
@@ -1615,9 +1616,53 @@ export class Evaluator {
       return this.createError('Unknown unit in composite target');
     }
 
+    // Determine if this is a derived unit conversion or composite value conversion
+    // - Composite value: source and all targets have SAME dimension (e.g., 10 m → ft in)
+    // - Derived unit: source dimension equals PRODUCT of target dimensions (e.g., 10 acre → ft in)
+
+    // Extract source terms for dimension computation
+    const sourceTerms = value.kind === 'number'
+      ? [{ unit: value.unit!, exponent: 1 }]
+      : value.terms; // derivedUnit already has terms
+
+    const sourceDimension = this.computeDimension(sourceTerms);
+    const targetDimension = this.computeDimension(resolvedUnits.map(u => ({ unit: u, exponent: 1 })));
+
+    // Check if target is product of dimensions (derived unit conversion)
+    const isDerivedUnitConversion = this.areDimensionsCompatible(sourceDimension, targetDimension);
+
+    // Check if all targets have same dimension as source (composite value conversion)
+    // For number values, compare against value.unit.dimension
+    // For derivedUnit values, check if all terms have same base dimension
+    const isCompositeValueConversion = value.kind === 'number'
+      ? resolvedUnits.every(u => u.dimension === value.unit!.dimension)
+      : false; // derivedUnit cannot be composite value
+
+    if (isDerivedUnitConversion && !isCompositeValueConversion) {
+      // This is a derived unit conversion: e.g., 10 acre (area) → ft in (length×length)
+      // Convert to derived unit representation
+      const derivedUnitExpr: AST.DerivedUnit = {
+        type: 'DerivedUnit',
+        terms: targetUnits.map(unitExpr => ({
+          unit: unitExpr,
+          exponent: 1
+        }) as AST.UnitTerm),
+        start: { line: 0, column: 0, offset: 0 },
+        end: { line: 0, column: 0, offset: 0 }
+      };
+
+      return this.convertToDerivedUnit(value, derivedUnitExpr);
+    }
+
+    // Standard composite value conversion: e.g., 10 m (length) → ft in (length, length)
+    // Only applies to number values (derivedUnit takes the other branch above)
+    if (value.kind !== 'number') {
+      return this.createError(`Cannot convert ${value.kind} to composite unit (internal error)`);
+    }
+
     try {
       const result = this.unitConverter.convertComposite(
-        [{ value: value.value, unitId: value.unit.id }],
+        [{ value: value.value, unitId: value.unit!.id }],
         resolvedUnits.map(u => u.id)
       );
 

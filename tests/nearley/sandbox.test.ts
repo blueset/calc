@@ -221,19 +221,20 @@ describe("Nearley Parser Sandbox Tests", () => {
   });
 
   it.skip("parse units", () => {
-    debugParse("1 A");
-    debugParse("1 hong kong dollar");
-    debugParse("1 newton meter");
-    debugParse("1 pound mile");
-    debugParse("1 pound nautical mile");
-    debugParse("1 pound force nautical mile");
-    debugParse("1000 EUR/person");
     debugParse("1000 pound force person hong kong dollar per nautical mile");
-    debugParse("compenstation = 100 USD");
-    debugParse("1000 EUR/compenstation");
-    debugParse("1000 EUR/km^2/g^-3");
-    debugParse("1000 EUR per km² per g^-3");
-    debugParse("1000 EUR/km^2");
+    debugParse("1000 pound force person hong kong dollar nautical mile");
+    // debugParse("1 A");
+    // debugParse("1 hong kong dollar");
+    // debugParse("1 newton meter");
+    // debugParse("1 pound mile");
+    // debugParse("1 pound nautical mile");
+    // debugParse("1000 EUR/person");
+    // debugParse("1 pound force nautical mile");
+    // debugParse("compensation = 100 USD");
+    // debugParse("1000 hong kong dollar/compensation");
+    // debugParse("1000 EUR/km^2/g^-3");
+    // debugParse("1000 EUR per km² per g^-3");
+    // debugParse("1000 EUR/km^2");
   });
 
   it.skip("parse primes, double primes", () => {

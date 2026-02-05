@@ -338,6 +338,62 @@ export class DataLoader {
   }
 
   /**
+   * Get unit by name with similarity-based fallback.
+   * First tries exact case-sensitive match, then falls back to
+   * case-insensitive match with the most similar casing.
+   *
+   * Example: "PG" has no exact match, but matches "Pg" (petagram)
+   * with 1 matching char vs "pg" (picogram) with 0 matching chars,
+   * so returns petagram.
+   */
+  getUnitByNameWithFallback(name: string): Unit | undefined {
+    // First, try exact case-sensitive match
+    const exactMatch = this.unitByCaseSensitiveName.get(name);
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // No exact match - apply case-insensitive with similarity scoring
+    const candidates = this.unitByCaseInsensitiveName.get(name.toLowerCase());
+    if (!candidates || candidates.length === 0) {
+      return undefined;
+    }
+
+    // If only one candidate, return it
+    if (candidates.length === 1) {
+      return candidates[0];
+    }
+
+    // Multiple candidates - find the one with most similar casing
+    let bestUnit = candidates[0];
+    let bestMatchingChars = 0;
+
+    for (const unit of candidates) {
+      // Find the name variant that matches case-insensitively
+      const matchingName = unit.names.find(n =>
+        n.toLowerCase() === name.toLowerCase()
+      );
+
+      if (matchingName) {
+        // Count matching case characters
+        let matchingChars = 0;
+        for (let i = 0; i < matchingName.length; i++) {
+          if (matchingName[i] === name[i]) {
+            matchingChars++;
+          }
+        }
+
+        if (matchingChars > bestMatchingChars) {
+          bestMatchingChars = matchingChars;
+          bestUnit = unit;
+        }
+      }
+    }
+
+    return bestUnit;
+  }
+
+  /**
    * Get units by case-insensitive name (may return multiple)
    */
   getUnitsByCaseInsensitiveName(name: string): Unit[] {

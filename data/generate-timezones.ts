@@ -776,7 +776,7 @@ async function buildTimezonesDatabase() {
       }
     }
 
-    // 5. Deduplicate names case-insensitively (without cities for now)
+    // 5. Deduplicate names case-insensitively
     const deduped = deduplicateNames(names);
 
     timezones.push({ iana: tz, names: deduped });
