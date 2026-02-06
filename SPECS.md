@@ -1053,6 +1053,7 @@ Conditional expression can be nested and appear in a parts of other expressions.
   - Functions
   - Variables
   - Keywords
+  - etc.
 - Use different colors for different syntax elements.
 
 ## Settings
@@ -1071,3 +1072,11 @@ Support the following settings, and persist them in local storage:
 - Time format: 24-hour/12-hour; default: 24-hour
 - Date time format: `{date} {time}` / `{time} {date}`; default: `{date} {time}`
 - Imperial units: US/UK; default: US
+- Debug mode: on/off; default: off
+
+## Debug mode
+
+When debug mode is on, show:
+
+- visualization of the parsed expression
+- errors encountered during parsing or evaluation

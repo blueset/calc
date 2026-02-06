@@ -9,7 +9,7 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev:nearley": "nodemon --watch src/nearley --ext ne --exec \"nearleyc -o ./src/nearley/grammar.ts ./src/nearley/grammar.ne\""
+    "dev:nearley": "nodemon --watch src/calculator/nearley --ext ne --exec \"nearleyc -o ./src/calculator/nearley/grammar.ts ./src/calculator/nearley/grammar.ne\""
   },
   "devDependencies": {
     "@types/moo": "^0.5.10",
