@@ -2,11 +2,10 @@
  * Formatter - converts evaluation results to formatted strings
  */
 
-import type { Value, NumberValue, DerivedUnitValue, CompositeUnitValue, DateTimeValue, BooleanValue, ErrorValue, PresentationValue } from './evaluator';
+import type { Value, NumberValue, DerivedUnitValue, CompositeUnitValue, DateTimeValue, BooleanValue, ErrorValue, PresentationValue, PresentationFormat } from './evaluator';
 import type { Settings } from './settings';
 import { defaultSettings } from './settings';
 import type { Unit } from '../types/types';
-import type { PresentationFormat } from './ast';
 import { Temporal } from '@js-temporal/polyfill';
 import { Duration, ZonedDateTime, toTemporalZonedDateTime, toTemporalPlainDateTime, toTemporalPlainDate, toTemporalPlainTime, toTemporalInstant } from './date-time';
 import type { DataLoader } from './data-loader';
@@ -73,12 +72,8 @@ export class Formatter {
     const formatName = typeof format === 'number' ? `base ${format}` : format;
 
     // Handle date/time presentation formats
-    // Accept both lowercase and grammar-produced format names (with spaces, mixed case)
-    const normalizedFormat = typeof format === 'string'
-      ? format.toLowerCase().replace(/\s+/g, '')
-      : format;
-    if (normalizedFormat === 'iso8601' || normalizedFormat === 'rfc9557' || normalizedFormat === 'rfc2822') {
-      return this.formatDateTimePresentation(innerValue, normalizedFormat as 'iso8601' | 'rfc9557' | 'rfc2822');
+    if (format === 'ISO 8601' || format === 'RFC 9557' || format === 'RFC 2822') {
+      return this.formatDateTimePresentation(innerValue, format);
     }
 
     // Handle different value types
@@ -124,9 +119,9 @@ export class Formatter {
   /**
    * Format date/time value in specific presentation format
    */
-  private formatDateTimePresentation(value: Value, format: 'iso8601' | 'rfc9557' | 'rfc2822'): string {
+  private formatDateTimePresentation(value: Value, format: 'ISO 8601' | 'RFC 9557' | 'RFC 2822'): string {
     // For RFC 2822, convert all date/time types to ZonedDateTime first
-    if (format === 'rfc2822') {
+    if (format === 'RFC 2822') {
       // Convert to ZonedDateTime with defaults
       let zdt: ReturnType<typeof Temporal.ZonedDateTime.from>;
       const systemTimeZone = Temporal.Now.timeZoneId();
@@ -183,7 +178,7 @@ export class Formatter {
     if (value.kind === 'zonedDateTime') {
       const zdt = toTemporalZonedDateTime(value.zonedDateTime);
       let result = zdt.toString();
-      if (format === 'iso8601') {
+      if (format === 'ISO 8601') {
         // Remove timezone annotation and convert +00:00 to Z
         result = result.replace(/\[.*?\]$/, '').replace(/\+00:00$/, 'Z');
       }

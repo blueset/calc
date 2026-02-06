@@ -14,7 +14,6 @@ import grammar from '../../src/nearley/grammar';
 import { DataLoader } from '../../src/data-loader';
 import { pruneInvalidCandidates, PruningContext } from '../../src/nearley/pruner';
 import { selectBestCandidate } from '../../src/nearley/selector';
-import { setDataLoader } from '../../src/nearley/ast-adapter';
 import * as NearleyAST from '../../src/nearley/types';
 
 describe('Phase 2: Ambiguity Resolution', () => {
@@ -22,8 +21,6 @@ describe('Phase 2: Ambiguity Resolution', () => {
 
   beforeAll(() => {
     dataLoader = new DataLoader();
-    dataLoader.load();
-    setDataLoader(dataLoader);
   });
 
   /**

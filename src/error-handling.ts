@@ -1,4 +1,4 @@
-import { SourceLocation } from './tokens';
+import type { SourceLocation, Document } from './document';
 
 /**
  * Base error class for all language errors
@@ -6,8 +6,7 @@ import { SourceLocation } from './tokens';
 export abstract class LanguageError extends Error {
   constructor(
     message: string,
-    public readonly start: SourceLocation,
-    public readonly end: SourceLocation,
+    public readonly location: SourceLocation,
     public readonly errorType: string
   ) {
     super(message);
@@ -18,7 +17,7 @@ export abstract class LanguageError extends Error {
    * Format error with location information
    */
   format(): string {
-    return `${this.errorType} at line ${this.start.line}, column ${this.start.column}: ${this.message}`;
+    return `${this.errorType} at line ${this.location.line}, column ${this.location.column}: ${this.message}`;
   }
 }
 
@@ -26,8 +25,8 @@ export abstract class LanguageError extends Error {
  * Lexer errors - problems during tokenization
  */
 export class LexerError extends LanguageError {
-  constructor(message: string, start: SourceLocation, end: SourceLocation) {
-    super(message, start, end, 'Lexer Error');
+  constructor(message: string, location: SourceLocation) {
+    super(message, location, 'Lexer Error');
   }
 }
 
@@ -35,17 +34,8 @@ export class LexerError extends LanguageError {
  * Parser errors - problems during syntactic analysis
  */
 export class ParserError extends LanguageError {
-  constructor(message: string, start: SourceLocation, end: SourceLocation) {
-    super(message, start, end, 'Parser Error');
-  }
-}
-
-/**
- * Type errors - problems during semantic analysis
- */
-export class TypeError extends LanguageError {
-  constructor(message: string, start: SourceLocation, end: SourceLocation) {
-    super(message, start, end, 'Type Error');
+  constructor(message: string, location: SourceLocation) {
+    super(message, location, 'Parser Error');
   }
 }
 
@@ -53,31 +43,9 @@ export class TypeError extends LanguageError {
  * Runtime errors - problems during evaluation
  */
 export class RuntimeError extends LanguageError {
-  constructor(message: string, start: SourceLocation, end: SourceLocation) {
-    super(message, start, end, 'Runtime Error');
+  constructor(message: string, location: SourceLocation) {
+    super(message, location, 'Runtime Error');
   }
-}
-
-/**
- * Error result wrapper for expressions that fail type checking or evaluation
- */
-export interface ErrorResult {
-  type: 'error';
-  error: LanguageError;
-}
-
-/**
- * Check if a value is an error result
- */
-export function isErrorResult(value: any): value is ErrorResult {
-  return value && typeof value === 'object' && value.type === 'error';
-}
-
-/**
- * Create an error result
- */
-export function createErrorResult(error: LanguageError): ErrorResult {
-  return { type: 'error', error };
 }
 
 /**
@@ -90,17 +58,9 @@ export interface LineError {
 }
 
 /**
- * Result of tokenization with collected errors
- */
-export interface TokenizeResult {
-  tokens: import('./tokens').Token[];
-  errors: LexerError[];
-}
-
-/**
  * Result of parsing with collected errors
  */
 export interface DocumentResult {
-  ast: import('./ast').Document;
+  ast: Document;
   errors: LineError[];
 }

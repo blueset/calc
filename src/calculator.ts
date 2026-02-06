@@ -1,17 +1,18 @@
 import { NearleyParser } from './nearley/nearley-parser';
 import { DataLoader } from './data-loader';
 import { LexerError, ParserError, RuntimeError, LineError } from './error-handling';
-import { Document, Line } from './ast';
+import { Document, ParsedLine } from './document';
 import { Evaluator, Value, ErrorValue } from './evaluator';
 import { Formatter } from './formatter';
 import { Settings, createSettings, defaultSettings } from './settings';
+import { SourceLocation } from './document';
 
 /**
  * Result of a single line calculation
  */
 export interface LineResult {
   line: number;
-  type: 'ExpressionLine' | 'VariableDefinition' | 'PlainText' | 'Heading' | 'EmptyLine';
+  type: string;
   result: string | null;  // Formatted result, or null for non-expressions
   hasError: boolean;      // True if this line had an error
 }
@@ -26,6 +27,23 @@ export interface CalculationResult {
     parser: LineError[];
     runtime: RuntimeError[];
   };
+}
+
+/**
+ * Extract location from a ParsedLine (handles both Nearley AST and document wrapper types)
+ */
+function getLineLocation(line: ParsedLine): SourceLocation {
+  if (line === null) return { line: 0, column: 0, offset: 0 };
+  if ('location' in line && line.location) {
+    const loc = line.location;
+    // Enriched SourceLocation (from parser wrapper)
+    if (typeof loc === 'object' && 'line' in loc) {
+      return loc as SourceLocation;
+    }
+    // Raw Nearley offset (number) - convert to SourceLocation
+    return { line: 0, column: loc as number, offset: loc as number };
+  }
+  return { line: 0, column: 0, offset: 0 };
 }
 
 /**
@@ -66,43 +84,36 @@ export class Calculator {
    * Returns results for all lines and collects all errors
    */
   calculate(input: string): CalculationResult {
-    let ast: Document;
-    let lexerErrors: LexerError[] = [];
-    let parserErrors: LineError[] = [];
-
     const nearleyParser = new NearleyParser(this.dataLoader);
     const result = nearleyParser.parseDocument(input);
-    ast = result.ast;
-    parserErrors = result.errors;
+    const ast = result.ast as any as Document;
+    const parserErrors = result.errors;
 
-    // Phase 3: Evaluate
+    // Evaluate
     const results: LineResult[] = [];
     const runtimeErrors: RuntimeError[] = [];
-    let lineValues: Map<Line, Value | null> | null = null;
+    let lineValues: Map<ParsedLine, Value | null> | null = null;
 
     try {
       lineValues = this.evaluator.evaluateDocument(ast);
     } catch (error) {
       // Catch any unexpected thrown errors during evaluation
-      // Mark all lines as having errors
       for (let i = 0; i < ast.lines.length; i++) {
         const line = ast.lines[i];
         const lineNumber = i + 1;
 
         results.push({
           line: lineNumber,
-          type: line.type as any,
+          type: line !== null && typeof line === 'object' && 'type' in line ? (line as any).type : 'unknown',
           result: null,
           hasError: true
         });
 
-        // Create a runtime error for the first line
         if (i === 0) {
           runtimeErrors.push(
             new RuntimeError(
               error instanceof Error ? error.message : String(error),
-              line.start,
-              line.end
+              getLineLocation(line)
             )
           );
         }
@@ -111,30 +122,27 @@ export class Calculator {
       return {
         results,
         errors: {
-          lexer: lexerErrors,
+          lexer: [],
           parser: parserErrors,
           runtime: runtimeErrors
         }
       };
     }
 
-    // Phase 4: Format results
+    // Format results
     for (let i = 0; i < ast.lines.length; i++) {
       const line = ast.lines[i];
       const lineNumber = i + 1;
       const value = lineValues.get(line);
 
-      let result: string | null = null;
+      let lineResult: string | null = null;
       let hasError = false;
 
-      // Check if this line has lexer or parser errors
-      const lexerError = lexerErrors.find(e => e.start.line === lineNumber);
+      // Check if this line has parser errors
       const parserError = parserErrors.find(e => e.line === lineNumber);
-      if (lexerError || parserError) {
+      if (parserError) {
         hasError = true;
-        // Set result to the error message
-        const errorMsg = parserError?.error.message || lexerError?.message || 'Parse error';
-        result = `Parsing Error: ${errorMsg}`;
+        lineResult = `Parsing Error: ${parserError.error.message}`;
       }
 
       // Check if the value is an error
@@ -144,34 +152,30 @@ export class Calculator {
         runtimeErrors.push(
           new RuntimeError(
             errorValue.error.message,
-            line.start,
-            line.end
+            getLineLocation(line)
           )
         );
-        // Format the error for display
-        result = `Error: ${errorValue.error.message}`;
+        lineResult = `Error: ${errorValue.error.message}`;
       } else if (value !== null && value !== undefined) {
-        // Format the value
         try {
-          result = this.formatter.format(value);
+          lineResult = this.formatter.format(value);
         } catch (error) {
           hasError = true;
           const errorMessage = error instanceof Error ? error.message : String(error);
           runtimeErrors.push(
             new RuntimeError(
               `Formatting error: ${errorMessage}`,
-              line.start,
-              line.end
+              getLineLocation(line)
             )
           );
-          result = `Formatting Error: ${errorMessage}`;
+          lineResult = `Formatting Error: ${errorMessage}`;
         }
       }
 
       results.push({
         line: lineNumber,
-        type: line.type as any,
-        result,
+        type: line !== null && typeof line === 'object' && 'type' in line ? (line as any).type : 'unknown',
+        result: lineResult,
         hasError
       });
     }
@@ -179,7 +183,7 @@ export class Calculator {
     return {
       results,
       errors: {
-        lexer: lexerErrors,
+        lexer: [],
         parser: parserErrors,
         runtime: runtimeErrors
       }
@@ -200,9 +204,9 @@ export class Calculator {
     const nearleyParser = new NearleyParser(this.dataLoader);
     const result = nearleyParser.parseDocument(input);
     return {
-      ast: result.ast,
+      ast: result.ast as any as Document,
       errors: {
-        lexer: [], // Nearley parser doesn't have separate lexer errors
+        lexer: [],
         parser: result.errors
       }
     };

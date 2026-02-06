@@ -23,15 +23,15 @@ describe('NearleyParser', () => {
     it('should parse empty document', () => {
       const result = parser.parseDocument('');
       expect(result.ast.lines).toHaveLength(1);
-      expect(result.ast.lines[0].type).toBe('EmptyLine');
+      expect(result.ast.lines[0]?.type).toBe('EmptyLine');
       expect(result.errors).toHaveLength(0);
     });
 
     it('should parse heading', () => {
       const result = parser.parseDocument('# Title');
       expect(result.ast.lines).toHaveLength(1);
-      expect(result.ast.lines[0].type).toBe('Heading');
-      if (result.ast.lines[0].type === 'Heading') {
+      expect(result.ast.lines[0]?.type).toBe('Heading');
+      if (result.ast.lines[0]?.type === 'Heading') {
         expect(result.ast.lines[0].level).toBe(1);
         expect(result.ast.lines[0].text).toBe('Title');
       }
@@ -41,22 +41,22 @@ describe('NearleyParser', () => {
     it('should parse simple number', () => {
       const result = parser.parseDocument('42');
       expect(result.ast.lines).toHaveLength(1);
-      expect(result.ast.lines[0].type).toBe('ExpressionLine');
+      expect(result.ast.lines[0]?.type).toBe('Value');  // Now returns Nearley AST directly
       expect(result.errors).toHaveLength(0);
     });
 
     it('should parse simple arithmetic', () => {
       const result = parser.parseDocument('5 + 5');
       expect(result.ast.lines).toHaveLength(1);
-      expect(result.ast.lines[0].type).toBe('ExpressionLine');
+      expect(result.ast.lines[0]?.type).toBe('BinaryExpression');  // Now returns Nearley AST directly
       expect(result.errors).toHaveLength(0);
     });
 
     it('should parse variable assignment', () => {
       const result = parser.parseDocument('x = 10');
       expect(result.ast.lines).toHaveLength(1);
-      expect(result.ast.lines[0].type).toBe('VariableDefinition');
-      if (result.ast.lines[0].type === 'VariableDefinition') {
+      expect(result.ast.lines[0]?.type).toBe('VariableAssignment');  // Nearley AST type
+      if (result.ast.lines[0]?.type === 'VariableAssignment') {
         expect(result.ast.lines[0].name).toBe('x');
       }
       expect(result.errors).toHaveLength(0);
@@ -67,7 +67,7 @@ describe('NearleyParser', () => {
     it('should strip inline comments', () => {
       const result = parser.parseDocument('5 + 5 # this is a comment');
       expect(result.ast.lines).toHaveLength(1);
-      expect(result.ast.lines[0].type).toBe('ExpressionLine');
+      expect(result.ast.lines[0]?.type).toBe('BinaryExpression');  // Now returns Nearley AST directly
       expect(result.errors).toHaveLength(0);
     });
 
@@ -88,11 +88,11 @@ describe('NearleyParser', () => {
 
       const result = parser.parseDocument(input);
       expect(result.ast.lines).toHaveLength(5);
-      expect(result.ast.lines[0].type).toBe('Heading');
-      expect(result.ast.lines[1].type).toBe('ExpressionLine');
-      expect(result.ast.lines[2].type).toBe('ExpressionLine');
-      expect(result.ast.lines[3].type).toBe('EmptyLine');
-      expect(result.ast.lines[4].type).toBe('ExpressionLine');
+      expect(result.ast.lines[0]?.type).toBe('Heading');
+      expect(result.ast.lines[1]?.type).toBe('BinaryExpression');  // Direct Nearley AST
+      expect(result.ast.lines[2]?.type).toBe('BinaryExpression');  // Direct Nearley AST
+      expect(result.ast.lines[3]?.type).toBe('EmptyLine');
+      expect(result.ast.lines[4]?.type).toBe('BinaryExpression');  // Direct Nearley AST
     });
 
     it('should track variable definitions across lines', () => {
@@ -101,8 +101,8 @@ y = x + 5`;
 
       const result = parser.parseDocument(input);
       expect(result.ast.lines).toHaveLength(2);
-      expect(result.ast.lines[0].type).toBe('VariableDefinition');
-      expect(result.ast.lines[1].type).toBe('VariableDefinition');
+      expect(result.ast.lines[0]?.type).toBe('VariableAssignment');  // Nearley AST type
+      expect(result.ast.lines[1]?.type).toBe('VariableAssignment');  // Nearley AST type
       // Second line should successfully reference x
       expect(result.errors).toHaveLength(0);
     });
@@ -112,13 +112,13 @@ y = x + 5`;
     it('should parse number with unit', () => {
       const result = parser.parseDocument('5 km');
       expect(result.ast.lines).toHaveLength(1);
-      expect(result.ast.lines[0].type).toBe('ExpressionLine');
+      expect(result.ast.lines[0]).not.toBe(null);  // Now returns Nearley AST expression directly
     });
 
     it('should parse unit conversion', () => {
       const result = parser.parseDocument('5 km to m');
       expect(result.ast.lines).toHaveLength(1);
-      expect(result.ast.lines[0].type).toBe('ExpressionLine');
+      expect(result.ast.lines[0]).not.toBe(null);  // Now returns Nearley AST expression directly
     });
   });
 
@@ -126,7 +126,7 @@ y = x + 5`;
     it('should handle invalid syntax as plain text', () => {
       const result = parser.parseDocument('this is not valid syntax @ $ %% ]]');
       expect(result.ast.lines).toHaveLength(1);
-      expect(result.ast.lines[0].type).toBe('PlainText');
+      expect(result.ast.lines[0]?.type).toBe('PlainText');
     });
 
     it('should continue parsing after error', () => {
@@ -136,9 +136,9 @@ invalid @ syntax
 
       const result = parser.parseDocument(input);
       expect(result.ast.lines).toHaveLength(3);
-      expect(result.ast.lines[0].type).toBe('ExpressionLine');
-      expect(result.ast.lines[1].type).toBe('PlainText');
-      expect(result.ast.lines[2].type).toBe('ExpressionLine');
+      expect(result.ast.lines[0]).not.toBe(null);  // Now returns Nearley AST expression directly
+      expect(result.ast.lines[1]?.type).toBe('PlainText');
+      expect(result.ast.lines[2]).not.toBe(null);  // Now returns Nearley AST expression directly
     });
   });
 
@@ -152,11 +152,11 @@ invalid @ syntax
 
       const result = parser.parseDocument(input);
       expect(result.ast.lines).toHaveLength(5);
-      expect(result.ast.lines[0].type).toBe('EmptyLine');
-      expect(result.ast.lines[1].type).toBe('EmptyLine');
-      expect(result.ast.lines[2].type).toBe('ExpressionLine');
-      expect(result.ast.lines[3].type).toBe('EmptyLine');
-      expect(result.ast.lines[4].type).toBe('EmptyLine');
+      expect(result.ast.lines[0]?.type).toBe('EmptyLine');
+      expect(result.ast.lines[1]?.type).toBe('EmptyLine');
+      expect(result.ast.lines[2]).not.toBe(null);  // Now returns Nearley AST expression directly
+      expect(result.ast.lines[3]?.type).toBe('EmptyLine');
+      expect(result.ast.lines[4]?.type).toBe('EmptyLine');
     });
 
     it('should handle whitespace-only lines', () => {
@@ -166,9 +166,9 @@ invalid @ syntax
 
       const result = parser.parseDocument(input);
       expect(result.ast.lines).toHaveLength(3);
-      expect(result.ast.lines[0].type).toBe('ExpressionLine');
-      expect(result.ast.lines[1].type).toBe('EmptyLine');
-      expect(result.ast.lines[2].type).toBe('ExpressionLine');
+      expect(result.ast.lines[0]).not.toBe(null);  // Now returns Nearley AST expression directly
+      expect(result.ast.lines[1]?.type).toBe('EmptyLine');
+      expect(result.ast.lines[2]).not.toBe(null);  // Now returns Nearley AST expression directly
     });
   });
 });

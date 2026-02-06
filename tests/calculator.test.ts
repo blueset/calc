@@ -64,9 +64,9 @@ this is just text
       // The text line may parse as an ExpressionLine with identifiers, not necessarily PlainText
       // The important thing is that it doesn't cause the parser to fail
       expect(result.ast.lines.length).toBeGreaterThanOrEqual(3);
-      expect(result.ast.lines[0].type).toBe('ExpressionLine');
+      expect(result.ast.lines[0]?.type).toBe('BinaryExpression');
       // Last line should be an expression
-      expect(result.ast.lines[result.ast.lines.length - 1].type).toBe('ExpressionLine');
+      expect(result.ast.lines[2]?.type).toBe('BinaryExpression');
     });
   });
 

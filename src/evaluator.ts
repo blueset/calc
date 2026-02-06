@@ -1,13 +1,39 @@
-import * as AST from './ast';
+import * as NearleyAST from './nearley/types';
+import { Document, ParsedLine } from './document';
 import { DataLoader } from './data-loader';
 import { UnitConverter, ConversionSettings } from './unit-converter';
 import { DateTimeEngine, Duration, PlainDate, PlainTime, PlainDateTime, Instant, ZonedDateTime, toTemporalZonedDateTime, toTemporalPlainDateTime, toTemporalPlainDate, toTemporalInstant } from './date-time';
 import { CurrencyConverter, CurrencyValue } from './currency';
 import { MathFunctions } from './functions';
-import { createErrorResult, ErrorResult } from './error-handling';
 import type { Unit } from '../types/types';
 import { getConstant } from './constants';
 import { Temporal } from '@js-temporal/polyfill';
+import { resolveUnitFromNode, resolveUnitsExpression, isDegreeUnit, hasDegreeInUnits, UnitResolutionContext } from './ast-helpers';
+
+/**
+ * Presentation format strings
+ * Defines the valid string formats for value presentation/conversion.
+ */
+export type PresentationFormat =
+  | 'binary'
+  | 'bin'
+  | 'octal'
+  | 'oct'
+  | 'decimal'
+  | 'dec'
+  | 'hex'
+  | 'hexadecimal'
+  | 'fraction'
+  | 'scientific'
+  | 'ordinal'
+  | 'iso8601'
+  | 'rfc9557'
+  | 'rfc2822'
+  | 'ISO 8601'
+  | 'RFC 9557'
+  | 'RFC 2822'
+  | 'unix'
+  | 'unixMilliseconds';
 
 /**
  * Runtime value types
@@ -29,7 +55,7 @@ export type Value =
  */
 export interface PresentationValue {
   kind: 'presentation';
-  format: AST.PresentationFormat | number;  // Format string OR base number (2-36)
+  format: PresentationFormat | number;  // Format string OR base number (2-36)
   innerValue: Value;  // Can be NumberValue, DerivedUnitValue, or CompositeUnitValue
 }
 
@@ -178,9 +204,9 @@ export class Evaluator {
   /**
    * Evaluate the entire document
    */
-  evaluateDocument(document: AST.Document): Map<AST.Line, Value | null> {
+  evaluateDocument(document: Document): Map<ParsedLine, Value | null> {
     const context: EvaluationContext = { variables: new Map() };
-    const lineValues = new Map<AST.Line, Value | null>();
+    const lineValues = new Map<ParsedLine, Value | null>();
 
     for (const line of document.lines) {
       const lineValue = this.evaluateLine(line, context);
@@ -191,216 +217,587 @@ export class Evaluator {
   }
 
   /**
-   * Evaluate a single line
+   * Evaluate a single line (ParsedLine union: Nearley AST | Heading | EmptyLine | PlainText)
    */
-  private evaluateLine(line: AST.Line, context: EvaluationContext): Value | null {
-    switch (line.type) {
-      case 'Heading':
-      case 'PlainText':
-      case 'EmptyLine':
-        return null;
+  private evaluateLine(line: ParsedLine, context: EvaluationContext): Value | null {
+    if (line === null) return null;
 
-      case 'ExpressionLine':
-        return this.evaluateExpression(line.expression, context);
-
-      case 'VariableDefinition':
-        const value = this.evaluateExpression(line.value, context);
-        context.variables.set(line.name, value);
-        return value;
-
-      default:
-        return this.createError(`Unknown line type: ${(line as any).type}`);
+    // Handle document-level wrapper types
+    if (line.type === 'Heading' || line.type === 'PlainText' || line.type === 'EmptyLine') {
+      return null;
     }
+
+    // Handle VariableAssignment (Nearley AST)
+    if (line.type === 'VariableAssignment') {
+      const value = this.evaluateExpression(line.value as NearleyAST.ExpressionNode, context);
+      context.variables.set(line.name, value);
+      return value;
+    }
+
+    // Everything else is an ExpressionNode - evaluate directly
+    return this.evaluateExpression(line as NearleyAST.ExpressionNode, context);
   }
 
   /**
-   * Evaluate an expression
+   * Evaluate an expression (Nearley AST ExpressionNode)
    */
-  private evaluateExpression(expr: AST.Expression, context: EvaluationContext): Value {
+  private evaluateExpression(expr: NearleyAST.ExpressionNode, context: EvaluationContext): Value {
     switch (expr.type) {
-      case 'ConditionalExpression':
-        return this.evaluateConditional(expr, context);
+      case 'ConditionalExpr':
+        return this.evaluateConditional(expr as NearleyAST.ConditionalExprNode, context);
 
-      case 'ConversionExpression':
-        return this.evaluateConversion(expr, context);
+      case 'Conversion':
+        return this.evaluateConversion(expr as NearleyAST.ConversionNode, context);
 
       case 'BinaryExpression':
-        return this.evaluateBinary(expr, context);
+        return this.evaluateBinary(expr as NearleyAST.BinaryExpressionNode, context);
 
       case 'UnaryExpression':
-        return this.evaluateUnary(expr, context);
+        return this.evaluateUnary(expr as NearleyAST.UnaryExpressionNode, context);
 
       case 'PostfixExpression':
-        return this.evaluatePostfix(expr, context);
-
-      case 'RelativeInstantExpression':
-        return this.evaluateRelativeInstant(expr, context);
+        return this.evaluatePostfix(expr as NearleyAST.PostfixExpressionNode, context);
 
       case 'FunctionCall':
-        return this.evaluateFunctionCall(expr, context);
+        return this.evaluateFunctionCall(expr as NearleyAST.FunctionCallNode, context);
 
-      case 'GroupedExpression':
-        return this.evaluateExpression(expr.expression, context);
+      case 'Variable':
+        return this.evaluateVariable(expr as NearleyAST.VariableNode, context);
 
-      case 'Identifier':
-        return this.evaluateIdentifier(expr, context);
+      case 'Constant':
+        return this.evaluateConstant(expr as NearleyAST.ConstantNode);
 
-      case 'NumberLiteral':
-      case 'NumberWithUnit':
-      case 'CompositeUnitLiteral':
-      case 'PlainDateLiteral':
-      case 'PlainTimeLiteral':
-      case 'PlainDateTimeLiteral':
-      case 'InstantLiteral':
-      case 'ZonedDateTimeLiteral':
-      case 'DurationLiteral':
+      case 'Value':
+        return this.evaluateValue(expr as NearleyAST.ValueNode, context);
+
+      case 'CompositeValue':
+        return this.evaluateCompositeValue(expr as NearleyAST.CompositeValueNode, context);
+
       case 'BooleanLiteral':
-      case 'ConstantLiteral':
-        return this.evaluateLiteral(expr, context);
+        return { kind: 'boolean', value: (expr as NearleyAST.BooleanLiteralNode).value };
+
+      case 'PlainDate':
+        return this.evaluatePlainDate(expr as NearleyAST.PlainDateNode);
+
+      case 'PlainTime':
+        return this.evaluatePlainTime(expr as NearleyAST.PlainTimeNode);
+
+      case 'PlainDateTime':
+        return this.evaluatePlainDateTime(expr as NearleyAST.PlainDateTimeNode);
+
+      case 'Instant':
+        return this.evaluateInstant(expr as NearleyAST.InstantNode, context);
+
+      case 'ZonedDateTime':
+        return this.evaluateZonedDateTime(expr as NearleyAST.ZonedDateTimeNode);
 
       default:
         return this.createError(`Unknown expression type: ${(expr as any).type}`);
     }
   }
 
+  // ============================================================================
+  // Nearley AST Value Evaluation
+  // ============================================================================
+
   /**
-   * Evaluate a literal expression
+   * Parse a numerical value node (NumberLiteral or PercentageLiteral) to a number or error
    */
-  private evaluateLiteral(literal: AST.Literal, context: EvaluationContext): Value {
-    switch (literal.type) {
-      case 'NumberLiteral':
-        return { kind: 'number', value: literal.value };
-
-      case 'NumberWithUnit': {
-        // Handle DerivedUnit (e.g., from m^2 syntax)
-        if (literal.unit.type === 'DerivedUnit') {
-          const terms: Array<{ unit: Unit; exponent: number }> = [];
-          for (const term of literal.unit.terms) {
-            const resolvedUnit = this.resolveUnit(term.unit);
-            if (!resolvedUnit) {
-              return this.createError(`Unknown unit in derived unit literal`);
-            }
-            terms.push({ unit: resolvedUnit, exponent: term.exponent });
-          }
-          return { kind: 'derivedUnit', value: literal.value, terms };
-        }
-
-        // Handle SimpleUnit
-        const unit = this.resolveUnit(literal.unit);
-        if (!unit) {
-          return this.createError(`Unknown unit in literal`);
-        }
-
-        // Auto-convert dimensionless units to pure numbers
-        if (unit.dimension === 'dimensionless') {
-          // Convert to base unit (which is 1.0 for dimensionless units)
-          const convertedValue = this.unitConverter.toBaseUnit(literal.value, unit);
-          return { kind: 'number', value: convertedValue };
-        }
-
-        return { kind: 'number', value: literal.value, unit };
+  private parseNumericalValue(node: NearleyAST.NumericalValueNode): number | ErrorValue {
+    if (node.type === 'NumberLiteral') {
+      const cleaned = node.value.replaceAll('_', '');
+      // Validate base range
+      if (node.base < 2 || node.base > 36) {
+        return this.createError(`Base must be between 2 and 36, got ${node.base}`);
       }
-
-      case 'CompositeUnitLiteral': {
-        const components = literal.components.map((comp) => {
-          const unit = this.resolveUnit(comp.unit);
-          if (!unit) {
-            throw new Error(`Unknown unit in composite literal`);
-          }
-          return { value: comp.value, unit };
-        });
-        return { kind: 'composite', components };
-      }
-
-      case 'PlainDateLiteral':
-        return {
-          kind: 'plainDate',
-          date: { year: literal.year, month: literal.month, day: literal.day }
-        };
-
-      case 'PlainTimeLiteral':
-        return {
-          kind: 'plainTime',
-          time: {
-            hour: literal.hour,
-            minute: literal.minute,
-            second: literal.second,
-            millisecond: literal.millisecond || 0
-          }
-        };
-
-      case 'PlainDateTimeLiteral':
-        return {
-          kind: 'plainDateTime',
-          dateTime: {
-            date: {
-              year: literal.date.year,
-              month: literal.date.month,
-              day: literal.date.day
-            },
-            time: {
-              hour: literal.time.hour,
-              minute: literal.time.minute,
-              second: literal.time.second,
-              millisecond: literal.time.millisecond || 0
-            }
-          }
-        };
-
-      case 'InstantLiteral':
-        return {
-          kind: 'instant',
-          instant: { timestamp: literal.timestamp }
-        };
-
-      case 'ZonedDateTimeLiteral':
-        return {
-          kind: 'zonedDateTime',
-          zonedDateTime: {
-            dateTime: {
-              date: {
-                year: literal.dateTime.date.year,
-                month: literal.dateTime.date.month,
-                day: literal.dateTime.date.day
-              },
-              time: {
-                hour: literal.dateTime.time.hour,
-                minute: literal.dateTime.time.minute,
-                second: literal.dateTime.time.second,
-                millisecond: literal.dateTime.time.millisecond || 0
-              }
-            },
-            timezone: literal.timezone
-          }
-        };
-
-      case 'DurationLiteral':
-        return {
-          kind: 'duration',
-          duration: this.dateTimeEngine.createDuration(literal.components)
-        };
-
-      case 'BooleanLiteral':
-        return { kind: 'boolean', value: literal.value };
-
-      case 'ConstantLiteral': {
-        const constantValue = getConstant(literal.name);
-        if (constantValue === undefined) {
-          return this.createError(`Unknown constant: ${literal.name}`);
+      // For arbitrary base literals (e.g., "ABC base 10"), validate digits
+      // Regular decimal literals (subType !== ArbitraryBase*) skip validation
+      const isArbitraryBase = node.subType?.startsWith('ArbitraryBase');
+      if (isArbitraryBase || node.base !== 10) {
+        const validationError = this.validateBaseDigits(cleaned, node.base);
+        if (validationError) {
+          return this.createError(validationError);
         }
-        return { kind: 'number', value: constantValue };
       }
-
-      default:
-        return this.createError(`Unknown literal type: ${(literal as any).type}`);
+      if (node.base === 10) {
+        return parseFloat(cleaned);
+      }
+      // Handle fractional parts for non-base-10 numbers
+      return this.parseBaseNumber(cleaned, node.base);
     }
+    if (node.type === 'PercentageLiteral') {
+      const cleaned = node.value.replaceAll('_', '');
+      const numValue = parseFloat(cleaned);
+      return node.symbol === 'percent' ? numValue / 100 : numValue / 1000;
+    }
+    return 0;
+  }
+
+  /**
+   * Validate that all digits in a string are valid for the given base
+   * Returns error message if invalid, null if valid
+   */
+  private validateBaseDigits(str: string, base: number): string | null {
+    const digitRange = base <= 10
+      ? `0-${String.fromCharCode(47 + base)}`
+      : `0-9A-${String.fromCharCode(54 + base)}`;
+    const invalid = new RegExp(`[^.\\-${digitRange}]`, 'i');
+    const match = str.match(invalid);
+    if (match) {
+      return `Invalid digit '${match[0]}' for base ${base}`;
+    }
+    return null;
+  }
+
+  /**
+   * Parse a number string in an arbitrary base, supporting fractional parts
+   */
+  private parseBaseNumber(str: string, base: number): number {
+    const parts = str.split('.');
+    const intPart = parseInt(parts[0] || '0', base);
+
+    if (parts.length === 1 || !parts[1]) {
+      return intPart;
+    }
+
+    // Parse fractional part digit by digit
+    let fracValue = 0;
+    let placeValue = 1 / base;
+    for (const char of parts[1]) {
+      const digit = parseInt(char, base);
+      if (isNaN(digit)) break;
+      fracValue += digit * placeValue;
+      placeValue /= base;
+    }
+
+    return (intPart >= 0 ? 1 : -1) * (Math.abs(intPart) + fracValue);
+  }
+
+  /**
+   * Resolve a Nearley UnitsNode or CurrencyUnitNode to a Unit object
+   */
+  private resolveNearleyUnit(
+    unitNode: NearleyAST.UnitsNode | NearleyAST.CurrencyUnitNode,
+    unitContext: UnitResolutionContext = { hasDegreeUnit: false }
+  ): Unit | null {
+    if (unitNode.type === 'CurrencyUnit') {
+      return this.resolveCurrencyUnit(unitNode);
+    }
+
+    // UnitsNode - should be a single term for simple resolution
+    if (unitNode.terms.length === 1 && unitNode.terms[0].exponent === 1) {
+      const resolved = resolveUnitFromNode(unitNode.terms[0].unit, this.dataLoader, unitContext);
+      return this.resolveUnitById(resolved.id, resolved.displayName);
+    }
+
+    // Multi-term or non-1 exponent: not a simple unit
+    return null;
+  }
+
+  /**
+   * Resolve a currency unit node to a Unit object
+   */
+  private resolveCurrencyUnit(node: NearleyAST.CurrencyUnitNode): Unit | null {
+    const name = node.name;
+
+    // Check if it's an unambiguous currency symbol (like €, ₹, ₽, ฿)
+    const unambiguous = this.dataLoader.getCurrencyByAdjacentSymbol(name) || this.dataLoader.getCurrencyBySpacedSymbol(name);
+    if (unambiguous) {
+      return this.createCurrencyUnit(unambiguous.code);
+    }
+
+    // Check if it's an ambiguous currency symbol (like $, £, ¥)
+    const ambiguous = this.dataLoader.getAmbiguousCurrencyByAdjacentSymbol(name);
+    if (ambiguous) {
+      return {
+        id: ambiguous.dimension, // Use dimension as ID for ambiguous currencies
+        dimension: ambiguous.dimension,
+        names: [ambiguous.symbol],
+        conversion: { type: 'linear', factor: 1.0 },
+        displayName: {
+          symbol: name, // Preserve original symbol
+          singular: name,
+          plural: name
+        }
+      };
+    }
+
+    // Try as currency code
+    const currency = this.dataLoader.getCurrencyByCode(name);
+    if (currency) {
+      return this.createCurrencyUnit(currency.code);
+    }
+
+    return null;
+  }
+
+  /**
+   * Create a Unit object for a currency code
+   */
+  private createCurrencyUnit(code: string): Unit | null {
+    const currency = this.dataLoader.getCurrencyByCode(code);
+    if (!currency) return null;
+
+    let exchangeRate: number;
+    if (currency.code === 'USD') {
+      exchangeRate = 1.0;
+    } else {
+      try {
+        const converted = this.currencyConverter.convert(
+          { amount: 1.0, currencyCode: currency.code },
+          'USD'
+        );
+        exchangeRate = converted.amount;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    return {
+      id: code,
+      dimension: 'currency',
+      names: [currency.code, ...currency.names],
+      conversion: { type: 'linear', factor: exchangeRate },
+      displayName: {
+        symbol: currency.code,
+        singular: currency.displayName.singular,
+        plural: currency.displayName.plural || currency.displayName.singular
+      }
+    };
+  }
+
+  /**
+   * Resolve a unit by its ID (after name→ID resolution from ast-helpers)
+   */
+  private resolveUnitById(unitId: string, displayName: string): Unit | null {
+    // STEP 1: Try regular unit database
+    const unit = this.dataLoader.getUnitById(unitId);
+    if (unit) return unit;
+
+    // STEP 2: Check unambiguous currency (ISO code)
+    const currencyUnit = this.createCurrencyUnit(unitId);
+    if (currencyUnit) return currencyUnit;
+
+    // STEP 3: Check ambiguous currency symbol
+    if (unitId.startsWith('currency_symbol_')) {
+      const ambiguous = this.dataLoader.getAmbiguousCurrencyByAdjacentSymbol(displayName);
+      if (ambiguous) {
+        return {
+          id: unitId,
+          dimension: ambiguous.dimension,
+          names: [ambiguous.symbol],
+          conversion: { type: 'linear', factor: 1.0 },
+          displayName: {
+            symbol: ambiguous.symbol,
+            singular: ambiguous.symbol,
+            plural: ambiguous.symbol
+          }
+        };
+      }
+    }
+
+    // STEP 4: User-defined unit fallback
+    return {
+      id: unitId,
+      dimension: `user_defined_${unitId}`,
+      names: [displayName],
+      conversion: { type: 'linear', factor: 1.0 },
+      displayName: {
+        symbol: displayName,
+        singular: displayName,
+        plural: displayName + 's'
+      }
+    };
+  }
+
+  /**
+   * Resolve Nearley UnitsNode terms to DerivedUnitValue terms
+   */
+  private resolveNearleyUnitTerms(
+    node: NearleyAST.UnitsNode,
+    unitContext: UnitResolutionContext = { hasDegreeUnit: false }
+  ): Array<{ unit: Unit; exponent: number }> | null {
+    const terms: Array<{ unit: Unit; exponent: number }> = [];
+    let hasDegree = unitContext.hasDegreeUnit;
+    for (const term of node.terms) {
+      if (isDegreeUnit(term.unit.name)) {
+        hasDegree = true;
+      }
+      const ctx: UnitResolutionContext = { hasDegreeUnit: hasDegree };
+      const resolved = resolveUnitFromNode(term.unit, this.dataLoader, ctx);
+      const unit = this.resolveUnitById(resolved.id, resolved.displayName);
+      if (!unit) return null;
+      terms.push({ unit, exponent: term.exponent });
+    }
+    return terms;
+  }
+
+  /**
+   * Evaluate a Value node (number with optional unit)
+   */
+  private evaluateValue(expr: NearleyAST.ValueNode, context: EvaluationContext): Value {
+    const numResult = this.parseNumericalValue(expr.value as NearleyAST.NumericalValueNode);
+    if (typeof numResult !== 'number') return numResult; // ErrorValue
+    const numValue = numResult;
+
+    if (expr.unit === null) {
+      return { kind: 'number', value: numValue };
+    }
+
+    const unitNode = expr.unit as NearleyAST.UnitsNode | NearleyAST.CurrencyUnitNode;
+
+    // Handle currency units
+    if (unitNode.type === 'CurrencyUnit') {
+      const unit = this.resolveCurrencyUnit(unitNode);
+      if (!unit) {
+        return this.createError(`Unknown currency: ${unitNode.name}`);
+      }
+      return { kind: 'number', value: numValue, unit };
+    }
+
+    // Handle UnitsNode
+    const unitsNode = unitNode as NearleyAST.UnitsNode;
+
+    // Check if it's a derived unit (multiple terms or exponent != 1)
+    if (unitsNode.terms.length > 1 || (unitsNode.terms.length === 1 && unitsNode.terms[0].exponent !== 1)) {
+      const terms = this.resolveNearleyUnitTerms(unitsNode);
+      if (!terms) {
+        return this.createError(`Unknown unit in derived unit literal`);
+      }
+      return { kind: 'derivedUnit', value: numValue, terms };
+    }
+
+    // Simple unit
+    const unit = this.resolveNearleyUnit(unitNode);
+    if (!unit) {
+      return this.createError(`Unknown unit in literal`);
+    }
+
+    // Auto-convert dimensionless units to pure numbers
+    if (unit.dimension === 'dimensionless') {
+      const convertedValue = this.unitConverter.toBaseUnit(numValue, unit);
+      return { kind: 'number', value: convertedValue };
+    }
+
+    return { kind: 'number', value: numValue, unit };
+  }
+
+  /**
+   * Evaluate a CompositeValue node (e.g., "5 ft 7 in")
+   */
+  private evaluateCompositeValue(expr: NearleyAST.CompositeValueNode, context: EvaluationContext): Value {
+    let hasDegreeUnit = false;
+    const components: Array<{ value: number; unit: Unit }> = [];
+
+    const values = expr.values as NearleyAST.ValueNode[];
+    for (const valueNode of values) {
+      const numResult = this.parseNumericalValue(valueNode.value as NearleyAST.NumericalValueNode);
+      if (typeof numResult !== 'number') return numResult;
+      const numValue = numResult;
+
+      if (valueNode.unit === null) {
+        return this.createError('Composite value component must have a unit');
+      }
+
+      const unitNode = valueNode.unit as NearleyAST.UnitsNode | NearleyAST.CurrencyUnitNode;
+      const unitContext: UnitResolutionContext = { hasDegreeUnit };
+
+      // Check for degree unit before resolving (for prime/doublePrime context)
+      if (unitNode.type === 'Units') {
+        const unitsNode = unitNode as NearleyAST.UnitsNode;
+        if (hasDegreeInUnits(unitsNode)) {
+          hasDegreeUnit = true;
+        }
+      }
+
+      const unit = this.resolveNearleyUnit(unitNode, unitContext);
+      if (!unit) {
+        return this.createError('Unknown unit in composite literal');
+      }
+      components.push({ value: numValue, unit });
+    }
+
+    return { kind: 'composite', components };
+  }
+
+  /**
+   * Evaluate a Variable node
+   */
+  private evaluateVariable(expr: NearleyAST.VariableNode, context: EvaluationContext): Value {
+    // Check for relative instant keywords first
+    const relativeInstant = this.evaluateRelativeInstantKeyword(expr.name);
+    if (relativeInstant) {
+      return relativeInstant;
+    }
+
+    // Try to look up as a variable
+    const value = context.variables.get(expr.name);
+    if (value !== undefined) {
+      return value;
+    }
+
+    // If not found as variable, check if it's a unit name
+    const unit = this.dataLoader.getUnitByName(expr.name);
+    if (unit) {
+      return { kind: 'number', value: 1, unit };
+    }
+
+    return this.createError(`Undefined variable: ${expr.name}`);
+  }
+
+  /**
+   * Evaluate a Constant node
+   */
+  private evaluateConstant(expr: NearleyAST.ConstantNode): Value {
+    const constantValue = getConstant(expr.name);
+    if (constantValue === undefined) {
+      return this.createError(`Unknown constant: ${expr.name}`);
+    }
+    return { kind: 'number', value: constantValue };
+  }
+
+  /**
+   * Evaluate PlainDate node
+   */
+  private evaluatePlainDate(expr: NearleyAST.PlainDateNode): Value {
+    return {
+      kind: 'plainDate',
+      date: { year: expr.year, month: expr.month, day: expr.day }
+    };
+  }
+
+  /**
+   * Evaluate PlainTime node
+   */
+  private evaluatePlainTime(expr: NearleyAST.PlainTimeNode): Value {
+    return {
+      kind: 'plainTime',
+      time: {
+        hour: expr.hour,
+        minute: expr.minute,
+        second: expr.second,
+        millisecond: 0
+      }
+    };
+  }
+
+  /**
+   * Evaluate PlainDateTime node
+   */
+  private evaluatePlainDateTime(expr: NearleyAST.PlainDateTimeNode): Value {
+    const date = expr.date as NearleyAST.PlainDateNode;
+    const time = expr.time as NearleyAST.PlainTimeNode;
+    return {
+      kind: 'plainDateTime',
+      dateTime: {
+        date: { year: date.year, month: date.month, day: date.day },
+        time: { hour: time.hour, minute: time.minute, second: time.second, millisecond: 0 }
+      }
+    };
+  }
+
+  /**
+   * Evaluate Instant node (keyword like 'now' or relative like '2 days ago')
+   */
+  private evaluateInstant(expr: NearleyAST.InstantNode, context: EvaluationContext): Value {
+    // Keyword instant (now, today, yesterday, tomorrow)
+    if ('keyword' in expr) {
+      const keywordExpr = expr as NearleyAST.InstantKeywordNode;
+      const result = this.evaluateRelativeInstantKeyword(keywordExpr.keyword);
+      if (result) return result;
+      return this.createError(`Unknown instant keyword: ${keywordExpr.keyword}`);
+    }
+
+    // Relative instant (e.g., "2 days ago", "5 minutes from now")
+    const relativeExpr = expr as NearleyAST.InstantRelativeNode;
+    const numResult = this.parseNumericalValue(relativeExpr.amount as NearleyAST.NumericalValueNode);
+    if (typeof numResult !== 'number') return numResult;
+    const numValue = numResult;
+
+    // Resolve the time unit
+    const timeUnit = this.dataLoader.getUnitByName(relativeExpr.unit);
+    if (!timeUnit) {
+      return this.createError(`Unknown time unit: ${relativeExpr.unit}`);
+    }
+
+    const duration = this.convertTimeToDuration(numValue, timeUnit);
+    const now = this.dateTimeEngine.getCurrentInstant();
+
+    if (relativeExpr.direction === 'sinceEpoch') {
+      // "N units since epoch" → instant from epoch
+      const durationMs = this.durationToMilliseconds(duration);
+      return { kind: 'instant', instant: { timestamp: durationMs } };
+    }
+
+    const result = relativeExpr.direction === 'ago'
+      ? this.dateTimeEngine.subtractFromInstant(now, duration)
+      : this.dateTimeEngine.addToInstant(now, duration);
+
+    return { kind: 'instant', instant: result };
+  }
+
+  /**
+   * Evaluate ZonedDateTime node
+   */
+  private evaluateZonedDateTime(expr: NearleyAST.ZonedDateTimeNode): Value {
+    const dateTime = expr.dateTime as NearleyAST.PlainDateTimeNode;
+    const date = dateTime.date as NearleyAST.PlainDateNode | null;
+    const time = dateTime.time as NearleyAST.PlainTimeNode;
+    const tz = expr.timezone as NearleyAST.TimezoneNode;
+
+    // Resolve timezone: TimezoneName through DataLoader, UTCOffset uses offsetStr
+    const rawTimezone = tz.type === 'TimezoneName' ? tz.zoneName : (tz as NearleyAST.UTCOffsetNode).offsetStr;
+    const timezone = this.dataLoader.resolveTimezone(rawTimezone) || rawTimezone;
+
+    // Handle time-only ZonedDateTime (no date component, e.g., "12:30 UTC")
+    if (!date) {
+      // Use today's date in the specified timezone
+      const now = Temporal.Now.zonedDateTimeISO(timezone);
+      return {
+        kind: 'zonedDateTime',
+        zonedDateTime: {
+          dateTime: {
+            date: { year: now.year, month: now.month, day: now.day },
+            time: { hour: time.hour, minute: time.minute, second: time.second, millisecond: 0 }
+          },
+          timezone
+        }
+      };
+    }
+
+    return {
+      kind: 'zonedDateTime',
+      zonedDateTime: {
+        dateTime: {
+          date: { year: date.year, month: date.month, day: date.day },
+          time: { hour: time.hour, minute: time.minute, second: time.second, millisecond: 0 }
+        },
+        timezone
+      }
+    };
+  }
+
+  /**
+   * Convert duration to milliseconds (approximate for calendar durations)
+   */
+  private durationToMilliseconds(duration: Duration): number {
+    return (
+      (duration.years || 0) * 365.25 * 24 * 60 * 60 * 1000 +
+      (duration.months || 0) * 30.4375 * 24 * 60 * 60 * 1000 +
+      (duration.weeks || 0) * 7 * 24 * 60 * 60 * 1000 +
+      (duration.days || 0) * 24 * 60 * 60 * 1000 +
+      (duration.hours || 0) * 60 * 60 * 1000 +
+      (duration.minutes || 0) * 60 * 1000 +
+      (duration.seconds || 0) * 1000 +
+      (duration.milliseconds || 0)
+    );
   }
 
   /**
    * Evaluate a conditional expression (if-then-else)
    */
-  private evaluateConditional(expr: AST.ConditionalExpression, context: EvaluationContext): Value {
-    const condition = this.evaluateExpression(expr.condition, context);
+  private evaluateConditional(expr: NearleyAST.ConditionalExprNode, context: EvaluationContext): Value {
+    const condition = this.evaluateExpression(expr.condition as NearleyAST.ExpressionNode, context);
 
     if (condition.kind === 'error') {
       return condition;
@@ -413,84 +810,357 @@ export class Evaluator {
     }
 
     if (conditionBool.value) {
-      return this.evaluateExpression(expr.thenBranch, context);
+      return this.evaluateExpression(expr.then as NearleyAST.ExpressionNode, context);
     } else {
-      return this.evaluateExpression(expr.elseBranch, context);
+      return this.evaluateExpression(expr.else as NearleyAST.ExpressionNode, context);
     }
   }
 
   /**
-   * Evaluate a conversion expression
+   * Evaluate a conversion expression (Nearley AST)
    */
-  private evaluateConversion(expr: AST.ConversionExpression, context: EvaluationContext): Value {
-    const value = this.evaluateExpression(expr.expression, context);
+  private evaluateConversion(expr: NearleyAST.ConversionNode, context: EvaluationContext): Value {
+    const value = this.evaluateExpression(expr.expression as NearleyAST.ExpressionNode, context);
 
     if (value.kind === 'error') {
       return value;
     }
 
-    const target = expr.target;
+    const target = expr.target as NearleyAST.ConversionTargetNode;
+    return this.evaluateConversionTarget(value, target);
+  }
 
-    switch (target.type) {
-      case 'UnitTarget':
-        return this.convertToUnit(value, target.unit);
+  /**
+   * Evaluate a Nearley conversion target
+   */
+  private evaluateConversionTarget(value: Value, target: NearleyAST.ConversionTargetNode): Value {
+    // Units target (simple unit, derived unit, or composite unit)
+    if (target.type === 'Units') {
+      return this.convertToNearleyUnit(value, target as NearleyAST.UnitsNode);
+    }
 
-      case 'CompositeUnitTarget':
-        return this.convertToCompositeUnit(value, target.units);
+    // Presentation format target
+    if (target.type === 'PresentationFormat') {
+      return this.convertToPresentationFormat(value, target as NearleyAST.PresentationFormatNode);
+    }
 
-      case 'PresentationTarget':
-        return this.convertToPresentation(value, target.format);
+    // Property target (year, month, day, etc.)
+    if (target.type === 'PropertyTarget') {
+      const propTarget = target as NearleyAST.PropertyTargetNode;
+      return this.extractProperty(value, propTarget.property);
+    }
 
-      case 'BaseTarget':
-        return this.convertToPresentation(value, target.base);
+    // Timezone target
+    if (target.type === 'UTCOffset' || target.type === 'TimezoneName') {
+      const tz = target as NearleyAST.TimezoneNode;
+      const rawTz = tz.type === 'TimezoneName' ? tz.zoneName : (tz as NearleyAST.UTCOffsetNode).offsetStr;
+      const timezone = this.dataLoader.resolveTimezone(rawTz) || rawTz;
+      return this.convertToTimezone(value, timezone);
+    }
 
-      case 'PropertyTarget':
-        return this.extractProperty(value, target.property);
+    return this.createError(`Unknown conversion target: ${(target as any).type}`);
+  }
 
-      case 'TimezoneTarget':
-        return this.convertToTimezone(value, target.timezone);
+  /**
+   * Convert value to Nearley unit target (handles simple, derived, and composite)
+   */
+  private convertToNearleyUnit(value: Value, unitsNode: NearleyAST.UnitsNode): Value {
+    const terms = unitsNode.terms as NearleyAST.UnitWithExponentNode[];
 
-      case 'PrecisionTarget':
-        return this.applyPrecision(value, target.precision, target.mode);
+    // Check if this is a composite unit target (multiple simple units with exponent 1)
+    // e.g., "to ft in" → composite conversion
+    const isComposite = terms.length > 1 && terms.every(t => t.exponent === 1);
 
-      default:
-        return this.createError(`Unknown conversion target: ${(target as any).type}`);
+    if (isComposite) {
+      // Resolve each unit for composite conversion with context-aware prime/doublePrime
+      // Rule: within the composite target, if degree appears before prime/doublePrime,
+      // interpret them as arcminute/arcsecond. Otherwise, foot/inch.
+      const resolvedUnits: Unit[] = [];
+      let hasDegreeInTarget = false;
+      for (const term of terms) {
+        // Check if this term is a degree unit BEFORE resolving (for context)
+        if (isDegreeUnit(term.unit.name)) {
+          hasDegreeInTarget = true;
+        }
+        const unitContext: UnitResolutionContext = { hasDegreeUnit: hasDegreeInTarget };
+        const resolved = resolveUnitFromNode(term.unit, this.dataLoader, unitContext);
+        const unit = this.resolveUnitById(resolved.id, resolved.displayName);
+        if (!unit) {
+          return this.createError(`Unknown unit in composite target`);
+        }
+        resolvedUnits.push(unit);
+      }
+
+      // Check if all targets have same dimension as source (true composite)
+      if (value.kind === 'number' && value.unit) {
+        const allSameDimension = resolvedUnits.every(u => u.dimension === value.unit!.dimension);
+        if (allSameDimension) {
+          return this.convertToCompositeUnitResolved(value, resolvedUnits);
+        }
+      }
+
+      // Fall through to derived unit conversion
+      return this.convertToDerivedUnitNearley(value, unitsNode);
+    }
+
+    // Single term or derived unit
+    if (terms.length === 1 && terms[0].exponent === 1) {
+      // Simple unit target
+      const resolved = resolveUnitFromNode(terms[0].unit, this.dataLoader);
+      const targetUnit = this.resolveUnitById(resolved.id, resolved.displayName);
+      if (!targetUnit) {
+        return this.createError('Unknown target unit');
+      }
+      return this.convertToSimpleUnit(value, targetUnit);
+    }
+
+    // Derived unit target
+    return this.convertToDerivedUnitNearley(value, unitsNode);
+  }
+
+  /**
+   * Convert value to a simple (single) unit
+   */
+  private convertToSimpleUnit(value: Value, targetUnit: Unit): Value {
+    // Handle composite source
+    if (value.kind === 'composite') {
+      for (const component of value.components) {
+        if (component.unit.dimension !== targetUnit.dimension) {
+          return this.createError('Cannot convert between different dimensions');
+        }
+      }
+      let totalInBase = 0;
+      for (const component of value.components) {
+        totalInBase += this.unitConverter.toBaseUnit(component.value, component.unit);
+      }
+      const result = this.unitConverter.fromBaseUnit(totalInBase, targetUnit);
+      return { kind: 'number', value: result, unit: targetUnit };
+    }
+
+    if (value.kind === 'derivedUnit') {
+      // Try derived unit conversion
+      return this.createError('Cannot convert derived unit to simple unit (not yet implemented)');
+    }
+
+    if (value.kind !== 'number') {
+      return this.createError(`Cannot convert ${value.kind} to unit`);
+    }
+
+    if (!value.unit) {
+      return this.createError('Cannot convert dimensionless value to unit');
+    }
+
+    if (value.unit.dimension !== targetUnit.dimension) {
+      return this.createError('Cannot convert between different dimensions');
+    }
+
+    try {
+      const converted = this.unitConverter.convert(value.value, value.unit, targetUnit);
+      return { kind: 'number', value: converted, unit: targetUnit };
+    } catch (e) {
+      return this.createError(`Conversion error: ${e}`);
     }
   }
 
   /**
-   * Evaluate a binary expression
+   * Convert value to derived unit using Nearley UnitsNode
    */
-  private evaluateBinary(expr: AST.BinaryExpression, context: EvaluationContext): Value {
-    const left = this.evaluateExpression(expr.left, context);
+  private convertToDerivedUnitNearley(value: Value, targetNode: NearleyAST.UnitsNode): Value {
+    // Resolve target terms
+    const targetTerms = this.resolveNearleyUnitTerms(targetNode);
+    if (!targetTerms) {
+      return this.createError('Unknown unit in target');
+    }
+
+    // Extract source info
+    let sourceValue: number;
+    let sourceTerms: Array<{ unit: Unit; exponent: number }>;
+
+    if (value.kind === 'number') {
+      if (!value.unit) {
+        return this.createError('Cannot convert dimensionless value to derived unit');
+      }
+      sourceValue = value.value;
+      sourceTerms = [{ unit: value.unit, exponent: 1 }];
+    } else if (value.kind === 'derivedUnit') {
+      sourceValue = value.value;
+      sourceTerms = value.terms;
+    } else {
+      return this.createError(`Cannot convert ${value.kind} to derived unit`);
+    }
+
+    // Check dimensional compatibility
+    const sourceDimension = this.computeDimension(sourceTerms);
+    const targetDimension = this.computeDimension(targetTerms);
+
+    if (!this.areDimensionsCompatible(sourceDimension, targetDimension)) {
+      return this.createError('Cannot convert between different dimensions');
+    }
+
+    // Convert through base units
+    let valueInBase = sourceValue;
+    for (const term of sourceTerms) {
+      const factorToBase = this.unitConverter.toBaseUnit(1, term.unit);
+      valueInBase *= Math.pow(factorToBase, term.exponent);
+    }
+
+    let result = valueInBase;
+    for (const term of targetTerms) {
+      const factorFromBase = this.unitConverter.fromBaseUnit(1, term.unit);
+      result *= Math.pow(factorFromBase, term.exponent);
+    }
+
+    return {
+      kind: 'derivedUnit',
+      value: result,
+      terms: targetTerms
+    };
+  }
+
+  /**
+   * Convert value to composite unit using resolved Unit objects
+   */
+  private convertToCompositeUnitResolved(value: Value, resolvedUnits: Unit[]): Value {
+    if (value.kind !== 'number' || !value.unit) {
+      return this.createError('Cannot convert to composite unit');
+    }
+
+    try {
+      const result = this.unitConverter.convertComposite(
+        [{ value: value.value, unitId: value.unit.id }],
+        resolvedUnits.map(u => u.id)
+      );
+
+      const components = result.components.map(comp => {
+        const unit = this.dataLoader.getUnitById(comp.unitId);
+        if (!unit) throw new Error(`Unit not found: ${comp.unitId}`);
+        return { value: comp.value, unit };
+      });
+
+      return { kind: 'composite', components };
+    } catch (e) {
+      return this.createError(`Composite conversion error: ${e}`);
+    }
+  }
+
+  /**
+   * Convert Nearley PresentationFormatNode to presentation value
+   */
+  private convertToPresentationFormat(value: Value, node: NearleyAST.PresentationFormatNode): Value {
+    switch (node.format) {
+      case 'value':
+        // "to value" - unwrap presentation, identity otherwise
+        return value;
+
+      case 'base': {
+        const baseNode = node as NearleyAST.BaseFormatNode;
+        return this.convertToPresentation(value, baseNode.base);
+      }
+
+      case 'sigFigs': {
+        const sfNode = node as NearleyAST.SigFigsFormatNode;
+        return this.applyPrecision(value, sfNode.sigFigs, 'sigfigs');
+      }
+
+      case 'decimals': {
+        const decNode = node as NearleyAST.DecimalsFormatNode;
+        return this.applyPrecision(value, decNode.decimals, 'decimals');
+      }
+
+      case 'scientific':
+        return this.convertToPresentation(value, 'scientific');
+
+      case 'fraction':
+        return this.convertToPresentation(value, 'fraction');
+
+      case 'unix': {
+        const unixNode = node as NearleyAST.UnixFormatNode;
+        if (unixNode.unit === 'millisecond' || unixNode.unit === 'milliseconds' || unixNode.unit === 'ms') {
+          return this.convertToPresentation(value, 'unixMilliseconds');
+        }
+        return this.convertToPresentation(value, 'unix');
+      }
+
+      case 'namedFormat': {
+        const namedNode = node as NearleyAST.NamedFormatNode;
+        const formatName = namedNode.name.toLowerCase();
+        // Map named formats to PresentationFormat strings
+        const formatMap: Record<string, PresentationFormat> = {
+          'binary': 'binary', 'bin': 'bin',
+          'octal': 'octal', 'oct': 'oct',
+          'decimal': 'decimal', 'dec': 'dec',
+          'hex': 'hex', 'hexadecimal': 'hexadecimal',
+          'fraction': 'fraction',
+          'scientific': 'scientific',
+          'ordinal': 'ordinal',
+        };
+        const mapped = formatMap[formatName];
+        if (mapped) {
+          return this.convertToPresentation(value, mapped);
+        }
+        return this.createError(`Unknown presentation format: ${namedNode.name}`);
+      }
+
+      default: {
+        // Handle formats not in the TypeScript type system (ISO 8601, RFC 9557, RFC 2822)
+        const rawFormat = (node as any).format as string;
+        const normalizedFormat = rawFormat.toLowerCase().replace(/\s+/g, '');
+        if (normalizedFormat === 'iso8601') return this.convertToPresentation(value, 'ISO 8601');
+        if (normalizedFormat === 'rfc9557') return this.convertToPresentation(value, 'RFC 9557');
+        if (normalizedFormat === 'rfc2822') return this.convertToPresentation(value, 'RFC 2822');
+        return this.createError(`Unknown presentation format: ${rawFormat}`);
+      }
+    }
+  }
+
+  /**
+   * Evaluate a binary expression (Nearley AST)
+   */
+  private evaluateBinary(expr: NearleyAST.BinaryExpressionNode, context: EvaluationContext): Value {
+    const left = this.evaluateExpression(expr.left as NearleyAST.ExpressionNode, context);
     if (left.kind === 'error') return left;
 
-    const right = this.evaluateExpression(expr.right, context);
+    const right = this.evaluateExpression(expr.right as NearleyAST.ExpressionNode, context);
     if (right.kind === 'error') return right;
 
     const op = expr.operator;
 
-    // Logical operators (short-circuit)
-    if (op === '&&' || op === '||') {
-      return this.evaluateLogical(op, left, right);
-    }
+    // Map Nearley operators to internal operator strings
+    switch (op) {
+      // Logical
+      case 'and': return this.evaluateLogical('&&', left, right);
+      case 'or': return this.evaluateLogical('||', left, right);
 
-    // Comparison operators
-    if (op === '==' || op === '!=' || op === '<' || op === '<=' || op === '>' || op === '>=') {
-      return this.evaluateComparison(op, left, right);
-    }
+      // Comparison
+      case 'equals': return this.evaluateComparison('==', left, right);
+      case 'notEquals': return this.evaluateComparison('!=', left, right);
+      case 'lessThan': return this.evaluateComparison('<', left, right);
+      case 'lessThanOrEqual': return this.evaluateComparison('<=', left, right);
+      case 'greaterThan': return this.evaluateComparison('>', left, right);
+      case 'greaterThanOrEqual': return this.evaluateComparison('>=', left, right);
 
-    // Arithmetic operators
-    if (op === '+' || op === '-' || op === '*' || op === '/' || op === '%' || op === 'mod' || op === 'per' || op === '^') {
-      return this.evaluateArithmetic(op, left, right);
-    }
+      // Arithmetic
+      case 'plus': return this.evaluateArithmetic('+', left, right);
+      case 'minus': return this.evaluateArithmetic('-', left, right);
+      case 'times': return this.evaluateArithmetic('*', left, right);
+      case 'slash':
+      case 'divide': return this.evaluateArithmetic('/', left, right);
+      case 'percent':
+      case 'kw_mod': return this.evaluateArithmetic('%', left, right);
+      case 'kw_per': return this.evaluateArithmetic('per', left, right);
+      case 'caret':
+      case 'superscript': return this.evaluateArithmetic('^', left, right);
 
-    // Bitwise operators
-    if (op === '&' || op === '|' || op === 'xor' || op === '<<' || op === '>>') {
-      return this.evaluateBitwise(op, left, right);
-    }
+      // Bitwise
+      case 'ampersand': return this.evaluateBitwise('&', left, right);
+      case 'pipe': return this.evaluateBitwise('|', left, right);
+      case 'kw_xor': return this.evaluateBitwise('xor', left, right);
+      case 'lShift': return this.evaluateBitwise('<<', left, right);
+      case 'rShift': return this.evaluateBitwise('>>', left, right);
 
-    return this.createError(`Unknown binary operator: ${op}`);
+      default:
+        return this.createError(`Unknown binary operator: ${op}`);
+    }
   }
 
   /**
@@ -1217,15 +1887,15 @@ export class Evaluator {
   }
 
   /**
-   * Evaluate a unary expression
+   * Evaluate a unary expression (Nearley AST)
    */
-  private evaluateUnary(expr: AST.UnaryExpression, context: EvaluationContext): Value {
-    const operand = this.evaluateExpression(expr.operand, context);
+  private evaluateUnary(expr: NearleyAST.UnaryExpressionNode, context: EvaluationContext): Value {
+    const operand = this.evaluateExpression(expr.argument as NearleyAST.ExpressionNode, context);
     if (operand.kind === 'error') return operand;
 
     const op = expr.operator;
 
-    if (op === '-') {
+    if (op === 'minus') {
       if (operand.kind === 'number') {
         return { kind: 'number', value: -operand.value, unit: operand.unit };
       }
@@ -1243,13 +1913,13 @@ export class Evaluator {
       return this.createError(`Cannot negate ${operand.kind}`);
     }
 
-    if (op === '!') {
+    if (op === 'bang') {
       const bool = this.toBoolean(operand);
       if (bool.kind === 'error') return bool;
       return { kind: 'boolean', value: !bool.value };
     }
 
-    if (op === '~') {
+    if (op === 'tilde') {
       if (operand.kind !== 'number') {
         return this.createError('Bitwise NOT requires a number');
       }
@@ -1265,11 +1935,11 @@ export class Evaluator {
   /**
    * Evaluate a postfix expression (factorial)
    */
-  private evaluatePostfix(expr: AST.PostfixExpression, context: EvaluationContext): Value {
-    const operand = this.evaluateExpression(expr.operand, context);
+  private evaluatePostfix(expr: NearleyAST.PostfixExpressionNode, context: EvaluationContext): Value {
+    const operand = this.evaluateExpression(expr.argument as NearleyAST.ExpressionNode, context);
     if (operand.kind === 'error') return operand;
 
-    if (expr.operator === '!') {
+    if (expr.operator === 'bang') {
       if (operand.kind !== 'number') {
         return this.createError('Factorial requires a number');
       }
@@ -1294,9 +1964,9 @@ export class Evaluator {
   }
 
   /**
-   * Evaluate a function call
+   * Evaluate a function call (Nearley AST)
    */
-  private evaluateFunctionCall(expr: AST.FunctionCall, context: EvaluationContext): Value {
+  private evaluateFunctionCall(expr: NearleyAST.FunctionCallNode, context: EvaluationContext): Value {
     // Check if function preserves units (round, floor, ceil, abs, trunc, frac)
     const preservesUnits = ['round', 'floor', 'ceil', 'abs', 'trunc', 'frac'].includes(expr.name.toLowerCase());
 
@@ -1308,8 +1978,9 @@ export class Evaluator {
     // Special handling for duration arguments with preservesUnits functions
     let durationArg: DurationValue | undefined;
 
-    for (let i = 0; i < expr.arguments.length; i++) {
-      const argExpr = expr.arguments[i];
+    const funcArgs = expr.arguments as NearleyAST.ExpressionNode[];
+    for (let i = 0; i < funcArgs.length; i++) {
+      const argExpr = funcArgs[i];
       let argValue = this.evaluateExpression(argExpr, context);
       if (argValue.kind === 'error') return argValue;
 
@@ -1422,33 +2093,6 @@ export class Evaluator {
     return { kind: 'number', value: result.value };
   }
 
-  /**
-   * Evaluate an identifier (variable lookup or implicit unit)
-   */
-  private evaluateIdentifier(expr: AST.Identifier, context: EvaluationContext): Value {
-    // Check for relative instant keywords first
-    const relativeInstant = this.evaluateRelativeInstantKeyword(expr.name);
-    if (relativeInstant) {
-      return relativeInstant;
-    }
-
-    // Try to look up as a variable
-    const value = context.variables.get(expr.name);
-    if (value !== undefined) {
-      return value;
-    }
-
-    // If not found as variable, check if it's a unit name
-    // This handles cases like "100 km / h" where "h" is parsed as an identifier
-    const unit = this.dataLoader.getUnitByName(expr.name);
-    if (unit) {
-      // Treat as implicit "1 [unit]"
-      return { kind: 'number', value: 1, unit };
-    }
-
-    // Not a variable or unit - error
-    return this.createError(`Undefined variable: ${expr.name}`);
-  }
 
   /**
    * Evaluate relative instant keywords (now, today, tomorrow, yesterday)
@@ -1479,242 +2123,14 @@ export class Evaluator {
     }
   }
 
-  /**
-   * Evaluate relative instant expression (e.g., "2 days ago", "5 minutes from now")
-   */
-  private evaluateRelativeInstant(expr: AST.RelativeInstantExpression, context: EvaluationContext): Value {
-    const amountValue = this.evaluateExpression(expr.amount, context);
-    if (amountValue.kind === 'error') return amountValue;
 
-    if (amountValue.kind !== 'number' || !amountValue.unit) {
-      return this.createError('Relative time expressions require number with time unit');
-    }
-
-    const duration = this.convertTimeToDuration(amountValue.value, amountValue.unit);
-    const now = this.dateTimeEngine.getCurrentInstant();
-
-    const result = expr.direction === 'ago'
-      ? this.dateTimeEngine.subtractFromInstant(now, duration)
-      : this.dateTimeEngine.addToInstant(now, duration);
-
-    return { kind: 'instant', instant: result };
-  }
-
-  /**
-   * Convert value to unit
-   */
-  private convertToUnit(value: Value, unitExpr: AST.UnitExpression): Value {
-    if (value.kind !== 'number' && value.kind !== 'derivedUnit' && value.kind !== 'composite') {
-      return this.createError(`Cannot convert ${value.kind} to unit`);
-    }
-
-    // Handle derived unit target (e.g., "100 km/h to m/s")
-    if (unitExpr.type === 'DerivedUnit') {
-      return this.convertToDerivedUnit(value, unitExpr);
-    }
-
-    // Handle simple unit target
-    const targetUnit = this.resolveUnit(unitExpr);
-    if (!targetUnit) {
-      return this.createError('Unknown target unit');
-    }
-
-    // Handle composite unit source (e.g., "6 ft 3 in to cm")
-    if (value.kind === 'composite') {
-      // Check dimension compatibility: all components must have same dimension as target
-      for (const component of value.components) {
-        if (component.unit.dimension !== targetUnit.dimension) {
-          return this.createError('Cannot convert between different dimensions');
-        }
-      }
-
-      // Convert all components to base unit and sum them
-      let totalInBase = 0;
-      for (const component of value.components) {
-        const inBase = this.unitConverter.toBaseUnit(component.value, component.unit);
-        totalInBase += inBase;
-      }
-
-      // Convert from base unit to target unit
-      const result = this.unitConverter.fromBaseUnit(totalInBase, targetUnit);
-      return { kind: 'number', value: result, unit: targetUnit };
-    }
-
-    if (value.kind !== 'number') {
-      return this.createError('Cannot convert derived unit to simple unit (not yet implemented)');
-    }
-
-    if (!value.unit) {
-      return this.createError('Cannot convert dimensionless value to unit');
-    }
-
-    if (value.unit.dimension !== targetUnit.dimension) {
-      return this.createError('Cannot convert between different dimensions');
-    }
-
-    try {
-      const converted = this.unitConverter.convert(value.value, value.unit, targetUnit);
-      return { kind: 'number', value: converted, unit: targetUnit };
-    } catch (e) {
-      return this.createError(`Conversion error: ${e}`);
-    }
-  }
-
-  /**
-   * Convert value to derived unit (e.g., "100 km/h to m/s")
-   *
-   * Algorithm:
-   * 1. Extract source terms (convert NumberValue to single term if needed)
-   * 2. Resolve target terms (SimpleUnit → Unit)
-   * 3. Check dimensional compatibility
-   * 4. Convert source value to base units using term-by-term conversion
-   * 5. Convert from base units to target units
-   * 6. Return new DerivedUnitValue with target units
-   */
-  private convertToDerivedUnit(value: Value, targetExpr: AST.DerivedUnit): Value {
-    // Step 1: Extract source terms
-    let sourceValue: number;
-    let sourceTerms: Array<{ unit: Unit; exponent: number }>;
-
-    if (value.kind === 'number') {
-      if (!value.unit) {
-        return this.createError('Cannot convert dimensionless value to derived unit');
-      }
-      sourceValue = value.value;
-      sourceTerms = [{ unit: value.unit, exponent: 1 }];
-    } else if (value.kind === 'derivedUnit') {
-      sourceValue = value.value;
-      sourceTerms = value.terms;
-    } else {
-      return this.createError(`Cannot convert ${value.kind} to derived unit`);
-    }
-
-    // Step 2: Resolve target terms
-    const targetTerms: Array<{ unit: Unit; exponent: number }> = [];
-    for (const targetTerm of targetExpr.terms) {
-      const resolvedUnit = this.resolveUnit(targetTerm.unit);
-      if (!resolvedUnit) {
-        return this.createError('Unknown unit in target');
-      }
-      targetTerms.push({ unit: resolvedUnit, exponent: targetTerm.exponent });
-    }
-
-    // Step 3: Check dimensional compatibility
-    const sourceDimension = this.computeDimension(sourceTerms);
-    const targetDimension = this.computeDimension(targetTerms);
-
-    if (!this.areDimensionsCompatible(sourceDimension, targetDimension)) {
-      return this.createError('Cannot convert between different dimensions');
-    }
-
-    // Step 4: Convert source to base units
-    let valueInBase = sourceValue;
-    for (const term of sourceTerms) {
-      const factorToBase = this.unitConverter.toBaseUnit(1, term.unit);
-      valueInBase *= Math.pow(factorToBase, term.exponent);
-    }
-
-    // Step 5: Convert from base units to target units
-    let result = valueInBase;
-    for (const term of targetTerms) {
-      const factorFromBase = this.unitConverter.fromBaseUnit(1, term.unit);
-      result *= Math.pow(factorFromBase, term.exponent);
-    }
-
-    // Step 6: Return new DerivedUnitValue
-    return {
-      kind: 'derivedUnit',
-      value: result,
-      terms: targetTerms
-    };
-  }
-
-  /**
-   * Convert value to composite unit
-   */
-  private convertToCompositeUnit(value: Value, targetUnits: AST.UnitExpression[]): Value {
-    if (value.kind !== 'number' && value.kind !== 'derivedUnit') {
-      return this.createError(`Cannot convert ${value.kind} to composite unit`);
-    }
-
-    // For number values, must have a unit
-    if (value.kind === 'number' && !value.unit) {
-      return this.createError('Cannot convert dimensionless value to composite unit');
-    }
-
-    const resolvedUnits = targetUnits.map(u => this.resolveUnit(u)).filter((u): u is Unit => u !== null);
-    if (resolvedUnits.length !== targetUnits.length) {
-      return this.createError('Unknown unit in composite target');
-    }
-
-    // Determine if this is a derived unit conversion or composite value conversion
-    // - Composite value: source and all targets have SAME dimension (e.g., 10 m → ft in)
-    // - Derived unit: source dimension equals PRODUCT of target dimensions (e.g., 10 acre → ft in)
-
-    // Extract source terms for dimension computation
-    const sourceTerms = value.kind === 'number'
-      ? [{ unit: value.unit!, exponent: 1 }]
-      : value.terms; // derivedUnit already has terms
-
-    const sourceDimension = this.computeDimension(sourceTerms);
-    const targetDimension = this.computeDimension(resolvedUnits.map(u => ({ unit: u, exponent: 1 })));
-
-    // Check if target is product of dimensions (derived unit conversion)
-    const isDerivedUnitConversion = this.areDimensionsCompatible(sourceDimension, targetDimension);
-
-    // Check if all targets have same dimension as source (composite value conversion)
-    // For number values, compare against value.unit.dimension
-    // For derivedUnit values, check if all terms have same base dimension
-    const isCompositeValueConversion = value.kind === 'number'
-      ? resolvedUnits.every(u => u.dimension === value.unit!.dimension)
-      : false; // derivedUnit cannot be composite value
-
-    if (isDerivedUnitConversion && !isCompositeValueConversion) {
-      // This is a derived unit conversion: e.g., 10 acre (area) → ft in (length×length)
-      // Convert to derived unit representation
-      const derivedUnitExpr: AST.DerivedUnit = {
-        type: 'DerivedUnit',
-        terms: targetUnits.map(unitExpr => ({
-          unit: unitExpr,
-          exponent: 1
-        }) as AST.UnitTerm),
-        start: { line: 0, column: 0, offset: 0 },
-        end: { line: 0, column: 0, offset: 0 }
-      };
-
-      return this.convertToDerivedUnit(value, derivedUnitExpr);
-    }
-
-    // Standard composite value conversion: e.g., 10 m (length) → ft in (length, length)
-    // Only applies to number values (derivedUnit takes the other branch above)
-    if (value.kind !== 'number') {
-      return this.createError(`Cannot convert ${value.kind} to composite unit (internal error)`);
-    }
-
-    try {
-      const result = this.unitConverter.convertComposite(
-        [{ value: value.value, unitId: value.unit!.id }],
-        resolvedUnits.map(u => u.id)
-      );
-
-      const components = result.components.map(comp => {
-        const unit = this.dataLoader.getUnitById(comp.unitId);
-        if (!unit) throw new Error(`Unit not found: ${comp.unitId}`);
-        return { value: comp.value, unit };
-      });
-
-      return { kind: 'composite', components };
-    } catch (e) {
-      return this.createError(`Composite conversion error: ${e}`);
-    }
-  }
 
   /**
    * Convert value to presentation format or base
    * Accepts format string (binary, hex, etc.) OR numeric base (2-36)
    * Preserves units - only formats the numeric value(s)
    */
-  private convertToPresentation(value: Value, format: AST.PresentationFormat | number): Value {
+  private convertToPresentation(value: Value, format: PresentationFormat | number): Value {
     // Don't wrap error values
     if (value.kind === 'error') {
       return value;
@@ -1722,12 +2138,12 @@ export class Evaluator {
 
     // Handle date/time presentation formats
     // Accept both lowercase and grammar-produced format names (with spaces, mixed case)
-    const dateTimeFormats: AST.PresentationFormat[] = [
-      'iso8601', 'ISO 8601',    // Accept both variants
-      'rfc9557', 'RFC 9557',
-      'rfc2822', 'RFC 2822',
-      'unix',                   // Already normalized by ast-adapter
-      'unixMilliseconds'        // Already normalized by ast-adapter
+    const dateTimeFormats: PresentationFormat[] = [
+      'ISO 8601',
+      'RFC 9557',
+      'RFC 2822',
+      'unix',
+      'unixMilliseconds'
     ];
     if (typeof format === 'string' && dateTimeFormats.includes(format)) {
       // Unix timestamps: convert date/time to numeric value (seconds or milliseconds since epoch)
@@ -1828,7 +2244,9 @@ export class Evaluator {
   /**
    * Extract property from date/time value
    */
-  private extractProperty(value: Value, property: AST.DateTimeProperty): Value {
+  private extractProperty(value: Value, property: string): Value {
+    // Map Nearley property names to internal names
+    if (property === 'weekday') property = 'dayOfWeek';
     if (value.kind === 'plainDate') {
       const date = value.date;
       const temporal = Temporal.PlainDate.from({
@@ -2204,95 +2622,6 @@ export class Evaluator {
     return this.createValueFromTerms(value * factor, simplified);
   }
 
-  /**
-   * Resolve a unit expression to a Unit object from the data loader
-   *
-   * Returns:
-   * - For SimpleUnit: the resolved Unit object from data loader, currency unit, or pseudo-unit for user-defined units
-   * - For DerivedUnit: null (caller should check unitExpr.type and handle separately)
-   *
-   * Note: DerivedUnit AST nodes are now created by the parser in conversion targets.
-   * Callers should check for DerivedUnit type and use convertToDerivedUnit() instead.
-   */
-  private resolveUnit(unitExpr: AST.UnitExpression): Unit | null {
-    if (unitExpr.type === 'SimpleUnit') {
-      // STEP 1: Try regular unit database first
-      const unit = this.dataLoader.getUnitById(unitExpr.unitId);
-      if (unit) return unit;
-
-      // STEP 2: Check unambiguous currency (ISO code)
-      const currency = this.dataLoader.getCurrencyByCode(unitExpr.unitId);
-      if (currency) {
-        // Get exchange rate relative to USD (base currency for 'currency' dimension)
-        // This allows currencies to work like regular units with conversion factors
-        let exchangeRate: number;
-
-        if (currency.code === 'USD') {
-          // USD is the base currency
-          exchangeRate = 1.0;
-        } else {
-          try {
-            // Convert 1 unit of this currency to USD to get the conversion factor
-            const converted = this.currencyConverter.convert(
-              { amount: 1.0, currencyCode: currency.code },
-              'USD'
-            );
-            exchangeRate = converted.amount;
-          } catch (e) {
-            // Exchange rates not loaded - return null to trigger error
-            return null;
-          }
-        }
-
-        return {
-          id: unitExpr.unitId,
-          dimension: 'currency', // ALL unambiguous currencies share "currency" dimension
-          names: [currency.code, ...currency.names],
-          conversion: { type: 'linear', factor: exchangeRate }, // Dynamic factor based on exchange rate!
-          displayName: {
-            symbol: currency.code,
-            singular: currency.displayName.singular,
-            plural: currency.displayName.plural || currency.displayName.singular
-          }
-        };
-      }
-
-      // STEP 3: Check ambiguous currency symbol ($, £, ¥)
-      if (unitExpr.unitId.startsWith('currency_symbol_')) {
-        const ambiguous = this.dataLoader.getAmbiguousCurrencyByAdjacentSymbol(unitExpr.name);
-        if (ambiguous) {
-          return {
-            id: unitExpr.unitId,
-            dimension: ambiguous.dimension, // e.g., "currency_symbol_0024" (unique per symbol)
-            names: [ambiguous.symbol],
-            conversion: { type: 'linear', factor: 1.0 },
-            displayName: {
-              symbol: ambiguous.symbol,
-              singular: ambiguous.symbol,
-              plural: ambiguous.symbol
-            }
-          };
-        }
-      }
-
-      // STEP 4: User-defined unit fallback
-      // Each user-defined unit gets its own unique dimension
-      return {
-        id: unitExpr.unitId,
-        dimension: `user_defined_${unitExpr.unitId}`,
-        names: [unitExpr.name],
-        conversion: { type: 'linear', factor: 1.0 },
-        displayName: {
-          symbol: unitExpr.name,
-          singular: unitExpr.name,
-          plural: unitExpr.name + 's'
-        }
-      };
-    }
-    // DerivedUnit: return null to indicate this needs special handling
-    // The caller should check unitExpr.type and call convertToDerivedUnit() instead
-    return null;
-  }
 
   /**
    * Convert value to boolean

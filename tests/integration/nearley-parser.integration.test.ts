@@ -59,7 +59,7 @@ describe('Nearley Parser Integration', () => {
       const oldResult = oldCalculator.calculate(input);
       const nearleyResult = nearleyCalculator.calculate(input);
 
-      expect(nearleyResult.results[0].type).toBe('VariableDefinition');
+      expect(nearleyResult.results[0].type).toBe('VariableAssignment');
       expect(nearleyResult.results[0].result).toBe('10');
       expect(nearleyResult.results[0].hasError).toBe(false);
       expect(nearleyResult.results[0].result).toBe(oldResult.results[0].result);

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { Evaluator, NumberValue, BooleanValue, Value } from '../src/evaluator';
 import { DataLoader } from '../src/data-loader';
 import { Calculator } from '../src/calculator';
-import * as AST from '../src/ast';
 
 // Helper to create evaluator with loaded data
 let dataLoader: DataLoader;
