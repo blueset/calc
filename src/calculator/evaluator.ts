@@ -1141,6 +1141,13 @@ export class Evaluator {
       return { kind: "number", value: result, unit: targetUnit };
     }
 
+    // Duration → implicit conversion to number/composite, then convert to target unit
+    if (value.kind === "duration" && targetUnit.dimension === "time") {
+      const asValue = this.durationToValue(value.duration);
+      if (asValue.kind === "error") return asValue;
+      return this.convertToSimpleUnit(asValue, targetUnit);
+    }
+
     if (value.kind !== "number") {
       return this.createError(
         `Cannot convert ${value.kind} to unit ${targetUnit.displayName.symbol}`,
@@ -2964,6 +2971,7 @@ export class Evaluator {
   private extractProperty(value: Value, property: string): Value {
     // Map Nearley property names to internal names
     if (property === "weekday") property = "dayOfWeek";
+    property = property.replace(/s$/, ""); // Remove plural 's' if present
     if (value.kind === "plainDate") {
       const date = value.date;
       const temporal = Temporal.PlainDate.from({
@@ -3110,6 +3118,63 @@ export class Evaluator {
           return this.createError(
             `Cannot extract ${property} from ZonedDateTime`,
           );
+      }
+    }
+
+    if (value.kind === "instant") {
+      // Convert instant to ZonedDateTime in system timezone to extract properties
+      const systemTimezone = Temporal.Now.timeZoneId();
+      const temporal = toTemporalInstant(value.instant).toZonedDateTimeISO(
+        systemTimezone,
+      );
+
+      switch (property) {
+        case "year":
+          return { kind: "number", value: temporal.year };
+        case "month":
+          return { kind: "number", value: temporal.month };
+        case "day":
+          return { kind: "number", value: temporal.day };
+        case "hour":
+          return { kind: "number", value: temporal.hour };
+        case "minute":
+          return { kind: "number", value: temporal.minute };
+        case "second":
+          return { kind: "number", value: temporal.second };
+        case "millisecond":
+          return { kind: "number", value: temporal.millisecond };
+        case "dayOfWeek":
+          return { kind: "number", value: temporal.dayOfWeek };
+        case "dayOfYear":
+          return { kind: "number", value: temporal.dayOfYear };
+        case "weekOfYear":
+          return { kind: "number", value: temporal.weekOfYear ?? 0 };
+        case "offset": {
+          const offsetNanoseconds = temporal.offsetNanoseconds;
+          if (offsetNanoseconds === 0) {
+            const minuteUnit = this.dataLoader.getUnitById("minute");
+            if (!minuteUnit) {
+              return this.createError("Minute unit not found");
+            }
+            return { kind: "number", value: 0, unit: minuteUnit };
+          }
+          try {
+            const duration = Temporal.Duration.from({
+              nanoseconds: offsetNanoseconds,
+            });
+            const rounded = duration.round({
+              largestUnit: "hour",
+              smallestUnit: "minute",
+            });
+            return { kind: "duration", duration: rounded };
+          } catch (error) {
+            return this.createError(
+              `Error creating duration for offset: ${error}`,
+            );
+          }
+        }
+        default:
+          return this.createError(`Cannot extract ${property} from Instant`);
       }
     }
 
@@ -3571,6 +3636,52 @@ export class Evaluator {
     // Base unit for time is second
     const valueInSeconds = this.unitConverter.toBaseUnit(value, unit);
     return this.dateTimeEngine.createDuration({ seconds: valueInSeconds });
+  }
+
+  /**
+   * Convert a Duration to a NumberValue (single field) or CompositeUnitValue (multiple fields).
+   * Inverse of convertTimeToDuration.
+   */
+  private durationToValue(
+    duration: Duration,
+  ): NumberValue | CompositeUnitValue | ErrorValue {
+    const durationToUnit: Array<{ field: keyof Duration; unitId: string }> = [
+      { field: "years", unitId: "year" },
+      { field: "months", unitId: "month" },
+      { field: "weeks", unitId: "week" },
+      { field: "days", unitId: "day" },
+      { field: "hours", unitId: "hour" },
+      { field: "minutes", unitId: "minute" },
+      { field: "seconds", unitId: "second" },
+      { field: "milliseconds", unitId: "millisecond" },
+    ];
+
+    const components: Array<{ value: number; unit: Unit }> = [];
+    for (const { field, unitId } of durationToUnit) {
+      const val = duration[field];
+      if (val) {
+        const unit = this.dataLoader.getUnitById(unitId);
+        if (!unit) continue;
+        components.push({ value: val, unit });
+      }
+    }
+
+    if (components.length === 0) {
+      // Zero duration — return 0 seconds
+      const secUnit = this.dataLoader.getUnitById("second");
+      if (!secUnit) return this.createError("Cannot resolve second unit");
+      return { kind: "number", value: 0, unit: secUnit };
+    }
+
+    if (components.length === 1) {
+      return {
+        kind: "number",
+        value: components[0].value,
+        unit: components[0].unit,
+      };
+    }
+
+    return { kind: "composite", components };
   }
 
   /**

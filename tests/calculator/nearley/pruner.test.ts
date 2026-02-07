@@ -571,6 +571,161 @@ describe('Pruner Unit Tests', () => {
         }
       });
 
+      it('should reject PropertyTarget on non-temporal Value nodes', () => {
+        const context = createContext();
+        const target: NearleyAST.PropertyTargetNode = {
+          type: 'PropertyTarget',
+          location: 0,
+          property: 'minute'
+        };
+
+        // Dimensionless value: "100 in minute"
+        const dimensionless: NearleyAST.ConversionNode = {
+          type: 'Conversion',
+          location: 0,
+          expression: createValue('100'),
+          operator: 'kw_to',
+          target
+        };
+        expect(pruneInvalidCandidates([dimensionless], context)).toHaveLength(0);
+
+        // Value with unit: "100 hour in minute"
+        const withUnit: NearleyAST.ConversionNode = {
+          type: 'Conversion',
+          location: 0,
+          expression: {
+            type: 'Value',
+            location: 0,
+            value: { type: 'NumberLiteral', location: 0, subType: 'decimal', base: 10, value: '100' },
+            unit: {
+              type: 'Units',
+              location: 0,
+              subType: 'simple',
+              terms: [{
+                type: 'UnitWithExponent',
+                location: 0,
+                unit: { type: 'Unit', location: 0, name: 'hour', matched: 'unit' },
+                exponent: 1
+              }]
+            }
+          },
+          operator: 'kw_to',
+          target
+        };
+        expect(pruneInvalidCandidates([withUnit], context)).toHaveLength(0);
+      });
+
+      it('should reject PropertyTarget on BinaryExpression of Values', () => {
+        const context = createContext();
+        const target: NearleyAST.PropertyTargetNode = {
+          type: 'PropertyTarget',
+          location: 0,
+          property: 'minute'
+        };
+        const candidate: NearleyAST.ConversionNode = {
+          type: 'Conversion',
+          location: 0,
+          expression: {
+            type: 'BinaryExpression',
+            location: 0,
+            left: createValue('100'),
+            operator: '+',
+            right: createValue('50')
+          },
+          operator: 'kw_to',
+          target
+        };
+        expect(pruneInvalidCandidates([candidate], context)).toHaveLength(0);
+      });
+
+      it('should accept PropertyTarget on temporal expressions', () => {
+        const context = createContext();
+        const target: NearleyAST.PropertyTargetNode = {
+          type: 'PropertyTarget',
+          location: 0,
+          property: 'minute'
+        };
+
+        // PlainTime
+        const plainTime: NearleyAST.ConversionNode = {
+          type: 'Conversion',
+          location: 0,
+          expression: {
+            type: 'PlainTime',
+            location: 0,
+            subType: 'hm',
+            hour: 12,
+            minute: 35
+          },
+          operator: 'kw_to',
+          target
+        };
+        expect(pruneInvalidCandidates([plainTime], context)).toHaveLength(1);
+
+        // BinaryExpression with temporal operand: "PlainTime + Value"
+        const mixed: NearleyAST.ConversionNode = {
+          type: 'Conversion',
+          location: 0,
+          expression: {
+            type: 'BinaryExpression',
+            location: 0,
+            left: {
+              type: 'PlainTime',
+              location: 0,
+              subType: 'hm',
+              hour: 12,
+              minute: 35
+            },
+            operator: '+',
+            right: createValue('1')
+          },
+          operator: 'kw_to',
+          target
+        };
+        expect(pruneInvalidCandidates([mixed], context)).toHaveLength(1);
+      });
+
+      it('should reject PropertyTarget on subtraction of two temporal values', () => {
+        const context = createContext();
+        const target: NearleyAST.PropertyTargetNode = {
+          type: 'PropertyTarget',
+          location: 0,
+          property: 'minute'
+        };
+        // "tomorrow - now in minute" — subtraction of two Instants yields a Duration
+        const candidate: NearleyAST.ConversionNode = {
+          type: 'Conversion',
+          location: 0,
+          expression: {
+            type: 'BinaryExpression',
+            location: 0,
+            left: { type: 'Instant', location: 0, keyword: 'tomorrow' },
+            operator: 'minus',
+            right: { type: 'Instant', location: 0, keyword: 'now' }
+          },
+          operator: 'kw_to',
+          target
+        };
+        expect(pruneInvalidCandidates([candidate], context)).toHaveLength(0);
+      });
+
+      it('should conservatively accept PropertyTarget on Variable', () => {
+        const context = createContext(['x']);
+        const target: NearleyAST.PropertyTargetNode = {
+          type: 'PropertyTarget',
+          location: 0,
+          property: 'hour'
+        };
+        const candidate: NearleyAST.ConversionNode = {
+          type: 'Conversion',
+          location: 0,
+          expression: createVariable('x'),
+          operator: 'kw_to',
+          target
+        };
+        expect(pruneInvalidCandidates([candidate], context)).toHaveLength(1);
+      });
+
       it('should validate Units targets', () => {
         const context = createContext();
         const target: NearleyAST.UnitsNode = {

@@ -10,8 +10,8 @@
  * so no unit existence validation is needed.
  */
 
-import * as NearleyAST from './types';
-import { DataLoader } from '../data-loader';
+import * as NearleyAST from "./types";
+import { DataLoader } from "../data-loader";
 
 export interface PruningContext {
   dataLoader: DataLoader;
@@ -25,9 +25,9 @@ export interface PruningContext {
  */
 export function pruneInvalidCandidates(
   candidates: NearleyAST.LineNode[],
-  context: PruningContext
+  context: PruningContext,
 ): NearleyAST.LineNode[] {
-  return candidates.filter(candidate => {
+  return candidates.filter((candidate) => {
     if (candidate === null) {
       // Null lines are valid (empty lines)
       return true;
@@ -55,7 +55,10 @@ export function pruneInvalidCandidates(
 /**
  * Validate that all variable references are in scope
  */
-function validateVariableScopes(node: NearleyAST.LineNode, context: PruningContext): boolean {
+function validateVariableScopes(
+  node: NearleyAST.LineNode,
+  context: PruningContext,
+): boolean {
   if (node === null) {
     return true;
   }
@@ -80,11 +83,11 @@ function collectVariables(node: NearleyAST.LineNode): Set<string> {
   const variables = new Set<string>();
 
   function visit(n: any): void {
-    if (!n || typeof n !== 'object') {
+    if (!n || typeof n !== "object") {
       return;
     }
 
-    if (n.type === 'Variable') {
+    if (n.type === "Variable") {
       variables.add(n.name);
       return;
     }
@@ -94,7 +97,7 @@ function collectVariables(node: NearleyAST.LineNode): Set<string> {
       const value = n[key];
       if (Array.isArray(value)) {
         value.forEach(visit);
-      } else if (typeof value === 'object' && value !== null) {
+      } else if (typeof value === "object" && value !== null) {
         visit(value);
       }
     }
@@ -108,66 +111,75 @@ function collectVariables(node: NearleyAST.LineNode): Set<string> {
  * Validate types - basic dimension compatibility checks
  * This is a lightweight check; full type checking happens in evaluator
  */
-function validateTypes(node: NearleyAST.LineNode, context: PruningContext): boolean {
+function validateTypes(
+  node: NearleyAST.LineNode,
+  context: PruningContext,
+): boolean {
   if (node === null) {
     return true;
   }
 
   // For now, just ensure the tree structure is valid
   // More sophisticated type checking can be added later
-  return validateExpression(node.type === 'VariableAssignment' ? node.value : node, context);
+  return validateExpression(
+    node.type === "VariableAssignment" ? node.value : node,
+    context,
+  );
 }
 
 /**
  * Validate an expression node
  */
-function validateExpression(node: NearleyAST.ExpressionNode, context: PruningContext): boolean {
+function validateExpression(
+  node: NearleyAST.ExpressionNode,
+  context: PruningContext,
+): boolean {
   switch (node.type) {
-    case 'ConditionalExpr':
+    case "ConditionalExpr":
       return (
         validateExpression(node.condition, context) &&
         validateExpression(node.then, context) &&
         validateExpression(node.else, context)
       );
 
-    case 'Conversion':
+    case "Conversion":
       return (
         validateExpression(node.expression, context) &&
         validateConversionTarget(node.expression, node.target, context)
       );
 
-    case 'BinaryExpression':
+    case "BinaryExpression":
       return (
         validateExpression(node.left, context) &&
         validateExpression(node.right, context)
       );
 
-    case 'UnaryExpression':
+    case "UnaryExpression":
       return validateExpression(node.argument, context);
 
-    case 'PostfixExpression':
+    case "PostfixExpression":
       return validateExpression(node.argument, context);
 
-    case 'Value':
+    case "Value":
       return true; // Values are always valid
 
-    case 'CompositeValue':
-      return node.values.every(v => true); // Composite values are always valid structurally
+    case "CompositeValue":
+      return node.values.every((v) => true); // Composite values are always valid structurally
 
-    case 'FunctionCall':
-      return node.arguments.every(arg => validateExpression(arg, context));
+    case "FunctionCall":
+      return node.arguments.every((arg) => validateExpression(arg, context));
 
-    case 'BooleanLiteral':
-    case 'Variable':
-    case 'Constant':
+    case "BooleanLiteral":
+    case "Variable":
+    case "Constant":
       return true; // Literals are always valid
 
     // Date-time nodes
-    case 'Instant':
-    case 'PlainTime':
-    case 'PlainDate':
-    case 'PlainDateTime':
-    case 'ZonedDateTime':
+    case "Instant":
+    case "PlainTime":
+    case "PlainDate":
+    case "PlainDateTime":
+    case "ZonedDateTime":
       return true; // Date-time literals are always valid
 
     default:
@@ -182,10 +194,10 @@ function validateExpression(node: NearleyAST.ExpressionNode, context: PruningCon
 function validateConversionTarget(
   expression: NearleyAST.ExpressionNode,
   target: NearleyAST.ConversionTargetNode,
-  context: PruningContext
+  context: PruningContext,
 ): boolean {
   // Reject conversions of dimensionless values to value with units
-  if (target.type === 'Units') {
+  if (target.type === "Units") {
     const unitCount = target.terms.length;
     const hasUnit = unitCount >= 1;
 
@@ -194,7 +206,75 @@ function validateConversionTarget(
     }
   }
 
+  // Reject PropertyTarget on expressions that definitely aren't temporal values
+  if (target.type === "PropertyTarget") {
+    if (isDefinitelyNotTemporal(expression)) {
+      return false;
+    }
+  }
+
   return true;
+}
+
+/**
+ * Check if an expression is definitely not a temporal value.
+ * Returns true for expressions that can never produce a temporal type
+ * (PlainDate, PlainTime, PlainDateTime, ZonedDateTime, Instant).
+ * Conservative: returns false (might be temporal) when uncertain.
+ */
+function isDefinitelyNotTemporal(node: NearleyAST.ExpressionNode): boolean {
+  switch (node.type) {
+    // Definitely not temporal
+    case "Value":
+    case "CompositeValue":
+    case "BooleanLiteral":
+      return true;
+
+    // Definitely temporal
+    case "Instant":
+    case "PlainTime":
+    case "PlainDate":
+    case "PlainDateTime":
+    case "ZonedDateTime":
+      return false;
+
+    // Recursive cases
+    case "BinaryExpression":
+      // Subtracting two temporal values yields a Duration, not a temporal
+      if (node.operator === "minus" && isDefinitelyTemporal(node.left) && isDefinitelyTemporal(node.right)) {
+        return true;
+      }
+      return isDefinitelyNotTemporal(node.left) && isDefinitelyNotTemporal(node.right);
+    case "UnaryExpression":
+    case "PostfixExpression":
+      return isDefinitelyNotTemporal(node.argument);
+
+    // Conservative — could be temporal at runtime
+    case "Variable":
+    case "Constant":
+    case "FunctionCall":
+    case "ConditionalExpr":
+    case "Conversion":
+    default:
+      return false;
+  }
+}
+
+/**
+ * Check if an expression is definitely a temporal value
+ * (PlainDate, PlainTime, PlainDateTime, ZonedDateTime, Instant).
+ */
+function isDefinitelyTemporal(node: NearleyAST.ExpressionNode): boolean {
+  switch (node.type) {
+    case "Instant":
+    case "PlainTime":
+    case "PlainDate":
+    case "PlainDateTime":
+    case "ZonedDateTime":
+      return true;
+    default:
+      return false;
+  }
 }
 
 /**
@@ -202,57 +282,57 @@ function validateConversionTarget(
  */
 function isDimensionless(node: NearleyAST.ExpressionNode): boolean {
   switch (node.type) {
-    case 'Value':
+    case "Value":
       // A Value is dimensionless if it has no unit field, or if it has a Units node with no terms
       if (!node.unit) {
         return true;
       }
-      if (node.unit.type === 'Units') {
+      if (node.unit.type === "Units") {
         return node.unit.terms.length === 0;
       }
       // Currency units are not dimensionless
       return false;
 
-    case 'BinaryExpression':
+    case "BinaryExpression":
       // For simplicity, consider binary expressions dimensionful if either operand has dimensions
       // Full dimensional analysis would require evaluating the operation
       return isDimensionless(node.left) && isDimensionless(node.right);
 
-    case 'UnaryExpression':
+    case "UnaryExpression":
       return isDimensionless(node.argument);
 
-    case 'PostfixExpression':
+    case "PostfixExpression":
       return isDimensionless(node.argument);
 
-    case 'BooleanLiteral':
-    case 'Variable':
-    case 'Constant':
+    case "BooleanLiteral":
+    case "Variable":
+    case "Constant":
       // These could have dimensions depending on their values
       // Conservative: assume they might have dimensions
       return false;
 
-    case 'FunctionCall':
+    case "FunctionCall":
       // Functions can return dimensionful values
       return false;
 
-    case 'ConditionalExpr':
+    case "ConditionalExpr":
       // Could have dimensions from either branch
       return false;
 
-    case 'Conversion':
+    case "Conversion":
       // Conversions always produce dimensionful results
       return false;
 
-    case 'CompositeValue':
+    case "CompositeValue":
       // Composite values are dimensionful
       return false;
 
     // Date-time nodes are not dimensionless (they're temporal values)
-    case 'Instant':
-    case 'PlainTime':
-    case 'PlainDate':
-    case 'PlainDateTime':
-    case 'ZonedDateTime':
+    case "Instant":
+    case "PlainTime":
+    case "PlainDate":
+    case "PlainDateTime":
+    case "ZonedDateTime":
       return false;
 
     default:
@@ -265,7 +345,10 @@ function isDimensionless(node: NearleyAST.ExpressionNode): boolean {
  * Check if a candidate is better than another based on structural simplicity
  * Used by selector, but defined here for potential pruning optimization
  */
-export function compareComplexity(a: NearleyAST.LineNode, b: NearleyAST.LineNode): number {
+export function compareComplexity(
+  a: NearleyAST.LineNode,
+  b: NearleyAST.LineNode,
+): number {
   const aCount = countNodes(a);
   const bCount = countNodes(b);
   return aCount - bCount; // Lower count = simpler = better
@@ -275,7 +358,7 @@ export function compareComplexity(a: NearleyAST.LineNode, b: NearleyAST.LineNode
  * Count total nodes in AST (for complexity comparison)
  */
 function countNodes(node: any): number {
-  if (!node || typeof node !== 'object') {
+  if (!node || typeof node !== "object") {
     return 0;
   }
 
@@ -286,7 +369,7 @@ function countNodes(node: any): number {
     const value = node[key];
     if (Array.isArray(value)) {
       count += value.reduce((sum, item) => sum + countNodes(item), 0);
-    } else if (typeof value === 'object' && value !== null) {
+    } else if (typeof value === "object" && value !== null) {
       count += countNodes(value);
     }
   }

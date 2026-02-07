@@ -323,7 +323,7 @@ const grammar: Grammar = {
                             },
     {"name": "PropertyTarget", "symbols": [(lexer.has("identifier") ? {type: "identifier"} : identifier)], "postprocess": 
         (data, location, reject) =>
-          /^(year|month|day|weekday|hour|minute|second|millisecond|offset)$/i.test(data[0].value)
+          /^(year|month|day|weekday|hour|minute|second|millisecond|offset)s?$/i.test(data[0].value)
           ? ({ type: 'PropertyTarget', property: data[0].value, offset: data[0].offset })
           : reject
                             },

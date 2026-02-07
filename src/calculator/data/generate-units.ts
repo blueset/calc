@@ -19,7 +19,6 @@ interface Dimension {
   name: string;
   baseUnit: string;
   derivedFrom?: Array<{ dimension: string; exponent: number }>;
-  hasNamedUnits?: boolean;
 }
 
 interface Unit {
@@ -135,14 +134,12 @@ const dimensions: Dimension[] = [
     name: "Area",
     baseUnit: "square_meter",
     derivedFrom: [{ dimension: "length", exponent: 2 }],
-    hasNamedUnits: true,
   },
   {
     id: "volume",
     name: "Volume",
     baseUnit: "cubic_meter",
     derivedFrom: [{ dimension: "length", exponent: 3 }],
-    hasNamedUnits: true,
   },
   { id: "temperature", name: "Temperature", baseUnit: "kelvin" },
   { id: "time", name: "Time", baseUnit: "second" },
@@ -154,7 +151,6 @@ const dimensions: Dimension[] = [
       { dimension: "length", exponent: 1 },
       { dimension: "time", exponent: -1 },
     ],
-    hasNamedUnits: true,
   },
   {
     id: "energy",
@@ -165,7 +161,6 @@ const dimensions: Dimension[] = [
       { dimension: "length", exponent: 2 },
       { dimension: "time", exponent: -2 },
     ],
-    hasNamedUnits: true,
   },
   {
     id: "power",
@@ -176,9 +171,17 @@ const dimensions: Dimension[] = [
       { dimension: "length", exponent: 2 },
       { dimension: "time", exponent: -3 },
     ],
-    hasNamedUnits: true,
   },
   { id: "data", name: "Data", baseUnit: "bit" },
+  {
+    id: "data_rate",
+    name: "Data Rate",
+    baseUnit: "bit_per_second",
+    derivedFrom: [
+      { dimension: "data", exponent: 1 },
+      { dimension: "time", exponent: -1 },
+    ],
+  },
   {
     id: "pressure",
     name: "Pressure",
@@ -188,7 +191,6 @@ const dimensions: Dimension[] = [
       { dimension: "length", exponent: -1 },
       { dimension: "time", exponent: -2 },
     ],
-    hasNamedUnits: true,
   },
   {
     id: "force",
@@ -199,7 +201,6 @@ const dimensions: Dimension[] = [
       { dimension: "length", exponent: 1 },
       { dimension: "time", exponent: -2 },
     ],
-    hasNamedUnits: true,
   },
   { id: "angle", name: "Angle", baseUnit: "radian" },
   { id: "cycle", name: "Cycle", baseUnit: "cycle" },
@@ -211,7 +212,6 @@ const dimensions: Dimension[] = [
       { dimension: "cycle", exponent: 1 },
       { dimension: "time", exponent: -1 },
     ],
-    hasNamedUnits: true,
   },
   { id: "current", name: "Electric Current", baseUnit: "ampere" },
   { id: "voltage", name: "Electric Potential", baseUnit: "volt" },
@@ -227,7 +227,6 @@ const dimensions: Dimension[] = [
       { dimension: "operation", exponent: 1 },
       { dimension: "time", exponent: -1 },
     ],
-    hasNamedUnits: true,
   },
   { id: "beat", name: "Beat", baseUnit: "beat" },
   {
@@ -238,7 +237,6 @@ const dimensions: Dimension[] = [
       { dimension: "beat", exponent: 1 },
       { dimension: "time", exponent: -1 },
     ],
-    hasNamedUnits: true,
   },
 ];
 
@@ -370,6 +368,71 @@ function generateFLOPSUnits(): Unit[] {
       dimension: "operation_rate",
       displayName: { symbol, singular: symbol, plural: symbol },
       names: [symbol],
+      conversion: { type: "linear", factor },
+    });
+  }
+
+  return units;
+}
+
+function generateDataRateUnits(
+  baseId: string,
+  baseSymbol: string,
+  baseSingular: string,
+  basePlural: string,
+  baseFactorToBit: number = 1,
+): Unit[] {
+  const units: Unit[] = [];
+
+  // Base rate unit (e.g., "bit_per_second" or "byte_per_second")
+  units.push({
+    id: `${baseId}_per_second`,
+    dimension: "data_rate",
+    displayName: {
+      symbol: `${baseSymbol}ps`,
+      singular: `${baseSingular} per second`,
+      plural: `${basePlural} per second`,
+    },
+    names: [
+      `${baseSymbol}ps`,
+      `${baseSingular} per second`,
+      `${basePlural} per second`,
+      `${baseSymbol}/s`,
+    ],
+    conversion: { type: "linear", factor: baseFactorToBit },
+    isBaseUnit: baseFactorToBit === 1 ? true : undefined,
+  });
+
+  // Decimal SI prefixes (kilo and larger)
+  for (const prefix of LARGE_SI_PREFIXES) {
+    const id = `${prefix.name}${baseId}_per_second`;
+    const symbol = `${prefix.symbol}${baseSymbol}ps`;
+    const singular = `${prefix.name}${baseSingular} per second`;
+    const plural = `${prefix.name}${basePlural} per second`;
+    const factor = baseFactorToBit * Math.pow(10, prefix.exponent);
+
+    units.push({
+      id,
+      dimension: "data_rate",
+      displayName: { symbol, singular, plural },
+      names: [symbol, singular, plural, `${prefix.symbol}${baseSymbol}/s`],
+      conversion: { type: "linear", factor },
+    });
+  }
+
+  // Binary prefixes
+  for (const prefix of BINARY_PREFIXES) {
+    const id = `${prefix.name}${baseId}_per_second`;
+    const symbol = `${prefix.symbol}${baseSymbol}ps`;
+    const singular = `${prefix.name}${baseSingular} per second`;
+    const plural = `${prefix.name}${basePlural} per second`;
+    const factor = baseFactorToBit * Math.pow(2, prefix.exponent);
+
+    units.push({
+      id,
+      dimension: "data_rate",
+      displayName: { symbol, singular, plural },
+      names: [symbol, singular, plural, `${prefix.symbol}${baseSymbol}/s`],
       conversion: { type: "linear", factor },
     });
   }
@@ -1283,7 +1346,7 @@ const staticUnits: Unit[] = [
       singular: "beat per second",
       plural: "beats per second",
     },
-    names: ["beat/s", "beat per second", "beats per second", "bps"],
+    names: ["beat/s", "beat per second", "beats per second"],
     conversion: { type: "linear", factor: 1 }, // Base unit for beat_rate
     isBaseUnit: true,
   },
@@ -1423,6 +1486,10 @@ function generateAllUnits(): Unit[] {
   // Data units (bit and byte)
   units.push(...generateDataUnits("bit", "b", "bit", "bits", 1));
   units.push(...generateDataUnits("byte", "B", "byte", "bytes", 8));
+
+  // Data rate units (bit/s and byte/s)
+  units.push(...generateDataRateUnits("bit", "b", "bit", "bits", 1));
+  units.push(...generateDataRateUnits("byte", "B", "byte", "bytes", 8));
 
   // FLOPS units
   units.push(...generateFLOPSUnits());

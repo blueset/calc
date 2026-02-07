@@ -24,8 +24,7 @@
           "dimension": "length",
           "exponent": 2
         }
-      ],
-      "hasNamedUnits": true
+      ]
     },
     {
       "id": "volume",
@@ -36,8 +35,7 @@
           "dimension": "length",
           "exponent": 3
         }
-      ],
-      "hasNamedUnits": true
+      ]
     },
     {
       "id": "temperature",
@@ -62,8 +60,7 @@
           "dimension": "time",
           "exponent": -1
         }
-      ],
-      "hasNamedUnits": true
+      ]
     },
     {
       "id": "energy",
@@ -82,8 +79,7 @@
           "dimension": "time",
           "exponent": -2
         }
-      ],
-      "hasNamedUnits": true
+      ]
     },
     {
       "id": "power",
@@ -102,13 +98,27 @@
           "dimension": "time",
           "exponent": -3
         }
-      ],
-      "hasNamedUnits": true
+      ]
     },
     {
       "id": "data",
       "name": "Data",
       "baseUnit": "bit"
+    },
+    {
+      "id": "data_rate",
+      "name": "Data Rate",
+      "baseUnit": "bit_per_second",
+      "derivedFrom": [
+        {
+          "dimension": "data",
+          "exponent": 1
+        },
+        {
+          "dimension": "time",
+          "exponent": -1
+        }
+      ]
     },
     {
       "id": "pressure",
@@ -127,8 +137,7 @@
           "dimension": "time",
           "exponent": -2
         }
-      ],
-      "hasNamedUnits": true
+      ]
     },
     {
       "id": "force",
@@ -147,8 +156,7 @@
           "dimension": "time",
           "exponent": -2
         }
-      ],
-      "hasNamedUnits": true
+      ]
     },
     {
       "id": "angle",
@@ -173,8 +181,7 @@
           "dimension": "time",
           "exponent": -1
         }
-      ],
-      "hasNamedUnits": true
+      ]
     },
     {
       "id": "current",
@@ -219,8 +226,7 @@
           "dimension": "time",
           "exponent": -1
         }
-      ],
-      "hasNamedUnits": true
+      ]
     },
     {
       "id": "beat",
@@ -240,8 +246,7 @@
           "dimension": "time",
           "exponent": -1
         }
-      ],
-      "hasNamedUnits": true
+      ]
     }
   ],
   "units": [
@@ -1896,8 +1901,7 @@
       "names": [
         "beat/s",
         "beat per second",
-        "beats per second",
-        "bps"
+        "beats per second"
       ],
       "conversion": {
         "type": "linear",
@@ -8546,6 +8550,805 @@
         "QiB",
         "quebibyte",
         "quebibytes"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.0141204801825835e+31
+      }
+    },
+    {
+      "id": "bit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "bps",
+        "singular": "bit per second",
+        "plural": "bits per second"
+      },
+      "names": [
+        "bps",
+        "bit per second",
+        "bits per second",
+        "b/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true
+    },
+    {
+      "id": "quettabit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Qbps",
+        "singular": "quettabit per second",
+        "plural": "quettabits per second"
+      },
+      "names": [
+        "Qbps",
+        "quettabit per second",
+        "quettabits per second",
+        "Qb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+30
+      }
+    },
+    {
+      "id": "ronnabit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Rbps",
+        "singular": "ronnabit per second",
+        "plural": "ronnabits per second"
+      },
+      "names": [
+        "Rbps",
+        "ronnabit per second",
+        "ronnabits per second",
+        "Rb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+27
+      }
+    },
+    {
+      "id": "yottabit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Ybps",
+        "singular": "yottabit per second",
+        "plural": "yottabits per second"
+      },
+      "names": [
+        "Ybps",
+        "yottabit per second",
+        "yottabits per second",
+        "Yb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+24
+      }
+    },
+    {
+      "id": "zettabit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Zbps",
+        "singular": "zettabit per second",
+        "plural": "zettabits per second"
+      },
+      "names": [
+        "Zbps",
+        "zettabit per second",
+        "zettabits per second",
+        "Zb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1e+21
+      }
+    },
+    {
+      "id": "exabit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Ebps",
+        "singular": "exabit per second",
+        "plural": "exabits per second"
+      },
+      "names": [
+        "Ebps",
+        "exabit per second",
+        "exabits per second",
+        "Eb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000000
+      }
+    },
+    {
+      "id": "petabit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Pbps",
+        "singular": "petabit per second",
+        "plural": "petabits per second"
+      },
+      "names": [
+        "Pbps",
+        "petabit per second",
+        "petabits per second",
+        "Pb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000000
+      }
+    },
+    {
+      "id": "terabit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Tbps",
+        "singular": "terabit per second",
+        "plural": "terabits per second"
+      },
+      "names": [
+        "Tbps",
+        "terabit per second",
+        "terabits per second",
+        "Tb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000000
+      }
+    },
+    {
+      "id": "gigabit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Gbps",
+        "singular": "gigabit per second",
+        "plural": "gigabits per second"
+      },
+      "names": [
+        "Gbps",
+        "gigabit per second",
+        "gigabits per second",
+        "Gb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000000
+      }
+    },
+    {
+      "id": "megabit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Mbps",
+        "singular": "megabit per second",
+        "plural": "megabits per second"
+      },
+      "names": [
+        "Mbps",
+        "megabit per second",
+        "megabits per second",
+        "Mb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000000
+      }
+    },
+    {
+      "id": "kilobit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "kbps",
+        "singular": "kilobit per second",
+        "plural": "kilobits per second"
+      },
+      "names": [
+        "kbps",
+        "kilobit per second",
+        "kilobits per second",
+        "kb/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1000
+      }
+    },
+    {
+      "id": "kibibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Kibps",
+        "singular": "kibibit per second",
+        "plural": "kibibits per second"
+      },
+      "names": [
+        "Kibps",
+        "kibibit per second",
+        "kibibits per second",
+        "Kib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1024
+      }
+    },
+    {
+      "id": "mebibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Mibps",
+        "singular": "mebibit per second",
+        "plural": "mebibits per second"
+      },
+      "names": [
+        "Mibps",
+        "mebibit per second",
+        "mebibits per second",
+        "Mib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1048576
+      }
+    },
+    {
+      "id": "gibibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Gibps",
+        "singular": "gibibit per second",
+        "plural": "gibibits per second"
+      },
+      "names": [
+        "Gibps",
+        "gibibit per second",
+        "gibibits per second",
+        "Gib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1073741824
+      }
+    },
+    {
+      "id": "tebibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Tibps",
+        "singular": "tebibit per second",
+        "plural": "tebibits per second"
+      },
+      "names": [
+        "Tibps",
+        "tebibit per second",
+        "tebibits per second",
+        "Tib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1099511627776
+      }
+    },
+    {
+      "id": "pebibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Pibps",
+        "singular": "pebibit per second",
+        "plural": "pebibits per second"
+      },
+      "names": [
+        "Pibps",
+        "pebibit per second",
+        "pebibits per second",
+        "Pib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1125899906842624
+      }
+    },
+    {
+      "id": "exbibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Eibps",
+        "singular": "exbibit per second",
+        "plural": "exbibits per second"
+      },
+      "names": [
+        "Eibps",
+        "exbibit per second",
+        "exbibits per second",
+        "Eib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1152921504606847000
+      }
+    },
+    {
+      "id": "zebibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Zibps",
+        "singular": "zebibit per second",
+        "plural": "zebibits per second"
+      },
+      "names": [
+        "Zibps",
+        "zebibit per second",
+        "zebibits per second",
+        "Zib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.1805916207174113e+21
+      }
+    },
+    {
+      "id": "yobibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Yibps",
+        "singular": "yobibit per second",
+        "plural": "yobibits per second"
+      },
+      "names": [
+        "Yibps",
+        "yobibit per second",
+        "yobibits per second",
+        "Yib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.2089258196146292e+24
+      }
+    },
+    {
+      "id": "robibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Ribps",
+        "singular": "robibit per second",
+        "plural": "robibits per second"
+      },
+      "names": [
+        "Ribps",
+        "robibit per second",
+        "robibits per second",
+        "Rib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.2379400392853803e+27
+      }
+    },
+    {
+      "id": "quebibit_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Qibps",
+        "singular": "quebibit per second",
+        "plural": "quebibits per second"
+      },
+      "names": [
+        "Qibps",
+        "quebibit per second",
+        "quebibits per second",
+        "Qib/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1.2676506002282294e+30
+      }
+    },
+    {
+      "id": "byte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "Bps",
+        "singular": "byte per second",
+        "plural": "bytes per second"
+      },
+      "names": [
+        "Bps",
+        "byte per second",
+        "bytes per second",
+        "B/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8
+      }
+    },
+    {
+      "id": "quettabyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "QBps",
+        "singular": "quettabyte per second",
+        "plural": "quettabytes per second"
+      },
+      "names": [
+        "QBps",
+        "quettabyte per second",
+        "quettabytes per second",
+        "QB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8e+30
+      }
+    },
+    {
+      "id": "ronnabyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "RBps",
+        "singular": "ronnabyte per second",
+        "plural": "ronnabytes per second"
+      },
+      "names": [
+        "RBps",
+        "ronnabyte per second",
+        "ronnabytes per second",
+        "RB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8e+27
+      }
+    },
+    {
+      "id": "yottabyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "YBps",
+        "singular": "yottabyte per second",
+        "plural": "yottabytes per second"
+      },
+      "names": [
+        "YBps",
+        "yottabyte per second",
+        "yottabytes per second",
+        "YB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8e+24
+      }
+    },
+    {
+      "id": "zettabyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "ZBps",
+        "singular": "zettabyte per second",
+        "plural": "zettabytes per second"
+      },
+      "names": [
+        "ZBps",
+        "zettabyte per second",
+        "zettabytes per second",
+        "ZB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8e+21
+      }
+    },
+    {
+      "id": "exabyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "EBps",
+        "singular": "exabyte per second",
+        "plural": "exabytes per second"
+      },
+      "names": [
+        "EBps",
+        "exabyte per second",
+        "exabytes per second",
+        "EB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000000000000000
+      }
+    },
+    {
+      "id": "petabyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "PBps",
+        "singular": "petabyte per second",
+        "plural": "petabytes per second"
+      },
+      "names": [
+        "PBps",
+        "petabyte per second",
+        "petabytes per second",
+        "PB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000000000000
+      }
+    },
+    {
+      "id": "terabyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "TBps",
+        "singular": "terabyte per second",
+        "plural": "terabytes per second"
+      },
+      "names": [
+        "TBps",
+        "terabyte per second",
+        "terabytes per second",
+        "TB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000000000
+      }
+    },
+    {
+      "id": "gigabyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "GBps",
+        "singular": "gigabyte per second",
+        "plural": "gigabytes per second"
+      },
+      "names": [
+        "GBps",
+        "gigabyte per second",
+        "gigabytes per second",
+        "GB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000000
+      }
+    },
+    {
+      "id": "megabyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "MBps",
+        "singular": "megabyte per second",
+        "plural": "megabytes per second"
+      },
+      "names": [
+        "MBps",
+        "megabyte per second",
+        "megabytes per second",
+        "MB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000000
+      }
+    },
+    {
+      "id": "kilobyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "kBps",
+        "singular": "kilobyte per second",
+        "plural": "kilobytes per second"
+      },
+      "names": [
+        "kBps",
+        "kilobyte per second",
+        "kilobytes per second",
+        "kB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8000
+      }
+    },
+    {
+      "id": "kibibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "KiBps",
+        "singular": "kibibyte per second",
+        "plural": "kibibytes per second"
+      },
+      "names": [
+        "KiBps",
+        "kibibyte per second",
+        "kibibytes per second",
+        "KiB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8192
+      }
+    },
+    {
+      "id": "mebibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "MiBps",
+        "singular": "mebibyte per second",
+        "plural": "mebibytes per second"
+      },
+      "names": [
+        "MiBps",
+        "mebibyte per second",
+        "mebibytes per second",
+        "MiB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8388608
+      }
+    },
+    {
+      "id": "gibibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "GiBps",
+        "singular": "gibibyte per second",
+        "plural": "gibibytes per second"
+      },
+      "names": [
+        "GiBps",
+        "gibibyte per second",
+        "gibibytes per second",
+        "GiB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8589934592
+      }
+    },
+    {
+      "id": "tebibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "TiBps",
+        "singular": "tebibyte per second",
+        "plural": "tebibytes per second"
+      },
+      "names": [
+        "TiBps",
+        "tebibyte per second",
+        "tebibytes per second",
+        "TiB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 8796093022208
+      }
+    },
+    {
+      "id": "pebibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "PiBps",
+        "singular": "pebibyte per second",
+        "plural": "pebibytes per second"
+      },
+      "names": [
+        "PiBps",
+        "pebibyte per second",
+        "pebibytes per second",
+        "PiB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9007199254740992
+      }
+    },
+    {
+      "id": "exbibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "EiBps",
+        "singular": "exbibyte per second",
+        "plural": "exbibytes per second"
+      },
+      "names": [
+        "EiBps",
+        "exbibyte per second",
+        "exbibytes per second",
+        "EiB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9223372036854776000
+      }
+    },
+    {
+      "id": "zebibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "ZiBps",
+        "singular": "zebibyte per second",
+        "plural": "zebibytes per second"
+      },
+      "names": [
+        "ZiBps",
+        "zebibyte per second",
+        "zebibytes per second",
+        "ZiB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9.44473296573929e+21
+      }
+    },
+    {
+      "id": "yobibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "YiBps",
+        "singular": "yobibyte per second",
+        "plural": "yobibytes per second"
+      },
+      "names": [
+        "YiBps",
+        "yobibyte per second",
+        "yobibytes per second",
+        "YiB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9.671406556917033e+24
+      }
+    },
+    {
+      "id": "robibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "RiBps",
+        "singular": "robibyte per second",
+        "plural": "robibytes per second"
+      },
+      "names": [
+        "RiBps",
+        "robibyte per second",
+        "robibytes per second",
+        "RiB/s"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 9.903520314283042e+27
+      }
+    },
+    {
+      "id": "quebibyte_per_second",
+      "dimension": "data_rate",
+      "displayName": {
+        "symbol": "QiBps",
+        "singular": "quebibyte per second",
+        "plural": "quebibytes per second"
+      },
+      "names": [
+        "QiBps",
+        "quebibyte per second",
+        "quebibytes per second",
+        "QiB/s"
       ],
       "conversion": {
         "type": "linear",

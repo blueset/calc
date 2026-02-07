@@ -8,18 +8,27 @@ export const DEFAULT_DOCUMENT = `# Arithmetic
 
 # Units
 5 km
-170 cm to ft in
-3.5 hours + 45 minutes
+25 km + 50 mi
+3 ft 10 in + 20 in
 
 # Conversions
-100 °F to °C
+100 C to F
 1 mile to km
-5 kg to lbs
+171 cm to ft in
+3 hrs 15 min + 45 min to hrs min
 
 # Variables
-width = 10 m
-height = 5 m
-area = width * height
+size = 12.59 GiB
+speed = 100 Mbps
+time = size / speed in min
+
+# Date & Time
+now
+3 hours ago
+18:30 New York in London
+now + 2 months 3 days
+2038-01-19 03:14:07 UTC - now  # The infamous 2038 problem!
+
 `;
 
 export const DEMO_DOCUMENT = `# Welcome to ${APP_NAME}!
