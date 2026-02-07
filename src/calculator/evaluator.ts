@@ -646,7 +646,9 @@ export class Evaluator {
     ) {
       const terms = this.resolveNearleyUnitTerms(unitsNode);
       if (!terms) {
-        return this.createError(`Unknown unit in derived unit literal`);
+        return this.createError(
+          `Unknown unit “${unitsNode.terms.map((t) => t.unit.name).join(" ")}” in derived unit literal`,
+        );
       }
       return { kind: "derivedUnit", value: numValue, terms };
     }
@@ -654,7 +656,9 @@ export class Evaluator {
     // Simple unit
     const unit = this.resolveNearleyUnit(unitNode);
     if (!unit) {
-      return this.createError(`Unknown unit in literal`);
+      return this.createError(
+        `Unknown unit “${unitsNode.terms.map((t) => t.unit.name).join(" ")}” in literal`,
+      );
     }
 
     // Auto-convert dimensionless units to pure numbers
@@ -703,7 +707,9 @@ export class Evaluator {
 
       const unit = this.resolveNearleyUnit(unitNode, unitContext);
       if (!unit) {
-        return this.createError("Unknown unit in composite literal");
+        return this.createError(
+          `Unknown unit “${(unitNode as NearleyAST.UnitsNode).terms.map((t) => t.unit.name).join(" ")}” in composite literal`,
+        );
       }
       components.push({ value: numValue, unit });
     }
@@ -1046,7 +1052,9 @@ export class Evaluator {
         );
         const unit = this.resolveUnitById(resolved.id, resolved.displayName);
         if (!unit) {
-          return this.createError(`Unknown unit in composite target`);
+          return this.createError(
+            `Unknown unit “${term.unit.name}” in composite target`,
+          );
         }
         resolvedUnits.push(unit);
       }
@@ -1074,7 +1082,7 @@ export class Evaluator {
         resolved.displayName,
       );
       if (!targetUnit) {
-        return this.createError("Unknown target unit");
+        return this.createError(`Unknown target unit “${terms[0].unit.name}”`);
       }
       return this.convertToSimpleUnit(value, targetUnit);
     }
@@ -1108,10 +1116,28 @@ export class Evaluator {
     }
 
     if (value.kind === "derivedUnit") {
-      // Try derived unit conversion
-      return this.createError(
-        "Cannot convert derived unit to simple unit (not yet implemented)",
-      );
+      const sourceTerms = value.terms;
+      const targetTerms: Array<{ unit: Unit; exponent: number }> = [
+        { unit: targetUnit, exponent: 1 },
+      ];
+
+      const sourceDim = this.computeDimension(sourceTerms);
+      const targetDim = this.computeDimension(targetTerms);
+
+      if (!this.areDimensionsCompatible(sourceDim, targetDim)) {
+        return this.createError(
+          `Cannot convert from dimensions ${this.formatDimension(sourceDim)} to ${this.formatDimension(targetDim)}`,
+        );
+      }
+
+      let valueInBase = value.value;
+      for (const term of sourceTerms) {
+        const factorToBase = this.unitConverter.toBaseUnit(1, term.unit);
+        valueInBase *= Math.pow(factorToBase, term.exponent);
+      }
+
+      const result = this.unitConverter.fromBaseUnit(valueInBase, targetUnit);
+      return { kind: "number", value: result, unit: targetUnit };
     }
 
     if (value.kind !== "number") {
@@ -1427,28 +1453,42 @@ export class Evaluator {
     left: Value,
     right: Value,
   ): Value {
+    // Convert composite units to single units for comparison
+    let convertedLeft: Value = left;
+    let convertedRight: Value = right;
+    if (left.kind === "composite") {
+      convertedLeft = this.convertCompositeToSingleUnit(left);
+      if (convertedLeft.kind === "error") return convertedLeft;
+    }
+    if (right.kind === "composite") {
+      convertedRight = this.convertCompositeToSingleUnit(right);
+      if (convertedRight.kind === "error") return convertedRight;
+    }
+
     // For numbers, convert to same unit if needed
-    if (left.kind === "number" && right.kind === "number") {
-      const leftValue = left.value;
-      let rightValue = right.value;
+    if (convertedLeft.kind === "number" && convertedRight.kind === "number") {
+      const leftNum = convertedLeft;
+      const rightNum = convertedRight;
+      const leftValue = leftNum.value;
+      let rightValue = rightNum.value;
 
       // If both have units, convert right to left's unit
-      if (left.unit && right.unit) {
-        if (left.unit.dimension !== right.unit.dimension) {
+      if (leftNum.unit && rightNum.unit) {
+        if (leftNum.unit.dimension !== rightNum.unit.dimension) {
           return this.createError(
-            `Cannot compare values with different dimensions`,
+            `Cannot compare values with dimensions ${leftNum.unit.dimension} and ${rightNum.unit.dimension}`,
           );
         }
         try {
           rightValue = this.unitConverter.convert(
-            right.value,
-            right.unit,
-            left.unit,
+            rightNum.value,
+            rightNum.unit,
+            leftNum.unit,
           );
         } catch (e) {
           return this.createError(`Conversion error: ${e}`);
         }
-      } else if (left.unit || right.unit) {
+      } else if (leftNum.unit || rightNum.unit) {
         // One has unit, other doesn't
         return this.createError(
           `Cannot compare dimensioned and dimensionless values`,
@@ -1471,6 +1511,58 @@ export class Evaluator {
       }
     }
 
+    // For derived units or mixed number+derivedUnit comparisons
+    const isNumeric = (v: Value) =>
+      v.kind === "number" || v.kind === "derivedUnit";
+    if (isNumeric(convertedLeft) && isNumeric(convertedRight)) {
+      const l = convertedLeft as NumberValue | DerivedUnitValue;
+      const r = convertedRight as NumberValue | DerivedUnitValue;
+      const leftTerms = this.extractTerms(l);
+      const rightTerms = this.extractTerms(r);
+
+      // Both must have units (dimensionless numbers handled above)
+      if (leftTerms.length === 0 || rightTerms.length === 0) {
+        return this.createError(
+          "Cannot compare dimensioned and dimensionless values",
+        );
+      }
+
+      const leftDim = this.computeDimension(leftTerms);
+      const rightDim = this.computeDimension(rightTerms);
+      if (!this.areDimensionsCompatible(leftDim, rightDim)) {
+        return this.createError(
+          `Cannot compare values with dimensions ${this.formatDimension(leftDim)} and ${this.formatDimension(rightDim)}`,
+        );
+      }
+
+      // Convert both values to base units
+      let leftInBase = l.value;
+      for (const term of leftTerms) {
+        const factorToBase = this.unitConverter.toBaseUnit(1, term.unit);
+        leftInBase *= Math.pow(factorToBase, term.exponent);
+      }
+      let rightInBase = r.value;
+      for (const term of rightTerms) {
+        const factorToBase = this.unitConverter.toBaseUnit(1, term.unit);
+        rightInBase *= Math.pow(factorToBase, term.exponent);
+      }
+
+      switch (op) {
+        case "==":
+          return { kind: "boolean", value: leftInBase === rightInBase };
+        case "!=":
+          return { kind: "boolean", value: leftInBase !== rightInBase };
+        case "<":
+          return { kind: "boolean", value: leftInBase < rightInBase };
+        case "<=":
+          return { kind: "boolean", value: leftInBase <= rightInBase };
+        case ">":
+          return { kind: "boolean", value: leftInBase > rightInBase };
+        case ">=":
+          return { kind: "boolean", value: leftInBase >= rightInBase };
+      }
+    }
+
     // For booleans
     if (left.kind === "boolean" && right.kind === "boolean") {
       if (op === "==")
@@ -1481,7 +1573,7 @@ export class Evaluator {
     }
 
     return this.createError(
-      `Cannot compare values of types ${left.kind} and ${right.kind}`,
+      `Cannot compare values of types ${convertedLeft.kind} and ${convertedRight.kind}`,
     );
   }
 
@@ -1615,10 +1707,60 @@ export class Evaluator {
         }
       }
 
-      // Derived units or mixed - not supported for addition/subtraction
-      return this.createError(
-        `Cannot ${op === "+" ? "add" : "subtract"} values with incompatible types`,
-      );
+      // Derived units or mixed (NumberValue with unit + DerivedUnitValue)
+      // Convert both to base units, perform op, convert back to left's form
+      const leftTerms = this.extractTerms(left);
+      const rightTerms = this.extractTerms(right);
+
+      // Both must have units
+      if (leftTerms.length === 0 || rightTerms.length === 0) {
+        return this.createError(
+          `Cannot ${op === "+" ? "add" : "subtract"} values between dimensionless and dimensioned values`,
+        );
+      }
+
+      const leftDim = this.computeDimension(leftTerms);
+      const rightDim = this.computeDimension(rightTerms);
+
+      if (!this.areDimensionsCompatible(leftDim, rightDim)) {
+        return this.createError(
+          `Cannot ${op === "+" ? "add" : "subtract"} values between dimensions ${this.formatDimension(leftDim)} and ${this.formatDimension(rightDim)}`,
+        );
+      }
+
+      // Convert both values to base units
+      let leftInBase = leftValue;
+      for (const term of leftTerms) {
+        const factorToBase = this.unitConverter.toBaseUnit(1, term.unit);
+        leftInBase *= Math.pow(factorToBase, term.exponent);
+      }
+
+      let rightInBase = rightValue;
+      for (const term of rightTerms) {
+        const factorToBase = this.unitConverter.toBaseUnit(1, term.unit);
+        rightInBase *= Math.pow(factorToBase, term.exponent);
+      }
+
+      // Perform operation in base units
+      const baseResult =
+        op === "+" ? leftInBase + rightInBase : leftInBase - rightInBase;
+
+      // Convert back to left operand's unit terms
+      let finalResult = baseResult;
+      for (const term of leftTerms) {
+        const factorFromBase = this.unitConverter.fromBaseUnit(1, term.unit);
+        finalResult *= Math.pow(factorFromBase, term.exponent);
+      }
+
+      // Return in the left operand's form
+      if (left.kind === "number" && left.unit) {
+        return { kind: "number", value: finalResult, unit: left.unit };
+      }
+      return {
+        kind: "derivedUnit",
+        value: finalResult,
+        terms: leftTerms,
+      };
     }
 
     // Multiplication - combine units
@@ -1797,7 +1939,9 @@ export class Evaluator {
 
         return this.createError("Cannot exponentiate this type");
       }
-      return this.createError("Exponent must be dimensionless");
+      return this.createError(
+        `Exponent must be dimensionless, got ${right.kind}`,
+      );
     }
 
     return this.createError(`Unknown arithmetic operator: ${op}`);
@@ -2319,11 +2463,15 @@ export class Evaluator {
     right: Value,
   ): Value {
     if (left.kind !== "number" || right.kind !== "number") {
-      return this.createError("Bitwise operators require numbers");
+      return this.createError(
+        `Bitwise operators require numbers, got ${left.kind} and ${right.kind}`,
+      );
     }
 
     if (left.unit || right.unit) {
-      return this.createError("Bitwise operators require dimensionless values");
+      return this.createError(
+        `Bitwise operators require dimensionless values, got ${left.unit || "none"} and ${right.unit || "none"}`,
+      );
     }
 
     const leftInt = Math.trunc(left.value);
@@ -2395,10 +2543,14 @@ export class Evaluator {
 
     if (op === "tilde") {
       if (operand.kind !== "number") {
-        return this.createError("Bitwise NOT requires a number");
+        return this.createError(
+          `Bitwise NOT requires a number, got ${operand.kind}`,
+        );
       }
       if (operand.unit) {
-        return this.createError("Bitwise NOT requires dimensionless value");
+        return this.createError(
+          `Bitwise NOT requires dimensionless value, got ${operand.unit}`,
+        );
       }
       return { kind: "number", value: ~Math.trunc(operand.value) };
     }
@@ -2421,15 +2573,21 @@ export class Evaluator {
 
     if (expr.operator === "bang") {
       if (operand.kind !== "number") {
-        return this.createError("Factorial requires a number");
+        return this.createError(
+          `Factorial requires a number, got ${operand.kind}`,
+        );
       }
       if (operand.unit) {
-        return this.createError("Factorial requires dimensionless value");
+        return this.createError(
+          `Factorial requires dimensionless value, got ${operand.unit}`,
+        );
       }
 
       const n = operand.value;
       if (n < 0 || !Number.isInteger(n)) {
-        return this.createError("Factorial requires non-negative integer");
+        return this.createError(
+          `Factorial requires non-negative integer, got ${n}`,
+        );
       }
 
       let result = 1;
@@ -2682,7 +2840,9 @@ export class Evaluator {
         };
       }
 
-      return this.createError(`${format} format requires a date/time value`);
+      return this.createError(
+        `${format} format requires a date/time value, got ${value.kind}`,
+      );
     }
 
     // Validate that value is numeric type (number, derivedUnit, or composite)
@@ -2692,7 +2852,9 @@ export class Evaluator {
       value.kind !== "composite"
     ) {
       const formatName = typeof format === "number" ? `base ${format}` : format;
-      return this.createError(`${formatName} format requires a numeric value`);
+      return this.createError(
+        `${formatName} format requires a numeric value, got ${value.kind}`,
+      );
     }
 
     // Validate base range for numeric base conversions
@@ -2705,16 +2867,22 @@ export class Evaluator {
     // Ordinal format requires integers
     if (format === "ordinal") {
       if (value.kind === "number" && !Number.isInteger(value.value)) {
-        return this.createError("ordinal format requires integer values");
+        return this.createError(
+          `ordinal format requires integer values, got ${value.value}`,
+        );
       } else if (
         value.kind === "derivedUnit" &&
         !Number.isInteger(value.value)
       ) {
-        return this.createError("ordinal format requires integer values");
+        return this.createError(
+          `ordinal format requires integer values, got ${value.value}`,
+        );
       } else if (value.kind === "composite") {
         for (const comp of value.components) {
           if (!Number.isInteger(comp.value)) {
-            return this.createError("ordinal format requires integer values");
+            return this.createError(
+              `ordinal format requires integer values, got ${comp.value}`,
+            );
           }
         }
       }

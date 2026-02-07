@@ -10,16 +10,23 @@
  * - Error collection and conversion
  */
 
-import * as nearley from 'nearley';
-import grammar from './grammar';
-import { DataLoader } from '../data-loader';
-import { preprocessDocument, PreprocessedLine } from './preprocessor';
-import { pruneInvalidCandidates, PruningContext } from './pruner';
-import { selectBestCandidate } from './selector';
-import { Document, ParsedLine, createDocument, createHeading, createEmptyLine, createPlainText } from '../document';
-import { LineError, ParserError, DocumentResult } from '../error-handling';
-import { SourceLocation } from '../document';
-import * as NearleyAST from './types';
+import * as nearley from "nearley";
+import grammar from "./grammar";
+import { DataLoader } from "../data-loader";
+import { preprocessDocument, PreprocessedLine } from "./preprocessor";
+import { pruneInvalidCandidates, PruningContext } from "./pruner";
+import { selectBestCandidate } from "./selector";
+import {
+  Document,
+  ParsedLine,
+  createDocument,
+  createHeading,
+  createEmptyLine,
+  createPlainText,
+} from "../document";
+import { LineError, ParserError, DocumentResult } from "../error-handling";
+import { SourceLocation } from "../document";
+import * as NearleyAST from "./types";
 
 /**
  * Nearley Parser - matches old Parser interface
@@ -53,7 +60,12 @@ export class NearleyParser {
       }
 
       // Track variable definitions for pruning context
-      if (line !== null && typeof line === 'object' && 'type' in line && line.type === 'VariableAssignment') {
+      if (
+        line !== null &&
+        typeof line === "object" &&
+        "type" in line &&
+        line.type === "VariableAssignment"
+      ) {
         this.definedVariables.add(line.name);
       }
     }
@@ -67,24 +79,28 @@ export class NearleyParser {
   /**
    * Parse a single preprocessed line
    */
-  private parseLine(preprocessed: PreprocessedLine): { line: ParsedLine; error: LineError | null } {
-    const { type, content, lineNumber, originalText, contentOffset } = preprocessed;
+  private parseLine(preprocessed: PreprocessedLine): {
+    line: ParsedLine;
+    error: LineError | null;
+  } {
+    const { type, content, lineNumber, originalText, contentOffset } =
+      preprocessed;
 
     // Handle empty lines
-    if (type === 'empty') {
+    if (type === "empty") {
       const loc: SourceLocation = { line: lineNumber, column: 0, offset: 0 };
       return {
         line: createEmptyLine(loc),
-        error: null
+        error: null,
       };
     }
 
     // Handle headings
-    if (type === 'heading') {
+    if (type === "heading") {
       const loc: SourceLocation = { line: lineNumber, column: 0, offset: 0 };
       return {
         line: createHeading(preprocessed.level || 1, content, loc),
-        error: null
+        error: null,
       };
     }
 
@@ -96,14 +112,16 @@ export class NearleyParser {
       if (candidates.length === 0) {
         // No valid parse - return as plain text with error
         const loc: SourceLocation = { line: lineNumber, column: 0, offset: 0 };
-        const errorMessage = parseResult.parseError || 'Unable to parse expression';
+        const errorMessage =
+          parseResult.parseError ||
+          "Unable to parse expression, unexpected end of input.";
         return {
           line: createPlainText(originalText, loc),
           error: {
             line: lineNumber,
             error: new ParserError(errorMessage, loc),
-            rawText: originalText
-          }
+            rawText: originalText,
+          },
         };
       }
 
@@ -111,7 +129,7 @@ export class NearleyParser {
       const context: PruningContext = {
         dataLoader: this.dataLoader,
         definedVariables: this.definedVariables,
-        lineNumber
+        lineNumber,
       };
 
       const validCandidates = pruneInvalidCandidates(candidates, context);
@@ -121,15 +139,19 @@ export class NearleyParser {
         const loc: SourceLocation = { line: lineNumber, column: 0, offset: 0 };
 
         // Try to determine why candidates were rejected
-        const errorMessage = this.diagnoseRejectionReason(candidates, context, originalText);
+        const errorMessage = this.diagnoseRejectionReason(
+          candidates,
+          context,
+          originalText,
+        );
 
         return {
           line: createPlainText(originalText, loc),
           error: {
             line: lineNumber,
             error: new ParserError(errorMessage, loc),
-            rawText: originalText
-          }
+            rawText: originalText,
+          },
         };
       }
 
@@ -137,24 +159,29 @@ export class NearleyParser {
       const bestCandidate = selectBestCandidate(validCandidates, context);
 
       // Enrich Nearley AST with full location information
-      const enrichedLine = this.enrichLineWithLocations(bestCandidate, lineNumber, contentOffset);
+      const enrichedLine = this.enrichLineWithLocations(
+        bestCandidate,
+        lineNumber,
+        contentOffset,
+      );
 
       return {
         line: enrichedLine,
-        error: null
+        error: null,
       };
     } catch (error) {
       // Parse failed - return as plain text with error
       const loc: SourceLocation = { line: lineNumber, column: 0, offset: 0 };
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       return {
         line: createPlainText(originalText, loc),
         error: {
           line: lineNumber,
           error: new ParserError(errorMessage, loc),
-          rawText: originalText
-        }
+          rawText: originalText,
+        },
       };
     }
   }
@@ -163,7 +190,10 @@ export class NearleyParser {
    * Parse an expression line using Nearley
    * Returns all candidate parses and any parse error
    */
-  private parseExpression(content: string, lineNumber: number): {
+  private parseExpression(
+    content: string,
+    lineNumber: number,
+  ): {
     candidates: NearleyAST.LineNode[];
     parseError: string | null;
   } {
@@ -179,7 +209,8 @@ export class NearleyParser {
       return { candidates: results, parseError: null };
     } catch (error) {
       // Parse error - return empty array with error message
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       return { candidates: [], parseError: errorMessage };
     }
   }
@@ -188,33 +219,47 @@ export class NearleyParser {
    * Enrich Nearley AST with full source locations
    * Converts offset to full SourceLocation objects with line numbers
    */
-  private enrichLineWithLocations(node: NearleyAST.LineNode, lineNumber: number, contentOffset: number): NearleyAST.LineNode {
-    return this.enrichNode(node, lineNumber, contentOffset) as NearleyAST.LineNode;
+  private enrichLineWithLocations(
+    node: NearleyAST.LineNode,
+    lineNumber: number,
+    contentOffset: number,
+  ): NearleyAST.LineNode {
+    return this.enrichNode(
+      node,
+      lineNumber,
+      contentOffset,
+    ) as NearleyAST.LineNode;
   }
 
   /**
    * Recursively enrich all nodes with full source location information
    */
-  private enrichNode(node: any, lineNumber: number, contentOffset: number): any {
-    if (!node || typeof node !== 'object') {
+  private enrichNode(
+    node: any,
+    lineNumber: number,
+    contentOffset: number,
+  ): any {
+    if (!node || typeof node !== "object") {
       return node;
     }
 
     // Handle arrays
     if (Array.isArray(node)) {
-      return node.map(item => this.enrichNode(item, lineNumber, contentOffset));
+      return node.map((item) =>
+        this.enrichNode(item, lineNumber, contentOffset),
+      );
     }
 
     // Create a new object with enriched location
     const enriched: any = {};
 
     for (const key in node) {
-      if (key === 'offset' && typeof node.offset === 'number') {
+      if (key === "offset" && typeof node.offset === "number") {
         // Convert raw char offset to full SourceLocation, storing as 'location'
         enriched.location = {
           line: lineNumber,
           column: node.offset + contentOffset,
-          offset: node.offset + contentOffset
+          offset: node.offset + contentOffset,
         };
       } else {
         // Recursively enrich child nodes
@@ -232,7 +277,7 @@ export class NearleyParser {
   private diagnoseRejectionReason(
     candidates: NearleyAST.LineNode[],
     context: PruningContext,
-    originalText: string
+    originalText: string,
   ): string {
     // Check for undefined variables across all candidates
     const allUndefinedVars = new Set<string>();
@@ -251,7 +296,7 @@ export class NearleyParser {
 
     // If we found undefined variables, that's likely the issue
     if (allUndefinedVars.size > 0) {
-      const varList = Array.from(allUndefinedVars).join(', ');
+      const varList = Array.from(allUndefinedVars).join(", ");
       if (allUndefinedVars.size === 1) {
         return `Undefined variable: ${varList}`;
       } else {
@@ -270,21 +315,21 @@ export class NearleyParser {
     const variables = new Set<string>();
 
     const traverse = (n: any) => {
-      if (!n || typeof n !== 'object') return;
+      if (!n || typeof n !== "object") return;
 
       // Check if this is a Variable node
-      if (n.type === 'Variable' && n.name) {
+      if (n.type === "Variable" && n.name) {
         variables.add(n.name);
       }
 
       // Traverse all properties
       for (const key in n) {
-        if (key === 'type' || key === 'offset') continue;
+        if (key === "type" || key === "offset") continue;
         const value = n[key];
 
         if (Array.isArray(value)) {
-          value.forEach(item => traverse(item));
-        } else if (typeof value === 'object' && value !== null) {
+          value.forEach((item) => traverse(item));
+        } else if (typeof value === "object" && value !== null) {
           traverse(value);
         }
       }
