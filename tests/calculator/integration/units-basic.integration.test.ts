@@ -51,7 +51,7 @@ describe('Integration Tests - Basic Units', () => {
       expect(result.results[0].result).toBe('10 000');
       expect(result.results[1].result).toBe('2 000 000');
       expect(result.results[2].result).toBe('3 000 000 000');
-      expect(result.results[3].result).toBe('1e+12');
+      expect(result.results[3].result).toBe('1 000 000 000 000');
     });
 
     it('should handle percentages (word form) converting to dimensionless', () => {

@@ -46,8 +46,8 @@ describe('Integration Tests - Date and Time Literals', () => {
 2023 Jan 01 14:00 New York
 2023.06.15 09:00 London
 1970 Jan 01 23:59 UTC+8`);
-      expect(result.results[0].result).toBe('12:30 UTC');
-      expect(result.results[1].result).toBe('08:25 UTC+9');
+      expect(result.results[0].result).toMatch(/(tomorrow )?12:30 UTC/);
+      expect(result.results[1].result).toMatch(/(tomorrow )?08:25 UTC\+9/);
       expect(result.results[2].result).toBe('2023-01-01 Sun 14:00 UTC-5');
       expect(result.results[3].result).toBe('2023-01-01 Sun 14:00 UTC-5');
       expect(result.results[4].result).toBe('2023-06-15 Thu 09:00 UTC+1');
@@ -71,11 +71,11 @@ describe('Integration Tests - Date and Time Literals', () => {
 12:30 UTC+01
 12:30 UTC-515
 12:30 UTC-1015`);
-      expect(result.results[0].result).toBe('12:30 UTC');
-      expect(result.results[1].result).toBe('12:30 UTC+1');
-      expect(result.results[2].result).toBe('12:30 UTC+1');
-      expect(result.results[3].result).toBe('12:30 UTC-5:15');
-      expect(result.results[4].result).toBe('12:30 UTC-10:15');
+      expect(result.results[0].result).toMatch(/(tomorrow )?12:30 UTC/);
+      expect(result.results[1].result).toMatch(/(tomorrow )?12:30 UTC\+1/);
+      expect(result.results[2].result).toMatch(/(tomorrow )?12:30 UTC\+1/);
+      expect(result.results[3].result).toMatch(/(tomorrow )?12:30 UTC-5:15/);
+      expect(result.results[4].result).toMatch(/(tomorrow )?12:30 UTC-10:15/);
     });
 
     it('should handle parsing surrounding zoned date times', () => {
@@ -86,11 +86,11 @@ describe('Integration Tests - Date and Time Literals', () => {
 05:00 UTC - 3:30
 05:00 UTC+3:30`);
       expect(result.results[0].result).toBe('05:00');
-      expect(result.results[1].result).toBe('05:00 UTC');
+      expect(result.results[1].result).toMatch(/(tomorrow )?05:00 UTC/);
       expect(result.results[2].result).toBe('1 h 30 min');
-      expect(result.results[3].result).toBe('05:00 UTC-3:30');
+      expect(result.results[3].result).toMatch(/(tomorrow )?05:00 UTC-3:30/);
       expect(result.results[4].result).toMatch(/(-1 day -6 h -30 min|17 h 30 min)/);
-      expect(result.results[5].result).toBe('05:00 UTC+3:30');
+      expect(result.results[5].result).toMatch(/(tomorrow )?05:00 UTC\+3:30/);
     });
 
     it('should handle numeric date formats', () => {

@@ -16,6 +16,7 @@ export interface PreprocessedLine {
   lineNumber: number;   // 1-indexed line number
   originalText: string; // Original line text
   level?: number;       // Heading level (only for type='heading')
+  contentOffset: number; // chars stripped from start by trim/comment removal
 }
 
 /**
@@ -35,7 +36,8 @@ export function preprocessDocument(input: string): PreprocessedLine[] {
         type: 'empty',
         content: '',
         lineNumber,
-        originalText
+        originalText,
+        contentOffset: 0
       });
       continue;
     }
@@ -50,7 +52,8 @@ export function preprocessDocument(input: string): PreprocessedLine[] {
         content: text,
         lineNumber,
         originalText,
-        level
+        level,
+        contentOffset: 0
       });
       continue;
     }
@@ -58,15 +61,18 @@ export function preprocessDocument(input: string): PreprocessedLine[] {
     // Expression line - strip inline comments
     // Find first # that's not part of a heading
     const hashIndex = originalText.indexOf('#');
-    const cleaned = hashIndex >= 0
-      ? originalText.substring(0, hashIndex).trimEnd()
+    const beforeComment = hashIndex >= 0
+      ? originalText.substring(0, hashIndex)
       : originalText;
+    const cleaned = beforeComment.trim();
+    const contentOffset = beforeComment.length - beforeComment.trimStart().length;
 
     result.push({
       type: 'expression',
       content: cleaned,
       lineNumber,
-      originalText
+      originalText,
+      contentOffset
     });
   }
 
@@ -85,7 +91,8 @@ export function preprocessLine(text: string, lineNumber: number = 1): Preprocess
       type: 'empty',
       content: '',
       lineNumber,
-      originalText
+      originalText,
+      contentOffset: 0
     };
   }
 
@@ -99,20 +106,24 @@ export function preprocessLine(text: string, lineNumber: number = 1): Preprocess
       content,
       lineNumber,
       originalText,
-      level
+      level,
+      contentOffset: 0
     };
   }
 
   // Expression line - strip inline comments
   const hashIndex = text.indexOf('#');
-  const cleaned = hashIndex >= 0
-    ? text.substring(0, hashIndex).trimEnd()
+  const beforeComment = hashIndex >= 0
+    ? text.substring(0, hashIndex)
     : text;
+  const cleaned = beforeComment.trim();
+  const contentOffset = beforeComment.length - beforeComment.trimStart().length;
 
   return {
     type: 'expression',
     content: cleaned,
     lineNumber,
-    originalText
+    originalText,
+    contentOffset
   };
 }

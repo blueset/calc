@@ -22,7 +22,7 @@ interface Arr extends TransformTypeFn {
 // ============================================================================
 
 interface Node {
-  readonly location: number;
+  readonly offset: number;  // character offset within the line (from moo token)
 }
 
 // ============================================================================
@@ -72,6 +72,9 @@ interface ConditionalExprNode<F extends TransformTypeFn = Id> extends Node {
   readonly condition: Apply<F, ExpressionNode<F>>;
   readonly then: Apply<F, ExpressionNode<F>>;
   readonly else: Apply<F, ExpressionNode<F>>;
+  readonly ifToken?: { readonly offset: number; readonly length: number };
+  readonly thenToken?: { readonly offset: number; readonly length: number };
+  readonly elseToken?: { readonly offset: number; readonly length: number };
 }
 
 interface ConversionNode<F extends TransformTypeFn = Id> extends Node {
@@ -79,6 +82,7 @@ interface ConversionNode<F extends TransformTypeFn = Id> extends Node {
   readonly expression: Apply<F, ExpressionNode<F>>;
   readonly operator: ConversionOperator;
   readonly target: Apply<F, ConversionTargetNode<F>>;
+  readonly operatorToken?: { readonly offset: number; readonly length: number };
 }
 
 interface BinaryExpressionNode<F extends TransformTypeFn = Id> extends Node {
@@ -87,6 +91,7 @@ interface BinaryExpressionNode<F extends TransformTypeFn = Id> extends Node {
   readonly operator: BinaryOperator;
   readonly left: Apply<F, ExpressionNode<F>>;
   readonly right: Apply<F, ExpressionNode<F>>;
+  readonly operatorToken?: { readonly offset: number; readonly length: number };
 }
 
 interface UnaryExpressionNode<F extends TransformTypeFn = Id> extends Node {
@@ -99,6 +104,7 @@ interface PostfixExpressionNode<F extends TransformTypeFn = Id> extends Node {
   readonly type: 'PostfixExpression';
   readonly operator: PostfixOperator;
   readonly argument: Apply<F, ExpressionNode<F>>;
+  readonly operatorToken?: { readonly offset: number; readonly length: number };
 }
 
 // ============================================================================
@@ -151,12 +157,14 @@ interface NumberLiteralNode extends Node {
   readonly subType: string;
   readonly base: number;
   readonly value: string;
+  readonly sourceLength?: number;
 }
 
 interface PercentageLiteralNode extends Node {
   readonly type: 'PercentageLiteral';
   readonly value: string;
   readonly symbol: 'percent' | 'permille';
+  readonly sourceLength?: number;
 }
 
 type NumericalValueNode = NumberLiteralNode | PercentageLiteralNode;
@@ -181,6 +189,7 @@ interface UnitNode extends Node {
   readonly type: 'Unit';
   readonly name: string;
   readonly matched: 'symbol' | 'unit' | 'currencyName' | 'currencyCode' | 'identifier';
+  readonly sourceLength?: number;
 }
 
 interface CurrencyUnitNode extends Node {
@@ -196,6 +205,7 @@ interface CurrencyUnitNode extends Node {
 interface InstantKeywordNode extends Node {
   readonly type: 'Instant';
   readonly keyword: 'now' | 'today' | 'yesterday' | 'tomorrow';
+  readonly sourceLength?: number;
 }
 
 interface InstantRelativeNode<F extends TransformTypeFn = Id> extends Node {
@@ -203,6 +213,7 @@ interface InstantRelativeNode<F extends TransformTypeFn = Id> extends Node {
   readonly amount: Apply<F, NumericalValueNode>;
   readonly unit: string;
   readonly direction: 'ago' | 'fromNow' | 'sinceEpoch';
+  readonly sourceLength?: number;
 }
 
 type InstantNode<F extends TransformTypeFn = Id> = InstantKeywordNode | InstantRelativeNode<F>;
@@ -213,6 +224,7 @@ interface PlainTimeNode extends Node {
   readonly hour: number;
   readonly minute: number;
   readonly second: number;
+  readonly sourceLength?: number;
 }
 
 interface PlainDateNode extends Node {
@@ -221,6 +233,7 @@ interface PlainDateNode extends Node {
   readonly day: number;
   readonly month: number;
   readonly year: number;
+  readonly sourceLength?: number;
 }
 
 interface PlainDateTimeNode<F extends TransformTypeFn = Id> extends Node {
@@ -228,6 +241,7 @@ interface PlainDateTimeNode<F extends TransformTypeFn = Id> extends Node {
   readonly subType: string;
   readonly date: Apply<F, PlainDateNode>;
   readonly time: Apply<F, PlainTimeNode>;
+  readonly sourceLength?: number;
 }
 
 interface ZonedDateTimeNode<F extends TransformTypeFn = Id> extends Node {
@@ -235,6 +249,7 @@ interface ZonedDateTimeNode<F extends TransformTypeFn = Id> extends Node {
   readonly subType: string;
   readonly dateTime: Apply<F, PlainDateTimeNode<F>>;
   readonly timezone: Apply<F, TimezoneNode>;
+  readonly sourceLength?: number;
 }
 
 type DateTimeLiteralNode<F extends TransformTypeFn = Id> =
@@ -253,11 +268,13 @@ interface UTCOffsetNode extends Node {
   readonly subType: string;
   readonly offsetStr: string;
   readonly baseZone: string;
+  readonly sourceLength?: number;
 }
 
 interface TimezoneNameNode extends Node {
   readonly type: 'TimezoneName';
   readonly zoneName: string;
+  readonly sourceLength?: number;
 }
 
 type TimezoneNode = UTCOffsetNode | TimezoneNameNode;
@@ -269,46 +286,54 @@ type TimezoneNode = UTCOffsetNode | TimezoneNameNode;
 interface ValueFormatNode extends Node {
   readonly type: 'PresentationFormat';
   readonly format: 'value';
+  readonly sourceLength?: number;
 }
 
 interface BaseFormatNode extends Node {
   readonly type: 'PresentationFormat';
   readonly format: 'base';
   readonly base: number;
+  readonly sourceLength?: number;
 }
 
 interface SigFigsFormatNode extends Node {
   readonly type: 'PresentationFormat';
   readonly format: 'sigFigs';
   readonly sigFigs: number;
+  readonly sourceLength?: number;
 }
 
 interface DecimalsFormatNode extends Node {
   readonly type: 'PresentationFormat';
   readonly format: 'decimals';
   readonly decimals: number;
+  readonly sourceLength?: number;
 }
 
 interface ScientificFormatNode extends Node {
   readonly type: 'PresentationFormat';
   readonly format: 'scientific';
+  readonly sourceLength?: number;
 }
 
 interface FractionFormatNode extends Node {
   readonly type: 'PresentationFormat';
   readonly format: 'fraction';
+  readonly sourceLength?: number;
 }
 
 interface UnixFormatNode extends Node {
   readonly type: 'PresentationFormat';
   readonly format: 'unix';
   readonly unit: string;
+  readonly sourceLength?: number;
 }
 
 interface NamedFormatNode extends Node {
   readonly type: 'PresentationFormat';
   readonly format: 'namedFormat';
   readonly name: string;
+  readonly sourceLength?: number;
 }
 
 type PresentationFormatNode =

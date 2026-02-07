@@ -68,7 +68,7 @@ export class NearleyParser {
    * Parse a single preprocessed line
    */
   private parseLine(preprocessed: PreprocessedLine): { line: ParsedLine; error: LineError | null } {
-    const { type, content, lineNumber, originalText } = preprocessed;
+    const { type, content, lineNumber, originalText, contentOffset } = preprocessed;
 
     // Handle empty lines
     if (type === 'empty') {
@@ -137,7 +137,7 @@ export class NearleyParser {
       const bestCandidate = selectBestCandidate(validCandidates, context);
 
       // Enrich Nearley AST with full location information
-      const enrichedLine = this.enrichLineWithLocations(bestCandidate, lineNumber);
+      const enrichedLine = this.enrichLineWithLocations(bestCandidate, lineNumber, contentOffset);
 
       return {
         line: enrichedLine,
@@ -186,39 +186,39 @@ export class NearleyParser {
 
   /**
    * Enrich Nearley AST with full source locations
-   * Converts location offsets to full SourceLocation objects with line numbers
+   * Converts offset to full SourceLocation objects with line numbers
    */
-  private enrichLineWithLocations(node: NearleyAST.LineNode, lineNumber: number): NearleyAST.LineNode {
-    return this.enrichNode(node, lineNumber) as NearleyAST.LineNode;
+  private enrichLineWithLocations(node: NearleyAST.LineNode, lineNumber: number, contentOffset: number): NearleyAST.LineNode {
+    return this.enrichNode(node, lineNumber, contentOffset) as NearleyAST.LineNode;
   }
 
   /**
    * Recursively enrich all nodes with full source location information
    */
-  private enrichNode(node: any, lineNumber: number): any {
+  private enrichNode(node: any, lineNumber: number, contentOffset: number): any {
     if (!node || typeof node !== 'object') {
       return node;
     }
 
     // Handle arrays
     if (Array.isArray(node)) {
-      return node.map(item => this.enrichNode(item, lineNumber));
+      return node.map(item => this.enrichNode(item, lineNumber, contentOffset));
     }
 
     // Create a new object with enriched location
     const enriched: any = {};
 
     for (const key in node) {
-      if (key === 'location' && typeof node.location === 'number') {
-        // Enrich the location field
+      if (key === 'offset' && typeof node.offset === 'number') {
+        // Convert raw char offset to full SourceLocation, storing as 'location'
         enriched.location = {
           line: lineNumber,
-          column: node.location,
-          offset: node.location  // Use column offset as offset within line
+          column: node.offset + contentOffset,
+          offset: node.offset + contentOffset
         };
       } else {
         // Recursively enrich child nodes
-        enriched[key] = this.enrichNode(node[key], lineNumber);
+        enriched[key] = this.enrichNode(node[key], lineNumber, contentOffset);
       }
     }
 
@@ -279,7 +279,7 @@ export class NearleyParser {
 
       // Traverse all properties
       for (const key in n) {
-        if (key === 'type' || key === 'location') continue;
+        if (key === 'type' || key === 'offset') continue;
         const value = n[key];
 
         if (Array.isArray(value)) {

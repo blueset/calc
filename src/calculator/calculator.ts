@@ -15,6 +15,8 @@ export interface LineResult {
   type: string;
   result: string | null;  // Formatted result, or null for non-expressions
   hasError: boolean;      // True if this line had an error
+  rawValue?: Value | null; // The raw evaluated value (for tooltips/debugging), optional
+  ast?: ParsedLine | null; // The AST node for this line, optional
 }
 
 /**
@@ -106,7 +108,8 @@ export class Calculator {
           line: lineNumber,
           type: line !== null && typeof line === 'object' && 'type' in line ? (line as any).type : 'unknown',
           result: null,
-          hasError: true
+          hasError: true,
+          ast: line
         });
 
         if (i === 0) {
@@ -176,6 +179,8 @@ export class Calculator {
         line: lineNumber,
         type: line !== null && typeof line === 'object' && 'type' in line ? (line as any).type : 'unknown',
         result: lineResult,
+        rawValue: value,
+        ast: line,
         hasError
       });
     }

@@ -26,7 +26,7 @@ describe('Unit Resolution Functions', () => {
         type: 'Unit',
         name: 'meter',
         matched: 'unit',
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitFromNode(node, dataLoader);
@@ -39,7 +39,7 @@ describe('Unit Resolution Functions', () => {
         type: 'Unit',
         name: 'METER',
         matched: 'unit',
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitFromNode(node, dataLoader);
@@ -51,7 +51,7 @@ describe('Unit Resolution Functions', () => {
         type: 'Unit',
         name: 'foo',
         matched: 'identifier',
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitFromNode(node, null);
@@ -64,7 +64,7 @@ describe('Unit Resolution Functions', () => {
         type: 'Unit',
         name: 'prime',
         matched: 'symbol',
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitFromNode(node, dataLoader);
@@ -76,7 +76,7 @@ describe('Unit Resolution Functions', () => {
         type: 'Unit',
         name: 'prime',
         matched: 'symbol',
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitFromNode(node, dataLoader, { hasDegreeUnit: true });
@@ -88,7 +88,7 @@ describe('Unit Resolution Functions', () => {
         type: 'Unit',
         name: 'doublePrime',
         matched: 'symbol',
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitFromNode(node, dataLoader);
@@ -100,7 +100,7 @@ describe('Unit Resolution Functions', () => {
         type: 'Unit',
         name: 'doublePrime',
         matched: 'symbol',
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitFromNode(node, dataLoader, { hasDegreeUnit: true });
@@ -112,7 +112,7 @@ describe('Unit Resolution Functions', () => {
         type: 'Unit',
         name: 'USD',
         matched: 'currencyCode',
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitFromNode(node, dataLoader);
@@ -128,11 +128,11 @@ describe('Unit Resolution Functions', () => {
         subType: 'simple',
         terms: [{
           type: 'UnitWithExponent',
-          unit: { type: 'Unit', name: 'meter', matched: 'unit', location: 0 },
+          unit: { type: 'Unit', name: 'meter', matched: 'unit', offset: 0 },
           exponent: 1,
-          location: 0
+          offset: 0
         }],
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitsExpression(node, dataLoader);
@@ -149,18 +149,18 @@ describe('Unit Resolution Functions', () => {
         terms: [
           {
             type: 'UnitWithExponent',
-            unit: { type: 'Unit', name: 'meter', matched: 'unit', location: 0 },
+            unit: { type: 'Unit', name: 'meter', matched: 'unit', offset: 0 },
             exponent: 1,
-            location: 0
+            offset: 0
           },
           {
             type: 'UnitWithExponent',
-            unit: { type: 'Unit', name: 'second', matched: 'unit', location: 0 },
+            unit: { type: 'Unit', name: 'second', matched: 'unit', offset: 0 },
             exponent: -1,
-            location: 0
+            offset: 0
           }
         ],
-        location: 0
+        offset: 0
       };
 
       const result = resolveUnitsExpression(node, dataLoader);
@@ -196,11 +196,11 @@ describe('Unit Resolution Functions', () => {
         subType: 'simple',
         terms: [{
           type: 'UnitWithExponent',
-          unit: { type: 'Unit', name: 'degree', matched: 'unit', location: 0 },
+          unit: { type: 'Unit', name: 'degree', matched: 'unit', offset: 0 },
           exponent: 1,
-          location: 0
+          offset: 0
         }],
-        location: 0
+        offset: 0
       };
 
       expect(hasDegreeInUnits(node)).toBe(true);
@@ -212,11 +212,11 @@ describe('Unit Resolution Functions', () => {
         subType: 'simple',
         terms: [{
           type: 'UnitWithExponent',
-          unit: { type: 'Unit', name: 'meter', matched: 'unit', location: 0 },
+          unit: { type: 'Unit', name: 'meter', matched: 'unit', offset: 0 },
           exponent: 1,
-          location: 0
+          offset: 0
         }],
-        location: 0
+        offset: 0
       };
 
       expect(hasDegreeInUnits(node)).toBe(false);

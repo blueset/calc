@@ -31,8 +31,8 @@ describe('Phase 3: Evaluator Enhancements', () => {
       expect(nearleyCalculator.calculate('1 PG').results[0].result).toBe('1 Pg');
       expect(nearleyCalculator.calculate('1 pG').results[0].result).toBe('1 pg');
       expect(nearleyCalculator.calculate('1 pg to g').results[0].result).toBe('1e-12 g');
-      expect(nearleyCalculator.calculate('1 Pg to g').results[0].result).toBe('1e+15 g');
-      expect(nearleyCalculator.calculate('1 PG to g').results[0].result).toBe('1e+15 g');
+      expect(nearleyCalculator.calculate('1 Pg to g').results[0].result).toBe('1 000 000 000 000 000 g');
+      expect(nearleyCalculator.calculate('1 PG to g').results[0].result).toBe('1 000 000 000 000 000 g');
       expect(nearleyCalculator.calculate('1 pG to g').results[0].result).toBe('1e-12 g');
     });
 
