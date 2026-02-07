@@ -303,6 +303,15 @@ ZZ base 36 to base 10`);
       // 100 cm = 1 m 0 cm
       expect(result.results[0].result).toContain("1 m 0 cm");
     });
+
+    it("should convert to composite units from derived units", () => {
+      const result = calculator.calculate(`12.59 GiB / 100 Mbps to minutes
+(12.59 GiB / 100 Mbps to minutes) to minutes seconds
+12.59 GiB / 100 Mbps to minutes seconds`);
+      expect(result.results[0].result).toMatch(/18.024\d+ min/);
+      expect(result.results[1].result).toMatch(/18 min 1\.47\d* s/);
+      expect(result.results[2].result).toMatch(/18 min 1\.47\d* s/);
+    });
   });
 
   describe("Conversion Edge Cases", () => {

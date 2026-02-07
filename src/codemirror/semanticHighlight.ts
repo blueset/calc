@@ -142,7 +142,7 @@ export function buildSemanticTree(ast: Document, docText: string): Tree {
         break;
       }
       case "VariableAssignment": {
-        const loc: { line: number; column: number; } = (node as any).location;
+        const loc: { line: number; column: number } = (node as any).location;
         if (loc && typeof loc === "object" && "line" in loc) {
           const from = toAbsolute(loc.line, loc.column);
           if (from >= 0)
@@ -244,6 +244,13 @@ export function buildSemanticTree(ast: Document, docText: string): Tree {
         break;
       }
       case "PresentationFormat": {
+        if (hasLoc && node.sourceLength) {
+          const from = toAbsolute(loc.line, loc.column);
+          addSpan(NodeID.Keyword, from, node.sourceLength);
+        }
+        break;
+      }
+      case "PropertyTarget": {
         if (hasLoc && node.sourceLength) {
           const from = toAbsolute(loc.line, loc.column);
           addSpan(NodeID.Keyword, from, node.sourceLength);

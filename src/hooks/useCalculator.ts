@@ -105,9 +105,7 @@ export function useCalculator(
     const calcResult = calculatorRef.current.calculate(text);
     setResults(calcResult.results);
     setErrors(calcResult.errors);
-
-    const parseResult = calculatorRef.current.parse(text);
-    setAst(parseResult.ast);
+    setAst(calcResult.ast);
   }, []);
 
   useEffect(() => {

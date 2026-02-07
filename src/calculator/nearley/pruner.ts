@@ -1,10 +1,11 @@
 /**
  * Parse Tree Pruner
  *
- * Filters out invalid candidate parses based on semantic rules:
+ * Filters out invalid candidate parses based on scope rules:
  * - Out-of-scope variables
- * - Type errors (dimension compatibility)
- * - Dimension mismatches
+ *
+ * Type-based disambiguation is now handled by trial evaluation in the
+ * evaluate-then-pick pipeline (see NearleyParser.parseLine).
  *
  * Note: All unit identifiers are valid (either in-database or user-defined),
  * so no unit existence validation is needed.
@@ -21,7 +22,7 @@ export interface PruningContext {
 
 /**
  * Prune invalid candidates from parse results
- * Returns only semantically valid parses
+ * Returns only semantically valid parses (scope-only validation)
  */
 export function pruneInvalidCandidates(
   candidates: NearleyAST.LineNode[],
@@ -36,11 +37,6 @@ export function pruneInvalidCandidates(
     try {
       // Check for out-of-scope variables
       if (!validateVariableScopes(candidate, context)) {
-        return false;
-      }
-
-      // Check for basic type errors
-      if (!validateTypes(candidate, context)) {
         return false;
       }
 
@@ -105,240 +101,6 @@ function collectVariables(node: NearleyAST.LineNode): Set<string> {
 
   visit(node);
   return variables;
-}
-
-/**
- * Validate types - basic dimension compatibility checks
- * This is a lightweight check; full type checking happens in evaluator
- */
-function validateTypes(
-  node: NearleyAST.LineNode,
-  context: PruningContext,
-): boolean {
-  if (node === null) {
-    return true;
-  }
-
-  // For now, just ensure the tree structure is valid
-  // More sophisticated type checking can be added later
-  return validateExpression(
-    node.type === "VariableAssignment" ? node.value : node,
-    context,
-  );
-}
-
-/**
- * Validate an expression node
- */
-function validateExpression(
-  node: NearleyAST.ExpressionNode,
-  context: PruningContext,
-): boolean {
-  switch (node.type) {
-    case "ConditionalExpr":
-      return (
-        validateExpression(node.condition, context) &&
-        validateExpression(node.then, context) &&
-        validateExpression(node.else, context)
-      );
-
-    case "Conversion":
-      return (
-        validateExpression(node.expression, context) &&
-        validateConversionTarget(node.expression, node.target, context)
-      );
-
-    case "BinaryExpression":
-      return (
-        validateExpression(node.left, context) &&
-        validateExpression(node.right, context)
-      );
-
-    case "UnaryExpression":
-      return validateExpression(node.argument, context);
-
-    case "PostfixExpression":
-      return validateExpression(node.argument, context);
-
-    case "Value":
-      return true; // Values are always valid
-
-    case "CompositeValue":
-      return node.values.every((v) => true); // Composite values are always valid structurally
-
-    case "FunctionCall":
-      return node.arguments.every((arg) => validateExpression(arg, context));
-
-    case "BooleanLiteral":
-    case "Variable":
-    case "Constant":
-      return true; // Literals are always valid
-
-    // Date-time nodes
-    case "Instant":
-    case "PlainTime":
-    case "PlainDate":
-    case "PlainDateTime":
-    case "ZonedDateTime":
-      return true; // Date-time literals are always valid
-
-    default:
-      // Unknown node type - reject to be safe
-      return false;
-  }
-}
-
-/**
- * Validate a conversion target
- */
-function validateConversionTarget(
-  expression: NearleyAST.ExpressionNode,
-  target: NearleyAST.ConversionTargetNode,
-  context: PruningContext,
-): boolean {
-  // Reject conversions of dimensionless values to value with units
-  if (target.type === "Units") {
-    const unitCount = target.terms.length;
-    const hasUnit = unitCount >= 1;
-
-    if (hasUnit && isDimensionless(expression)) {
-      return false;
-    }
-  }
-
-  // Reject PropertyTarget on expressions that definitely aren't temporal values
-  if (target.type === "PropertyTarget") {
-    if (isDefinitelyNotTemporal(expression)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/**
- * Check if an expression is definitely not a temporal value.
- * Returns true for expressions that can never produce a temporal type
- * (PlainDate, PlainTime, PlainDateTime, ZonedDateTime, Instant).
- * Conservative: returns false (might be temporal) when uncertain.
- */
-function isDefinitelyNotTemporal(node: NearleyAST.ExpressionNode): boolean {
-  switch (node.type) {
-    // Definitely not temporal
-    case "Value":
-    case "CompositeValue":
-    case "BooleanLiteral":
-      return true;
-
-    // Definitely temporal
-    case "Instant":
-    case "PlainTime":
-    case "PlainDate":
-    case "PlainDateTime":
-    case "ZonedDateTime":
-      return false;
-
-    // Recursive cases
-    case "BinaryExpression":
-      // Subtracting two temporal values yields a Duration, not a temporal
-      if (node.operator === "minus" && isDefinitelyTemporal(node.left) && isDefinitelyTemporal(node.right)) {
-        return true;
-      }
-      return isDefinitelyNotTemporal(node.left) && isDefinitelyNotTemporal(node.right);
-    case "UnaryExpression":
-    case "PostfixExpression":
-      return isDefinitelyNotTemporal(node.argument);
-
-    // Conservative — could be temporal at runtime
-    case "Variable":
-    case "Constant":
-    case "FunctionCall":
-    case "ConditionalExpr":
-    case "Conversion":
-    default:
-      return false;
-  }
-}
-
-/**
- * Check if an expression is definitely a temporal value
- * (PlainDate, PlainTime, PlainDateTime, ZonedDateTime, Instant).
- */
-function isDefinitelyTemporal(node: NearleyAST.ExpressionNode): boolean {
-  switch (node.type) {
-    case "Instant":
-    case "PlainTime":
-    case "PlainDate":
-    case "PlainDateTime":
-    case "ZonedDateTime":
-      return true;
-    default:
-      return false;
-  }
-}
-
-/**
- * Check if an expression is dimensionless (no units attached)
- */
-function isDimensionless(node: NearleyAST.ExpressionNode): boolean {
-  switch (node.type) {
-    case "Value":
-      // A Value is dimensionless if it has no unit field, or if it has a Units node with no terms
-      if (!node.unit) {
-        return true;
-      }
-      if (node.unit.type === "Units") {
-        return node.unit.terms.length === 0;
-      }
-      // Currency units are not dimensionless
-      return false;
-
-    case "BinaryExpression":
-      // For simplicity, consider binary expressions dimensionful if either operand has dimensions
-      // Full dimensional analysis would require evaluating the operation
-      return isDimensionless(node.left) && isDimensionless(node.right);
-
-    case "UnaryExpression":
-      return isDimensionless(node.argument);
-
-    case "PostfixExpression":
-      return isDimensionless(node.argument);
-
-    case "BooleanLiteral":
-    case "Variable":
-    case "Constant":
-      // These could have dimensions depending on their values
-      // Conservative: assume they might have dimensions
-      return false;
-
-    case "FunctionCall":
-      // Functions can return dimensionful values
-      return false;
-
-    case "ConditionalExpr":
-      // Could have dimensions from either branch
-      return false;
-
-    case "Conversion":
-      // Conversions always produce dimensionful results
-      return false;
-
-    case "CompositeValue":
-      // Composite values are dimensionful
-      return false;
-
-    // Date-time nodes are not dimensionless (they're temporal values)
-    case "Instant":
-    case "PlainTime":
-    case "PlainDate":
-    case "PlainDateTime":
-    case "ZonedDateTime":
-      return false;
-
-    default:
-      // Unknown types: conservative, assume dimensionful
-      return false;
-  }
 }
 
 /**

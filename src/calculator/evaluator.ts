@@ -240,6 +240,74 @@ export class Evaluator {
   }
 
   /**
+   * Create a fresh evaluation context
+   */
+  createContext(): EvaluationContext {
+    return { variables: new Map() };
+  }
+
+  /**
+   * Trial-evaluate a line against a cloned context (does not mutate the input context).
+   * Returns the value and any variable assignment that would result.
+   */
+  tryEvaluateLine(
+    line: ParsedLine,
+    context: EvaluationContext,
+  ): {
+    value: Value | null;
+    assignedVariable?: { name: string; value: Value };
+  } {
+    // Clone the context so we don't mutate the caller's state
+    const cloned: EvaluationContext = {
+      variables: new Map(context.variables),
+      parent: context.parent,
+    };
+
+    try {
+      const value = this.evaluateLine(line, cloned);
+
+      // Check if a variable was assigned (cloned context gained a new entry)
+      let assignedVariable: { name: string; value: Value } | undefined;
+      if (
+        line !== null &&
+        typeof line === "object" &&
+        "type" in line &&
+        line.type === "VariableAssignment"
+      ) {
+        const varName = (line as NearleyAST.VariableAssignmentNode).name;
+        const varValue = cloned.variables.get(varName);
+        if (varValue !== undefined) {
+          assignedVariable = { name: varName, value: varValue };
+        }
+      }
+
+      return { value, assignedVariable };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : `${e}`;
+      return {
+        value: {
+          kind: "error",
+          error: {
+            type: "RuntimeError",
+            message: `Evaluation failed: ${message}`,
+          },
+        } as ErrorValue,
+      };
+    }
+  }
+
+  /**
+   * Apply a variable assignment to a context
+   */
+  commitAssignment(
+    context: EvaluationContext,
+    name: string,
+    value: Value,
+  ): void {
+    context.variables.set(name, value);
+  }
+
+  /**
    * Evaluate a single line (ParsedLine union: Nearley AST | Heading | EmptyLine | PlainText)
    */
   private evaluateLine(
@@ -1067,6 +1135,20 @@ export class Evaluator {
         );
         if (allSameDimension) {
           return this.convertToCompositeUnitResolved(value, resolvedUnits);
+        }
+      }
+
+      // Handle derived unit source → composite target (e.g. GiB/Mbps to minutes seconds)
+      if (value.kind === "derivedUnit") {
+        const sourceDim = this.computeDimension(value.terms);
+        const allSameDimension = resolvedUnits.every((u) => {
+          const uDim = this.computeDimension([{ unit: u, exponent: 1 }]);
+          return this.areDimensionsCompatible(sourceDim, uDim);
+        });
+        if (allSameDimension) {
+          const asSimple = this.convertToSimpleUnit(value, resolvedUnits[0]);
+          if (asSimple.kind === "error") return asSimple;
+          return this.convertToCompositeUnitResolved(asSimple, resolvedUnits);
         }
       }
 

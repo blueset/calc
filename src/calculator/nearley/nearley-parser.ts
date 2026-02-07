@@ -6,6 +6,7 @@
  * - Line preprocessing (comments, headings, empty lines)
  * - Nearley parser instantiation per line
  * - Parse tree pruning and selection
+ * - Trial evaluation for disambiguation (evaluate-then-pick pipeline)
  * - Location enrichment (adding line numbers to Nearley AST)
  * - Error collection and conversion
  */
@@ -27,6 +28,7 @@ import {
 import { LineError, ParserError, DocumentResult } from "../error-handling";
 import { SourceLocation } from "../document";
 import * as NearleyAST from "./types";
+import { Evaluator, EvaluationContext, Value } from "../evaluator";
 
 /**
  * Nearley Parser - matches old Parser interface
@@ -41,18 +43,27 @@ export class NearleyParser {
 
   /**
    * Parse a complete document
-   * Returns AST and collected errors
+   * When evaluator is provided, uses evaluate-then-pick pipeline for disambiguation.
+   * Returns AST, collected errors, and optionally pre-computed evaluated values.
    */
-  parseDocument(input: string): DocumentResult {
+  parseDocument(input: string, evaluator?: Evaluator): DocumentResult {
     // Preprocess input into classified lines
     const preprocessedLines = preprocessDocument(input);
 
     const lines: ParsedLine[] = [];
     const errors: LineError[] = [];
+    const evaluatedValues = evaluator
+      ? new Map<ParsedLine, Value | null>()
+      : undefined;
+    const evalContext = evaluator ? evaluator.createContext() : undefined;
 
     // Parse each line
     for (const preprocessed of preprocessedLines) {
-      const { line, error } = this.parseLine(preprocessed);
+      const { line, error, value } = this.parseLine(
+        preprocessed,
+        evaluator,
+        evalContext,
+      );
       lines.push(line);
 
       if (error) {
@@ -68,20 +79,31 @@ export class NearleyParser {
       ) {
         this.definedVariables.add(line.name);
       }
+
+      // Store pre-computed value if using evaluate-then-pick
+      if (evaluatedValues) {
+        evaluatedValues.set(line, value ?? null);
+      }
     }
 
     // Create document node
     const ast = createDocument(lines);
 
-    return { ast, errors };
+    return { ast, errors, evaluatedValues };
   }
 
   /**
    * Parse a single preprocessed line
+   * When evaluator/evalContext are provided, uses trial evaluation for disambiguation.
    */
-  private parseLine(preprocessed: PreprocessedLine): {
+  private parseLine(
+    preprocessed: PreprocessedLine,
+    evaluator?: Evaluator,
+    evalContext?: EvaluationContext,
+  ): {
     line: ParsedLine;
     error: LineError | null;
+    value?: Value | null;
   } {
     const { type, content, lineNumber, originalText, contentOffset } =
       preprocessed;
@@ -92,6 +114,7 @@ export class NearleyParser {
       return {
         line: createEmptyLine(loc),
         error: null,
+        value: null,
       };
     }
 
@@ -101,6 +124,7 @@ export class NearleyParser {
       return {
         line: createHeading(preprocessed.level || 1, content, loc),
         error: null,
+        value: null,
       };
     }
 
@@ -122,10 +146,11 @@ export class NearleyParser {
             error: new ParserError(errorMessage, loc),
             rawText: originalText,
           },
+          value: null,
         };
       }
 
-      // Prune invalid candidates
+      // Prune invalid candidates (scope-only)
       const context: PruningContext = {
         dataLoader: this.dataLoader,
         definedVariables: this.definedVariables,
@@ -152,10 +177,24 @@ export class NearleyParser {
             error: new ParserError(errorMessage, loc),
             rawText: originalText,
           },
+          value: null,
         };
       }
 
-      // Select best candidate
+      // Evaluate-then-pick pipeline when evaluator is available
+      if (evaluator && evalContext) {
+        return this.evaluateThenPick(
+          validCandidates,
+          context,
+          evaluator,
+          evalContext,
+          lineNumber,
+          contentOffset,
+          originalText,
+        );
+      }
+
+      // Fallback: structural selection only (no evaluator)
       const bestCandidate = selectBestCandidate(validCandidates, context);
 
       // Enrich Nearley AST with full location information
@@ -182,8 +221,98 @@ export class NearleyParser {
           error: new ParserError(errorMessage, loc),
           rawText: originalText,
         },
+        value: null,
       };
     }
+  }
+
+  /**
+   * Evaluate-then-pick: trial-evaluate all candidates, pick from successes.
+   * Enriches candidates with locations before evaluation, then selects the best.
+   */
+  private evaluateThenPick(
+    candidates: NearleyAST.LineNode[],
+    pruningContext: PruningContext,
+    evaluator: Evaluator,
+    evalContext: EvaluationContext,
+    lineNumber: number,
+    contentOffset: number,
+    originalText: string,
+  ): {
+    line: ParsedLine;
+    error: LineError | null;
+    value?: Value | null;
+  } {
+    // Enrich and trial-evaluate each candidate
+    const results: Array<{
+      candidate: NearleyAST.LineNode;
+      enriched: NearleyAST.LineNode;
+      value: Value | null;
+      assignedVariable?: { name: string; value: Value };
+      isSuccess: boolean;
+    }> = [];
+
+    for (const candidate of candidates) {
+      const enriched = this.enrichLineWithLocations(
+        candidate,
+        lineNumber,
+        contentOffset,
+      );
+
+      const trialResult = evaluator.tryEvaluateLine(enriched, evalContext);
+      const isSuccess =
+        trialResult.value === null || trialResult.value.kind !== "error";
+
+      results.push({
+        candidate,
+        enriched,
+        value: trialResult.value,
+        assignedVariable: trialResult.assignedVariable,
+        isSuccess,
+      });
+    }
+
+    // Partition into successes and failures
+    const successes = results.filter((r) => r.isSuccess);
+    const pool = successes.length > 0 ? successes : results;
+
+    // Select best from the pool using structural scoring
+    const poolCandidates = pool.map((r) => r.candidate);
+    const bestRawCandidate = selectBestCandidate(
+      poolCandidates,
+      pruningContext,
+    );
+
+    // Find the matching result
+    const bestResult = pool.find((r) => r.candidate === bestRawCandidate)!;
+
+    // Commit variable assignment if present
+    if (bestResult.assignedVariable) {
+      evaluator.commitAssignment(
+        evalContext,
+        bestResult.assignedVariable.name,
+        bestResult.assignedVariable.value,
+      );
+    }
+
+    // If the best result is a failure, return error
+    if (!bestResult.isSuccess && bestResult.value?.kind === "error") {
+      const errorValue = bestResult.value as {
+        kind: "error";
+        error: { message: string };
+      };
+      return {
+        line: bestResult.enriched,
+        error: null, // Runtime error, not parser error - will be surfaced through the value
+        value: bestResult.value,
+      };
+    }
+
+    return {
+      line: bestResult.enriched,
+      error: null,
+      value: bestResult.value,
+    };
   }
 
   /**

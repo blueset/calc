@@ -29,6 +29,9 @@ now
 now + 2 months 3 days
 2038-01-19 03:14:07 UTC - now  # The infamous 2038 problem!
 
+# Currency
+100 USD to EUR
+
 `;
 
 export const DEMO_DOCUMENT = `# Welcome to ${APP_NAME}!

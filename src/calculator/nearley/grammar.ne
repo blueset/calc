@@ -227,15 +227,15 @@ PresentationTarget -> %kw_value {% (data, location) => ({ type: 'PresentationFor
                         : ({ type: 'PresentationFormat', format: 'namedFormat', name: data[0].value, offset: data[0].offset, sourceLength: data[0].value.length })
                     %}
 PropertyTarget -> %dayOfYear {%
-                      (data, location) => ({ type: 'PropertyTarget', property: 'dayOfYear', offset: data[0].offset })
+                      (data, location) => ({ type: 'PropertyTarget', property: 'dayOfYear', offset: data[0].offset, sourceLength: data[0].value.length })
                     %}
                  | %weekOfYear {%
-                      (data, location) => ({ type: 'PropertyTarget', property: 'weekOfYear', offset: data[0].offset })
+                      (data, location) => ({ type: 'PropertyTarget', property: 'weekOfYear', offset: data[0].offset, sourceLength: data[0].value.length })
                     %}
                  | %identifier {%
                       (data, location, reject) =>
                         /^(year|month|day|weekday|hour|minute|second|millisecond|offset)s?$/i.test(data[0].value)
-                        ? ({ type: 'PropertyTarget', property: data[0].value, offset: data[0].offset })
+                        ? ({ type: 'PropertyTarget', property: data[0].value, offset: data[0].offset, sourceLength: data[0].value.length })
                         : reject
                     %}
 

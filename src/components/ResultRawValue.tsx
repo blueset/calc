@@ -24,7 +24,6 @@ function PricisionBadge({
 function RawValueInfo({ rawValue }: { rawValue: Value }) {
   switch (rawValue.kind) {
     case "number": {
-      console.log(rawValue);
       return (
         <>
           <div className="flex flex-wrap items-center gap-2">

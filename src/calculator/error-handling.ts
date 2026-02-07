@@ -1,4 +1,5 @@
-import type { SourceLocation, Document } from './document';
+import type { SourceLocation, Document, ParsedLine } from './document';
+import type { Value } from './evaluator';
 
 /**
  * Base error class for all language errors
@@ -63,4 +64,5 @@ export interface LineError {
 export interface DocumentResult {
   ast: Document;
   errors: LineError[];
+  evaluatedValues?: Map<ParsedLine, Value | null>;
 }

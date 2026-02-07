@@ -316,15 +316,15 @@ const grammar: Grammar = {
           : ({ type: 'PresentationFormat', format: 'namedFormat', name: data[0].value, offset: data[0].offset, sourceLength: data[0].value.length })
                             },
     {"name": "PropertyTarget", "symbols": [(lexer.has("dayOfYear") ? {type: "dayOfYear"} : dayOfYear)], "postprocess": 
-        (data, location) => ({ type: 'PropertyTarget', property: 'dayOfYear', offset: data[0].offset })
+        (data, location) => ({ type: 'PropertyTarget', property: 'dayOfYear', offset: data[0].offset, sourceLength: data[0].value.length })
                             },
     {"name": "PropertyTarget", "symbols": [(lexer.has("weekOfYear") ? {type: "weekOfYear"} : weekOfYear)], "postprocess": 
-        (data, location) => ({ type: 'PropertyTarget', property: 'weekOfYear', offset: data[0].offset })
+        (data, location) => ({ type: 'PropertyTarget', property: 'weekOfYear', offset: data[0].offset, sourceLength: data[0].value.length })
                             },
     {"name": "PropertyTarget", "symbols": [(lexer.has("identifier") ? {type: "identifier"} : identifier)], "postprocess": 
         (data, location, reject) =>
           /^(year|month|day|weekday|hour|minute|second|millisecond|offset)s?$/i.test(data[0].value)
-          ? ({ type: 'PropertyTarget', property: data[0].value, offset: data[0].offset })
+          ? ({ type: 'PropertyTarget', property: data[0].value, offset: data[0].offset, sourceLength: data[0].value.length })
           : reject
                             },
     {"name": "TimezoneTarget", "symbols": ["Timezone"], "postprocess": id},

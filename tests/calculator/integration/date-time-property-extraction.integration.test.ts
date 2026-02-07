@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { Calculator } from "../../../src/calculator/calculator";
 import { DataLoader } from "../../../src/calculator/data-loader";
-import * as path from "path";
 
 /**
  * Integration tests for date and time property extraction

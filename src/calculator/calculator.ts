@@ -30,6 +30,7 @@ export interface LineResult {
  */
 export interface CalculationResult {
   results: LineResult[];
+  ast: Document;
   errors: {
     lexer: LexerError[];
     parser: LineError[];
@@ -93,52 +94,55 @@ export class Calculator {
    */
   calculate(input: string): CalculationResult {
     const nearleyParser = new NearleyParser(this.dataLoader);
-    const result = nearleyParser.parseDocument(input);
+    const result = nearleyParser.parseDocument(input, this.evaluator);
     const ast = result.ast as any as Document;
     const parserErrors = result.errors;
 
-    // Evaluate
+    // Use pre-computed values from evaluate-then-pick pipeline, or fall back to evaluateDocument
     const results: LineResult[] = [];
     const runtimeErrors: RuntimeError[] = [];
-    let lineValues: Map<ParsedLine, Value | null> | null = null;
+    let lineValues: Map<ParsedLine, Value | null> | null = result.evaluatedValues ?? null;
 
-    try {
-      lineValues = this.evaluator.evaluateDocument(ast);
-    } catch (error) {
-      // Catch any unexpected thrown errors during evaluation
-      for (let i = 0; i < ast.lines.length; i++) {
-        const line = ast.lines[i];
-        const lineNumber = i + 1;
+    if (!lineValues) {
+      try {
+        lineValues = this.evaluator.evaluateDocument(ast);
+      } catch (error) {
+        // Catch any unexpected thrown errors during evaluation
+        for (let i = 0; i < ast.lines.length; i++) {
+          const line = ast.lines[i];
+          const lineNumber = i + 1;
 
-        results.push({
-          line: lineNumber,
-          type:
-            line !== null && typeof line === "object" && "type" in line
-              ? (line as any).type
-              : "unknown",
-          result: null,
-          hasError: true,
-          ast: line,
-        });
+          results.push({
+            line: lineNumber,
+            type:
+              line !== null && typeof line === "object" && "type" in line
+                ? (line as any).type
+                : "unknown",
+            result: null,
+            hasError: true,
+            ast: line,
+          });
 
-        if (i === 0) {
-          runtimeErrors.push(
-            new RuntimeError(
-              error instanceof Error ? error.message : String(error),
-              getLineLocation(line),
-            ),
-          );
+          if (i === 0) {
+            runtimeErrors.push(
+              new RuntimeError(
+                error instanceof Error ? error.message : String(error),
+                getLineLocation(line),
+              ),
+            );
+          }
         }
-      }
 
-      return {
-        results,
-        errors: {
-          lexer: [],
-          parser: parserErrors,
-          runtime: runtimeErrors,
-        },
-      };
+        return {
+          results,
+          ast,
+          errors: {
+            lexer: [],
+            parser: parserErrors,
+            runtime: runtimeErrors,
+          },
+        };
+      }
     }
 
     // Format results
@@ -197,6 +201,7 @@ export class Calculator {
 
     return {
       results,
+      ast,
       errors: {
         lexer: [],
         parser: parserErrors,
