@@ -387,6 +387,9 @@ function AstNode({ node }: { node: Node }) {
         case "fraction":
           formatLabel = "Fraction";
           break;
+        case "percentage":
+          formatLabel = "Percentage";
+          break;
         case "unix":
           formatLabel = `Unix (${fmtNode.unit})`;
           break;

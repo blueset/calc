@@ -22,9 +22,40 @@ height = 5 m
 area = width * height
 `;
 
-export const HELP_DOCUMENT = `# Welcome to ${APP_NAME}!
+export const DEMO_DOCUMENT = `# Welcome to ${APP_NAME}!
+# Try editing any line to see results update instantly.
 
-More content coming soon.
+# Arithmetic
+2 + 3
+10 * 4 - 7
+(100 + 50) / 3
+2 ^ 10
+
+# Percentages
+200 + 15%
+50% of 80
+
+# Units & conversions
+5 km to miles
+170 cm to ft in
+100 °F to °C
+3.5 hours + 45 minutes to minutes
+
+# Variables
+price = 49.99
+qty = 12
+subtotal = price * qty
+tax = subtotal * 8.5%
+total = subtotal + tax
+
+# Currency
+1 USD to EUR
+100 JPY to GBP
+
+# Functions
+sqrt(144)
+sin(45 deg)
+log(1000)
 `;
 
 export const FONT_SIZE_MAP = {

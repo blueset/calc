@@ -24,6 +24,7 @@ function PricisionBadge({
 function RawValueInfo({ rawValue }: { rawValue: Value }) {
   switch (rawValue.kind) {
     case "number": {
+      console.log(rawValue);
       return (
         <>
           <div className="flex flex-wrap items-center gap-2">
@@ -34,6 +35,11 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
             {!!rawValue.unit && (
               <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
                 {rawValue.unit.displayName.singular}
+                {rawValue.unit.id.startsWith("currency_symbol_")
+                  ? " (ambiguous currency)"
+                  : rawValue.unit.dimension.startsWith("user_defined_")
+                    ? " (user defined)"
+                    : null}
               </Badge>
             )}
             {!!rawValue.precision && (
@@ -55,6 +61,11 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
               <Badge className="gap-0 bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
                 {term.unit.displayName.singular}
                 {term.exponent !== 1 && <sup>{term.exponent}</sup>}
+                {term.unit.id.startsWith("currency_symbol_")
+                  ? " (ambiguous currency)"
+                  : term.unit.dimension.startsWith("user_defined_")
+                    ? " (user defined)"
+                    : null}
               </Badge>
             ))}
             {!!rawValue.precision && (

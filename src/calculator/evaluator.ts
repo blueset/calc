@@ -44,6 +44,7 @@ export type PresentationFormat =
   | "fraction"
   | "scientific"
   | "ordinal"
+  | "percentage"
   | "ISO 8601"
   | "RFC 9557"
   | "RFC 2822"
@@ -1295,6 +1296,9 @@ export class Evaluator {
 
       case "fraction":
         return this.convertToPresentation(value, "fraction");
+
+      case "percentage":
+        return this.convertToPresentation(value, "percentage");
 
       case "unix": {
         const unixNode = node as NearleyAST.UnixFormatNode;
@@ -2861,6 +2865,20 @@ export class Evaluator {
     if (typeof format === "number") {
       if (format < 2 || format > 36) {
         return this.createError(`Base must be between 2 and 36, got ${format}`);
+      }
+    }
+
+    // Percentage format requires unitless numeric value
+    if (format === "percentage") {
+      if (value.kind !== "number") {
+        return this.createError(
+          `percentage format requires a unitless numeric value, got ${value.kind}`,
+        );
+      }
+      if (value.unit) {
+        return this.createError(
+          `percentage format requires a unitless numeric value`,
+        );
       }
     }
 

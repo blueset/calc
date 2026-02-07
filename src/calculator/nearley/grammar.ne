@@ -197,6 +197,12 @@ PresentationTarget -> %kw_value {% (data, location) => ({ type: 'PresentationFor
                     | %kw_fraction {%
                       (data, location) => ({ type: 'PresentationFormat', format: 'fraction', offset: data[0].offset, sourceLength: data[0].value.length })
                     %}
+                    | (%kw_percentage | %percent) {%
+                      (data, location) => ({
+                        type: 'PresentationFormat', format: 'percentage',
+                        offset: data[0][0].offset, sourceLength: data[0][0].value.length
+                      })
+                    %}
                     | %ISO8601 {%
                       (data, location) => ({ type: 'PresentationFormat', format: 'ISO 8601', offset: data[0].offset, sourceLength: data[0].value.length })
                     %}

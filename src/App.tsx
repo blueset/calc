@@ -14,12 +14,14 @@ import {
 import { useTheme } from "@/hooks/useTheme";
 import {
   DEFAULT_DOCUMENT,
+  DEMO_DOCUMENT,
   DOCUMENT_STORAGE_KEY,
   FONT_SIZE_MAP,
 } from "@/constants";
 import type { LinePosition } from "@/codemirror/resultAlign";
 
-function loadDocument(): string {
+function loadDocument(demoMode: boolean): string {
+  if (demoMode) return DEMO_DOCUMENT;
   try {
     const stored = localStorage.getItem(DOCUMENT_STORAGE_KEY);
     if (stored) return stored;
@@ -30,17 +32,48 @@ function loadDocument(): string {
 }
 
 function AppContent() {
-  const [input, setInput] = useState(loadDocument);
+  const [isInDemoMode, setIsInDemoMode] = useState(
+    () => window.location.hash === "#demo",
+  );
+  const [input, setInput] = useState(() => loadDocument(isInDemoMode));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [linePositions, setLinePositions] = useState<LinePosition[]>([]);
   const [contentHeight, setContentHeight] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
   const [activeLine, setActiveLine] = useState(1);
   const editorViewRef = useRef<EditorView | null>(null);
-  const initialDocRef = useRef(loadDocument());
+  const initialDocRef = useRef(loadDocument(isInDemoMode));
+  const [editorKey, setEditorKey] = useState(0);
 
   const { settings, updateSetting } = useSettings();
   const resolvedTheme = useTheme(settings.theme);
+
+  const enterDemoMode = useCallback(() => {
+    window.location.hash = "#demo";
+  }, []);
+
+  const exitDemoMode = useCallback(() => {
+    history.pushState(null, "", location.pathname + location.search);
+    setIsInDemoMode(false);
+    const doc = loadDocument(false);
+    setInput(doc);
+    initialDocRef.current = doc;
+    setEditorKey((k) => k + 1);
+  }, []);
+
+  // Sync demo mode state with URL hash (handles back/forward + direct URL access)
+  useEffect(() => {
+    const handler = () => {
+      const demo = window.location.hash === "#demo";
+      setIsInDemoMode(demo);
+      const doc = loadDocument(demo);
+      setInput(doc);
+      initialDocRef.current = doc;
+      setEditorKey((k) => k + 1);
+    };
+    window.addEventListener("hashchange", handler);
+    return () => window.removeEventListener("hashchange", handler);
+  }, []);
 
   const calcSettings = useMemo(() => {
     const { debugMode, debounce, ...rest } = settings;
@@ -55,6 +88,7 @@ function AppContent() {
 
   // Persist document to localStorage
   useEffect(() => {
+    if (isInDemoMode) return;
     const timer = setTimeout(() => {
       try {
         localStorage.setItem(DOCUMENT_STORAGE_KEY, input);
@@ -63,7 +97,7 @@ function AppContent() {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [input]);
+  }, [input, isInDemoMode]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -103,12 +137,16 @@ function AppContent() {
         theme={resolvedTheme}
         onThemeToggle={handleThemeToggle}
         exchangeRatesVersion={exchangeRatesVersion}
+        isInDemoMode={isInDemoMode}
+        onEnterDemoMode={enterDemoMode}
+        onExitDemoMode={exitDemoMode}
       />
       <div className="flex flex-col flex-1 mx-auto w-full max-w-4xl min-h-0">
         <div className="flex flex-row flex-1 h-0 min-h-0">
           <div className="flex flex-col flex-1 min-w-0 min-h-0">
             {isReady ? (
               <Editor
+                key={editorKey}
                 initialDoc={initialDocRef.current}
                 onChange={setInput}
                 onLinePositions={handleLinePositions}

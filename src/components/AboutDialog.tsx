@@ -15,9 +15,10 @@ import SimpleIconsGithub from "~icons/simple-icons/github";
 
 export interface AboutDialogProps {
   exchangeRatesVersion?: string;
+  onEnterDemoMode?: () => void;
 }
 
-export function AboutDialog({ exchangeRatesVersion }: AboutDialogProps) {
+export function AboutDialog({ exchangeRatesVersion, onEnterDemoMode }: AboutDialogProps) {
   return (
     <Dialog>
       <DialogTrigger
@@ -82,12 +83,11 @@ export function AboutDialog({ exchangeRatesVersion }: AboutDialogProps) {
                 </a>
               }
             />
-            <Button
-              variant="outline"
+            <DialogClose
               render={
-                <a /* href={TODO} */ target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" onClick={onEnterDemoMode}>
                   <CircleQuestionMark /> Learn more
-                </a>
+                </Button>
               }
             />
           </div>

@@ -437,12 +437,9 @@ export class Formatter {
    */
   private formatCurrencyNumber(num: number, unit: Unit): string {
     const currency = this.dataLoader?.getCurrencyByCode(unit.id);
-    if (!currency) {
-      // Ambiguous currency - use default precision
-      return this.formatNumber(num);
-    }
 
-    const decimalPlaces = currency.minorUnits;
+    // Use 2 decimal places for ambiguous currencies as a best effort guess.
+    const decimalPlaces = currency?.minorUnits ?? 2;
     let formatted = num.toFixed(decimalPlaces);
 
     // Apply decimal separator (formatNumber uses '.' by default)
@@ -1160,7 +1157,8 @@ export class Formatter {
         format === "binary" ||
         format === "octal" ||
         format === "hex" ||
-        format === "ordinal"
+        format === "ordinal" ||
+        format === "percentage"
       ) {
         return `Error: ${format} format requires finite integer value`;
       }
@@ -1182,6 +1180,8 @@ export class Formatter {
         return this.formatFraction(value);
       case "scientific":
         return this.formatScientific(value);
+      case "percentage":
+        return this.formatPercentage(value);
       case "ordinal":
         return this.formatOrdinal(value);
       case "ISO 8601":
@@ -1298,6 +1298,19 @@ export class Formatter {
     const precision =
       this.settings.precision === -1 ? undefined : this.settings.precision;
     return value.toExponential(precision);
+  }
+
+  /**
+   * Format as percentage (multiply by 100 and append %)
+   */
+  private formatPercentage(value: number): string {
+    const percentValue = value * 100;
+    const precision =
+      this.settings.precision === -1 ? undefined : this.settings.precision;
+    if (precision !== undefined) {
+      return `${percentValue.toFixed(precision)}%`;
+    }
+    return `${parseFloat(percentValue.toPrecision(15))}%`;
   }
 
   /**

@@ -282,6 +282,10 @@ export class NearleyParser {
     // Check for undefined variables across all candidates
     const allUndefinedVars = new Set<string>();
 
+    if (candidates.filter(Boolean).length === 0) {
+      return "Unexpected end of input.";
+    }
+
     for (const candidate of candidates) {
       if (!candidate) continue;
 

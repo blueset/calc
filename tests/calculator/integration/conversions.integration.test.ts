@@ -170,6 +170,54 @@ describe("Integration Tests - Conversions", () => {
     });
   });
 
+  describe("Percentage Conversions", () => {
+    it("should convert decimal to percentage using keyword", () => {
+      const result = calculator.calculate("0.5 to percentage");
+      expect(result.results[0].result).toBe("50%");
+    });
+
+    it("should convert decimal to percentage using % symbol", () => {
+      const result = calculator.calculate("0.5 to %");
+      expect(result.results[0].result).toBe("50%");
+    });
+
+    it("should convert small decimal to percentage", () => {
+      const result = calculator.calculate("0.123 to percentage");
+      expect(result.results[0].result).toBe("12.3%");
+    });
+
+    it("should convert negative value to percentage", () => {
+      const result = calculator.calculate("-0.5 to percentage");
+      expect(result.results[0].result).toBe("-50%");
+    });
+
+    it("should convert 1 to 100%", () => {
+      const result = calculator.calculate("1 to %");
+      expect(result.results[0].result).toBe("100%");
+    });
+
+    it("should convert 0 to 0%", () => {
+      const result = calculator.calculate("0 to percentage");
+      expect(result.results[0].result).toBe("0%");
+    });
+
+    it("should reject value with units", () => {
+      const result = calculator.calculate("0.5 kg to percentage");
+      expect(result.results[0].result).toContain("Error");
+    });
+
+    it("should reject derived unit value", () => {
+      const result = calculator.calculate("5 m/s to percentage");
+      expect(result.results[0].result).toContain("Error");
+    });
+
+    it("should respect precision settings", () => {
+      const preciseCalc = new Calculator(dataLoader, { precision: 2 });
+      const result = preciseCalc.calculate("0.12345 to percentage");
+      expect(result.results[0].result).toBe("12.35%");
+    });
+  });
+
   describe("Angle Unit Display", () => {
     it("should display angle unit for inverse trig in degrees", () => {
       const degreeCalc = new Calculator(dataLoader, { angleUnit: "degree" });

@@ -24,6 +24,8 @@ declare var kw_decimals: any;
 declare var kw_base: any;
 declare var kw_scientific: any;
 declare var kw_fraction: any;
+declare var kw_percentage: any;
+declare var percent: any;
 declare var ISO8601: any;
 declare var RFC9557: any;
 declare var RFC2822: any;
@@ -50,7 +52,6 @@ declare var times: any;
 declare var slash: any;
 declare var divide: any;
 declare var kw_per: any;
-declare var percent: any;
 declare var kw_mod: any;
 declare var bang: any;
 declare var tilde: any;
@@ -279,6 +280,14 @@ const grammar: Grammar = {
                             },
     {"name": "PresentationTarget", "symbols": [(lexer.has("kw_fraction") ? {type: "kw_fraction"} : kw_fraction)], "postprocess": 
         (data, location) => ({ type: 'PresentationFormat', format: 'fraction', offset: data[0].offset, sourceLength: data[0].value.length })
+                            },
+    {"name": "PresentationTarget$subexpression$2", "symbols": [(lexer.has("kw_percentage") ? {type: "kw_percentage"} : kw_percentage)]},
+    {"name": "PresentationTarget$subexpression$2", "symbols": [(lexer.has("percent") ? {type: "percent"} : percent)]},
+    {"name": "PresentationTarget", "symbols": ["PresentationTarget$subexpression$2"], "postprocess": 
+        (data, location) => ({
+          type: 'PresentationFormat', format: 'percentage',
+          offset: data[0][0].offset, sourceLength: data[0][0].value.length
+        })
                             },
     {"name": "PresentationTarget", "symbols": [(lexer.has("ISO8601") ? {type: "ISO8601"} : ISO8601)], "postprocess": 
         (data, location) => ({ type: 'PresentationFormat', format: 'ISO 8601', offset: data[0].offset, sourceLength: data[0].value.length })

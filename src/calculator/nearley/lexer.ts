@@ -168,6 +168,7 @@ export const lexer = moo.compile({
           "decimals",
           "scientific",
           "fraction",
+          "percentage",
           // ---
           "now", "yesterday", "today", "tomorrow",
           "from", "ago"

@@ -346,6 +346,12 @@ interface FractionFormatNode extends Node {
   readonly sourceLength?: number;
 }
 
+interface PercentageFormatNode extends Node {
+  readonly type: "PresentationFormat";
+  readonly format: "percentage";
+  readonly sourceLength?: number;
+}
+
 interface UnixFormatNode extends Node {
   readonly type: "PresentationFormat";
   readonly format: "unix";
@@ -367,6 +373,7 @@ type PresentationFormatNode =
   | DecimalsFormatNode
   | ScientificFormatNode
   | FractionFormatNode
+  | PercentageFormatNode
   | UnixFormatNode
   | NamedFormatNode;
 
@@ -483,6 +490,7 @@ export type {
   DecimalsFormatNode,
   ScientificFormatNode,
   FractionFormatNode,
+  PercentageFormatNode,
   UnixFormatNode,
   NamedFormatNode,
   PropertyTargetNode,
