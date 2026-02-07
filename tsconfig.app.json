@@ -17,6 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "paths": { "@/*": ["./src/*"] },
+    "types": ["unplugin-icons/types/react"],
     "typeRoots": ["./node_modules/@types", "./src/calculator/types"]
   },
   "include": ["src/**/*", "tests/**/*"]

@@ -99,7 +99,7 @@ const ALL_SI_PREFIXES: SIPrefix[] = [
 
 // SI prefixes kilo and larger (for data units)
 const LARGE_SI_PREFIXES: SIPrefix[] = ALL_SI_PREFIXES.filter(
-  (p) => p.exponent >= 3
+  (p) => p.exponent >= 3,
 );
 
 // Binary prefixes for data units
@@ -252,7 +252,7 @@ function generateSIPrefixedUnits(
   baseSingular: string,
   basePlural: string,
   dimension: string,
-  baseFactorToSI: number = 1
+  baseFactorToSI: number = 1,
 ): Unit[] {
   const units: Unit[] = [];
 
@@ -269,7 +269,9 @@ function generateSIPrefixedUnits(
     const names: string[] = [symbol, singular, plural];
 
     // Special case: kilogram is the base unit for mass dimension (factor 1)
-    const isDimensionBaseUnit = (id === "kilogram" && dimension === "mass") || (isBase && baseFactorToSI === 1);
+    const isDimensionBaseUnit =
+      (id === "kilogram" && dimension === "mass") ||
+      (isBase && baseFactorToSI === 1);
 
     units.push({
       id,
@@ -289,7 +291,7 @@ function generateDataUnits(
   baseSymbol: string,
   baseSingular: string,
   basePlural: string,
-  baseFactorToBit: number = 1
+  baseFactorToBit: number = 1,
 ): Unit[] {
   const units: Unit[] = [];
 
@@ -297,7 +299,11 @@ function generateDataUnits(
   units.push({
     id: baseId,
     dimension: "data",
-    displayName: { symbol: baseSymbol, singular: baseSingular, plural: basePlural },
+    displayName: {
+      symbol: baseSymbol,
+      singular: baseSingular,
+      plural: basePlural,
+    },
     names: [baseSymbol, baseSingular, basePlural],
     conversion: { type: "linear", factor: baseFactorToBit },
     isBaseUnit: baseFactorToBit === 1 ? true : undefined,
@@ -430,7 +436,11 @@ const staticUnits: Unit[] = [
   {
     id: "thousand",
     dimension: "dimensionless",
-    displayName: { symbol: "thousand", singular: "thousand", plural: "thousand" },
+    displayName: {
+      symbol: "thousand",
+      singular: "thousand",
+      plural: "thousand",
+    },
     names: ["thousand", "thousands"],
     conversion: { type: "linear", factor: 1000 },
   },
@@ -495,14 +505,22 @@ const staticUnits: Unit[] = [
   {
     id: "nautical_mile",
     dimension: "length",
-    displayName: { symbol: "nmi", singular: "nautical mile", plural: "nautical miles" },
+    displayName: {
+      symbol: "nmi",
+      singular: "nautical mile",
+      plural: "nautical miles",
+    },
     names: ["nmi", "nautical mile", "nautical miles", "NM"],
     conversion: { type: "linear", factor: 1852 },
   },
   {
     id: "astronomical_unit",
     dimension: "length",
-    displayName: { symbol: "au", singular: "astronomical unit", plural: "astronomical units" },
+    displayName: {
+      symbol: "au",
+      singular: "astronomical unit",
+      plural: "astronomical units",
+    },
     names: ["au", "astronomical unit", "astronomical units"],
     conversion: { type: "linear", factor: 149597870700 },
   },
@@ -510,7 +528,15 @@ const staticUnits: Unit[] = [
     id: "lightyear",
     dimension: "length",
     displayName: { symbol: "ly", singular: "lightyear", plural: "lightyears" },
-    names: ["ly", "lightyear", "lightyears", "light year", "light years", "light-year", "light-years"],
+    names: [
+      "ly",
+      "lightyear",
+      "lightyears",
+      "light year",
+      "light years",
+      "light-year",
+      "light-years",
+    ],
     conversion: { type: "linear", factor: 9.4607304725808e15 },
   },
 
@@ -553,7 +579,11 @@ const staticUnits: Unit[] = [
   {
     id: "short_ton",
     dimension: "mass",
-    displayName: { symbol: "sh tn", singular: "short ton", plural: "short tons" },
+    displayName: {
+      symbol: "sh tn",
+      singular: "short ton",
+      plural: "short tons",
+    },
     names: ["short ton", "short tons", "sh tn", "US ton", "US tons"],
     conversion: { type: "linear", factor: 907.18474 }, // kilograms (2000 lb)
   },
@@ -561,7 +591,15 @@ const staticUnits: Unit[] = [
     id: "long_ton",
     dimension: "mass",
     displayName: { symbol: "lg tn", singular: "long ton", plural: "long tons" },
-    names: ["long ton", "long tons", "lg tn", "UK ton", "UK tons", "imperial ton", "imperial tons"],
+    names: [
+      "long ton",
+      "long tons",
+      "lg tn",
+      "UK ton",
+      "UK tons",
+      "imperial ton",
+      "imperial tons",
+    ],
     conversion: { type: "linear", factor: 1016.0469088 }, // kilograms (2240 lb)
   },
 
@@ -569,8 +607,20 @@ const staticUnits: Unit[] = [
   {
     id: "square_meter",
     dimension: "area",
-    displayName: { symbol: "m²", singular: "square meter", plural: "square meters" },
-    names: ["m²", "m^2", "square meter", "square meters", "meter squared", "meters squared", "sq m"],
+    displayName: {
+      symbol: "m²",
+      singular: "square meter",
+      plural: "square meters",
+    },
+    names: [
+      "m²",
+      "m^2",
+      "square meter",
+      "square meters",
+      "meter squared",
+      "meters squared",
+      "sq m",
+    ],
     conversion: { type: "linear", factor: 1 },
     isBaseUnit: true,
   },
@@ -591,35 +641,55 @@ const staticUnits: Unit[] = [
   {
     id: "square_foot",
     dimension: "area",
-    displayName: { symbol: "ft²", singular: "square foot", plural: "square feet" },
+    displayName: {
+      symbol: "ft²",
+      singular: "square foot",
+      plural: "square feet",
+    },
     names: ["ft²", "ft^2", "square foot", "square feet", "sq ft"],
     conversion: { type: "linear", factor: 0.09290304 }, // m²
   },
   {
     id: "square_inch",
     dimension: "area",
-    displayName: { symbol: "in²", singular: "square inch", plural: "square inches" },
+    displayName: {
+      symbol: "in²",
+      singular: "square inch",
+      plural: "square inches",
+    },
     names: ["in²", "in^2", "square inch", "square inches", "sq in"],
     conversion: { type: "linear", factor: 0.00064516 }, // m²
   },
   {
     id: "square_mile",
     dimension: "area",
-    displayName: { symbol: "mi²", singular: "square mile", plural: "square miles" },
+    displayName: {
+      symbol: "mi²",
+      singular: "square mile",
+      plural: "square miles",
+    },
     names: ["mi²", "mi^2", "square mile", "square miles", "sq mi"],
     conversion: { type: "linear", factor: 2589988.110336 }, // m²
   },
   {
     id: "square_kilometer",
     dimension: "area",
-    displayName: { symbol: "km²", singular: "square kilometer", plural: "square kilometers" },
+    displayName: {
+      symbol: "km²",
+      singular: "square kilometer",
+      plural: "square kilometers",
+    },
     names: ["km²", "km^2", "square kilometer", "square kilometers", "sq km"],
     conversion: { type: "linear", factor: 1000000 }, // m²
   },
   {
     id: "square_centimeter",
     dimension: "area",
-    displayName: { symbol: "cm²", singular: "square centimeter", plural: "square centimeters" },
+    displayName: {
+      symbol: "cm²",
+      singular: "square centimeter",
+      plural: "square centimeters",
+    },
     names: ["cm²", "cm^2", "square centimeter", "square centimeters", "sq cm"],
     conversion: { type: "linear", factor: 0.0001 }, // m²
   },
@@ -628,29 +698,52 @@ const staticUnits: Unit[] = [
   {
     id: "cubic_meter",
     dimension: "volume",
-    displayName: { symbol: "m³", singular: "cubic meter", plural: "cubic meters" },
-    names: ["m³", "m^3", "cubic meter", "cubic meters", "meter cubed", "meters cubed"],
+    displayName: {
+      symbol: "m³",
+      singular: "cubic meter",
+      plural: "cubic meters",
+    },
+    names: [
+      "m³",
+      "m^3",
+      "cubic meter",
+      "cubic meters",
+      "meter cubed",
+      "meters cubed",
+    ],
     conversion: { type: "linear", factor: 1 },
     isBaseUnit: true,
   },
   {
     id: "cubic_centimeter",
     dimension: "volume",
-    displayName: { symbol: "cm³", singular: "cubic centimeter", plural: "cubic centimeters" },
+    displayName: {
+      symbol: "cm³",
+      singular: "cubic centimeter",
+      plural: "cubic centimeters",
+    },
     names: ["cm³", "cm^3", "cubic centimeter", "cubic centimeters", "cc"],
     conversion: { type: "linear", factor: 1e-6 }, // m³
   },
   {
     id: "cubic_foot",
     dimension: "volume",
-    displayName: { symbol: "ft³", singular: "cubic foot", plural: "cubic feet" },
+    displayName: {
+      symbol: "ft³",
+      singular: "cubic foot",
+      plural: "cubic feet",
+    },
     names: ["ft³", "ft^3", "cubic foot", "cubic feet"],
     conversion: { type: "linear", factor: 0.028316846592 }, // m³
   },
   {
     id: "cubic_inch",
     dimension: "volume",
-    displayName: { symbol: "in³", singular: "cubic inch", plural: "cubic inches" },
+    displayName: {
+      symbol: "in³",
+      singular: "cubic inch",
+      plural: "cubic inches",
+    },
     names: ["in³", "in^3", "cubic inch", "cubic inches"],
     conversion: { type: "linear", factor: 1.6387064e-5 }, // m³
   },
@@ -670,7 +763,11 @@ const staticUnits: Unit[] = [
   {
     id: "tablespoon",
     dimension: "volume",
-    displayName: { symbol: "tbsp", singular: "tablespoon", plural: "tablespoons" },
+    displayName: {
+      symbol: "tbsp",
+      singular: "tablespoon",
+      plural: "tablespoons",
+    },
     names: ["tbsp", "tablespoon", "tablespoons"],
     conversion: {
       type: "variant",
@@ -684,7 +781,7 @@ const staticUnits: Unit[] = [
     id: "cup",
     dimension: "volume",
     displayName: { symbol: "cup", singular: "cup", plural: "cups" },
-    names: ["cup", "cups", "c"],
+    names: ["cup", "cups"],
     conversion: {
       type: "variant",
       variants: {
@@ -696,7 +793,11 @@ const staticUnits: Unit[] = [
   {
     id: "fluid_ounce",
     dimension: "volume",
-    displayName: { symbol: "fl oz", singular: "fluid ounce", plural: "fluid ounces" },
+    displayName: {
+      symbol: "fl oz",
+      singular: "fluid ounce",
+      plural: "fluid ounces",
+    },
     names: ["fl oz", "fluid ounce", "fluid ounces", "floz"],
     conversion: {
       type: "variant",
@@ -758,15 +859,39 @@ const staticUnits: Unit[] = [
   {
     id: "celsius",
     dimension: "temperature",
-    displayName: { symbol: "°C", singular: "degree Celsius", plural: "degrees Celsius" },
-    names: ["°C", "C", "celsius", "Celsius", "deg C", "degree Celsius", "degrees Celsius"],
+    displayName: {
+      symbol: "°C",
+      singular: "degree Celsius",
+      plural: "degrees Celsius",
+    },
+    names: [
+      "°C",
+      "C",
+      "celsius",
+      "Celsius",
+      "deg C",
+      "degree Celsius",
+      "degrees Celsius",
+    ],
     conversion: { type: "affine", offset: 273.15, factor: 1 },
   },
   {
     id: "fahrenheit",
     dimension: "temperature",
-    displayName: { symbol: "°F", singular: "degree Fahrenheit", plural: "degrees Fahrenheit" },
-    names: ["°F", "F", "fahrenheit", "Fahrenheit", "deg F", "degree Fahrenheit", "degrees Fahrenheit"],
+    displayName: {
+      symbol: "°F",
+      singular: "degree Fahrenheit",
+      plural: "degrees Fahrenheit",
+    },
+    names: [
+      "°F",
+      "F",
+      "fahrenheit",
+      "Fahrenheit",
+      "deg F",
+      "degree Fahrenheit",
+      "degrees Fahrenheit",
+    ],
     conversion: { type: "affine", offset: 459.67, factor: 5 / 9 },
   },
 
@@ -782,21 +907,33 @@ const staticUnits: Unit[] = [
   {
     id: "millisecond",
     dimension: "time",
-    displayName: { symbol: "ms", singular: "millisecond", plural: "milliseconds" },
+    displayName: {
+      symbol: "ms",
+      singular: "millisecond",
+      plural: "milliseconds",
+    },
     names: ["ms", "millisecond", "milliseconds", "msec", "msecs"],
     conversion: { type: "linear", factor: 0.001 },
   },
   {
     id: "microsecond",
     dimension: "time",
-    displayName: { symbol: "μs", singular: "microsecond", plural: "microseconds" },
+    displayName: {
+      symbol: "μs",
+      singular: "microsecond",
+      plural: "microseconds",
+    },
     names: ["μs", "us", "microsecond", "microseconds"],
     conversion: { type: "linear", factor: 1e-6 },
   },
   {
     id: "nanosecond",
     dimension: "time",
-    displayName: { symbol: "ns", singular: "nanosecond", plural: "nanoseconds" },
+    displayName: {
+      symbol: "ns",
+      singular: "nanosecond",
+      plural: "nanoseconds",
+    },
     names: ["ns", "nanosecond", "nanoseconds"],
     conversion: { type: "linear", factor: 1e-9 },
   },
@@ -847,22 +984,53 @@ const staticUnits: Unit[] = [
   {
     id: "small_calorie",
     dimension: "energy",
-    displayName: { symbol: "gcal", singular: "small calorie", plural: "small calories" },
-    names: ["gcal", "small calorie", "small calories", "sm cal", "gram calorie", "gram calories"],
+    displayName: {
+      symbol: "gcal",
+      singular: "small calorie",
+      plural: "small calories",
+    },
+    names: [
+      "gcal",
+      "small calorie",
+      "small calories",
+      "sm cal",
+      "gram calorie",
+      "gram calories",
+    ],
     conversion: { type: "linear", factor: 4.184 }, // joules
   },
   {
     id: "kilocalorie",
     dimension: "energy",
-    displayName: { symbol: "kcal", singular: "kilocalorie", plural: "kilocalories" },
-    names: ["kcal", "kilocalorie", "kilocalories", "Cal", "calorie", "calories", "cal", "food calorie", "food calories"],
+    displayName: {
+      symbol: "kcal",
+      singular: "kilocalorie",
+      plural: "kilocalories",
+    },
+    names: [
+      "kcal",
+      "kilocalorie",
+      "kilocalories",
+      "Cal",
+      "calorie",
+      "calories",
+      "cal",
+      "food calorie",
+      "food calories",
+    ],
     conversion: { type: "linear", factor: 4184 }, // joules
   },
   {
     id: "btu",
     dimension: "energy",
     displayName: { symbol: "BTU", singular: "BTU", plural: "BTUs" },
-    names: ["BTU", "BTUs", "Btu", "British thermal unit", "British thermal units"],
+    names: [
+      "BTU",
+      "BTUs",
+      "Btu",
+      "British thermal unit",
+      "British thermal units",
+    ],
     conversion: { type: "linear", factor: 1055.06 }, // joules
   },
   {
@@ -875,7 +1043,11 @@ const staticUnits: Unit[] = [
   {
     id: "kilowatt_hour",
     dimension: "energy",
-    displayName: { symbol: "kW h", singular: "kilowatt hour", plural: "kilowatt hours" },
+    displayName: {
+      symbol: "kW h",
+      singular: "kilowatt hour",
+      plural: "kilowatt hours",
+    },
     names: ["kWh", "kilowatthour", "kilowatt hour", "kilowatt hours"],
     conversion: { type: "linear", factor: 3600000 }, // joules (1 kWh = 3,600,000 J)
   },
@@ -884,7 +1056,11 @@ const staticUnits: Unit[] = [
   {
     id: "meter_per_second",
     dimension: "speed",
-    displayName: { symbol: "m/s", singular: "meter per second", plural: "meters per second" },
+    displayName: {
+      symbol: "m/s",
+      singular: "meter per second",
+      plural: "meters per second",
+    },
     names: ["m/s", "meter per second", "meters per second", "mps"],
     conversion: { type: "linear", factor: 1 },
     isBaseUnit: true,
@@ -892,15 +1068,30 @@ const staticUnits: Unit[] = [
   {
     id: "miles_per_hour",
     dimension: "speed",
-    displayName: { symbol: "mph", singular: "mile per hour", plural: "miles per hour" },
+    displayName: {
+      symbol: "mph",
+      singular: "mile per hour",
+      plural: "miles per hour",
+    },
     names: ["mph", "MPH", "mi/h", "mile per hour", "miles per hour"],
     conversion: { type: "linear", factor: 0.44704 }, // m/s (1 mile = 1609.344 m, 1 hour = 3600 s)
   },
   {
     id: "kilometers_per_hour",
     dimension: "speed",
-    displayName: { symbol: "km/h", singular: "kilometer per hour", plural: "kilometers per hour" },
-    names: ["km/h", "kmh", "kph", "KPH", "kilometer per hour", "kilometers per hour"],
+    displayName: {
+      symbol: "km/h",
+      singular: "kilometer per hour",
+      plural: "kilometers per hour",
+    },
+    names: [
+      "km/h",
+      "kmh",
+      "kph",
+      "KPH",
+      "kilometer per hour",
+      "kilometers per hour",
+    ],
     conversion: { type: "linear", factor: 0.277778 }, // m/s (1 km = 1000 m, 1 hour = 3600 s)
   },
   {
@@ -931,7 +1122,11 @@ const staticUnits: Unit[] = [
   {
     id: "atmosphere",
     dimension: "pressure",
-    displayName: { symbol: "atm", singular: "atmosphere", plural: "atmospheres" },
+    displayName: {
+      symbol: "atm",
+      singular: "atmosphere",
+      plural: "atmospheres",
+    },
     names: ["atm", "atmosphere", "atmospheres"],
     conversion: { type: "linear", factor: 101325 }, // pascals
   },
@@ -945,14 +1140,22 @@ const staticUnits: Unit[] = [
   {
     id: "mmhg",
     dimension: "pressure",
-    displayName: { symbol: "mmHg", singular: "millimeter of mercury", plural: "millimeters of mercury" },
+    displayName: {
+      symbol: "mmHg",
+      singular: "millimeter of mercury",
+      plural: "millimeters of mercury",
+    },
     names: ["mmHg", "millimeter of mercury", "millimeters of mercury", "mm Hg"],
     conversion: { type: "linear", factor: 133.322 }, // pascals
   },
   {
     id: "inhg",
     dimension: "pressure",
-    displayName: { symbol: "inHg", singular: "inch of mercury", plural: "inches of mercury" },
+    displayName: {
+      symbol: "inHg",
+      singular: "inch of mercury",
+      plural: "inches of mercury",
+    },
     names: ["inHg", "inch of mercury", "inches of mercury", "in Hg"],
     conversion: { type: "linear", factor: 3386.39 }, // pascals
   },
@@ -961,15 +1164,35 @@ const staticUnits: Unit[] = [
   {
     id: "pound_force",
     dimension: "force",
-    displayName: { symbol: "lbf", singular: "pound-force", plural: "pounds-force" },
-    names: ["lbf", "pound-force", "pounds-force", "pound force", "pounds force"],
+    displayName: {
+      symbol: "lbf",
+      singular: "pound-force",
+      plural: "pounds-force",
+    },
+    names: [
+      "lbf",
+      "pound-force",
+      "pounds-force",
+      "pound force",
+      "pounds force",
+    ],
     conversion: { type: "linear", factor: 4.44822 }, // newtons
   },
   {
     id: "kilogram_force",
     dimension: "force",
-    displayName: { symbol: "kgf", singular: "kilogram-force", plural: "kilograms-force" },
-    names: ["kgf", "kilogram-force", "kilograms-force", "kilogram force", "kilograms force"],
+    displayName: {
+      symbol: "kgf",
+      singular: "kilogram-force",
+      plural: "kilograms-force",
+    },
+    names: [
+      "kgf",
+      "kilogram-force",
+      "kilograms-force",
+      "kilogram force",
+      "kilograms force",
+    ],
     conversion: { type: "linear", factor: 9.80665 }, // newtons
   },
 
@@ -993,14 +1216,31 @@ const staticUnits: Unit[] = [
     id: "arcminute",
     dimension: "angle",
     displayName: { symbol: "′", singular: "arcminute", plural: "arcminutes" },
-    names: ["′", "arcminute", "arcminutes", "arcmin", "arc minute", "arc minutes", "'"],
+    names: [
+      "′",
+      "arcminute",
+      "arcminutes",
+      "arcmin",
+      "arc minute",
+      "arc minutes",
+      "'",
+    ],
     conversion: { type: "linear", factor: Math.PI / 10800 }, // radians
   },
   {
     id: "arcsecond",
     dimension: "angle",
     displayName: { symbol: "″", singular: "arcsecond", plural: "arcseconds" },
-    names: ["″", "arcsecond", "arcseconds", "arcsec", "arc second", "arc seconds", "''", '"'],
+    names: [
+      "″",
+      "arcsecond",
+      "arcseconds",
+      "arcsec",
+      "arc second",
+      "arc seconds",
+      "''",
+      '"',
+    ],
     conversion: { type: "linear", factor: Math.PI / 648000 }, // radians
   },
 
@@ -1082,42 +1322,63 @@ function generateAllUnits(): Unit[] {
 
   // Meter with all SI prefixes (base unit for length)
   units.push(
-    ...generateSIPrefixedUnits("meter", "m", "meter", "meters", "length", 1)
+    ...generateSIPrefixedUnits("meter", "m", "meter", "meters", "length", 1),
   );
 
   // Gram with all SI prefixes (kilogram is base unit for mass, gram is 0.001 kg)
   units.push(
-    ...generateSIPrefixedUnits("gram", "g", "gram", "grams", "mass", 0.001)
+    ...generateSIPrefixedUnits("gram", "g", "gram", "grams", "mass", 0.001),
   );
 
   // Ampere with all SI prefixes
   units.push(
-    ...generateSIPrefixedUnits("ampere", "A", "ampere", "amperes", "current", 1)
+    ...generateSIPrefixedUnits(
+      "ampere",
+      "A",
+      "ampere",
+      "amperes",
+      "current",
+      1,
+    ),
   );
 
   // Hertz with all SI prefixes
   units.push(
-    ...generateSIPrefixedUnits("hertz", "Hz", "hertz", "hertz", "frequency", 1)
+    ...generateSIPrefixedUnits("hertz", "Hz", "hertz", "hertz", "frequency", 1),
   );
 
   // Pascal with all SI prefixes
   units.push(
-    ...generateSIPrefixedUnits("pascal", "Pa", "pascal", "pascals", "pressure", 1)
+    ...generateSIPrefixedUnits(
+      "pascal",
+      "Pa",
+      "pascal",
+      "pascals",
+      "pressure",
+      1,
+    ),
   );
 
   // Joule with all SI prefixes
   units.push(
-    ...generateSIPrefixedUnits("joule", "J", "joule", "joules", "energy", 1)
+    ...generateSIPrefixedUnits("joule", "J", "joule", "joules", "energy", 1),
   );
 
   // Watt with all SI prefixes
   units.push(
-    ...generateSIPrefixedUnits("watt", "W", "watt", "watts", "power", 1)
+    ...generateSIPrefixedUnits("watt", "W", "watt", "watts", "power", 1),
   );
 
   // Liter with all SI prefixes (1 L = 0.001 m³)
   units.push(
-    ...generateSIPrefixedUnits("liter", "L", "liter", "liters", "volume", 0.001)
+    ...generateSIPrefixedUnits(
+      "liter",
+      "L",
+      "liter",
+      "liters",
+      "volume",
+      0.001,
+    ),
   );
 
   // Electronvolt with all SI prefixes (1 eV = 1.602176634e-19 J)
@@ -1128,13 +1389,13 @@ function generateAllUnits(): Unit[] {
       "electronvolt",
       "electronvolts",
       "energy",
-      1.602176634e-19
-    )
+      1.602176634e-19,
+    ),
   );
 
   // Newton with all SI prefixes
   units.push(
-    ...generateSIPrefixedUnits("newton", "N", "newton", "newtons", "force", 1)
+    ...generateSIPrefixedUnits("newton", "N", "newton", "newtons", "force", 1),
   );
 
   // Candela with all SI prefixes
@@ -1145,18 +1406,18 @@ function generateAllUnits(): Unit[] {
       "candela",
       "candelas",
       "luminous_intensity",
-      1
-    )
+      1,
+    ),
   );
 
   // Volt with all SI prefixes
   units.push(
-    ...generateSIPrefixedUnits("volt", "V", "volt", "volts", "voltage", 1)
+    ...generateSIPrefixedUnits("volt", "V", "volt", "volts", "voltage", 1),
   );
 
   // Ohm with all SI prefixes
   units.push(
-    ...generateSIPrefixedUnits("ohm", "Ω", "ohm", "ohms", "resistance", 1)
+    ...generateSIPrefixedUnits("ohm", "Ω", "ohm", "ohms", "resistance", 1),
   );
 
   // Data units (bit and byte)
@@ -1217,7 +1478,10 @@ function reportDuplicateNames(units: Unit[]): void {
       if (allowed) {
         const unitIdSet = new Set(unitIds);
         // Check if the sets are exactly equal
-        if (unitIdSet.size === allowed.size && [...unitIdSet].every(id => allowed.has(id))) {
+        if (
+          unitIdSet.size === allowed.size &&
+          [...unitIdSet].every((id) => allowed.has(id))
+        ) {
           continue; // Skip this allowed duplicate
         }
       }
@@ -1229,7 +1493,9 @@ function reportDuplicateNames(units: Unit[]): void {
   if (duplicates.length === 0) {
     console.log(`\nNo duplicate names found.`);
   } else {
-    console.log(`\n⚠️  Found ${duplicates.length} duplicate names (case-sensitive):`);
+    console.log(
+      `\n⚠️  Found ${duplicates.length} duplicate names (case-sensitive):`,
+    );
     // Sort by name for readability
     duplicates.sort((a, b) => a.name.localeCompare(b.name));
     for (const { name, unitIds } of duplicates) {
@@ -1250,7 +1516,7 @@ function main() {
   fs.writeFileSync(
     "units.json",
     JSON.stringify(cleanDatabase, null, 2),
-    "utf-8"
+    "utf-8",
   );
 
   console.log(`Generated units.json with:`);

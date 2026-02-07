@@ -11,17 +11,22 @@ export interface Settings {
    * - 'dark': Dark theme
    * - 'system': Follow system preference
    */
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
 
   /**
    * Font size (default: 'medium')
    */
-  fontSize: 'small' | 'medium' | 'large';
+  fontSize: "small" | "medium" | "large";
 
   /**
    * Font family (default: 'monospace')
    */
-  fontFamily: 'monospace' | 'sans-serif' | 'serif';
+  fontFamily: "monospace" | "sans-serif" | "serif";
+
+  /**
+   * Line wrapping in editor (default: false)
+   */
+  lineWrapping: boolean;
 
   // Number Formatting Settings
   /**
@@ -34,14 +39,14 @@ export interface Settings {
    * Angle unit for trigonometric functions (default: 'degree')
    * Note: This affects both calculation and display
    */
-  angleUnit: 'degree' | 'radian';
+  angleUnit: "degree" | "radian";
 
   /**
    * Decimal separator character (default: '.')
    * - '.': Standard decimal point (1234.56)
    * - ',': European decimal comma (1234,56)
    */
-  decimalSeparator: '.' | ',';
+  decimalSeparator: "." | ",";
 
   /**
    * Digit grouping separator (default: ' ')
@@ -51,7 +56,7 @@ export interface Settings {
    * - '.': Dot separator (1.234.567)
    * - '′': Prime symbol separator (1′234′567)
    */
-  digitGroupingSeparator: '' | ' ' | ',' | '.' | '′';
+  digitGroupingSeparator: "" | " " | "," | "." | "′";
 
   /**
    * Digit grouping size (default: '3')
@@ -60,7 +65,7 @@ export interface Settings {
    * - '4': East Asian style (1234,5678)
    * - 'off': No grouping
    */
-  digitGroupingSize: '3' | '2-3' | '4' | 'off';
+  digitGroupingSize: "3" | "2-3" | "4" | "off";
 
   // Date/Time Formatting Settings
   /**
@@ -79,14 +84,14 @@ export interface Settings {
    * - 'h12': 12-hour format with AM/PM (3:45 PM)
    * - 'h23': 24-hour format (15:45)
    */
-  timeFormat: 'h12' | 'h23';
+  timeFormat: "h12" | "h23";
 
   /**
    * Date time format - order of date and time (default: '{date} {time}')
    * - '{date} {time}': Date first, then time (2024-01-31 15:45)
    * - '{time} {date}': Time first, then date (15:45 2024-01-31)
    */
-  dateTimeFormat: '{date} {time}' | '{time} {date}';
+  dateTimeFormat: "{date} {time}" | "{time} {date}";
 
   // Unit Settings
   /**
@@ -94,14 +99,14 @@ export interface Settings {
    * - 'us': US imperial units (US gallon, etc.)
    * - 'uk': UK imperial units (UK gallon, etc.)
    */
-  imperialUnits: 'us' | 'uk';
+  imperialUnits: "us" | "uk";
 
   /**
    * Unit display style (default: 'symbol')
    * - 'symbol': Use short symbols (km, kg, °C)
    * - 'name': Use full names (kilometer, kilogram, degree Celsius)
    */
-  unitDisplayStyle: 'symbol' | 'name';
+  unitDisplayStyle: "symbol" | "name";
 }
 
 /**
@@ -109,25 +114,26 @@ export interface Settings {
  */
 export const defaultSettings: Settings = {
   // UI defaults
-  theme: 'system',
-  fontSize: 'medium',
-  fontFamily: 'monospace',
+  theme: "system",
+  fontSize: "medium",
+  fontFamily: "monospace",
+  lineWrapping: true,
 
   // Number formatting defaults
   precision: -1, // Automatic precision
-  angleUnit: 'degree',
-  decimalSeparator: '.',
-  digitGroupingSeparator: ' ',
-  digitGroupingSize: '3', // European style (3 digits)
+  angleUnit: "degree",
+  decimalSeparator: ".",
+  digitGroupingSeparator: " ",
+  digitGroupingSize: "3", // European style (3 digits)
 
   // Date/time defaults
-  dateFormat: 'YYYY-MM-DD DDD',
-  timeFormat: 'h23',
-  dateTimeFormat: '{date} {time}',
+  dateFormat: "YYYY-MM-DD DDD",
+  timeFormat: "h23",
+  dateTimeFormat: "{date} {time}",
 
   // Unit defaults
-  imperialUnits: 'us',
-  unitDisplayStyle: 'symbol',
+  imperialUnits: "us",
+  unitDisplayStyle: "symbol",
 };
 
 /**

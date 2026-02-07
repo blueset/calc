@@ -7,14 +7,14 @@ interface TransformTypeFn {
   readonly type: unknown;
 }
 
-type Apply<F extends TransformTypeFn, A> = (F & { readonly _A: A})['type'];
+type Apply<F extends TransformTypeFn, A> = (F & { readonly _A: A })["type"];
 
 interface Id extends TransformTypeFn {
-  readonly type: this['_A'];
+  readonly type: this["_A"];
 }
 
 interface Arr extends TransformTypeFn {
-  readonly type: Array<this['_A']>;
+  readonly type: Array<this["_A"]>;
 }
 
 // ============================================================================
@@ -22,7 +22,8 @@ interface Arr extends TransformTypeFn {
 // ============================================================================
 
 interface Node {
-  readonly offset: number;  // character offset within the line (from moo token)
+  readonly type?: string;
+  readonly offset: number; // character offset within the line (from moo token)
 }
 
 // ============================================================================
@@ -30,27 +31,43 @@ interface Node {
 // ============================================================================
 
 type BinaryOperator =
-  | 'or' | 'and'                                                          // Logical
-  | 'pipe' | 'kw_xor' | 'ampersand'                                       // Bitwise
-  | 'lessThan' | 'lessThanOrEqual' | 'greaterThan' | 'greaterThanOrEqual' | 'equals' | 'notEquals'  // Comparison
-  | 'lShift' | 'rShift'                                                   // Bit shift
-  | 'plus' | 'minus'                                                      // Additive
-  | 'times' | 'slash' | 'divide' | 'kw_per' | 'percent' | 'kw_mod'        // Multiplicative
-  | 'caret' | 'superscript';                                              // Power
+  | "or"
+  | "and" // Logical
+  | "pipe"
+  | "kw_xor"
+  | "ampersand" // Bitwise
+  | "lessThan"
+  | "lessThanOrEqual"
+  | "greaterThan"
+  | "greaterThanOrEqual"
+  | "equals"
+  | "notEquals" // Comparison
+  | "lShift"
+  | "rShift" // Bit shift
+  | "plus"
+  | "minus" // Additive
+  | "times"
+  | "slash"
+  | "divide"
+  | "kw_per"
+  | "percent"
+  | "kw_mod" // Multiplicative
+  | "caret"
+  | "superscript"; // Power
 
-type UnaryOperator = 'minus' | 'bang' | 'tilde';
+type UnaryOperator = "minus" | "bang" | "tilde";
 
-type PostfixOperator = 'bang';
+type PostfixOperator = "bang";
 
-type ConversionOperator = 'kw_to' | 'kw_as' | 'kw_in' | 'arrow';
+type ConversionOperator = "kw_to" | "kw_as" | "kw_in" | "arrow";
 
 // ============================================================================
 // Line (Top-Level)
 // ============================================================================
 
-type LineNode<F extends TransformTypeFn = Id> = 
-  | Apply<F, VariableAssignmentNode<F>> 
-  | Apply<F, ExpressionNode<F>> 
+type LineNode<F extends TransformTypeFn = Id> =
+  | Apply<F, VariableAssignmentNode<F>>
+  | Apply<F, ExpressionNode<F>>
   | null;
 
 // ============================================================================
@@ -58,7 +75,7 @@ type LineNode<F extends TransformTypeFn = Id> =
 // ============================================================================
 
 interface VariableAssignmentNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'VariableAssignment';
+  readonly type: "VariableAssignment";
   readonly name: string;
   readonly value: Apply<F, ExpressionNode<F>>;
 }
@@ -68,7 +85,7 @@ interface VariableAssignmentNode<F extends TransformTypeFn = Id> extends Node {
 // ============================================================================
 
 interface ConditionalExprNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'ConditionalExpr';
+  readonly type: "ConditionalExpr";
   readonly condition: Apply<F, ExpressionNode<F>>;
   readonly then: Apply<F, ExpressionNode<F>>;
   readonly else: Apply<F, ExpressionNode<F>>;
@@ -78,7 +95,7 @@ interface ConditionalExprNode<F extends TransformTypeFn = Id> extends Node {
 }
 
 interface ConversionNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'Conversion';
+  readonly type: "Conversion";
   readonly expression: Apply<F, ExpressionNode<F>>;
   readonly operator: ConversionOperator;
   readonly target: Apply<F, ConversionTargetNode<F>>;
@@ -86,7 +103,7 @@ interface ConversionNode<F extends TransformTypeFn = Id> extends Node {
 }
 
 interface BinaryExpressionNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'BinaryExpression';
+  readonly type: "BinaryExpression";
   readonly subType?: string;
   readonly operator: BinaryOperator;
   readonly left: Apply<F, ExpressionNode<F>>;
@@ -95,13 +112,13 @@ interface BinaryExpressionNode<F extends TransformTypeFn = Id> extends Node {
 }
 
 interface UnaryExpressionNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'UnaryExpression';
+  readonly type: "UnaryExpression";
   readonly operator: UnaryOperator;
   readonly argument: Apply<F, ExpressionNode<F>>;
 }
 
 interface PostfixExpressionNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'PostfixExpression';
+  readonly type: "PostfixExpression";
   readonly operator: PostfixOperator;
   readonly argument: Apply<F, ExpressionNode<F>>;
   readonly operatorToken?: { readonly offset: number; readonly length: number };
@@ -112,22 +129,22 @@ interface PostfixExpressionNode<F extends TransformTypeFn = Id> extends Node {
 // ============================================================================
 
 interface BooleanLiteralNode extends Node {
-  readonly type: 'BooleanLiteral';
+  readonly type: "BooleanLiteral";
   readonly value: boolean;
 }
 
 interface VariableNode extends Node {
-  readonly type: 'Variable';
+  readonly type: "Variable";
   readonly name: string;
 }
 
 interface ConstantNode extends Node {
-  readonly type: 'Constant';
+  readonly type: "Constant";
   readonly name: string;
 }
 
 interface FunctionCallNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'FunctionCall';
+  readonly type: "FunctionCall";
   readonly name: string;
   readonly arguments: Apply<F, ExpressionNode<F>[]>;
 }
@@ -137,13 +154,13 @@ interface FunctionCallNode<F extends TransformTypeFn = Id> extends Node {
 // ============================================================================
 
 interface ValueNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'Value';
+  readonly type: "Value";
   readonly value: Apply<F, NumericalValueNode>;
   readonly unit: Apply<F, UnitsNode<F> | CurrencyUnitNode> | null;
 }
 
 interface CompositeValueNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'CompositeValue';
+  readonly type: "CompositeValue";
   readonly subType: string;
   readonly values: Apply<F, ValueNode<F>[]>;
 }
@@ -153,7 +170,7 @@ interface CompositeValueNode<F extends TransformTypeFn = Id> extends Node {
 // ============================================================================
 
 interface NumberLiteralNode extends Node {
-  readonly type: 'NumberLiteral';
+  readonly type: "NumberLiteral";
   readonly subType: string;
   readonly base: number;
   readonly value: string;
@@ -161,9 +178,9 @@ interface NumberLiteralNode extends Node {
 }
 
 interface PercentageLiteralNode extends Node {
-  readonly type: 'PercentageLiteral';
+  readonly type: "PercentageLiteral";
   readonly value: string;
-  readonly symbol: 'percent' | 'permille';
+  readonly symbol: "percent" | "permille";
   readonly sourceLength?: number;
 }
 
@@ -174,26 +191,31 @@ type NumericalValueNode = NumberLiteralNode | PercentageLiteralNode;
 // ============================================================================
 
 interface UnitsNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'Units';
+  readonly type: "Units";
   readonly subType: string;
   readonly terms: Apply<F, UnitWithExponentNode[]>;
 }
 
 interface UnitWithExponentNode extends Node {
-  readonly type: 'UnitWithExponent';
+  readonly type: "UnitWithExponent";
   readonly unit: UnitNode;
   readonly exponent: number;
 }
 
 interface UnitNode extends Node {
-  readonly type: 'Unit';
+  readonly type: "Unit";
   readonly name: string;
-  readonly matched: 'symbol' | 'unit' | 'currencyName' | 'currencyCode' | 'identifier';
+  readonly matched:
+    | "symbol"
+    | "unit"
+    | "currencyName"
+    | "currencyCode"
+    | "identifier";
   readonly sourceLength?: number;
 }
 
 interface CurrencyUnitNode extends Node {
-  readonly type: 'CurrencyUnit';
+  readonly type: "CurrencyUnit";
   readonly subType: string;
   readonly name: string;
 }
@@ -203,23 +225,25 @@ interface CurrencyUnitNode extends Node {
 // ============================================================================
 
 interface InstantKeywordNode extends Node {
-  readonly type: 'Instant';
-  readonly keyword: 'now' | 'today' | 'yesterday' | 'tomorrow';
+  readonly type: "Instant";
+  readonly keyword: "now" | "today" | "yesterday" | "tomorrow";
   readonly sourceLength?: number;
 }
 
 interface InstantRelativeNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'Instant';
+  readonly type: "Instant";
   readonly amount: Apply<F, NumericalValueNode>;
   readonly unit: string;
-  readonly direction: 'ago' | 'fromNow' | 'sinceEpoch';
+  readonly direction: "ago" | "fromNow" | "sinceEpoch";
   readonly sourceLength?: number;
 }
 
-type InstantNode<F extends TransformTypeFn = Id> = InstantKeywordNode | InstantRelativeNode<F>;
+type InstantNode<F extends TransformTypeFn = Id> =
+  | InstantKeywordNode
+  | InstantRelativeNode<F>;
 
 interface PlainTimeNode extends Node {
-  readonly type: 'PlainTime';
+  readonly type: "PlainTime";
   readonly subType: string;
   readonly hour: number;
   readonly minute: number;
@@ -228,7 +252,7 @@ interface PlainTimeNode extends Node {
 }
 
 interface PlainDateNode extends Node {
-  readonly type: 'PlainDate';
+  readonly type: "PlainDate";
   readonly subType: string;
   readonly day: number;
   readonly month: number;
@@ -237,7 +261,7 @@ interface PlainDateNode extends Node {
 }
 
 interface PlainDateTimeNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'PlainDateTime';
+  readonly type: "PlainDateTime";
   readonly subType: string;
   readonly date: Apply<F, PlainDateNode>;
   readonly time: Apply<F, PlainTimeNode>;
@@ -245,7 +269,7 @@ interface PlainDateTimeNode<F extends TransformTypeFn = Id> extends Node {
 }
 
 interface ZonedDateTimeNode<F extends TransformTypeFn = Id> extends Node {
-  readonly type: 'ZonedDateTime';
+  readonly type: "ZonedDateTime";
   readonly subType: string;
   readonly dateTime: Apply<F, PlainDateTimeNode<F>>;
   readonly timezone: Apply<F, TimezoneNode>;
@@ -264,7 +288,7 @@ type DateTimeLiteralNode<F extends TransformTypeFn = Id> =
 // ============================================================================
 
 interface UTCOffsetNode extends Node {
-  readonly type: 'UTCOffset';
+  readonly type: "UTCOffset";
   readonly subType: string;
   readonly offsetStr: string;
   readonly baseZone: string;
@@ -272,7 +296,7 @@ interface UTCOffsetNode extends Node {
 }
 
 interface TimezoneNameNode extends Node {
-  readonly type: 'TimezoneName';
+  readonly type: "TimezoneName";
   readonly zoneName: string;
   readonly sourceLength?: number;
 }
@@ -284,54 +308,54 @@ type TimezoneNode = UTCOffsetNode | TimezoneNameNode;
 // ============================================================================
 
 interface ValueFormatNode extends Node {
-  readonly type: 'PresentationFormat';
-  readonly format: 'value';
+  readonly type: "PresentationFormat";
+  readonly format: "value";
   readonly sourceLength?: number;
 }
 
 interface BaseFormatNode extends Node {
-  readonly type: 'PresentationFormat';
-  readonly format: 'base';
+  readonly type: "PresentationFormat";
+  readonly format: "base";
   readonly base: number;
   readonly sourceLength?: number;
 }
 
 interface SigFigsFormatNode extends Node {
-  readonly type: 'PresentationFormat';
-  readonly format: 'sigFigs';
+  readonly type: "PresentationFormat";
+  readonly format: "sigFigs";
   readonly sigFigs: number;
   readonly sourceLength?: number;
 }
 
 interface DecimalsFormatNode extends Node {
-  readonly type: 'PresentationFormat';
-  readonly format: 'decimals';
+  readonly type: "PresentationFormat";
+  readonly format: "decimals";
   readonly decimals: number;
   readonly sourceLength?: number;
 }
 
 interface ScientificFormatNode extends Node {
-  readonly type: 'PresentationFormat';
-  readonly format: 'scientific';
+  readonly type: "PresentationFormat";
+  readonly format: "scientific";
   readonly sourceLength?: number;
 }
 
 interface FractionFormatNode extends Node {
-  readonly type: 'PresentationFormat';
-  readonly format: 'fraction';
+  readonly type: "PresentationFormat";
+  readonly format: "fraction";
   readonly sourceLength?: number;
 }
 
 interface UnixFormatNode extends Node {
-  readonly type: 'PresentationFormat';
-  readonly format: 'unix';
+  readonly type: "PresentationFormat";
+  readonly format: "unix";
   readonly unit: string;
   readonly sourceLength?: number;
 }
 
 interface NamedFormatNode extends Node {
-  readonly type: 'PresentationFormat';
-  readonly format: 'namedFormat';
+  readonly type: "PresentationFormat";
+  readonly format: "namedFormat";
   readonly name: string;
   readonly sourceLength?: number;
 }
@@ -347,11 +371,19 @@ type PresentationFormatNode =
   | NamedFormatNode;
 
 interface PropertyTargetNode extends Node {
-  readonly type: 'PropertyTarget';
+  readonly type: "PropertyTarget";
   readonly property:
-    | 'year' | 'month' | 'day' | 'weekday'
-    | 'hour' | 'minute' | 'second' | 'millisecond'
-    | 'offset' | 'dayOfYear' | 'weekOfYear';
+    | "year"
+    | "month"
+    | "day"
+    | "weekday"
+    | "hour"
+    | "minute"
+    | "second"
+    | "millisecond"
+    | "offset"
+    | "dayOfYear"
+    | "weekOfYear";
 }
 
 type ConversionTargetNode<F extends TransformTypeFn = Id> =

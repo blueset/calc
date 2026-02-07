@@ -12,10 +12,12 @@ import {
   useSettings,
 } from "@/hooks/useSettings";
 import { useTheme } from "@/hooks/useTheme";
-import { DEFAULT_DOCUMENT, FONT_SIZE_MAP } from "@/constants";
+import {
+  DEFAULT_DOCUMENT,
+  DOCUMENT_STORAGE_KEY,
+  FONT_SIZE_MAP,
+} from "@/constants";
 import type { LinePosition } from "@/codemirror/resultAlign";
-
-const DOCUMENT_STORAGE_KEY = "calc-document";
 
 function loadDocument(): string {
   try {
@@ -45,7 +47,7 @@ function AppContent() {
     return rest;
   }, [settings]);
 
-  const { results, ast, errors, isReady } = useCalculator(
+  const { results, ast, errors, isReady, exchangeRatesVersion } = useCalculator(
     input,
     calcSettings,
     settings.debounce,
@@ -100,6 +102,7 @@ function AppContent() {
         onSettingsClick={() => setSettingsOpen(true)}
         theme={resolvedTheme}
         onThemeToggle={handleThemeToggle}
+        exchangeRatesVersion={exchangeRatesVersion}
       />
       <div className="flex flex-col flex-1 mx-auto w-full max-w-4xl min-h-0">
         <div className="flex flex-row flex-1 h-0 min-h-0">
@@ -118,6 +121,7 @@ function AppContent() {
                 resolvedTheme={resolvedTheme}
                 fontSize={fontSize}
                 fontFamily={settings.fontFamily}
+                lineWrapping={settings.lineWrapping}
                 editorViewRef={editorViewRef}
               />
             ) : (
@@ -139,9 +143,9 @@ function AppContent() {
           </div>
         </div>
         {settings.debugMode && (
-          <div className="h-[250px] shrink-0">
-            <DebugPanel ast={ast} errors={errors} />
-          </div>
+          // <div className="h-[250px] shrink-0">
+          <DebugPanel ast={ast} errors={errors} />
+          // </div>
         )}
       </div>
       <SettingsPanel open={settingsOpen} onOpenChange={setSettingsOpen} />

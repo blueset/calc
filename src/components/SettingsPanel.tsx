@@ -17,7 +17,10 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useSettings, type SettingsState } from "@/hooks/useSettings";
 import { cn } from "@/lib/utils";
-import { Temporal, Intl as TemporalIntl } from '@js-temporal/polyfill';
+import { Temporal, Intl as TemporalIntl } from "@js-temporal/polyfill";
+import FluentComma20Regular from "~icons/fluent/comma-20-regular";
+import FluentCircleSmall20Filled from "~icons/fluent/circle-small-20-filled";
+import { Separator } from "./ui/separator";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -41,22 +44,36 @@ function SettingRow({
 
 export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
   const { settings, updateSetting } = useSettings();
-  const demoSeparator = settings.digitGroupingSeparator === "" ? "·" : settings.digitGroupingSeparator;
+  const demoSeparator =
+    settings.digitGroupingSeparator === ""
+      ? "·"
+      : settings.digitGroupingSeparator;
 
-  const dateFormat = new TemporalIntl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: '2-digit', year: 'numeric' });
+  const dateFormat = new TemporalIntl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
   const temporalDate = Temporal.Now.plainDateISO();
-  const { mmm, ddd, yyyy, dd } = dateFormat.formatToParts(temporalDate).reduce((acc, part) => {
-    if (part.type === 'month') acc.mmm = part.value;
-    if (part.type === 'weekday') acc.ddd = part.value;
-    if (part.type === 'year') acc.yyyy = part.value;
-    if (part.type === 'day') acc.dd = part.value;
-    return acc;
-  }, { mmm: '', ddd: '', yyyy: '', dd: '' });
-  const mm = String(temporalDate.month).padStart(2, '0');
+  const { mmm, ddd, yyyy, dd } = dateFormat.formatToParts(temporalDate).reduce(
+    (acc, part) => {
+      if (part.type === "month") acc.mmm = part.value;
+      if (part.type === "weekday") acc.ddd = part.value;
+      if (part.type === "year") acc.yyyy = part.value;
+      if (part.type === "day") acc.dd = part.value;
+      return acc;
+    },
+    { mmm: "", ddd: "", yyyy: "", dd: "" },
+  );
+  const mm = String(temporalDate.month).padStart(2, "0");
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="data-[side=right]:w-full data-[side=right]:xs:w-3/4 overflow-y-auto">
+      <SheetContent
+        side="right"
+        className="data-[side=right]:w-full data-[side=right]:xs:w-3/4 overflow-y-auto"
+      >
         <SheetHeader>
           <SheetTitle>Settings</SheetTitle>
           <SheetDescription>Configure calculator preferences</SheetDescription>
@@ -78,7 +95,7 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
                     val[val.length - 1] as SettingsState["theme"],
                   );
               }}
-              variant="outline"
+              variant="outlinePrimary"
               size="sm"
             >
               <ToggleGroupItem value="light">Light</ToggleGroupItem>
@@ -97,13 +114,22 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
                     val[val.length - 1] as SettingsState["fontSize"],
                   );
               }}
-              variant="outline"
+              variant="outlinePrimary"
               size="sm"
             >
               <ToggleGroupItem value="small">S</ToggleGroupItem>
               <ToggleGroupItem value="medium">M</ToggleGroupItem>
               <ToggleGroupItem value="large">L</ToggleGroupItem>
             </ToggleGroup>
+          </SettingRow>
+
+          <SettingRow label="Line Wrap">
+            <Switch
+              checked={settings.lineWrapping}
+              onCheckedChange={(checked) =>
+                updateSetting("lineWrapping", checked)
+              }
+            />
           </SettingRow>
 
           <SettingRow label="Font">
@@ -148,6 +174,8 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
             </Select>
           </SettingRow>
 
+          <Separator />
+
           {/* Number Settings */}
           <h3 className="pt-4 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wider">
             Numbers
@@ -161,7 +189,9 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
               }}
             >
               <SelectTrigger size="sm">
-                <SelectValue>{(value) => (value === "-1" ? "Auto" : value)}</SelectValue>
+                <SelectValue>
+                  {(value) => (value === "-1" ? "Auto" : value)}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="-1">Auto</SelectItem>
@@ -185,11 +215,11 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
                     val[val.length - 1] as SettingsState["angleUnit"],
                   );
               }}
-              variant="outline"
+              variant="outlinePrimary"
               size="sm"
             >
-              <ToggleGroupItem value="degree">Deg</ToggleGroupItem>
-              <ToggleGroupItem value="radian">Rad</ToggleGroupItem>
+              <ToggleGroupItem value="degree">Degree</ToggleGroupItem>
+              <ToggleGroupItem value="radian">Radian</ToggleGroupItem>
             </ToggleGroup>
           </SettingRow>
 
@@ -203,11 +233,17 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
                     val[val.length - 1] as SettingsState["decimalSeparator"],
                   );
               }}
-              variant="outline"
+              variant="outlinePrimary"
               size="sm"
             >
-              <ToggleGroupItem value=".">.</ToggleGroupItem>
-              <ToggleGroupItem value=",">,</ToggleGroupItem>
+              <ToggleGroupItem value=".">
+                <FluentCircleSmall20Filled />
+                <span className="sr-only">Dot</span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value=",">
+                <FluentComma20Regular />
+                <span className="sr-only">Comma</span>
+              </ToggleGroupItem>
             </ToggleGroup>
           </SettingRow>
 
@@ -223,7 +259,11 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
               }}
             >
               <SelectTrigger size="sm">
-                <SelectValue>{(value) => (value === "" ? "None" : value === " " ? "Space" : value)}</SelectValue>
+                <SelectValue>
+                  {(value) =>
+                    value === "" ? "None" : value === " " ? "Space" : value
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">None</SelectItem>
@@ -247,16 +287,37 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
               }}
             >
               <SelectTrigger size="sm">
-                <SelectValue>{(value) => (value === "off" ? "Off" : `${value}`)}</SelectValue>
+                <SelectValue>
+                  {(value) => (value === "off" ? "Off" : `${value}`)}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3">3 <span className="text-muted-foreground">(1{demoSeparator}234{demoSeparator}567)</span></SelectItem>
-                <SelectItem value="2-3">2-3 <span className="text-muted-foreground">(12{demoSeparator}34{demoSeparator}567)</span></SelectItem>
-                <SelectItem value="4">4 <span className="text-muted-foreground">(1234{demoSeparator}5678)</span></SelectItem>
-                <SelectItem value="off">Off <span className="text-muted-foreground">(12345678)</span></SelectItem>
+                <SelectItem value="3">
+                  3{" "}
+                  <span className="text-muted-foreground">
+                    (1{demoSeparator}234{demoSeparator}567)
+                  </span>
+                </SelectItem>
+                <SelectItem value="2-3">
+                  2-3{" "}
+                  <span className="text-muted-foreground">
+                    (12{demoSeparator}34{demoSeparator}567)
+                  </span>
+                </SelectItem>
+                <SelectItem value="4">
+                  4{" "}
+                  <span className="text-muted-foreground">
+                    (1234{demoSeparator}5678)
+                  </span>
+                </SelectItem>
+                <SelectItem value="off">
+                  Off <span className="text-muted-foreground">(12345678)</span>
+                </SelectItem>
               </SelectContent>
             </Select>
           </SettingRow>
+
+          <Separator />
 
           {/* Date/Time Settings */}
           <h3 className="pt-4 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wider">
@@ -271,26 +332,36 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
               }}
             >
               <SelectTrigger size="sm">
-                <SelectValue>{(value) => {
-                  switch (value) {
-                    case "YYYY-MM-DD DDD":
-                      return `${yyyy}-${mm}-${dd} ${ddd}`;
-                    case "YYYY MMM DD DDD":
-                      return `${yyyy} ${mmm} ${dd} ${ddd}`;
-                    case "DDD DD MMM YYYY":
-                      return `${ddd} ${dd} ${mmm} ${yyyy}`;
-                    case "DDD MMM DD YYYY":
-                      return `${ddd} ${mmm} ${dd} ${yyyy}`;
-                    default:
-                      return value;
-                  }
-                }}</SelectValue>
+                <SelectValue>
+                  {(value) => {
+                    switch (value) {
+                      case "YYYY-MM-DD DDD":
+                        return `${yyyy}-${mm}-${dd} ${ddd}`;
+                      case "YYYY MMM DD DDD":
+                        return `${yyyy} ${mmm} ${dd} ${ddd}`;
+                      case "DDD DD MMM YYYY":
+                        return `${ddd} ${dd} ${mmm} ${yyyy}`;
+                      case "DDD MMM DD YYYY":
+                        return `${ddd} ${mmm} ${dd} ${yyyy}`;
+                      default:
+                        return value;
+                    }
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="YYYY-MM-DD DDD">{yyyy}-{mm}-{dd} {ddd}</SelectItem>
-                <SelectItem value="YYYY MMM DD DDD">{yyyy} {mmm} {dd} {ddd}</SelectItem>
-                <SelectItem value="DDD DD MMM YYYY">{ddd} {dd} {mmm} {yyyy}</SelectItem>
-                <SelectItem value="DDD MMM DD YYYY">{ddd} {mmm} {dd} {yyyy}</SelectItem>
+                <SelectItem value="YYYY-MM-DD DDD">
+                  {yyyy}-{mm}-{dd} {ddd}
+                </SelectItem>
+                <SelectItem value="YYYY MMM DD DDD">
+                  {yyyy} {mmm} {dd} {ddd}
+                </SelectItem>
+                <SelectItem value="DDD DD MMM YYYY">
+                  {ddd} {dd} {mmm} {yyyy}
+                </SelectItem>
+                <SelectItem value="DDD MMM DD YYYY">
+                  {ddd} {mmm} {dd} {yyyy}
+                </SelectItem>
               </SelectContent>
             </Select>
           </SettingRow>
@@ -305,11 +376,11 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
                     val[val.length - 1] as SettingsState["timeFormat"],
                   );
               }}
-              variant="outline"
+              variant="outlinePrimary"
               size="sm"
             >
-              <ToggleGroupItem value="h23">24h</ToggleGroupItem>
-              <ToggleGroupItem value="h12">12h</ToggleGroupItem>
+              <ToggleGroupItem value="h23">24 hours</ToggleGroupItem>
+              <ToggleGroupItem value="h12">12 hours</ToggleGroupItem>
             </ToggleGroup>
           </SettingRow>
 
@@ -323,13 +394,15 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
                     val[val.length - 1] as SettingsState["dateTimeFormat"],
                   );
               }}
-              variant="outline"
+              variant="outlinePrimary"
               size="sm"
             >
               <ToggleGroupItem value="{date} {time}">Date Time</ToggleGroupItem>
               <ToggleGroupItem value="{time} {date}">Time Date</ToggleGroupItem>
             </ToggleGroup>
           </SettingRow>
+
+          <Separator />
 
           {/* Unit Settings */}
           <h3 className="pt-4 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wider">
@@ -346,13 +419,15 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
                     val[val.length - 1] as SettingsState["imperialUnits"],
                   );
               }}
-              variant="outline"
+              variant="outlinePrimary"
               size="sm"
             >
               <ToggleGroupItem value="us">US</ToggleGroupItem>
               <ToggleGroupItem value="uk">UK</ToggleGroupItem>
             </ToggleGroup>
           </SettingRow>
+
+          <Separator />
 
           {/* Debug */}
           <h3 className="pt-4 pb-1 font-medium text-muted-foreground text-xs uppercase tracking-wider">

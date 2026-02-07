@@ -17,7 +17,7 @@ import {
 } from "./date-time";
 import { CurrencyConverter, CurrencyValue } from "./currency";
 import { MathFunctions } from "./functions";
-import type { Unit } from "./types/types";
+import type { ExchangeRatesDatabase, Unit } from "./types/types";
 import { getConstant } from "./constants";
 import { Temporal } from "@js-temporal/polyfill";
 import {
@@ -219,7 +219,7 @@ export class Evaluator {
   /**
    * Load exchange rates for currency conversion
    */
-  loadExchangeRates(rates: any): void {
+  loadExchangeRates(rates: ExchangeRatesDatabase): void {
     this.currencyConverter.loadExchangeRates(rates);
   }
 

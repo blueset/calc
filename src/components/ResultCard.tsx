@@ -6,6 +6,7 @@ import { Copy } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResultRawValue } from "./ResultRawValue";
 import { ResultAst } from "./ResultAst";
+import { Button } from "./ui/button";
 
 interface ResultCardProps {
   result: LineResult;
@@ -44,12 +45,14 @@ export function ResultCard({
   }, []);
 
   return (
-    <HoverCard openDelay={100} closeDelay={0}>
+    <HoverCard openDelay={100} closeDelay={debugMode ? undefined : 0}>
       <HoverCardTrigger asChild>
         <button
           className={cn(
             "right-0 left-0 absolute flex justify-end items-start hover:bg-accent dark:hover:bg-accent/50 px-1 md:px-3 transition-colors",
-            result.hasError ? "text-destructive" : "text-muted-foreground",
+            result.hasError
+              ? "text-destructive"
+              : "text-foreground dark:text-muted-foreground",
             isActive && !isCopied && "bg-secondary hover:bg-secondary",
             {
               "bg-primary hover:bg-primary/75 dark:hover:bg-primary/75 text-primary-foreground font-medium":
@@ -78,7 +81,7 @@ export function ResultCard({
         align="start"
         className="space-y-2 w-auto max-w-(--radix-hover-card-content-available-width)"
       >
-        <ScrollArea className="[&>div]:max-h-[4lh]">
+        <ScrollArea className="[&>div]:max-h-[5lh]">
           <div
             className={cn(
               "whitespace-pre-wrap",
@@ -89,20 +92,28 @@ export function ResultCard({
             {result.result}
           </div>
         </ScrollArea>
-        {canCopy &&
-          (isCopied === true ? (
-            <div className="text-green-700 dark:text-green-400 text-xs">
-              <Copy className="inline-block mr-1 size-[1em]" /> Copied!
-            </div>
-          ) : isCopied === false ? (
-            <div className="text-destructive text-xs">
-              <Copy className="inline-block mr-1 size-[1em]" /> Failed to copy
-            </div>
-          ) : (
-            <div className="text-muted-foreground text-xs">
-              <Copy className="inline-block mr-1 size-[1em]" /> Click to copy
-            </div>
-          ))}
+        {canCopy && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-mx-2 -mt-2 last:-mb-2"
+            onClick={() => handleCopy(result.result)}
+          >
+            {isCopied === true ? (
+              <span className="text-green-700 dark:text-green-400 text-xs">
+                <Copy className="inline-block mr-1 size-[1em]" /> Copied!
+              </span>
+            ) : isCopied === false ? (
+              <span className="text-destructive text-xs">
+                <Copy className="inline-block mr-1 size-[1em]" /> Failed to copy
+              </span>
+            ) : (
+              <span className="text-muted-foreground text-xs">
+                <Copy className="inline-block mr-1 size-[1em]" /> Click to copy
+              </span>
+            )}
+          </Button>
+        )}
 
         {debugMode && (
           <>

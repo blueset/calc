@@ -1,11 +1,17 @@
-import { NearleyParser } from './nearley/nearley-parser';
-import { DataLoader } from './data-loader';
-import { LexerError, ParserError, RuntimeError, LineError } from './error-handling';
-import { Document, ParsedLine } from './document';
-import { Evaluator, Value, ErrorValue } from './evaluator';
-import { Formatter } from './formatter';
-import { Settings, createSettings, defaultSettings } from './settings';
-import { SourceLocation } from './document';
+import { NearleyParser } from "./nearley/nearley-parser";
+import { DataLoader } from "./data-loader";
+import {
+  LexerError,
+  ParserError,
+  RuntimeError,
+  LineError,
+} from "./error-handling";
+import { Document, ParsedLine } from "./document";
+import { Evaluator, Value, ErrorValue } from "./evaluator";
+import { Formatter } from "./formatter";
+import { Settings, createSettings, defaultSettings } from "./settings";
+import { SourceLocation } from "./document";
+import { ExchangeRatesDatabase } from "./types/types";
 
 /**
  * Result of a single line calculation
@@ -13,8 +19,8 @@ import { SourceLocation } from './document';
 export interface LineResult {
   line: number;
   type: string;
-  result: string | null;  // Formatted result, or null for non-expressions
-  hasError: boolean;      // True if this line had an error
+  result: string | null; // Formatted result, or null for non-expressions
+  hasError: boolean; // True if this line had an error
   rawValue?: Value | null; // The raw evaluated value (for tooltips/debugging), optional
   ast?: ParsedLine | null; // The AST node for this line, optional
 }
@@ -36,10 +42,10 @@ export interface CalculationResult {
  */
 function getLineLocation(line: ParsedLine): SourceLocation {
   if (line === null) return { line: 0, column: 0, offset: 0 };
-  if ('location' in line && line.location) {
+  if ("location" in line && line.location) {
     const loc = line.location;
     // Enriched SourceLocation (from parser wrapper)
-    if (typeof loc === 'object' && 'line' in loc) {
+    if (typeof loc === "object" && "line" in loc) {
       return loc as SourceLocation;
     }
     // Raw Nearley offset (number) - convert to SourceLocation
@@ -62,7 +68,7 @@ export class Calculator {
     const mergedSettings: Settings = createSettings(settings);
     this.evaluator = new Evaluator(dataLoader, {
       variant: mergedSettings.imperialUnits,
-      angleUnit: mergedSettings.angleUnit
+      angleUnit: mergedSettings.angleUnit,
     });
     this.formatter = new Formatter(mergedSettings, dataLoader);
   }
@@ -70,7 +76,7 @@ export class Calculator {
   /**
    * Load exchange rates for currency conversion
    */
-  loadExchangeRates(rates: any): void {
+  loadExchangeRates(rates: ExchangeRatesDatabase): void {
     this.evaluator.loadExchangeRates(rates);
   }
 
@@ -106,18 +112,21 @@ export class Calculator {
 
         results.push({
           line: lineNumber,
-          type: line !== null && typeof line === 'object' && 'type' in line ? (line as any).type : 'unknown',
+          type:
+            line !== null && typeof line === "object" && "type" in line
+              ? (line as any).type
+              : "unknown",
           result: null,
           hasError: true,
-          ast: line
+          ast: line,
         });
 
         if (i === 0) {
           runtimeErrors.push(
             new RuntimeError(
               error instanceof Error ? error.message : String(error),
-              getLineLocation(line)
-            )
+              getLineLocation(line),
+            ),
           );
         }
       }
@@ -127,8 +136,8 @@ export class Calculator {
         errors: {
           lexer: [],
           parser: parserErrors,
-          runtime: runtimeErrors
-        }
+          runtime: runtimeErrors,
+        },
       };
     }
 
@@ -142,21 +151,18 @@ export class Calculator {
       let hasError = false;
 
       // Check if this line has parser errors
-      const parserError = parserErrors.find(e => e.line === lineNumber);
+      const parserError = parserErrors.find((e) => e.line === lineNumber);
       if (parserError) {
         hasError = true;
         lineResult = `Parsing Error: ${parserError.error.message}`;
       }
 
       // Check if the value is an error
-      if (value && value.kind === 'error') {
+      if (value && value.kind === "error") {
         hasError = true;
         const errorValue = value as ErrorValue;
         runtimeErrors.push(
-          new RuntimeError(
-            errorValue.error.message,
-            getLineLocation(line)
-          )
+          new RuntimeError(errorValue.error.message, getLineLocation(line)),
         );
         lineResult = `Error: ${errorValue.error.message}`;
       } else if (value !== null && value !== undefined) {
@@ -164,12 +170,13 @@ export class Calculator {
           lineResult = this.formatter.format(value);
         } catch (error) {
           hasError = true;
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           runtimeErrors.push(
             new RuntimeError(
               `Formatting error: ${errorMessage}`,
-              getLineLocation(line)
-            )
+              getLineLocation(line),
+            ),
           );
           lineResult = `Formatting Error: ${errorMessage}`;
         }
@@ -177,11 +184,14 @@ export class Calculator {
 
       results.push({
         line: lineNumber,
-        type: line !== null && typeof line === 'object' && 'type' in line ? (line as any).type : 'unknown',
+        type:
+          line !== null && typeof line === "object" && "type" in line
+            ? (line as any).type
+            : "unknown",
         result: lineResult,
         rawValue: value,
         ast: line,
-        hasError
+        hasError,
       });
     }
 
@@ -190,8 +200,8 @@ export class Calculator {
       errors: {
         lexer: [],
         parser: parserErrors,
-        runtime: runtimeErrors
-      }
+        runtime: runtimeErrors,
+      },
     };
   }
 
@@ -212,8 +222,8 @@ export class Calculator {
       ast: result.ast as any as Document,
       errors: {
         lexer: [],
-        parser: result.errors
-      }
+        parser: result.errors,
+      },
     };
   }
 }

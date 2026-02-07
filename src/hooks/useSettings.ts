@@ -7,8 +7,7 @@ import {
 } from "react";
 import type { Settings } from "@/calculator/settings";
 import { defaultSettings } from "@/calculator/settings";
-
-const STORAGE_KEY = "calc-settings";
+import { SETTINGS_STORAGE_KEY } from "@/constants";
 
 export interface SettingsState extends Settings {
   debugMode: boolean;
@@ -33,7 +32,7 @@ export function useSettings(): SettingsContextValue {
 
 function loadSettings(): SettingsState {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (stored) {
       return {
         ...defaultSettings,
@@ -50,7 +49,7 @@ function loadSettings(): SettingsState {
 
 function saveSettings(settings: SettingsState) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   } catch (e) {
     console.error("Failed to save settings", e);
   }

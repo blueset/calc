@@ -51,6 +51,7 @@ interface EditorProps {
   resolvedTheme?: "light" | "dark";
   fontSize?: number;
   fontFamily?: string;
+  lineWrapping?: boolean;
   editorViewRef?: RefObject<EditorView | null>;
 }
 
@@ -67,6 +68,7 @@ export function Editor({
   resolvedTheme = "light",
   fontSize = 15,
   fontFamily = "monospace",
+  lineWrapping: lineWrappingProp = false,
   editorViewRef,
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,6 +82,7 @@ export function Editor({
   const debugCompartmentRef = useRef(new Compartment());
   const themeCompartmentRef = useRef(new Compartment());
   const fontCompartmentRef = useRef(new Compartment());
+  const wrapCompartmentRef = useRef(new Compartment());
 
   onChangeRef.current = onChange;
   onLinePositionsRef.current = onLinePositions;
@@ -106,6 +109,7 @@ export function Editor({
     const debugCompartment = debugCompartmentRef.current;
     const themeCompartment = themeCompartmentRef.current;
     const fontCompartment = fontCompartmentRef.current;
+    const wrapCompartment = wrapCompartmentRef.current;
 
     const debugExtensions = debugMode
       ? [errorLintField, evalTooltipExtension(() => resultsRef.current, () => astRef.current)]
@@ -132,6 +136,7 @@ export function Editor({
         semanticHighlightPlugin,
         debugCompartment.of(debugExtensions),
         fontCompartment.of(getFontTheme(fontSize, fontFamily)),
+        wrapCompartment.of(lineWrappingProp ? EditorView.lineWrapping : []),
         themeCompartment.of(currentTheme),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
@@ -207,6 +212,17 @@ export function Editor({
       ),
     });
   }, [fontSize, fontFamily, getFontTheme]);
+
+  // Toggle line wrapping dynamically
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({
+      effects: wrapCompartmentRef.current.reconfigure(
+        lineWrappingProp ? EditorView.lineWrapping : [],
+      ),
+    });
+  }, [lineWrappingProp]);
 
   // Update semantic highlights when AST changes
   useEffect(() => {
