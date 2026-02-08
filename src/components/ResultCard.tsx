@@ -62,7 +62,7 @@ export function ResultCard({
             },
           )}
           style={{
-            top: top + 4,
+            translate: `0 ${top + 4}px`,
             height: height,
           }}
           onClick={() => handleCopy(result.result)}

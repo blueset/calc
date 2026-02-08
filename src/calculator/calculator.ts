@@ -63,6 +63,7 @@ export class Calculator {
   private dataLoader: DataLoader;
   private evaluator: Evaluator;
   private formatter: Formatter;
+  private nearleyParser: NearleyParser;
 
   constructor(dataLoader: DataLoader, settings: Partial<Settings> = {}) {
     this.dataLoader = dataLoader;
@@ -72,6 +73,7 @@ export class Calculator {
       angleUnit: mergedSettings.angleUnit,
     });
     this.formatter = new Formatter(mergedSettings, dataLoader);
+    this.nearleyParser = new NearleyParser(dataLoader);
   }
 
   /**
@@ -93,8 +95,7 @@ export class Calculator {
    * Returns results for all lines and collects all errors
    */
   calculate(input: string): CalculationResult {
-    const nearleyParser = new NearleyParser(this.dataLoader);
-    const result = nearleyParser.parseDocument(input, this.evaluator);
+    const result = this.nearleyParser.parseDocument(input, this.evaluator);
     const ast = result.ast as any as Document;
     const parserErrors = result.errors;
 
@@ -221,8 +222,7 @@ export class Calculator {
       parser: LineError[];
     };
   } {
-    const nearleyParser = new NearleyParser(this.dataLoader);
-    const result = nearleyParser.parseDocument(input);
+    const result = this.nearleyParser.parseDocument(input);
     return {
       ast: result.ast as any as Document,
       errors: {

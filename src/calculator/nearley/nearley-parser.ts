@@ -36,6 +36,7 @@ import { Evaluator, EvaluationContext, Value } from "../evaluator";
 export class NearleyParser {
   private dataLoader: DataLoader;
   private definedVariables: Set<string> = new Set();
+  private parseCache = new Map<string, { candidates: NearleyAST.LineNode[]; parseError: string | null }>();
 
   constructor(dataLoader: DataLoader) {
     this.dataLoader = dataLoader;
@@ -47,6 +48,10 @@ export class NearleyParser {
    * Returns AST, collected errors, and optionally pre-computed evaluated values.
    */
   parseDocument(input: string, evaluator?: Evaluator): DocumentResult {
+    // Reset per-document state (parser is now persistent across calls)
+    this.definedVariables = new Set();
+    const accessedCacheKeys = new Set<string>();
+
     // Preprocess input into classified lines
     const preprocessedLines = preprocessDocument(input);
 
@@ -63,6 +68,7 @@ export class NearleyParser {
         preprocessed,
         evaluator,
         evalContext,
+        accessedCacheKeys,
       );
       lines.push(line);
 
@@ -86,6 +92,11 @@ export class NearleyParser {
       }
     }
 
+    // Evict stale cache entries no longer in the document
+    for (const key of this.parseCache.keys()) {
+      if (!accessedCacheKeys.has(key)) this.parseCache.delete(key);
+    }
+
     // Create document node
     const ast = createDocument(lines);
 
@@ -100,6 +111,7 @@ export class NearleyParser {
     preprocessed: PreprocessedLine,
     evaluator?: Evaluator,
     evalContext?: EvaluationContext,
+    accessedCacheKeys?: Set<string>,
   ): {
     line: ParsedLine;
     error: LineError | null;
@@ -130,7 +142,7 @@ export class NearleyParser {
 
     // Handle expression lines
     try {
-      const parseResult = this.parseExpression(content, lineNumber);
+      const parseResult = this.parseExpression(content, lineNumber, accessedCacheKeys);
       const candidates = parseResult.candidates;
 
       if (candidates.length === 0) {
@@ -322,10 +334,16 @@ export class NearleyParser {
   private parseExpression(
     content: string,
     lineNumber: number,
+    accessedCacheKeys?: Set<string>,
   ): {
     candidates: NearleyAST.LineNode[];
     parseError: string | null;
   } {
+    accessedCacheKeys?.add(content);
+
+    const cached = this.parseCache.get(content);
+    if (cached) return cached;
+
     // Create a new parser instance for this line
     const parser = new nearley.Parser(nearley.Grammar.fromCompiled(grammar));
 
@@ -335,12 +353,16 @@ export class NearleyParser {
       // Get all parse results (may have multiple due to ambiguity)
       const results = parser.results as NearleyAST.LineNode[];
 
-      return { candidates: results, parseError: null };
+      const result = { candidates: results, parseError: null };
+      this.parseCache.set(content, result);
+      return result;
     } catch (error) {
       // Parse error - return empty array with error message
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      return { candidates: [], parseError: errorMessage };
+      const result = { candidates: [] as NearleyAST.LineNode[], parseError: errorMessage };
+      this.parseCache.set(content, result);
+      return result;
     }
   }
 
