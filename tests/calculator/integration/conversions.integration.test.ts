@@ -125,6 +125,11 @@ describe("Integration Tests - Conversions", () => {
       expect(result.results[0].result).toContain("Error");
     });
 
+    it("should support ordinal for integers", () => {
+      const result = calculator.calculate("3 to ordinal");
+      expect(result.results[0].result).toBe("3rd");
+    });
+
     it("should reject ordinal for non-integers", () => {
       const result = calculator.calculate("3.14 to ordinal");
       expect(result.results[0].result).toContain("Error");

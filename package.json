@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev:nearley": "nodemon --watch src/calculator/nearley --ext ne --exec \"nearleyc -o ./src/calculator/nearley/grammar.ts ./src/calculator/nearley/grammar.ne\""
+    "dev:nearley": "nodemon --watch src/calculator/nearley --ext ne --exec \"nearleyc -o ./src/calculator/nearley/grammar.ts ./src/calculator/nearley/grammar.ne\"",
+    "build:nearley": "nearleyc -o ./src/calculator/nearley/grammar.ts ./src/calculator/nearley/grammar.ne"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

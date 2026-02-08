@@ -154,11 +154,12 @@ describe("Nearley Parser Sandbox Tests", () => {
     console.log("Result value:", result.results[0]?.result);
   });
 
-  it.skip("should debug degree primes", () => {
+  it("should debug degree primes", () => {
     console.log("\n=== Degree + Prime parsing ===");
     debugParse("30° 15'");
     debugParse("45 deg 30'");
     debugParse("5'");
+    debugParse("3 to ordinal");
   });
 
   it.skip("should parse conditionals", () => {

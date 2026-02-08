@@ -222,7 +222,7 @@ PresentationTarget -> %kw_value {% (data, location) => ({ type: 'PresentationFor
                     %}
                     | %identifier {%
                       (data, location, reject) =>
-                        !/^(binary|octal|decimal|hexadecimal|scientific|bin|oct|dec|hex|fraction|unix|value|decimals|base)$/i.test(data[0].value)
+                        !/^(binary|octal|decimal|hexadecimal|scientific|bin|oct|dec|hex|fraction|unix|value|decimals|base|ordinal)$/i.test(data[0].value)
                         ? reject
                         : ({ type: 'PresentationFormat', format: 'namedFormat', name: data[0].value, offset: data[0].offset, sourceLength: data[0].value.length })
                     %}
