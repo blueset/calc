@@ -1144,6 +1144,13 @@ export class Evaluator {
     value: Value,
     unitsNode: NearleyAST.UnitsNode,
   ): Value {
+    // Convert Duration source to numeric value first, then delegate
+    if (value.kind === "duration") {
+      const asValue = this.durationToValue(value.duration);
+      if (asValue.kind === "error") return asValue;
+      return this.convertToNearleyUnit(asValue, unitsNode);
+    }
+
     const terms = unitsNode.terms as NearleyAST.UnitWithExponentNode[];
 
     // Check if this is a composite unit target (multiple simple units with exponent 1)
@@ -1177,6 +1184,13 @@ export class Evaluator {
           );
         }
         resolvedUnits.push(unit);
+      }
+
+      // Handle composite source → composite target: flatten to single unit first
+      if (value.kind === "composite") {
+        const flattened = this.convertCompositeToSingleUnit(value);
+        if (flattened.kind === "error") return flattened;
+        return this.convertToNearleyUnit(flattened, unitsNode);
       }
 
       // Check if all targets have same dimension as source (true composite)
@@ -1595,15 +1609,23 @@ export class Evaluator {
     left: Value,
     right: Value,
   ): Value {
-    // Convert composite units to single units for comparison
+    // Convert Duration and composite units to numeric values for comparison
     let convertedLeft: Value = left;
     let convertedRight: Value = right;
-    if (left.kind === "composite") {
-      convertedLeft = this.convertCompositeToSingleUnit(left);
+    if (left.kind === "duration") {
+      convertedLeft = this.durationToValue(left.duration);
       if (convertedLeft.kind === "error") return convertedLeft;
     }
-    if (right.kind === "composite") {
-      convertedRight = this.convertCompositeToSingleUnit(right);
+    if (right.kind === "duration") {
+      convertedRight = this.durationToValue(right.duration);
+      if (convertedRight.kind === "error") return convertedRight;
+    }
+    if (convertedLeft.kind === "composite") {
+      convertedLeft = this.convertCompositeToSingleUnit(convertedLeft);
+      if (convertedLeft.kind === "error") return convertedLeft;
+    }
+    if (convertedRight.kind === "composite") {
+      convertedRight = this.convertCompositeToSingleUnit(convertedRight);
       if (convertedRight.kind === "error") return convertedRight;
     }
 
@@ -2388,6 +2410,38 @@ export class Evaluator {
       }
     }
 
+    // Duration * N or Duration / N → Duration (scale duration by a dimensionless number)
+    if (left.kind === "duration" && right.kind === "value" && isDimensionless(right)) {
+      if (op === "*") {
+        return this.scaleDuration(left.duration, right.value);
+      }
+      if (op === "/") {
+        if (right.value === 0) {
+          return this.createError("Division by zero");
+        }
+        return this.scaleDuration(left.duration, 1 / right.value);
+      }
+    }
+
+    // N * Duration → Duration (commutative multiplication)
+    if (left.kind === "value" && isDimensionless(left) && right.kind === "duration") {
+      if (op === "*") {
+        return this.scaleDuration(right.duration, left.value);
+      }
+    }
+
+    // Duration / Duration → dimensionless number (ratio)
+    if (left.kind === "duration" && right.kind === "duration") {
+      if (op === "/") {
+        const leftMs = this.durationToMilliseconds(left.duration);
+        const rightMs = this.durationToMilliseconds(right.duration);
+        if (rightMs === 0) {
+          return this.createError("Division by zero");
+        }
+        return numVal(leftMs / rightMs);
+      }
+    }
+
     // === Cross-Type Subtraction Operations (SPECS.md lines 882-920) ===
 
     // Only support subtraction for cross-type operations
@@ -2722,6 +2776,8 @@ export class Evaluator {
 
     // Special handling for duration arguments with preservesUnits functions
     let durationArg: DurationValue | undefined;
+    // Special handling for composite unit arguments with preservesUnits functions
+    let compositeArg: CompositeUnitValue | undefined;
 
     const funcArgs = expr.arguments as NearleyAST.ExpressionNode[];
     for (let i = 0; i < funcArgs.length; i++) {
@@ -2729,10 +2785,16 @@ export class Evaluator {
       let argValue = this.evaluateExpression(argExpr, context);
       if (argValue.kind === "error") return argValue;
 
-      // For abs, round, floor, ceil, trunc, frac on duration: handle directly
+      // For round, floor, ceil, abs, trunc, frac on duration: handle directly
       if (preservesUnits && i === 0 && argValue.kind === "duration") {
         durationArg = argValue;
-        break; // Duration functions only take one argument
+        break;
+      }
+
+      // For round, floor, ceil, abs, trunc, frac on composite: handle directly
+      if (preservesUnits && i === 0 && argValue.kind === "composite") {
+        compositeArg = argValue;
+        break;
       }
 
       if (argValue.kind !== "value") {
@@ -2778,28 +2840,40 @@ export class Evaluator {
       }
     }
 
-    // Handle duration argument
+    // Handle duration argument — apply function to each component
     if (durationArg) {
       const funcName = expr.name.toLowerCase();
-      if (funcName === "abs") {
-        // abs(duration) → make all components positive
-        return {
-          kind: "duration",
-          duration: {
-            years: Math.abs(durationArg.duration.years),
-            months: Math.abs(durationArg.duration.months),
-            weeks: Math.abs(durationArg.duration.weeks),
-            days: Math.abs(durationArg.duration.days),
-            hours: Math.abs(durationArg.duration.hours),
-            minutes: Math.abs(durationArg.duration.minutes),
-            seconds: Math.abs(durationArg.duration.seconds),
-            milliseconds: Math.abs(durationArg.duration.milliseconds),
-          },
-        };
+      const mathFunc = this.getDurationMathFunc(funcName);
+      if (!mathFunc) {
+        return this.createError(
+          `Function ${expr.name} does not support duration arguments`,
+        );
       }
-      return this.createError(
-        `Function ${expr.name} does not support duration arguments`,
-      );
+      return {
+        kind: "duration",
+        duration: this.dateTimeEngine.createDuration({
+          years: mathFunc(durationArg.duration.years),
+          months: mathFunc(durationArg.duration.months),
+          weeks: mathFunc(durationArg.duration.weeks),
+          days: mathFunc(durationArg.duration.days),
+          hours: mathFunc(durationArg.duration.hours),
+          minutes: mathFunc(durationArg.duration.minutes),
+          seconds: mathFunc(durationArg.duration.seconds),
+          milliseconds: mathFunc(durationArg.duration.milliseconds),
+        }),
+      };
+    }
+
+    // Handle composite unit argument — flatten, apply function, re-composite
+    if (compositeArg) {
+      const converted = this.convertCompositeToSingleUnit(compositeArg);
+      if (converted.kind === "error") return converted;
+      const funcResult = this.mathFunctions.execute(expr.name, [converted.value]);
+      if (funcResult.error) return this.createError(funcResult.error);
+      // Re-composite into the original units
+      const resultAsSimple = numValUnit(funcResult.value, getUnit(converted)!);
+      const targetUnits = compositeArg.components.map((c) => c.unit);
+      return this.convertToCompositeUnitResolved(resultAsSimple, targetUnits);
     }
 
     // Execute function
@@ -2930,6 +3004,47 @@ export class Evaluator {
           format,
           innerValue: value,
         };
+      }
+
+      // Duration → ISO 8601 / RFC 9557 (formatter already handles it; RFC 2822 has no duration format)
+      if (value.kind === "duration" && format !== "RFC 2822") {
+        return {
+          kind: "presentation",
+          format,
+          innerValue: value,
+        };
+      }
+
+      // NumericValue with time unit → convert to Duration for ISO 8601 / RFC 9557
+      if (
+        value.kind === "value" &&
+        isSimpleUnit(value) &&
+        format !== "RFC 2822"
+      ) {
+        const unit = getUnit(value)!;
+        if (unit.dimension === "time") {
+          const duration = this.convertTimeToDuration(value.value, unit);
+          return {
+            kind: "presentation",
+            format,
+            innerValue: { kind: "duration", duration } as DurationValue,
+          };
+        }
+      }
+
+      // CompositeUnitValue with all time components → convert to Duration for ISO 8601 / RFC 9557
+      if (value.kind === "composite" && format !== "RFC 2822") {
+        const allTime = value.components.every(
+          (comp) => comp.unit.dimension === "time",
+        );
+        if (allTime) {
+          const duration = this.convertCompositeTimeToDuration(value);
+          return {
+            kind: "presentation",
+            format,
+            innerValue: { kind: "duration", duration } as DurationValue,
+          };
+        }
       }
 
       return this.createError(
@@ -3518,6 +3633,30 @@ export class Evaluator {
   }
 
   /**
+   * Get the Math function for a duration-preserving operation.
+   */
+  private getDurationMathFunc(
+    funcName: string,
+  ): ((n: number) => number) | null {
+    switch (funcName) {
+      case "abs":
+        return Math.abs;
+      case "round":
+        return Math.round;
+      case "floor":
+        return Math.floor;
+      case "ceil":
+        return Math.ceil;
+      case "trunc":
+        return Math.trunc;
+      case "frac":
+        return (n: number) => n - Math.trunc(n);
+      default:
+        return null;
+    }
+  }
+
+  /**
    * Check if function name is a trig function for radian/degree conversion
    */
   private isTrigFunction(name: string): boolean {
@@ -3661,6 +3800,53 @@ export class Evaluator {
     // Base unit for time is second
     const valueInSeconds = this.unitConverter.toBaseUnit(value, unit);
     return this.dateTimeEngine.createDuration({ seconds: valueInSeconds });
+  }
+
+  /**
+   * Scale a Duration by a numeric factor, converting to milliseconds for fractional scaling.
+   * For integer factors on clean durations, scales each field directly.
+   */
+  private scaleDuration(duration: Duration, factor: number): DurationValue {
+    // For integer factors, scale each field directly to preserve calendar semantics
+    if (Number.isInteger(factor)) {
+      return {
+        kind: "duration",
+        duration: this.dateTimeEngine.createDuration({
+          years: duration.years * factor,
+          months: duration.months * factor,
+          weeks: duration.weeks * factor,
+          days: duration.days * factor,
+          hours: duration.hours * factor,
+          minutes: duration.minutes * factor,
+          seconds: duration.seconds * factor,
+          milliseconds: duration.milliseconds * factor,
+        }),
+      };
+    }
+
+    // For fractional factors, convert to milliseconds, scale, then reconstruct
+    const totalMs = this.durationToMilliseconds(duration) * factor;
+    return this.millisecondsToDuration(totalMs);
+  }
+
+  /**
+   * Convert milliseconds to a DurationValue with appropriate components.
+   */
+  private millisecondsToDuration(totalMs: number): DurationValue {
+    const rounded = Temporal.Duration.from({ milliseconds: totalMs }).round({
+      largestUnit: "day",
+      smallestUnit: "millisecond",
+    });
+    return {
+      kind: "duration",
+      duration: this.dateTimeEngine.createDuration({
+        days: rounded.days,
+        hours: rounded.hours,
+        minutes: rounded.minutes,
+        seconds: rounded.seconds,
+        milliseconds: rounded.milliseconds,
+      }),
+    };
   }
 
   /**

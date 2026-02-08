@@ -244,6 +244,16 @@ export class Formatter {
       return pt.toString();
     }
 
+    if (value.kind === "instant") {
+      const instant = toTemporalInstant(value.instant);
+      return instant.toString();
+    }
+
+    if (value.kind === "duration") {
+      const duration = Temporal.Duration.from(value.duration);
+      return duration.toString();
+    }
+
     return `Error: Cannot format ${value.kind} as ${format}`;
   }
 
