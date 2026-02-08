@@ -1,10 +1,6 @@
 # Specification
 
-I want to build a web application for a “notepad calculator” where user can write math expressions in a text area and get the results calculated in real-time. The main layout is a simple text area on the left and a results pane on the right. The expression and results should align line by line.
-
-## Main instruction
-
-Please read this entire specification, research any existing similar products, libraries, or frameworks that could help in building this application, and then provide a detailed plan for implementation. Your plan should implement the entire specification and leverage existing tools where appropriate.
+A web application for a “notepad calculator” where user can write math expressions in a text area and get the results calculated in real-time. The main layout is a simple text area on the left and a results pane on the right. The expression and results should align line by line.
 
 ## Similar products
 
