@@ -58,16 +58,6 @@ function buildNumberPattern(
     `)` +
     exponentialPart;
   return new RegExp(pattern, "u");
-};
-
-function buildAmPmTimePattern(): RegExp {
-  const twelve = `(?:[1-9]|1[0-2])`;
-  const twelveTwo = `(?:0[1-9]|1[0-2])`;
-  const sixty = `(?:[0-5][0-9])`;
-  const ampm = `(?:AM|PM|am|pm|a.m.|p.m.|A.M.|P.M.)`;
-  const pattern =
-    twelve + `(?::` + sixty + `(?::` + sixty + `)?)?` + `\\s*` + ampm;
-  return new RegExp(pattern, "u");
 }
 
 export const lexer = moo.compile({
@@ -108,7 +98,7 @@ export const lexer = moo.compile({
   greaterThan: ">",
   plus: "+",
   minus: /-/u,
-  times: /[\*·×]/u,
+  times: /[*·×]/u,
   slash: "/",
   divide: "÷",
   sharp: "#",
@@ -170,8 +160,12 @@ export const lexer = moo.compile({
           "fraction",
           "percentage",
           // ---
-          "now", "yesterday", "today", "tomorrow",
-          "from", "ago"
+          "now",
+          "yesterday",
+          "today",
+          "tomorrow",
+          "from",
+          "ago",
         ].map((k) => ["kw_" + k, k]),
         // ...[
         //   "Unix",

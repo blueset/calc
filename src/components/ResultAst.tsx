@@ -1,4 +1,4 @@
-import { Heading, ParsedLine, PlainText } from "@/calculator/document";
+import { ParsedLine, PlainText } from "@/calculator/document";
 import {
   BinaryExpressionNode,
   BooleanLiteralNode,

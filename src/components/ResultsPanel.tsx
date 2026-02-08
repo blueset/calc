@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect } from "react";
 import type { LineResult } from "@/calculator/calculator";
 import type { LinePosition } from "@/codemirror/resultAlign";
 import { useSettings } from "@/hooks/useSettings";

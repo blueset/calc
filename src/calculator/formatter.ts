@@ -77,9 +77,10 @@ export class Formatter {
       case "zonedDateTime":
       case "duration":
         return this.formatDateTimeValue(value);
-      default:
+      default: {
         const _exhaustive: never = value;
         return String(_exhaustive);
+      }
     }
   }
 
@@ -352,7 +353,7 @@ export class Formatter {
           value.time.second,
           value.time.millisecond,
         );
-      case "plainDateTime":
+      case "plainDateTime": {
         const dateStr = this.formatPlainDate(
           value.dateTime.date.year,
           value.dateTime.date.month,
@@ -365,6 +366,7 @@ export class Formatter {
           value.dateTime.time.millisecond,
         );
         return this.formatDateTime(dateStr, timeStr);
+      }
       case "instant":
         // Format as ISO 8601
         return this.formatInstant(value.instant.timestamp);
@@ -372,9 +374,10 @@ export class Formatter {
         return this.formatZonedDateTime(value.zonedDateTime);
       case "duration":
         return this.formatDuration(value.duration);
-      default:
+      default: {
         const _exhaustive: never = value;
         return String(_exhaustive);
+      }
     }
   }
 
@@ -617,7 +620,7 @@ export class Formatter {
    */
   private applyDigitGrouping(numStr: string, decimalSep: string): string {
     // Handle exponential notation: only group the mantissa, not the exponent
-    const expMatch = numStr.match(/^(.+?)([eE][+\-]?\d+)$/);
+    const expMatch = numStr.match(/^(.+?)([eE][+-]?\d+)$/);
     if (expMatch) {
       const mantissa = expMatch[1];
       const exponent = expMatch[2];
@@ -1185,9 +1188,10 @@ export class Formatter {
       case "decimal":
       case "dec":
         return "this should never happen";
-      default:
+      default: {
         const _exhaustive: never = format;
         return String(_exhaustive);
+      }
     }
   }
 

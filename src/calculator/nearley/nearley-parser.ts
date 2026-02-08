@@ -18,7 +18,6 @@ import { preprocessDocument, PreprocessedLine } from "./preprocessor";
 import { pruneInvalidCandidates, PruningContext } from "./pruner";
 import { selectBestCandidate } from "./selector";
 import {
-  Document,
   ParsedLine,
   createDocument,
   createHeading,
@@ -36,7 +35,10 @@ import { Evaluator, EvaluationContext, Value } from "../evaluator";
 export class NearleyParser {
   private dataLoader: DataLoader;
   private definedVariables: Set<string> = new Set();
-  private parseCache = new Map<string, { candidates: NearleyAST.LineNode[]; parseError: string | null }>();
+  private parseCache = new Map<
+    string,
+    { candidates: NearleyAST.LineNode[]; parseError: string | null }
+  >();
 
   constructor(dataLoader: DataLoader) {
     this.dataLoader = dataLoader;
@@ -142,7 +144,7 @@ export class NearleyParser {
 
     // Handle expression lines
     try {
-      const parseResult = this.parseExpression(content, lineNumber, accessedCacheKeys);
+      const parseResult = this.parseExpression(content, accessedCacheKeys);
       const candidates = parseResult.candidates;
 
       if (candidates.length === 0) {
@@ -202,7 +204,6 @@ export class NearleyParser {
           evalContext,
           lineNumber,
           contentOffset,
-          originalText,
         );
       }
 
@@ -249,7 +250,6 @@ export class NearleyParser {
     evalContext: EvaluationContext,
     lineNumber: number,
     contentOffset: number,
-    originalText: string,
   ): {
     line: ParsedLine;
     error: LineError | null;
@@ -309,10 +309,6 @@ export class NearleyParser {
 
     // If the best result is a failure, return error
     if (!bestResult.isSuccess && bestResult.value?.kind === "error") {
-      const errorValue = bestResult.value as {
-        kind: "error";
-        error: { message: string };
-      };
       return {
         line: bestResult.enriched,
         error: null, // Runtime error, not parser error - will be surfaced through the value
@@ -333,7 +329,6 @@ export class NearleyParser {
    */
   private parseExpression(
     content: string,
-    lineNumber: number,
     accessedCacheKeys?: Set<string>,
   ): {
     candidates: NearleyAST.LineNode[];
@@ -360,7 +355,10 @@ export class NearleyParser {
       // Parse error - return empty array with error message
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      const result = { candidates: [] as NearleyAST.LineNode[], parseError: errorMessage };
+      const result = {
+        candidates: [] as NearleyAST.LineNode[],
+        parseError: errorMessage,
+      };
       this.parseCache.set(content, result);
       return result;
     }

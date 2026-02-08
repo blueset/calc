@@ -1,15 +1,10 @@
 import { NearleyParser } from "./nearley/nearley-parser";
 import { DataLoader } from "./data-loader";
-import {
-  LexerError,
-  ParserError,
-  RuntimeError,
-  LineError,
-} from "./error-handling";
+import { LexerError, RuntimeError, LineError } from "./error-handling";
 import { Document, ParsedLine } from "./document";
 import { Evaluator, Value, ErrorValue } from "./evaluator";
 import { Formatter } from "./formatter";
-import { Settings, createSettings, defaultSettings } from "./settings";
+import { Settings, createSettings } from "./settings";
 import { SourceLocation } from "./document";
 import { ExchangeRatesDatabase } from "./types/types";
 
@@ -102,7 +97,8 @@ export class Calculator {
     // Use pre-computed values from evaluate-then-pick pipeline, or fall back to evaluateDocument
     const results: LineResult[] = [];
     const runtimeErrors: RuntimeError[] = [];
-    let lineValues: Map<ParsedLine, Value | null> | null = result.evaluatedValues ?? null;
+    let lineValues: Map<ParsedLine, Value | null> | null =
+      result.evaluatedValues ?? null;
 
     if (!lineValues) {
       try {

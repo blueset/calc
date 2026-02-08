@@ -1,11 +1,11 @@
-import type { Unit, LinearConversion, AffineConversion, VariantConversion } from './types/types';
-import type { DataLoader } from './data-loader';
+import type { Unit, LinearConversion, AffineConversion } from "./types/types";
+import type { DataLoader } from "./data-loader";
 
 /**
  * Settings for unit conversion
  */
 export interface ConversionSettings {
-  variant: 'us' | 'uk'; // Which variant to use for variant conversions
+  variant: "us" | "uk"; // Which variant to use for variant conversions
 }
 
 /**
@@ -25,7 +25,7 @@ export interface CompositeConversionResult {
 export class UnitConverter {
   constructor(
     private dataLoader: DataLoader,
-    private settings: ConversionSettings = { variant: 'us' }
+    private settings: ConversionSettings = { variant: "us" },
   ) {}
 
   /**
@@ -39,20 +39,21 @@ export class UnitConverter {
     const conversion = unit.conversion;
 
     switch (conversion.type) {
-      case 'linear':
+      case "linear":
         return this.linearToBase(value, conversion);
 
-      case 'affine':
+      case "affine":
         return this.affineToBase(value, conversion);
 
-      case 'variant':
+      case "variant": {
         // Use the appropriate variant based on settings
         const variantConv = conversion.variants[this.settings.variant];
-        if (variantConv.type === 'linear') {
+        if (variantConv.type === "linear") {
           return this.linearToBase(value, variantConv);
         } else {
           return this.affineToBase(value, variantConv);
         }
+      }
 
       default:
         throw new Error(`Unknown conversion type: ${(conversion as any).type}`);
@@ -70,20 +71,21 @@ export class UnitConverter {
     const conversion = unit.conversion;
 
     switch (conversion.type) {
-      case 'linear':
+      case "linear":
         return this.linearFromBase(baseValue, conversion);
 
-      case 'affine':
+      case "affine":
         return this.affineFromBase(baseValue, conversion);
 
-      case 'variant':
+      case "variant": {
         // Use the appropriate variant based on settings
         const variantConv = conversion.variants[this.settings.variant];
-        if (variantConv.type === 'linear') {
+        if (variantConv.type === "linear") {
           return this.linearFromBase(baseValue, variantConv);
         } else {
           return this.affineFromBase(baseValue, variantConv);
         }
+      }
 
       default:
         throw new Error(`Unknown conversion type: ${(conversion as any).type}`);
@@ -103,7 +105,7 @@ export class UnitConverter {
     // Check dimension compatibility
     if (fromUnit.dimension !== toUnit.dimension) {
       throw new Error(
-        `Cannot convert between different dimensions: ${fromUnit.dimension} and ${toUnit.dimension}`
+        `Cannot convert between different dimensions: ${fromUnit.dimension} and ${toUnit.dimension}`,
       );
     }
 
@@ -134,10 +136,10 @@ export class UnitConverter {
    */
   convertComposite(
     components: Array<{ value: number; unitId: string }>,
-    targetUnitIds: string[]
+    targetUnitIds: string[],
   ): CompositeConversionResult {
     // Validate that all components have same dimension
-    const sourceUnits = components.map(c => {
+    const sourceUnits = components.map((c) => {
       const unit = this.dataLoader.getUnitById(c.unitId);
       if (!unit) {
         throw new Error(`Unknown unit ID: ${c.unitId}`);
@@ -149,20 +151,20 @@ export class UnitConverter {
     for (const unit of sourceUnits) {
       if (unit.dimension !== dimension) {
         throw new Error(
-          `All composite unit components must have same dimension. Found: ${unit.dimension}, expected: ${dimension}`
+          `All composite unit components must have same dimension. Found: ${unit.dimension}, expected: ${dimension}`,
         );
       }
     }
 
     // Get target units
-    const targetUnits = targetUnitIds.map(id => {
+    const targetUnits = targetUnitIds.map((id) => {
       const unit = this.dataLoader.getUnitById(id);
       if (!unit) {
         throw new Error(`Unknown unit ID: ${id}`);
       }
       if (unit.dimension !== dimension) {
         throw new Error(
-          `Target unit ${id} has wrong dimension: ${unit.dimension}, expected: ${dimension}`
+          `Target unit ${id} has wrong dimension: ${unit.dimension}, expected: ${dimension}`,
         );
       }
       return unit;
@@ -190,7 +192,7 @@ export class UnitConverter {
         // Last unit: use all remaining value (with decimals)
         result.components.push({
           value: valueInTargetUnit,
-          unitId: targetUnit.id
+          unitId: targetUnit.id,
         });
         remaining = 0;
       } else {
@@ -198,7 +200,7 @@ export class UnitConverter {
         const integerPart = Math.floor(valueInTargetUnit);
         result.components.push({
           value: integerPart,
-          unitId: targetUnit.id
+          unitId: targetUnit.id,
         });
 
         // Update remaining by converting integer part back to base and subtracting
@@ -216,7 +218,10 @@ export class UnitConverter {
     return value * conversion.factor;
   }
 
-  private linearFromBase(baseValue: number, conversion: LinearConversion): number {
+  private linearFromBase(
+    baseValue: number,
+    conversion: LinearConversion,
+  ): number {
     return baseValue / conversion.factor;
   }
 
@@ -224,7 +229,10 @@ export class UnitConverter {
     return (value + conversion.offset) * conversion.factor;
   }
 
-  private affineFromBase(baseValue: number, conversion: AffineConversion): number {
+  private affineFromBase(
+    baseValue: number,
+    conversion: AffineConversion,
+  ): number {
     return baseValue / conversion.factor - conversion.offset;
   }
 

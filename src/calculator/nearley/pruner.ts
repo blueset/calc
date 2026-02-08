@@ -42,6 +42,7 @@ export function pruneInvalidCandidates(
 
       return true;
     } catch (error) {
+      console.error("Error during pruning candidate: ", error);
       // If validation throws, consider candidate invalid
       return false;
     }

@@ -186,10 +186,8 @@ describe("Nearley Parser Sandbox Tests", () => {
     // const input = "2 kg 500 g in ft in mm hong kong dollar millimeter of mercury";
     // debugLexer(input);
     const input = "1000 EUR/person to USD per foot";
-    const start = performance.now();
     parser.feed(input);
     const results = parser.results;
-    const end = performance.now();
     // console.log(`Parsing took ${(end - start).toFixed(2)} ms`);
     expect(results.length).toBeGreaterThan(0);
     console.log("Parse results:");

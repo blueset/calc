@@ -216,9 +216,10 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
         </div>
       );
     }
-    default:
+    default: {
       const _exhaustiveCheck: never = rawValue;
       return <>{_exhaustiveCheck}</>;
+    }
   }
 }
 

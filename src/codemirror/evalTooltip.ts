@@ -1,16 +1,12 @@
 import { hoverTooltip } from "@codemirror/view";
 import type { LineResult } from "@/calculator/calculator";
-import type { Document } from "@/calculator/document";
 
 export function abbreviateResult(result: string | null): string | null {
   if (result === null) return null;
-  return result.replace(/ based on:(\n    [^\n]+)+\n?/g, "; ");
+  return result.replace(/ based on:(\n {4}[^\n]+)+\n?/g, "; ");
 }
 
-export function evalTooltipExtension(
-  getResults: () => LineResult[],
-  ast: () => Document | null | undefined,
-) {
+export function evalTooltipExtension(getResults: () => LineResult[]) {
   return hoverTooltip((view, pos) => {
     const line = view.state.doc.lineAt(pos);
     const results = getResults();

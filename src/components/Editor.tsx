@@ -1,15 +1,9 @@
 import { useRef, useEffect, useCallback, RefObject } from "react";
 import { basicSetup } from "codemirror";
 import { EditorState, Compartment } from "@codemirror/state";
-import {
-  EditorView,
-  keymap,
-  lineNumbers,
-  highlightActiveLine,
-  drawSelection,
-} from "@codemirror/view";
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { bracketMatching, foldGutter, foldKeymap } from "@codemirror/language";
+import { EditorView, keymap } from "@codemirror/view";
+import { defaultKeymap, historyKeymap } from "@codemirror/commands";
+import { foldKeymap } from "@codemirror/language";
 import { calcLanguage } from "@/codemirror/language";
 import {
   semanticTreeField,
@@ -81,7 +75,6 @@ export function Editor({
   const onScrollRef = useRef(onScroll);
   const onActiveLineRef = useRef(onActiveLine);
   const resultsRef = useRef<LineResult[]>([]);
-  const astRef = useRef<Document | null>(ast);
   const debugCompartmentRef = useRef(new Compartment());
   const themeCompartmentRef = useRef(new Compartment());
   const fontCompartmentRef = useRef(new Compartment());
@@ -92,7 +85,6 @@ export function Editor({
   onScrollRef.current = onScroll;
   onActiveLineRef.current = onActiveLine;
   resultsRef.current = results ?? [];
-  astRef.current = ast;
 
   const getFontTheme = useCallback((size: number, family: string) => {
     const ff = FONT_FAMILY_MAP[family] || family;
@@ -115,13 +107,7 @@ export function Editor({
     const wrapCompartment = wrapCompartmentRef.current;
 
     const debugExtensions = debugMode
-      ? [
-          errorLintField,
-          evalTooltipExtension(
-            () => resultsRef.current,
-            () => astRef.current,
-          ),
-        ]
+      ? [errorLintField, evalTooltipExtension(() => resultsRef.current)]
       : [];
 
     const currentTheme =
@@ -190,13 +176,7 @@ export function Editor({
     const view = viewRef.current;
     if (!view) return;
     const debugExtensions = debugMode
-      ? [
-          errorLintField,
-          evalTooltipExtension(
-            () => resultsRef.current,
-            () => astRef.current,
-          ),
-        ]
+      ? [errorLintField, evalTooltipExtension(() => resultsRef.current)]
       : [];
     view.dispatch({
       effects: debugCompartmentRef.current.reconfigure(debugExtensions),

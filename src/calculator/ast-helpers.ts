@@ -5,9 +5,8 @@
  * for Nearley AST consumption.
  */
 
-import * as NearleyAST from './nearley/types';
-import { DataLoader } from './data-loader';
-import type { Unit } from './types/types';
+import * as NearleyAST from "./nearley/types";
+import { DataLoader } from "./data-loader";
 
 // ============================================================================
 // Unit Resolution Helpers
@@ -50,30 +49,30 @@ function countMatchingChars(a: string, b: string): number {
 export function resolveUnitFromNode(
   node: NearleyAST.UnitNode,
   dataLoader: DataLoader | null,
-  context: UnitResolutionContext = { hasDegreeUnit: false }
+  context: UnitResolutionContext = { hasDegreeUnit: false },
 ): { id: string; displayName: string } {
   let name = node.name;
 
   // Context-aware prime/doublePrime conversion
-  if (name === 'prime') {
+  if (name === "prime") {
     // If in degree context (composite value with degree unit), convert to arcminute
     // Otherwise, convert to ft (which resolves to 'foot')
-    name = context.hasDegreeUnit ? 'arcminute' : 'ft';
-  } else if (name === 'doublePrime') {
+    name = context.hasDegreeUnit ? "arcminute" : "ft";
+  } else if (name === "doublePrime") {
     // If in degree context, convert to arcsecond
     // Otherwise, convert to in (which resolves to 'inch')
-    name = context.hasDegreeUnit ? 'arcsecond' : 'in';
+    name = context.hasDegreeUnit ? "arcsecond" : "in";
   }
 
   if (dataLoader) {
     // Step 1: Try exact case-sensitive matches (early return on match)
 
     // Check units by exact case-sensitive name
-    const unitExact = dataLoader['unitByCaseSensitiveName']?.get(name);
+    const unitExact = dataLoader["unitByCaseSensitiveName"]?.get(name);
     if (unitExact) {
       return {
         id: unitExact.id,
-        displayName: unitExact.displayName.symbol
+        displayName: unitExact.displayName.symbol,
       };
     }
 
@@ -101,17 +100,21 @@ export function resolveUnitFromNode(
     const candidates: Candidate[] = [];
 
     // Case-insensitive unit candidates - score by matching against name variants
-    const unitCandidates = dataLoader['unitByCaseInsensitiveName']?.get(name.toLowerCase());
+    const unitCandidates = dataLoader["unitByCaseInsensitiveName"]?.get(
+      name.toLowerCase(),
+    );
     if (unitCandidates) {
       for (const unit of unitCandidates) {
         // Find the name variant that matches case-insensitively and score against it
         // (matches DataLoader.getUnitByNameWithFallback logic)
-        const matchingName = unit.names.find(n => n.toLowerCase() === name.toLowerCase());
+        const matchingName = unit.names.find(
+          (n) => n.toLowerCase() === name.toLowerCase(),
+        );
         const score = matchingName ? countMatchingChars(name, matchingName) : 0;
         candidates.push({
           id: unit.id,
           displayName: unit.displayName.symbol,
-          matchingChars: score
+          matchingChars: score,
         });
       }
     }
@@ -121,20 +124,20 @@ export function resolveUnitFromNode(
       candidates.push({
         id: currencyByCode.code,
         displayName: currencyByCode.code,
-        matchingChars: countMatchingChars(name, currencyByCode.code)
+        matchingChars: countMatchingChars(name, currencyByCode.code),
       });
     }
 
     // Case-insensitive currency by name
     for (const currency of currenciesByName) {
       const bestMatchingChars = Math.max(
-        ...currency.names.map(n => countMatchingChars(name, n)),
-        countMatchingChars(name, currency.code)
+        ...currency.names.map((n) => countMatchingChars(name, n)),
+        countMatchingChars(name, currency.code),
       );
       candidates.push({
         id: currency.code,
         displayName: currency.code,
-        matchingChars: bestMatchingChars
+        matchingChars: bestMatchingChars,
       });
     }
 
@@ -163,20 +166,24 @@ export function resolveUnitFromNode(
 export function resolveUnitsExpression(
   node: NearleyAST.UnitsNode,
   dataLoader: DataLoader | null,
-  context: UnitResolutionContext = { hasDegreeUnit: false }
+  context: UnitResolutionContext = { hasDegreeUnit: false },
 ): { id: string } | { terms: Array<{ id: string; exponent: number }> } {
   // If single term with exponent 1, return as simple unit ID
   if (node.terms.length === 1 && node.terms[0].exponent === 1) {
-    const resolved = resolveUnitFromNode(node.terms[0].unit, dataLoader, context);
+    const resolved = resolveUnitFromNode(
+      node.terms[0].unit,
+      dataLoader,
+      context,
+    );
     return { id: resolved.id };
   }
 
   // Otherwise, return as derived unit with term IDs and exponents
-  const terms = node.terms.map(termNode => {
+  const terms = node.terms.map((termNode) => {
     const resolved = resolveUnitFromNode(termNode.unit, dataLoader, context);
     return {
       id: resolved.id,
-      exponent: termNode.exponent
+      exponent: termNode.exponent,
     };
   });
 
@@ -187,12 +194,12 @@ export function resolveUnitsExpression(
  * Check if a unit name represents a degree unit
  */
 export function isDegreeUnit(unitName: string): boolean {
-  return unitName === 'degree' || unitName === 'deg' || unitName === '°';
+  return unitName === "degree" || unitName === "deg" || unitName === "°";
 }
 
 /**
  * Check if a UnitsNode contains a degree unit
  */
 export function hasDegreeInUnits(node: NearleyAST.UnitsNode): boolean {
-  return node.terms.some(term => isDegreeUnit(term.unit.name));
+  return node.terms.some((term) => isDegreeUnit(term.unit.name));
 }

@@ -1,10 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { Formatter } from "../../src/calculator/formatter";
-import {
-  Settings,
-  defaultSettings,
-  createSettings,
-} from "../../src/calculator/settings";
+import { createSettings } from "../../src/calculator/settings";
 import {
   CompositeUnitValue,
   BooleanValue,

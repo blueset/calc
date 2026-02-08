@@ -3,7 +3,6 @@ import {
   Evaluator,
   Value,
   PlainDateValue,
-  PlainTimeValue,
   PlainDateTimeValue,
   InstantValue,
   ZonedDateTimeValue,

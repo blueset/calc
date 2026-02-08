@@ -1,5 +1,5 @@
-import type { DataLoader } from './data-loader';
-import { Temporal } from '@js-temporal/polyfill';
+import type { DataLoader } from "./data-loader";
+import { Temporal } from "@js-temporal/polyfill";
 
 /**
  * Duration representation following Temporal spec
@@ -65,7 +65,9 @@ export interface ZonedDateTime {
 /**
  * Convert internal ZonedDateTime to Temporal.ZonedDateTime
  */
-export function toTemporalZonedDateTime(zdt: ZonedDateTime): Temporal.ZonedDateTime {
+export function toTemporalZonedDateTime(
+  zdt: ZonedDateTime,
+): Temporal.ZonedDateTime {
   return Temporal.ZonedDateTime.from({
     year: zdt.dateTime.date.year,
     month: zdt.dateTime.date.month,
@@ -74,14 +76,16 @@ export function toTemporalZonedDateTime(zdt: ZonedDateTime): Temporal.ZonedDateT
     minute: zdt.dateTime.time.minute,
     second: zdt.dateTime.time.second,
     millisecond: zdt.dateTime.time.millisecond,
-    timeZone: zdt.timezone
+    timeZone: zdt.timezone,
   });
 }
 
 /**
  * Convert internal PlainDateTime to Temporal.PlainDateTime
  */
-export function toTemporalPlainDateTime(pdt: PlainDateTime): Temporal.PlainDateTime {
+export function toTemporalPlainDateTime(
+  pdt: PlainDateTime,
+): Temporal.PlainDateTime {
   return Temporal.PlainDateTime.from({
     year: pdt.date.year,
     month: pdt.date.month,
@@ -89,7 +93,7 @@ export function toTemporalPlainDateTime(pdt: PlainDateTime): Temporal.PlainDateT
     hour: pdt.time.hour,
     minute: pdt.time.minute,
     second: pdt.time.second,
-    millisecond: pdt.time.millisecond
+    millisecond: pdt.time.millisecond,
   });
 }
 
@@ -100,7 +104,7 @@ export function toTemporalPlainDate(pd: PlainDate): Temporal.PlainDate {
   return Temporal.PlainDate.from({
     year: pd.year,
     month: pd.month,
-    day: pd.day
+    day: pd.day,
   });
 }
 
@@ -112,7 +116,7 @@ export function toTemporalPlainTime(pt: PlainTime): Temporal.PlainTime {
     hour: pt.hour,
     minute: pt.minute,
     second: pt.second,
-    millisecond: pt.millisecond
+    millisecond: pt.millisecond,
   });
 }
 
@@ -142,7 +146,7 @@ export class DateTimeEngine {
       hours: components.hours || 0,
       minutes: components.minutes || 0,
       seconds: components.seconds || 0,
-      milliseconds: components.milliseconds || 0
+      milliseconds: components.milliseconds || 0,
     };
   }
 
@@ -162,9 +166,14 @@ export class DateTimeEngine {
     return {
       dateTime: {
         date: { year: now.year, month: now.month, day: now.day },
-        time: { hour: now.hour, minute: now.minute, second: now.second, millisecond: 0 }
+        time: {
+          hour: now.hour,
+          minute: now.minute,
+          second: now.second,
+          millisecond: 0,
+        },
       },
-      timezone: now.timeZoneId
+      timezone: now.timeZoneId,
     };
   }
 
@@ -209,16 +218,22 @@ export class DateTimeEngine {
    * Falls back to millisecond arithmetic for fractional durations
    * Returns PlainDateTime if duration has time components
    */
-  addToPlainDate(date: PlainDate, duration: Duration): PlainDate | PlainDateTime {
+  addToPlainDate(
+    date: PlainDate,
+    duration: Duration,
+  ): PlainDate | PlainDateTime {
     // Check if duration has time components
-    const hasTimeComponents = duration.hours !== 0 || duration.minutes !== 0 ||
-                              duration.seconds !== 0 || duration.milliseconds !== 0;
+    const hasTimeComponents =
+      duration.hours !== 0 ||
+      duration.minutes !== 0 ||
+      duration.seconds !== 0 ||
+      duration.milliseconds !== 0;
 
     if (hasTimeComponents) {
       // Convert to PlainDateTime at midnight and add duration
       const plainDateTime: PlainDateTime = {
         date,
-        time: { hour: 0, minute: 0, second: 0, millisecond: 0 }
+        time: { hour: 0, minute: 0, second: 0, millisecond: 0 },
       };
       return this.addToPlainDateTime(plainDateTime, duration);
     }
@@ -227,19 +242,22 @@ export class DateTimeEngine {
     const temporalDate = Temporal.PlainDate.from({
       year: date.year,
       month: date.month,
-      day: date.day
+      day: date.day,
     });
 
     try {
-      const result = temporalDate.add({
-        years: duration.years,
-        months: duration.months,
-        weeks: duration.weeks,
-        days: duration.days
-      }, { overflow: 'constrain' });  // Handles month-end clamping automatically
+      const result = temporalDate.add(
+        {
+          years: duration.years,
+          months: duration.months,
+          weeks: duration.weeks,
+          days: duration.days,
+        },
+        { overflow: "constrain" },
+      ); // Handles month-end clamping automatically
 
       return { year: result.year, month: result.month, day: result.day };
-    } catch (error) {
+    } catch {
       // Fallback: convert to milliseconds for fractional durations
       const totalMs = Math.round(this.durationToMilliseconds(duration));
       const msPerDay = 24 * 60 * 60 * 1000;
@@ -249,7 +267,7 @@ export class DateTimeEngine {
         // Has time component, convert to PlainDateTime
         const plainDateTime: PlainDateTime = {
           date,
-          time: { hour: 0, minute: 0, second: 0, millisecond: 0 }
+          time: { hour: 0, minute: 0, second: 0, millisecond: 0 },
         };
         // Create a duration with only milliseconds to avoid double-counting
         const msDuration = this.createDuration({ milliseconds: totalMs });
@@ -257,7 +275,10 @@ export class DateTimeEngine {
       }
 
       // Only full days, return PlainDate
-      const result = temporalDate.add({ milliseconds: totalMs }, { overflow: 'constrain' });
+      const result = temporalDate.add(
+        { milliseconds: totalMs },
+        { overflow: "constrain" },
+      );
       return { year: result.year, month: result.month, day: result.day };
     }
   }
@@ -266,7 +287,10 @@ export class DateTimeEngine {
    * Subtract duration from PlainDate
    * Returns PlainDateTime if duration has time components
    */
-  subtractFromPlainDate(date: PlainDate, duration: Duration): PlainDate | PlainDateTime {
+  subtractFromPlainDate(
+    date: PlainDate,
+    duration: Duration,
+  ): PlainDate | PlainDateTime {
     // Negate the duration and add
     const negated = this.negateDuration(duration);
     return this.addToPlainDate(date, negated);
@@ -278,15 +302,26 @@ export class DateTimeEngine {
    * Uses Temporal API for accurate time arithmetic
    * Falls back to millisecond arithmetic for fractional durations
    */
-  addToPlainTime(time: PlainTime, duration: Duration): PlainTime | PlainDateTime {
+  addToPlainTime(
+    time: PlainTime,
+    duration: Duration,
+  ): PlainTime | PlainDateTime {
     // Check if duration has date components OR if time arithmetic might cross day boundary
-    const hasDateComponents = duration.years !== 0 || duration.months !== 0 ||
-                              duration.weeks !== 0 || duration.days !== 0;
+    const hasDateComponents =
+      duration.years !== 0 ||
+      duration.months !== 0 ||
+      duration.weeks !== 0 ||
+      duration.days !== 0;
 
     // For time-only arithmetic, we need to detect day boundary crossing
     // Use PlainDateTime arithmetic to detect this
-    if (hasDateComponents || duration.hours !== 0 || duration.minutes !== 0 ||
-        duration.seconds !== 0 || duration.milliseconds !== 0) {
+    if (
+      hasDateComponents ||
+      duration.hours !== 0 ||
+      duration.minutes !== 0 ||
+      duration.seconds !== 0 ||
+      duration.milliseconds !== 0
+    ) {
       const now = Temporal.Now.plainDateTimeISO();
       const dateTime = Temporal.PlainDateTime.from({
         year: now.year,
@@ -295,23 +330,35 @@ export class DateTimeEngine {
         hour: time.hour,
         minute: time.minute,
         second: time.second,
-        millisecond: time.millisecond
+        millisecond: time.millisecond,
       });
 
       let result;
       try {
-        result = dateTime.add(duration, { overflow: 'constrain' });
-      } catch (error) {
+        result = dateTime.add(duration, { overflow: "constrain" });
+      } catch {
         // Fallback: convert to milliseconds for fractional durations
         const totalMs = Math.round(this.durationToMilliseconds(duration));
-        result = dateTime.add({ milliseconds: totalMs }, { overflow: 'constrain' });
+        result = dateTime.add(
+          { milliseconds: totalMs },
+          { overflow: "constrain" },
+        );
       }
 
       // If date changed, return PlainDateTime
-      if (result.year !== now.year || result.month !== now.month || result.day !== now.day) {
+      if (
+        result.year !== now.year ||
+        result.month !== now.month ||
+        result.day !== now.day
+      ) {
         return {
           date: { year: result.year, month: result.month, day: result.day },
-          time: { hour: result.hour, minute: result.minute, second: result.second, millisecond: result.millisecond }
+          time: {
+            hour: result.hour,
+            minute: result.minute,
+            second: result.second,
+            millisecond: result.millisecond,
+          },
         };
       }
 
@@ -320,7 +367,7 @@ export class DateTimeEngine {
         hour: result.hour,
         minute: result.minute,
         second: result.second,
-        millisecond: result.millisecond
+        millisecond: result.millisecond,
       };
     }
 
@@ -331,7 +378,10 @@ export class DateTimeEngine {
   /**
    * Subtract duration from PlainTime
    */
-  subtractFromPlainTime(time: PlainTime, duration: Duration): PlainTime | PlainDateTime {
+  subtractFromPlainTime(
+    time: PlainTime,
+    duration: Duration,
+  ): PlainTime | PlainDateTime {
     const negated = this.negateDuration(duration);
     return this.addToPlainTime(time, negated);
   }
@@ -341,7 +391,10 @@ export class DateTimeEngine {
    * Uses Temporal API for accurate datetime arithmetic
    * Falls back to millisecond arithmetic for fractional durations
    */
-  addToPlainDateTime(dateTime: PlainDateTime, duration: Duration): PlainDateTime {
+  addToPlainDateTime(
+    dateTime: PlainDateTime,
+    duration: Duration,
+  ): PlainDateTime {
     const temporal = Temporal.PlainDateTime.from({
       year: dateTime.date.year,
       month: dateTime.date.month,
@@ -349,28 +402,39 @@ export class DateTimeEngine {
       hour: dateTime.time.hour,
       minute: dateTime.time.minute,
       second: dateTime.time.second,
-      millisecond: dateTime.time.millisecond
+      millisecond: dateTime.time.millisecond,
     });
 
     let result;
     try {
-      result = temporal.add(duration, { overflow: 'constrain' });
-    } catch (error) {
+      result = temporal.add(duration, { overflow: "constrain" });
+    } catch {
       // Fallback: convert to milliseconds for fractional durations
       const totalMs = Math.round(this.durationToMilliseconds(duration));
-      result = temporal.add({ milliseconds: totalMs }, { overflow: 'constrain' });
+      result = temporal.add(
+        { milliseconds: totalMs },
+        { overflow: "constrain" },
+      );
     }
 
     return {
       date: { year: result.year, month: result.month, day: result.day },
-      time: { hour: result.hour, minute: result.minute, second: result.second, millisecond: result.millisecond }
+      time: {
+        hour: result.hour,
+        minute: result.minute,
+        second: result.second,
+        millisecond: result.millisecond,
+      },
     };
   }
 
   /**
    * Subtract duration from PlainDateTime
    */
-  subtractFromPlainDateTime(dateTime: PlainDateTime, duration: Duration): PlainDateTime {
+  subtractFromPlainDateTime(
+    dateTime: PlainDateTime,
+    duration: Duration,
+  ): PlainDateTime {
     const negated = this.negateDuration(duration);
     return this.addToPlainDateTime(dateTime, negated);
   }
@@ -383,22 +447,22 @@ export class DateTimeEngine {
     const leftTemporal = Temporal.PlainDate.from({
       year: left.year,
       month: left.month,
-      day: left.day
+      day: left.day,
     });
     const rightTemporal = Temporal.PlainDate.from({
       year: right.year,
       month: right.month,
-      day: right.day
+      day: right.day,
     });
 
     // since() calculates right to left (left - right), which matches expected semantics
-    const duration = leftTemporal.since(rightTemporal, { largestUnit: 'year' });
+    const duration = leftTemporal.since(rightTemporal, { largestUnit: "year" });
 
     return this.createDuration({
       years: duration.years,
       months: duration.months,
       weeks: duration.weeks,
-      days: duration.days
+      days: duration.days,
     });
   }
 
@@ -411,23 +475,23 @@ export class DateTimeEngine {
       hour: left.hour,
       minute: left.minute,
       second: left.second,
-      millisecond: left.millisecond
+      millisecond: left.millisecond,
     });
     const rightTemporal = Temporal.PlainTime.from({
       hour: right.hour,
       minute: right.minute,
       second: right.second,
-      millisecond: right.millisecond
+      millisecond: right.millisecond,
     });
 
     // since() calculates right to left (left - right), which matches expected semantics
-    const duration = leftTemporal.since(rightTemporal, { largestUnit: 'hour' });
+    const duration = leftTemporal.since(rightTemporal, { largestUnit: "hour" });
 
     return this.createDuration({
       hours: duration.hours,
       minutes: duration.minutes,
       seconds: duration.seconds,
-      milliseconds: duration.milliseconds
+      milliseconds: duration.milliseconds,
     });
   }
 
@@ -443,7 +507,7 @@ export class DateTimeEngine {
       hour: left.time.hour,
       minute: left.time.minute,
       second: left.time.second,
-      millisecond: left.time.millisecond
+      millisecond: left.time.millisecond,
     });
     const rightTemporal = Temporal.PlainDateTime.from({
       year: right.date.year,
@@ -452,11 +516,11 @@ export class DateTimeEngine {
       hour: right.time.hour,
       minute: right.time.minute,
       second: right.time.second,
-      millisecond: right.time.millisecond
+      millisecond: right.time.millisecond,
     });
 
     // since() calculates right to left (left - right), which matches expected semantics
-    const duration = leftTemporal.since(rightTemporal, { largestUnit: 'year' });
+    const duration = leftTemporal.since(rightTemporal, { largestUnit: "year" });
 
     return this.createDuration({
       years: duration.years,
@@ -466,7 +530,7 @@ export class DateTimeEngine {
       hours: duration.hours,
       minutes: duration.minutes,
       seconds: duration.seconds,
-      milliseconds: duration.milliseconds
+      milliseconds: duration.milliseconds,
     });
   }
 
@@ -482,7 +546,7 @@ export class DateTimeEngine {
       hours: left.hours + right.hours,
       minutes: left.minutes + right.minutes,
       seconds: left.seconds + right.seconds,
-      milliseconds: left.milliseconds + right.milliseconds
+      milliseconds: left.milliseconds + right.milliseconds,
     };
   }
 
@@ -498,7 +562,7 @@ export class DateTimeEngine {
       hours: left.hours - right.hours,
       minutes: left.minutes - right.minutes,
       seconds: left.seconds - right.seconds,
-      milliseconds: left.milliseconds - right.milliseconds
+      milliseconds: left.milliseconds - right.milliseconds,
     };
   }
 
@@ -514,7 +578,7 @@ export class DateTimeEngine {
       hours: -duration.hours,
       minutes: -duration.minutes,
       seconds: -duration.seconds,
-      milliseconds: -duration.milliseconds
+      milliseconds: -duration.milliseconds,
     };
   }
 
@@ -523,12 +587,19 @@ export class DateTimeEngine {
    * Uses Temporal API for accurate instant arithmetic
    */
   addToInstant(instant: Instant, duration: Duration): Instant {
-    const temporalInstant = Temporal.Instant.fromEpochMilliseconds(instant.timestamp);
+    const temporalInstant = Temporal.Instant.fromEpochMilliseconds(
+      instant.timestamp,
+    );
 
     // For any calendar/day-based operations, work through UTC timezone
     // This is necessary because Instant doesn't support day-level durations directly
-    if (duration.years !== 0 || duration.months !== 0 || duration.weeks !== 0 || duration.days !== 0) {
-      const zdt = temporalInstant.toZonedDateTimeISO('UTC');
+    if (
+      duration.years !== 0 ||
+      duration.months !== 0 ||
+      duration.weeks !== 0 ||
+      duration.days !== 0
+    ) {
+      const zdt = temporalInstant.toZonedDateTimeISO("UTC");
       const result = zdt.add(duration);
       return { timestamp: Number(result.toInstant().epochMilliseconds) };
     }
@@ -538,7 +609,7 @@ export class DateTimeEngine {
       hours: duration.hours,
       minutes: duration.minutes,
       seconds: duration.seconds,
-      milliseconds: duration.milliseconds
+      milliseconds: duration.milliseconds,
     });
 
     return { timestamp: Number(result.epochMilliseconds) };
@@ -558,10 +629,12 @@ export class DateTimeEngine {
    */
   subtractInstants(left: Instant, right: Instant): Duration {
     const leftTemporal = Temporal.Instant.fromEpochMilliseconds(left.timestamp);
-    const rightTemporal = Temporal.Instant.fromEpochMilliseconds(right.timestamp);
+    const rightTemporal = Temporal.Instant.fromEpochMilliseconds(
+      right.timestamp,
+    );
 
     // since() calculates right to left (left - right), which matches expected semantics
-    const duration = leftTemporal.since(rightTemporal, { largestUnit: 'hour' });
+    const duration = leftTemporal.since(rightTemporal, { largestUnit: "hour" });
 
     // Convert hours to days + remaining hours
     const totalHours = duration.hours;
@@ -573,7 +646,7 @@ export class DateTimeEngine {
       hours: remainingHours,
       minutes: duration.minutes,
       seconds: duration.seconds,
-      milliseconds: duration.milliseconds
+      milliseconds: duration.milliseconds,
     });
   }
 
@@ -594,12 +667,14 @@ export class DateTimeEngine {
       hour: dateTime.time.hour,
       minute: dateTime.time.minute,
       second: dateTime.time.second,
-      millisecond: dateTime.time.millisecond
+      millisecond: dateTime.time.millisecond,
     });
 
     // Convert to Temporal.Instant using the specific timezone
     // This properly accounts for timezone offsets and DST transitions
-    const temporalInstant = temporalDateTime.toZonedDateTime(ianaTimezone).toInstant();
+    const temporalInstant = temporalDateTime
+      .toZonedDateTime(ianaTimezone)
+      .toInstant();
 
     // Convert Temporal.Instant to our internal Instant representation (Unix timestamp in milliseconds)
     const timestamp = Number(temporalInstant.epochMilliseconds);
@@ -616,7 +691,9 @@ export class DateTimeEngine {
 
     // Use Temporal API for proper timezone-aware conversion
     // Create Temporal.Instant from our internal representation
-    const temporalInstant = Temporal.Instant.fromEpochMilliseconds(instant.timestamp);
+    const temporalInstant = Temporal.Instant.fromEpochMilliseconds(
+      instant.timestamp,
+    );
 
     // Convert to ZonedDateTime in the target timezone
     // This properly accounts for timezone offsets and DST
@@ -628,16 +705,16 @@ export class DateTimeEngine {
         date: {
           year: temporalZDT.year,
           month: temporalZDT.month,
-          day: temporalZDT.day
+          day: temporalZDT.day,
         },
         time: {
           hour: temporalZDT.hour,
           minute: temporalZDT.minute,
           second: temporalZDT.second,
-          millisecond: temporalZDT.millisecond
-        }
+          millisecond: temporalZDT.millisecond,
+        },
       },
-      timezone: ianaTimezone
+      timezone: ianaTimezone,
     };
   }
 
@@ -654,7 +731,10 @@ export class DateTimeEngine {
   /**
    * Subtract duration from ZonedDateTime
    */
-  subtractFromZonedDateTime(zdt: ZonedDateTime, duration: Duration): ZonedDateTime {
+  subtractFromZonedDateTime(
+    zdt: ZonedDateTime,
+    duration: Duration,
+  ): ZonedDateTime {
     const negated = this.negateDuration(duration);
     return this.addToZonedDateTime(zdt, negated);
   }
@@ -672,7 +752,10 @@ export class DateTimeEngine {
    * Subtract a PlainTime from a ZonedDateTime
    * Treats the PlainTime as today in the local timezone (per SPECS.md line 914)
    */
-  subtractPlainTimeFromZonedDateTime(zdt: ZonedDateTime, plainTime: PlainTime): Duration {
+  subtractPlainTimeFromZonedDateTime(
+    zdt: ZonedDateTime,
+    plainTime: PlainTime,
+  ): Duration {
     // Get today's date in the local timezone
     const localNow = Temporal.Now.plainDateTimeISO();
     const todayLocal = localNow.toPlainDate();
@@ -682,9 +765,9 @@ export class DateTimeEngine {
       date: {
         year: todayLocal.year,
         month: todayLocal.month,
-        day: todayLocal.day
+        day: todayLocal.day,
       },
-      time: plainTime
+      time: plainTime,
     };
 
     // Convert both to instants for comparison
@@ -702,5 +785,4 @@ export class DateTimeEngine {
   combineDateAndTime(date: PlainDate, time: PlainTime): PlainDateTime {
     return { date, time };
   }
-
 }

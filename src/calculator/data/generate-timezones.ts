@@ -112,7 +112,7 @@ function parseMetaZones(): {
     CLDR_PATH!,
     "common",
     "supplemental",
-    "metaZones.xml"
+    "metaZones.xml",
   );
   const xmlContent = fs.readFileSync(metaZonesPath, "utf-8");
   const parsed = parser.parse(xmlContent);
@@ -193,7 +193,7 @@ function parseMetaZones(): {
 function getLatestMetazone(
   tz: string,
   timezoneToMetazone: Map<string, MetazoneMapping[]>,
-  aliases: Map<string, string>
+  aliases: Map<string, string>,
 ): string | null {
   // First check the canonical timezone
   let mappings = timezoneToMetazone.get(tz);
@@ -363,7 +363,10 @@ function extractZoneAndMetazoneNames(): {
         // Handle special case for "Hawaii"
         if (metazoneType === "Hawaii") {
           if (names.long?.standard) {
-            names.long.standard = names.long.standard.replace("Hawaii-Aleutian Standard Time", "Hawaii Standard Time");
+            names.long.standard = names.long.standard.replace(
+              "Hawaii-Aleutian Standard Time",
+              "Hawaii Standard Time",
+            );
           }
         }
 
@@ -431,16 +434,14 @@ function extractTerritoryNames(): Map<string, string[]> {
   const xmlContent = fs.readFileSync(territoryPath, "utf-8");
   const parsed = parser.parse(xmlContent);
 
-  const territories =
-    parsed.ldml.localeDisplayNames.territories.territory;
+  const territories = parsed.ldml.localeDisplayNames.territories.territory;
   const territoryArray = Array.isArray(territories)
     ? territories
     : [territories];
 
   for (const territory of territoryArray) {
     const code = territory["@_type"];
-    const name =
-      typeof territory === "object" ? territory["#text"] : territory;
+    const name = typeof territory === "object" ? territory["#text"] : territory;
     if (code && name && name !== "∅∅∅") {
       if (!territoryNames.has(code)) {
         territoryNames.set(code, []);
@@ -506,10 +507,7 @@ function parseCities15000(): City[] {
     const timezone = parts[17];
 
     // Filter: PPLC or population > 500,000
-    if (
-      attributionCode === "PPLC" ||
-      population > 500000
-    ) {
+    if (attributionCode === "PPLC" || population > 500000) {
       cities.push({ name1, name2, attributionCode, population, timezone });
     }
   }
@@ -541,7 +539,7 @@ function filterDuplicateCities(cities: City[]): City[] {
   // Filter each group
   const filteredCities = new Set<City>();
 
-  for (const [name, group] of cityGroups.entries()) {
+  for (const [_name, group] of cityGroups.entries()) {
     if (group.length === 1) {
       // Only one city with this name, keep it
       filteredCities.add(group[0]);
@@ -561,13 +559,11 @@ function filterDuplicateCities(cities: City[]): City[] {
       } else if (over1M.length > 1) {
         // Multiple cities have over 1M population, keep most populated
         selected = over1M.reduce((a, b) =>
-          a.population > b.population ? a : b
+          a.population > b.population ? a : b,
         );
       } else if (pplc.length > 1) {
         // Multiple cities are PPLC, keep most populated
-        selected = pplc.reduce((a, b) =>
-          a.population > b.population ? a : b
-        );
+        selected = pplc.reduce((a, b) => (a.population > b.population ? a : b));
       }
       // else: drop all cities with this name (selected remains null)
 
@@ -592,7 +588,8 @@ async function buildTimezonesDatabase() {
   console.log(`  Found ${cldrAliases.size} CLDR timezone aliases`);
 
   console.log("\nStep 3: Parsing metaZones.xml...");
-  const { timezoneToMetazone, metazoneToTimezone, primaryZones } = parseMetaZones();
+  const { timezoneToMetazone, metazoneToTimezone, primaryZones } =
+    parseMetaZones();
   console.log(`  Found ${timezoneToMetazone.size} timezone->metazone mappings`);
   console.log(`  Found ${metazoneToTimezone.size} metazone->timezone mappings`);
   console.log(`  Found ${primaryZones.size} primary zones`);
@@ -622,7 +619,9 @@ async function buildTimezonesDatabase() {
   const cities = filterDuplicateCities(allCities);
   console.log(`  Kept ${cities.length} cities after filtering`);
 
-  console.log("\nStep 9: Building timezone database (phase 1: non-city names)...");
+  console.log(
+    "\nStep 9: Building timezone database (phase 1: non-city names)...",
+  );
   const timezones: Timezone[] = [];
 
   // Phase 1: Build all timezones without city names
@@ -653,12 +652,18 @@ async function buildTimezonesDatabase() {
       }
     }
 
-    const offsetMatch = tz.match(/^Etc\/GMT([+-]\d+)$/)
+    const offsetMatch = tz.match(/^Etc\/GMT([+-]\d+)$/);
     if (offsetMatch) {
-      names.push({ name: `UTC${offsetMatch[1]}`.replaceAll(/^UTC[+-]/g, (match) => match === "UTC+" ? "UTC-" : "UTC+") });
-      names.forEach(n => {
-        n.name = n.name.replaceAll(/^GMT[+-]/g, (match) => match === "GMT+" ? "GMT-" : "GMT+");
-      })
+      names.push({
+        name: `UTC${offsetMatch[1]}`.replaceAll(/^UTC[+-]/g, (match) =>
+          match === "UTC+" ? "UTC-" : "UTC+",
+        ),
+      });
+      names.forEach((n) => {
+        n.name = n.name.replaceAll(/^GMT[+-]/g, (match) =>
+          match === "GMT+" ? "GMT-" : "GMT+",
+        );
+      });
     }
 
     // 2. Add timezone aliases from tzdata
@@ -720,8 +725,7 @@ async function buildTimezonesDatabase() {
         // If no territories map back, add names without territory
         const hasMapping = mappedTerritories.length > 0;
 
-        for (const [locale, nameSet] of metazoneNameMap.entries()) {
-
+        for (const [_locale, nameSet] of metazoneNameMap.entries()) {
           for (const territory of hasMapping
             ? mappedTerritories
             : [undefined]) {
@@ -823,11 +827,7 @@ async function buildTimezonesDatabase() {
 
   // Write output
   const output: TimezonesDatabase = { timezones };
-  fs.writeFileSync(
-    "timezones.json",
-    JSON.stringify(output, null, 2),
-    "utf-8"
-  );
+  fs.writeFileSync("timezones.json", JSON.stringify(output, null, 2), "utf-8");
   console.log("\nSuccessfully wrote timezones.json");
 
   // Generate duplicate name report
@@ -895,7 +895,7 @@ function generateDuplicateNameReport(timezones: Timezone[]) {
   for (const dup of duplicates) {
     // Check for highlighting conditions
     const hasNonNullTerritory = Array.from(dup.territories.keys()).some(
-      (t) => t !== null
+      (t) => t !== null,
     );
     const has001Territory = dup.territories.has("001");
     const nullTerritoryCount = dup.territories.get(null)?.length || 0;
@@ -920,7 +920,7 @@ function generateDuplicateNameReport(timezones: Timezone[]) {
         if (a[0] !== null && b[0] === null) return -1;
         if (a[0] === null && b[0] === null) return 0;
         return a[0]!.localeCompare(b[0]!);
-      }
+      },
     );
 
     for (const [territory, tzList] of territoryEntries) {
@@ -934,7 +934,7 @@ function generateDuplicateNameReport(timezones: Timezone[]) {
       }
 
       console.log(
-        `${lineColor}- ${territoryLabel}: ${tzListStr}${colors.reset}`
+        `${lineColor}- ${territoryLabel}: ${tzListStr}${colors.reset}`,
       );
     }
 

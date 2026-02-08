@@ -1,7 +1,7 @@
 import * as NearleyAST from "./nearley/types";
 import { Document, ParsedLine } from "./document";
 import { DataLoader } from "./data-loader";
-import { UnitConverter, ConversionSettings } from "./unit-converter";
+import { UnitConverter } from "./unit-converter";
 import {
   DateTimeEngine,
   Duration,
@@ -15,7 +15,7 @@ import {
   toTemporalPlainDate,
   toTemporalInstant,
 } from "./date-time";
-import { CurrencyConverter, CurrencyValue } from "./currency";
+import { CurrencyConverter } from "./currency";
 import { MathFunctions } from "./functions";
 import type { ExchangeRatesDatabase, Unit } from "./types/types";
 import { getConstant } from "./constants";
@@ -441,12 +441,11 @@ export class Evaluator {
         return this.evaluateConstant(expr as NearleyAST.ConstantNode);
 
       case "Value":
-        return this.evaluateValue(expr as NearleyAST.ValueNode, context);
+        return this.evaluateValue(expr as NearleyAST.ValueNode);
 
       case "CompositeValue":
         return this.evaluateCompositeValue(
           expr as NearleyAST.CompositeValueNode,
-          context,
         );
 
       case "BooleanLiteral":
@@ -465,7 +464,7 @@ export class Evaluator {
         return this.evaluatePlainDateTime(expr as NearleyAST.PlainDateTimeNode);
 
       case "Instant":
-        return this.evaluateInstant(expr as NearleyAST.InstantNode, context);
+        return this.evaluateInstant(expr as NearleyAST.InstantNode);
 
       case "ZonedDateTime":
         return this.evaluateZonedDateTime(expr as NearleyAST.ZonedDateTimeNode);
@@ -642,6 +641,7 @@ export class Evaluator {
         );
         exchangeRate = converted.amount;
       } catch (e) {
+        console.error(`Failed to get exchange rate for ${currency.code}:`, e);
         return null;
       }
     }
@@ -729,10 +729,7 @@ export class Evaluator {
   /**
    * Evaluate a Value node (number with optional unit)
    */
-  private evaluateValue(
-    expr: NearleyAST.ValueNode,
-    context: EvaluationContext,
-  ): Value {
+  private evaluateValue(expr: NearleyAST.ValueNode): Value {
     const numResult = this.parseNumericalValue(
       expr.value as NearleyAST.NumericalValueNode,
     );
@@ -793,10 +790,7 @@ export class Evaluator {
   /**
    * Evaluate a CompositeValue node (e.g., "5 ft 7 in")
    */
-  private evaluateCompositeValue(
-    expr: NearleyAST.CompositeValueNode,
-    context: EvaluationContext,
-  ): Value {
+  private evaluateCompositeValue(expr: NearleyAST.CompositeValueNode): Value {
     let hasDegreeUnit = false;
     const components: Array<{ value: number; unit: Unit }> = [];
 
@@ -924,10 +918,7 @@ export class Evaluator {
   /**
    * Evaluate Instant node (keyword like 'now' or relative like '2 days ago')
    */
-  private evaluateInstant(
-    expr: NearleyAST.InstantNode,
-    context: EvaluationContext,
-  ): Value {
+  private evaluateInstant(expr: NearleyAST.InstantNode): Value {
     // Keyword instant (now, today, yesterday, tomorrow)
     if ("keyword" in expr) {
       const keywordExpr = expr as NearleyAST.InstantKeywordNode;
@@ -1936,6 +1927,7 @@ export class Evaluator {
           );
           return numVal(leftValue / convertedRight);
         } catch (e) {
+          console.error(`Conversion error during division: ${e}`);
           // Conversion failed, fall through to general case
         }
       }
@@ -2411,7 +2403,11 @@ export class Evaluator {
     }
 
     // Duration * N or Duration / N → Duration (scale duration by a dimensionless number)
-    if (left.kind === "duration" && right.kind === "value" && isDimensionless(right)) {
+    if (
+      left.kind === "duration" &&
+      right.kind === "value" &&
+      isDimensionless(right)
+    ) {
       if (op === "*") {
         return this.scaleDuration(left.duration, right.value);
       }
@@ -2424,7 +2420,11 @@ export class Evaluator {
     }
 
     // N * Duration → Duration (commutative multiplication)
-    if (left.kind === "value" && isDimensionless(left) && right.kind === "duration") {
+    if (
+      left.kind === "value" &&
+      isDimensionless(left) &&
+      right.kind === "duration"
+    ) {
       if (op === "*") {
         return this.scaleDuration(right.duration, left.value);
       }
@@ -2782,7 +2782,7 @@ export class Evaluator {
     const funcArgs = expr.arguments as NearleyAST.ExpressionNode[];
     for (let i = 0; i < funcArgs.length; i++) {
       const argExpr = funcArgs[i];
-      let argValue = this.evaluateExpression(argExpr, context);
+      const argValue = this.evaluateExpression(argExpr, context);
       if (argValue.kind === "error") return argValue;
 
       // For round, floor, ceil, abs, trunc, frac on duration: handle directly
@@ -2824,6 +2824,10 @@ export class Evaluator {
           );
           args.push(convertedValue);
         } catch (error) {
+          console.error(
+            `Unit conversion error in function ${expr.name}:`,
+            error,
+          );
           return this.createError(
             `Cannot convert ${argUnit.displayName.singular} to ${firstArgUnit.displayName.singular} in function call`,
           );
@@ -2868,7 +2872,9 @@ export class Evaluator {
     if (compositeArg) {
       const converted = this.convertCompositeToSingleUnit(compositeArg);
       if (converted.kind === "error") return converted;
-      const funcResult = this.mathFunctions.execute(expr.name, [converted.value]);
+      const funcResult = this.mathFunctions.execute(expr.name, [
+        converted.value,
+      ]);
       if (funcResult.error) return this.createError(funcResult.error);
       // Re-composite into the original units
       const resultAsSimple = numValUnit(funcResult.value, getUnit(converted)!);
@@ -2914,6 +2920,10 @@ export class Evaluator {
           );
           return numValUnit(convertedValue, secondArgUnit);
         } catch (error) {
+          console.error(
+            `Unit conversion error in function result conversion for ${expr.name}:`,
+            error,
+          );
           // If conversion fails, fall back to first argument's unit
           return numValUnit(result.value, firstArgUnit);
         }
@@ -3541,7 +3551,7 @@ export class Evaluator {
     const simplified: Array<{ unit: Unit; exponent: number }> = [];
 
     // For each dimension, check if units can be converted and canceled
-    for (const [dimension, dimTerms] of byDimension) {
+    for (const [_dimension, dimTerms] of byDimension) {
       if (dimTerms.length === 1) {
         // Single unit for this dimension, keep as-is
         simplified.push(dimTerms[0]);
@@ -3916,6 +3926,10 @@ export class Evaluator {
         );
         totalValue += convertedValue;
       } catch (error) {
+        console.error(
+          `Error converting ${component.value} ${component.unit.id} to ${targetUnit.id}:`,
+          error,
+        );
         return this.createError(
           `Cannot convert ${component.unit.displayName.singular} to ${targetUnit.displayName.singular}`,
         );

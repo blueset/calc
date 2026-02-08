@@ -5,7 +5,6 @@ import {
   type PlainDate,
   type PlainTime,
   type PlainDateTime,
-  type Duration,
   type ZonedDateTime,
 } from "../../src/calculator/date-time";
 
