@@ -23,37 +23,12 @@ function PricisionBadge({
 
 function RawValueInfo({ rawValue }: { rawValue: Value }) {
   switch (rawValue.kind) {
-    case "number": {
+    case "value": {
       return (
         <>
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
-              Number
-            </Badge>
-            {rawValue.value}
-            {!!rawValue.unit && (
-              <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
-                {rawValue.unit.displayName.singular}
-                {rawValue.unit.id.startsWith("currency_symbol_")
-                  ? " (ambiguous currency)"
-                  : rawValue.unit.dimension.startsWith("user_defined_")
-                    ? " (user defined)"
-                    : null}
-              </Badge>
-            )}
-            {!!rawValue.precision && (
-              <PricisionBadge precision={rawValue.precision} />
-            )}
-          </div>
-        </>
-      );
-    }
-    case "derivedUnit": {
-      return (
-        <>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
-              Derived Unit
+              Value
             </Badge>
             {rawValue.value}
             {rawValue.terms.map((term) => (
@@ -83,7 +58,14 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
             </Badge>
           </div>
           {rawValue.components.map((comp, index) => (
-            <RawValueInfo key={index} rawValue={{ kind: "number", ...comp }} />
+            <RawValueInfo
+              key={index}
+              rawValue={{
+                kind: "value",
+                terms: [{ unit: comp.unit, exponent: 1 }],
+                ...comp,
+              }}
+            />
           ))}
         </>
       );

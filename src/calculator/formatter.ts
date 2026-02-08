@@ -4,8 +4,7 @@
 
 import type {
   Value,
-  NumberValue,
-  DerivedUnitValue,
+  NumericValue,
   CompositeUnitValue,
   DateTimeValue,
   BooleanValue,
@@ -13,6 +12,7 @@ import type {
   PresentationValue,
   PresentationFormat,
 } from "./evaluator";
+import { getUnit, isDimensionless } from "./evaluator";
 import type { Settings } from "./settings";
 import { defaultSettings } from "./settings";
 import type { Unit } from "./types/types";
@@ -61,10 +61,8 @@ export class Formatter {
     switch (value.kind) {
       case "presentation":
         return "this should never happen";
-      case "number":
-        return this.formatNumberValue(value);
-      case "derivedUnit":
-        return this.formatDerivedUnitValue(value);
+      case "value":
+        return this.formatNumericValue(value);
       case "composite":
         return this.formatCompositeUnitValue(value);
       case "boolean":
@@ -104,26 +102,21 @@ export class Formatter {
     }
 
     // Handle different value types
-    if (innerValue.kind === "number") {
-      // Number with optional unit: format value, append unit
+    if (innerValue.kind === "value") {
       const formattedNumber =
         typeof format === "number"
           ? this.formatBase(innerValue.value, format)
           : this.formatPresentation(innerValue.value, format);
 
-      if (innerValue.unit) {
-        const unitStr = this.formatUnit(innerValue.unit);
+      if (isDimensionless(innerValue)) {
+        return formattedNumber;
+      }
+
+      const simpleUnit = getUnit(innerValue);
+      if (simpleUnit) {
+        const unitStr = this.formatUnit(simpleUnit);
         return `${formattedNumber}${this.getUnitSeparator(unitStr)}${unitStr}`;
       }
-      return formattedNumber;
-    }
-
-    if (innerValue.kind === "derivedUnit") {
-      // Derived unit: format value, append derived unit expression
-      const formattedNumber =
-        typeof format === "number"
-          ? this.formatBase(innerValue.value, format)
-          : this.formatPresentation(innerValue.value, format);
 
       const unitStr = this.formatDerivedUnit(innerValue.terms);
       return `${formattedNumber}${this.getUnitSeparator(unitStr)}${unitStr}`;
@@ -255,73 +248,62 @@ export class Formatter {
   }
 
   /**
-   * Format a number value (with optional unit)
+   * Format a numeric value (dimensionless, simple unit, or derived unit)
    */
-  private formatNumberValue(value: NumberValue): string {
-    // Check if value has precision metadata from conversion
+  private formatNumericValue(value: NumericValue): string {
+    const unit = getUnit(value);
+
+    // Precision metadata from conversion
     if (value.precision) {
       const numStr = this.formatNumberWithPrecision(
         value.value,
         value.precision.count,
         value.precision.mode,
       );
-      if (value.unit) {
-        const unitStr = this.formatUnit(value.unit);
-        // For ambiguous currencies (e.g., $, £, ¥), place symbol before value
-        if (this.isAmbiguousCurrency(value.unit)) {
+      if (unit) {
+        const unitStr = this.formatUnit(unit);
+        if (this.isAmbiguousCurrency(unit)) {
           return `${unitStr}${numStr}`;
         }
+        return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
+      }
+      if (value.terms.length > 0) {
+        const unitStr = this.formatDerivedUnit(value.terms);
         return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
       }
       return numStr;
     }
 
-    // Check if this is a currency that should use currency-specific precision
-    const useCurrencyPrecision =
-      this.settings.precision === -1 &&
-      value.unit &&
-      this.isCurrencyUnit(value.unit);
-
-    const numStr = useCurrencyPrecision
-      ? this.formatCurrencyNumber(value.value, value.unit!)
-      : this.formatNumber(value.value);
-
-    if (value.unit) {
-      const unitStr = this.formatUnit(value.unit);
-
-      // For ambiguous currencies (e.g., $, £, ¥), place symbol before value
-      if (this.isAmbiguousCurrency(value.unit)) {
+    // Simple unit path
+    if (unit) {
+      const useCurrencyPrecision =
+        this.settings.precision === -1 && this.isCurrencyUnit(unit);
+      const numStr = useCurrencyPrecision
+        ? this.formatCurrencyNumber(value.value, unit)
+        : this.formatNumber(value.value);
+      const unitStr = this.formatUnit(unit);
+      if (this.isAmbiguousCurrency(unit)) {
         return `${unitStr}${numStr}`;
       }
-
       return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
     }
-    return numStr;
-  }
 
-  /**
-   * Format a derived unit value (e.g., "50 km/h", "9.8 m/s²")
-   */
-  private formatDerivedUnitValue(value: DerivedUnitValue): string {
-    // Check if there's exactly one unit with positive exponent and it's a currency
-    const positiveTerms = value.terms.filter((t) => t.exponent > 0);
-    const shouldUseCurrencyPrecision =
-      this.settings.precision === -1 &&
-      positiveTerms.length === 1 &&
-      this.isCurrencyUnit(positiveTerms[0].unit);
-
-    const numStr = value.precision
-      ? this.formatNumberWithPrecision(
-          value.value,
-          value.precision.count,
-          value.precision.mode,
-        )
-      : shouldUseCurrencyPrecision
+    // Derived unit path
+    if (value.terms.length > 0) {
+      const positiveTerms = value.terms.filter((t) => t.exponent > 0);
+      const shouldUseCurrencyPrecision =
+        this.settings.precision === -1 &&
+        positiveTerms.length === 1 &&
+        this.isCurrencyUnit(positiveTerms[0].unit);
+      const numStr = shouldUseCurrencyPrecision
         ? this.formatCurrencyNumber(value.value, positiveTerms[0].unit)
         : this.formatNumber(value.value);
+      const unitStr = this.formatDerivedUnit(value.terms);
+      return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
+    }
 
-    const unitStr = this.formatDerivedUnit(value.terms);
-    return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
+    // Dimensionless
+    return this.formatNumber(value.value);
   }
 
   /**

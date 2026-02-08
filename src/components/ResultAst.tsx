@@ -411,7 +411,7 @@ function AstNode({ node }: { node: Node }) {
       const propNode = node as unknown as PropertyTargetNode;
       return (
         <div className="flex flex-row flex-wrap gap-2">
-          <Badge className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+          <Badge className="bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
             Property
           </Badge>
           <span>{propNode.property}</span>

@@ -57,8 +57,7 @@ export type PresentationFormat =
  */
 
 export type Value =
-  | NumberValue
-  | DerivedUnitValue
+  | NumericValue
   | CompositeUnitValue
   | DateTimeValue
   | BooleanValue
@@ -72,31 +71,83 @@ export type Value =
 export interface PresentationValue {
   kind: "presentation";
   format: PresentationFormat | number; // Format string OR base number (2-36)
-  innerValue: Value; // Can be NumberValue, DerivedUnitValue, or CompositeUnitValue
+  innerValue: Value; // Can be NumericValue or CompositeUnitValue
 }
 
 /**
- * Number value (with optional unit)
+ * Unified numeric value — covers dimensionless numbers, simple units, and derived units.
+ * terms: [] = dimensionless, [{unit, exponent:1}] = simple unit, multiple/non-1 = derived
  */
-export interface NumberValue {
-  kind: "number";
+export interface NumericValue {
+  kind: "value";
   value: number;
-  unit?: Unit; // undefined = dimensionless
-  precision?: { count: number; mode: "decimals" | "sigfigs" }; // For formatting
-}
-
-/**
- * Derived unit value (e.g., "50 km/h", "9.8 m/s²")
- * Uses signed exponents: positive for numerator, negative for denominator
- */
-export interface DerivedUnitValue {
-  kind: "derivedUnit";
-  value: number;
-  terms: Array<{
-    unit: Unit;
-    exponent: number;
-  }>;
+  terms: Array<{ unit: Unit; exponent: number }>; // [] = dimensionless
   precision?: { count: number; mode: "decimals" | "sigfigs" };
+}
+
+// ── NumericValue factory functions ──────────────────────────────────
+
+/** Create a dimensionless numeric value */
+export function numVal(
+  value: number,
+  precision?: { count: number; mode: "decimals" | "sigfigs" },
+): NumericValue {
+  return precision
+    ? { kind: "value", value, terms: [], precision }
+    : { kind: "value", value, terms: [] };
+}
+
+/** Create a numeric value with a single unit */
+export function numValUnit(
+  value: number,
+  unit: Unit,
+  precision?: { count: number; mode: "decimals" | "sigfigs" },
+): NumericValue {
+  return precision
+    ? { kind: "value", value, terms: [{ unit, exponent: 1 }], precision }
+    : { kind: "value", value, terms: [{ unit, exponent: 1 }] };
+}
+
+/** Create a numeric value with arbitrary unit terms */
+export function numValTerms(
+  value: number,
+  terms: Array<{ unit: Unit; exponent: number }>,
+  precision?: { count: number; mode: "decimals" | "sigfigs" },
+): NumericValue {
+  return precision
+    ? { kind: "value", value, terms, precision }
+    : { kind: "value", value, terms };
+}
+
+// ── NumericValue query functions ────────────────────────────────────
+
+/** Get the simple unit if terms is exactly [{unit, exponent:1}], else undefined */
+export function getUnit(v: NumericValue): Unit | undefined {
+  return v.terms.length === 1 && v.terms[0].exponent === 1
+    ? v.terms[0].unit
+    : undefined;
+}
+
+/** True when terms is empty (dimensionless) */
+export function isDimensionless(v: NumericValue): boolean {
+  return v.terms.length === 0;
+}
+
+/** True when there is exactly one term with exponent 1 */
+export function isSimpleUnit(v: NumericValue): boolean {
+  return v.terms.length === 1 && v.terms[0].exponent === 1;
+}
+
+/** True when there are multiple terms or a non-1 exponent */
+export function isDerived(v: NumericValue): boolean {
+  return (
+    v.terms.length > 1 || (v.terms.length === 1 && v.terms[0].exponent !== 1)
+  );
+}
+
+/** True when v is a NumericValue */
+export function isNumericValue(v: Value): v is NumericValue {
+  return v.kind === "value";
 }
 
 /**
@@ -654,7 +705,7 @@ export class Evaluator {
   }
 
   /**
-   * Resolve Nearley UnitsNode terms to DerivedUnitValue terms
+   * Resolve Nearley UnitsNode terms to NumericValue terms
    */
   private resolveNearleyUnitTerms(
     node: NearleyAST.UnitsNode,
@@ -689,7 +740,7 @@ export class Evaluator {
     const numValue = numResult;
 
     if (expr.unit === null) {
-      return { kind: "number", value: numValue };
+      return numVal(numValue);
     }
 
     const unitNode = expr.unit as
@@ -702,7 +753,7 @@ export class Evaluator {
       if (!unit) {
         return this.createError(`Unknown currency: ${unitNode.name}`);
       }
-      return { kind: "number", value: numValue, unit };
+      return numValUnit(numValue, unit);
     }
 
     // Handle UnitsNode
@@ -719,7 +770,7 @@ export class Evaluator {
           `Unknown unit “${unitsNode.terms.map((t) => t.unit.name).join(" ")}” in derived unit literal`,
         );
       }
-      return { kind: "derivedUnit", value: numValue, terms };
+      return numValTerms(numValue, terms);
     }
 
     // Simple unit
@@ -733,10 +784,10 @@ export class Evaluator {
     // Auto-convert dimensionless units to pure numbers
     if (unit.dimension === "dimensionless") {
       const convertedValue = this.unitConverter.toBaseUnit(numValue, unit);
-      return { kind: "number", value: convertedValue };
+      return numVal(convertedValue);
     }
 
-    return { kind: "number", value: numValue, unit };
+    return numValUnit(numValue, unit);
   }
 
   /**
@@ -808,7 +859,7 @@ export class Evaluator {
     // If not found as variable, check if it's a unit name
     const unit = this.dataLoader.getUnitByName(expr.name);
     if (unit) {
-      return { kind: "number", value: 1, unit };
+      return numValUnit(1, unit);
     }
 
     return this.createError(`Undefined variable: ${expr.name}`);
@@ -822,7 +873,7 @@ export class Evaluator {
     if (constantValue === undefined) {
       return this.createError(`Unknown constant: ${expr.name}`);
     }
-    return { kind: "number", value: constantValue };
+    return numVal(constantValue);
   }
 
   /**
@@ -1129,9 +1180,10 @@ export class Evaluator {
       }
 
       // Check if all targets have same dimension as source (true composite)
-      if (value.kind === "number" && value.unit) {
+      if (value.kind === "value" && isSimpleUnit(value)) {
+        const srcUnit = getUnit(value)!;
         const allSameDimension = resolvedUnits.every(
-          (u) => u.dimension === value.unit!.dimension,
+          (u) => u.dimension === srcUnit.dimension,
         );
         if (allSameDimension) {
           return this.convertToCompositeUnitResolved(value, resolvedUnits);
@@ -1139,7 +1191,7 @@ export class Evaluator {
       }
 
       // Handle derived unit source → composite target (e.g. GiB/Mbps to minutes seconds)
-      if (value.kind === "derivedUnit") {
+      if (value.kind === "value") {
         const sourceDim = this.computeDimension(value.terms);
         const allSameDimension = resolvedUnits.every((u) => {
           const uDim = this.computeDimension([{ unit: u, exponent: 1 }]);
@@ -1195,10 +1247,11 @@ export class Evaluator {
         );
       }
       const result = this.unitConverter.fromBaseUnit(totalInBase, targetUnit);
-      return { kind: "number", value: result, unit: targetUnit };
+      return numValUnit(result, targetUnit);
     }
 
-    if (value.kind === "derivedUnit") {
+    // Derived unit → simple unit conversion (factor-based)
+    if (value.kind === "value" && isDerived(value)) {
       const sourceTerms = value.terms;
       const targetTerms: Array<{ unit: Unit; exponent: number }> = [
         { unit: targetUnit, exponent: 1 },
@@ -1220,7 +1273,7 @@ export class Evaluator {
       }
 
       const result = this.unitConverter.fromBaseUnit(valueInBase, targetUnit);
-      return { kind: "number", value: result, unit: targetUnit };
+      return numValUnit(result, targetUnit);
     }
 
     // Duration → implicit conversion to number/composite, then convert to target unit
@@ -1230,31 +1283,33 @@ export class Evaluator {
       return this.convertToSimpleUnit(asValue, targetUnit);
     }
 
-    if (value.kind !== "number") {
+    if (value.kind !== "value") {
       return this.createError(
         `Cannot convert ${value.kind} to unit ${targetUnit.displayName.symbol}`,
       );
     }
 
-    if (!value.unit) {
+    if (isDimensionless(value)) {
       return this.createError(
         `Cannot convert dimensionless value to unit ${targetUnit.displayName.symbol}`,
       );
     }
 
-    if (value.unit.dimension !== targetUnit.dimension) {
+    // Simple unit → simple unit conversion (handles affine conversions like temperature)
+    const srcUnit = getUnit(value);
+    if (!srcUnit || srcUnit.dimension !== targetUnit.dimension) {
       return this.createError(
-        `Cannot convert from dimension ${value.unit.dimension} to ${targetUnit.dimension} for unit ${targetUnit.displayName.symbol}`,
+        `Cannot convert from dimension ${srcUnit?.dimension ?? "dimensionless"} to ${targetUnit.dimension} for unit ${targetUnit.displayName.symbol}`,
       );
     }
 
     try {
       const converted = this.unitConverter.convert(
         value.value,
-        value.unit,
+        srcUnit,
         targetUnit,
       );
-      return { kind: "number", value: converted, unit: targetUnit };
+      return numValUnit(converted, targetUnit);
     } catch (e) {
       return this.createError(`Conversion error: ${e}`);
     }
@@ -1277,15 +1332,12 @@ export class Evaluator {
     let sourceValue: number;
     let sourceTerms: Array<{ unit: Unit; exponent: number }>;
 
-    if (value.kind === "number") {
-      if (!value.unit) {
+    if (value.kind === "value") {
+      if (isDimensionless(value)) {
         return this.createError(
           "Cannot convert dimensionless value to derived unit",
         );
       }
-      sourceValue = value.value;
-      sourceTerms = [{ unit: value.unit, exponent: 1 }];
-    } else if (value.kind === "derivedUnit") {
       sourceValue = value.value;
       sourceTerms = value.terms;
     } else {
@@ -1317,11 +1369,7 @@ export class Evaluator {
       result *= Math.pow(factorFromBase, term.exponent);
     }
 
-    return {
-      kind: "derivedUnit",
-      value: result,
-      terms: targetTerms,
-    };
+    return numValTerms(result, targetTerms);
   }
 
   /**
@@ -1331,13 +1379,14 @@ export class Evaluator {
     value: Value,
     resolvedUnits: Unit[],
   ): Value {
-    if (value.kind !== "number" || !value.unit) {
+    if (value.kind !== "value" || !isSimpleUnit(value)) {
       return this.createError("Cannot convert to composite unit");
     }
+    const compSrcUnit = getUnit(value)!;
 
     try {
       const result = this.unitConverter.convertComposite(
-        [{ value: value.value, unitId: value.unit.id }],
+        [{ value: value.value, unitId: compSrcUnit.id }],
         resolvedUnits.map((u) => u.id),
       );
 
@@ -1558,30 +1607,37 @@ export class Evaluator {
       if (convertedRight.kind === "error") return convertedRight;
     }
 
-    // For numbers, convert to same unit if needed
-    if (convertedLeft.kind === "number" && convertedRight.kind === "number") {
+    // For simple numbers (dimensionless or single unit), convert to same unit if needed
+    if (
+      convertedLeft.kind === "value" &&
+      convertedRight.kind === "value" &&
+      !isDerived(convertedLeft) &&
+      !isDerived(convertedRight)
+    ) {
       const leftNum = convertedLeft;
       const rightNum = convertedRight;
       const leftValue = leftNum.value;
       let rightValue = rightNum.value;
 
       // If both have units, convert right to left's unit
-      if (leftNum.unit && rightNum.unit) {
-        if (leftNum.unit.dimension !== rightNum.unit.dimension) {
+      const leftCmpU = getUnit(leftNum);
+      const rightCmpU = getUnit(rightNum);
+      if (leftCmpU && rightCmpU) {
+        if (leftCmpU.dimension !== rightCmpU.dimension) {
           return this.createError(
-            `Cannot compare values with dimensions ${leftNum.unit.dimension} and ${rightNum.unit.dimension}`,
+            `Cannot compare values with dimensions ${leftCmpU.dimension} and ${rightCmpU.dimension}`,
           );
         }
         try {
           rightValue = this.unitConverter.convert(
             rightNum.value,
-            rightNum.unit,
-            leftNum.unit,
+            rightCmpU,
+            leftCmpU,
           );
         } catch (e) {
           return this.createError(`Conversion error: ${e}`);
         }
-      } else if (leftNum.unit || rightNum.unit) {
+      } else if (leftCmpU || rightCmpU) {
         // One has unit, other doesn't
         return this.createError(
           `Cannot compare dimensioned and dimensionless values`,
@@ -1604,14 +1660,12 @@ export class Evaluator {
       }
     }
 
-    // For derived units or mixed number+derivedUnit comparisons
-    const isNumeric = (v: Value) =>
-      v.kind === "number" || v.kind === "derivedUnit";
-    if (isNumeric(convertedLeft) && isNumeric(convertedRight)) {
-      const l = convertedLeft as NumberValue | DerivedUnitValue;
-      const r = convertedRight as NumberValue | DerivedUnitValue;
-      const leftTerms = this.extractTerms(l);
-      const rightTerms = this.extractTerms(r);
+    // For derived units or mixed numeric comparisons
+    if (isNumericValue(convertedLeft) && isNumericValue(convertedRight)) {
+      const l = convertedLeft;
+      const r = convertedRight;
+      const leftTerms = l.terms;
+      const rightTerms = r.terms;
 
       // Both must have units (dimensionless numbers handled above)
       if (leftTerms.length === 0 || rightTerms.length === 0) {
@@ -1683,10 +1737,15 @@ export class Evaluator {
     let convertedRight = right;
 
     // If left is a date/time type and right is a number with time dimension, convert right to duration
-    if (this.isDateTime(left) && right.kind === "number" && right.unit) {
-      if (right.unit.dimension === "time") {
+    if (
+      this.isDateTime(left) &&
+      right.kind === "value" &&
+      isSimpleUnit(right)
+    ) {
+      const rightTimeUnit = getUnit(right)!;
+      if (rightTimeUnit.dimension === "time") {
         // Convert to duration
-        const duration = this.convertTimeToDuration(right.value, right.unit);
+        const duration = this.convertTimeToDuration(right.value, rightTimeUnit);
         convertedRight = { kind: "duration", duration };
       }
     }
@@ -1724,15 +1783,9 @@ export class Evaluator {
       }
     }
 
-    // Handle number and derived unit arithmetic
-    const isNumeric = (v: Value) =>
-      v.kind === "number" || v.kind === "derivedUnit";
-    if (isNumeric(convertedLeft) && isNumeric(convertedRight)) {
-      return this.evaluateNumberArithmetic(
-        op,
-        convertedLeft as NumberValue | DerivedUnitValue,
-        convertedRight as NumberValue | DerivedUnitValue,
-      );
+    // Handle numeric arithmetic
+    if (isNumericValue(convertedLeft) && isNumericValue(convertedRight)) {
+      return this.evaluateNumberArithmetic(op, convertedLeft, convertedRight);
     }
 
     return this.createError(
@@ -1745,65 +1798,51 @@ export class Evaluator {
    */
   private evaluateNumberArithmetic(
     op: "+" | "-" | "*" | "/" | "%" | "mod" | "per" | "^",
-    left: NumberValue | DerivedUnitValue,
-    right: NumberValue | DerivedUnitValue,
+    left: NumericValue,
+    right: NumericValue,
   ): Value {
     const leftValue = left.value;
     const rightValue = right.value;
 
-    // Extract unit information
-    const leftUnit = left.kind === "number" ? left.unit : undefined;
-    const rightUnit = right.kind === "number" ? right.unit : undefined;
-    const leftIsDerived = left.kind === "derivedUnit";
-    const rightIsDerived = right.kind === "derivedUnit";
-
     // Addition and subtraction require same dimension
     if (op === "+" || op === "-") {
       // Both dimensionless numbers
-      if (
-        left.kind === "number" &&
-        !left.unit &&
-        right.kind === "number" &&
-        !right.unit
-      ) {
+      if (isDimensionless(left) && isDimensionless(right)) {
         const result =
           op === "+" ? leftValue + rightValue : leftValue - rightValue;
-        return { kind: "number", value: result };
+        return numVal(result);
       }
 
       // Both simple units - must be same dimension
-      if (
-        left.kind === "number" &&
-        left.unit &&
-        right.kind === "number" &&
-        right.unit
-      ) {
-        if (left.unit.dimension !== right.unit.dimension) {
+      const leftU = getUnit(left);
+      const rightU = getUnit(right);
+      if (leftU && rightU) {
+        if (leftU.dimension !== rightU.dimension) {
           return this.createError(
-            `Cannot ${op === "+" ? "add" : "subtract"} values between dimensions ${left.unit.dimension} and ${right.unit.dimension}`,
+            `Cannot ${op === "+" ? "add" : "subtract"} values between dimensions ${leftU.dimension} and ${rightU.dimension}`,
           );
         }
 
         try {
           const convertedRight = this.unitConverter.convert(
             rightValue,
-            right.unit,
-            left.unit,
+            rightU,
+            leftU,
           );
           const result =
             op === "+"
               ? leftValue + convertedRight
               : leftValue - convertedRight;
-          return { kind: "number", value: result, unit: left.unit };
+          return numValUnit(result, leftU);
         } catch (e) {
           return this.createError(`Conversion error: ${e}`);
         }
       }
 
-      // Derived units or mixed (NumberValue with unit + DerivedUnitValue)
+      // Derived units or mixed
       // Convert both to base units, perform op, convert back to left's form
-      const leftTerms = this.extractTerms(left);
-      const rightTerms = this.extractTerms(right);
+      const leftTerms = left.terms;
+      const rightTerms = right.terms;
 
       // Both must have units
       if (leftTerms.length === 0 || rightTerms.length === 0) {
@@ -1846,14 +1885,7 @@ export class Evaluator {
       }
 
       // Return in the left operand's form
-      if (left.kind === "number" && left.unit) {
-        return { kind: "number", value: finalResult, unit: left.unit };
-      }
-      return {
-        kind: "derivedUnit",
-        value: finalResult,
-        terms: leftTerms,
-      };
+      return numValTerms(finalResult, leftTerms);
     }
 
     // Multiplication - combine units
@@ -1871,20 +1903,16 @@ export class Evaluator {
       const result = leftValue / rightValue;
 
       // Special case: same dimension with simple units - try to convert and simplify
-      if (
-        left.kind === "number" &&
-        right.kind === "number" &&
-        left.unit &&
-        right.unit &&
-        left.unit.dimension === right.unit.dimension
-      ) {
+      const divLeftU = getUnit(left);
+      const divRightU = getUnit(right);
+      if (divLeftU && divRightU && divLeftU.dimension === divRightU.dimension) {
         try {
           const convertedRight = this.unitConverter.convert(
             rightValue,
-            right.unit,
-            left.unit,
+            divRightU,
+            divLeftU,
           );
-          return { kind: "number", value: leftValue / convertedRight };
+          return numVal(leftValue / convertedRight);
         } catch (e) {
           // Conversion failed, fall through to general case
         }
@@ -1896,33 +1924,29 @@ export class Evaluator {
 
     // Modulo
     if (op === "%" || op === "mod") {
-      if (
-        left.kind === "number" &&
-        !left.unit &&
-        right.kind === "number" &&
-        !right.unit
-      ) {
+      if (isDimensionless(left) && isDimensionless(right)) {
         if (rightValue === 0) {
           return this.createError("Modulo by zero");
         }
-        return { kind: "number", value: leftValue % rightValue };
+        return numVal(leftValue % rightValue);
       }
       return this.createError("Modulo requires dimensionless values");
     }
 
     // Power
     if (op === "^") {
-      if (right.kind === "number" && !right.unit) {
+      if (isDimensionless(right)) {
         const result = Math.pow(leftValue, rightValue);
 
         // Handle exponentiation of units
-        if (left.kind === "number" && left.unit) {
+        const powLeftU = getUnit(left);
+        if (powLeftU) {
           // (5 m)^2 → 25 m²
           // (16 m²)^0.5 → 4 m (need to expand derived dimensions)
 
           // Check if this unit's dimension is derived
           const dimension = this.dataLoader.getDimensionById(
-            left.unit.dimension,
+            powLeftU.dimension,
           );
           if (
             dimension &&
@@ -1955,22 +1979,16 @@ export class Evaluator {
                 exponent: baseDim.exponent * rightValue,
               });
             }
-            return {
-              kind: "derivedUnit",
-              value: result,
-              terms: expandedTerms,
-            };
+            return numValTerms(result, expandedTerms);
           } else {
             // Simple base dimension unit
-            return {
-              kind: "derivedUnit",
-              value: result,
-              terms: [{ unit: left.unit, exponent: rightValue }],
-            };
+            return numValTerms(result, [
+              { unit: powLeftU, exponent: rightValue },
+            ]);
           }
         }
 
-        if (left.kind === "derivedUnit") {
+        if (isDerived(left)) {
           // (3 m/s)^2 → 9 m²/s²
           // Multiply all term exponents by the power
           // Also need to expand any derived dimensions in the terms
@@ -2018,19 +2036,11 @@ export class Evaluator {
             }
           }
 
-          return {
-            kind: "derivedUnit",
-            value: result,
-            terms: newTerms,
-          };
+          return numValTerms(result, newTerms);
         }
 
         // Dimensionless number
-        if (left.kind === "number") {
-          return { kind: "number", value: result };
-        }
-
-        return this.createError("Cannot exponentiate this type");
+        return numVal(result);
       }
       return this.createError(
         `Exponent must be dimensionless, got ${right.kind}`,
@@ -2555,16 +2565,14 @@ export class Evaluator {
     left: Value,
     right: Value,
   ): Value {
-    if (left.kind !== "number" || right.kind !== "number") {
+    if (left.kind !== "value" || right.kind !== "value") {
       return this.createError(
         `Bitwise operators require numbers, got ${left.kind} and ${right.kind}`,
       );
     }
 
-    if (left.unit || right.unit) {
-      return this.createError(
-        `Bitwise operators require dimensionless values, got ${left.unit || "none"} and ${right.unit || "none"}`,
-      );
+    if (!isDimensionless(left) || !isDimensionless(right)) {
+      return this.createError(`Bitwise operators require dimensionless values`);
     }
 
     const leftInt = Math.trunc(left.value);
@@ -2589,7 +2597,7 @@ export class Evaluator {
         break;
     }
 
-    return { kind: "number", value: result };
+    return numVal(result);
   }
 
   /**
@@ -2608,8 +2616,8 @@ export class Evaluator {
     const op = expr.operator;
 
     if (op === "minus") {
-      if (operand.kind === "number") {
-        return { kind: "number", value: -operand.value, unit: operand.unit };
+      if (operand.kind === "value") {
+        return numValTerms(-operand.value, operand.terms, operand.precision);
       }
       if (operand.kind === "composite") {
         // Negate each component of the composite unit
@@ -2635,17 +2643,15 @@ export class Evaluator {
     }
 
     if (op === "tilde") {
-      if (operand.kind !== "number") {
+      if (operand.kind !== "value") {
         return this.createError(
           `Bitwise NOT requires a number, got ${operand.kind}`,
         );
       }
-      if (operand.unit) {
-        return this.createError(
-          `Bitwise NOT requires dimensionless value, got ${operand.unit}`,
-        );
+      if (!isDimensionless(operand)) {
+        return this.createError(`Bitwise NOT requires dimensionless value`);
       }
-      return { kind: "number", value: ~Math.trunc(operand.value) };
+      return numVal(~Math.trunc(operand.value));
     }
 
     return this.createError(`Unknown unary operator: ${op}`);
@@ -2665,15 +2671,13 @@ export class Evaluator {
     if (operand.kind === "error") return operand;
 
     if (expr.operator === "bang") {
-      if (operand.kind !== "number") {
+      if (operand.kind !== "value") {
         return this.createError(
           `Factorial requires a number, got ${operand.kind}`,
         );
       }
-      if (operand.unit) {
-        return this.createError(
-          `Factorial requires dimensionless value, got ${operand.unit}`,
-        );
+      if (!isDimensionless(operand)) {
+        return this.createError(`Factorial requires dimensionless value`);
       }
 
       const n = operand.value;
@@ -2688,7 +2692,7 @@ export class Evaluator {
         result *= i;
       }
 
-      return { kind: "number", value: result };
+      return numVal(result);
     }
 
     return this.createError(`Unknown postfix operator: ${expr.operator}`);
@@ -2731,46 +2735,41 @@ export class Evaluator {
         break; // Duration functions only take one argument
       }
 
-      if (argValue.kind !== "number") {
+      if (argValue.kind !== "value") {
         return this.createError(
           `Function argument must be a number, got ${argValue.kind}`,
         );
       }
 
       // Capture the first argument's unit if the function preserves units
-      if (preservesUnits && i === 0 && "unit" in argValue) {
-        firstArgUnit = argValue.unit;
+      if (preservesUnits && i === 0) {
+        firstArgUnit = getUnit(argValue);
       }
 
       // For functions with "nearest" parameter (round, floor, ceil, trunc),
       // convert subsequent arguments with units to match the first argument's unit
-      if (
-        preservesUnits &&
-        i > 0 &&
-        firstArgUnit &&
-        "unit" in argValue &&
-        argValue.unit
-      ) {
+      const argUnit = getUnit(argValue);
+      if (preservesUnits && i > 0 && firstArgUnit && argUnit) {
         // Capture the second argument's unit for result conversion
         if (i === 1) {
-          secondArgUnit = argValue.unit;
+          secondArgUnit = argUnit;
         }
         try {
           const convertedValue = this.unitConverter.convert(
             argValue.value,
-            argValue.unit,
+            argUnit,
             firstArgUnit,
           );
           args.push(convertedValue);
         } catch (error) {
           return this.createError(
-            `Cannot convert ${argValue.unit.displayName.singular} to ${firstArgUnit.displayName.singular} in function call`,
+            `Cannot convert ${argUnit.displayName.singular} to ${firstArgUnit.displayName.singular} in function call`,
           );
         }
       }
       // For trig functions, convert angle to radians if needed
       else if (
-        (argValue.unit?.id || this.settings.angleUnit) === "degree" &&
+        (getUnit(argValue)?.id || this.settings.angleUnit) === "degree" &&
         this.isTrigFunction(expr.name)
       ) {
         args.push(this.degreesToRadians(argValue.value));
@@ -2822,10 +2821,10 @@ export class Evaluator {
           : result.value;
 
       if (angleUnit) {
-        return { kind: "number", value: numericValue, unit: angleUnit };
+        return numValUnit(numericValue, angleUnit);
       }
 
-      return { kind: "number", value: numericValue };
+      return numVal(numericValue);
     }
 
     // Return result with preserved unit if applicable
@@ -2839,16 +2838,16 @@ export class Evaluator {
             firstArgUnit,
             secondArgUnit,
           );
-          return { kind: "number", value: convertedValue, unit: secondArgUnit };
+          return numValUnit(convertedValue, secondArgUnit);
         } catch (error) {
           // If conversion fails, fall back to first argument's unit
-          return { kind: "number", value: result.value, unit: firstArgUnit };
+          return numValUnit(result.value, firstArgUnit);
         }
       }
-      return { kind: "number", value: result.value, unit: firstArgUnit };
+      return numValUnit(result.value, firstArgUnit);
     }
 
-    return { kind: "number", value: result.value };
+    return numVal(result.value);
   }
 
   /**
@@ -2939,11 +2938,7 @@ export class Evaluator {
     }
 
     // Validate that value is numeric type (number, derivedUnit, or composite)
-    if (
-      value.kind !== "number" &&
-      value.kind !== "derivedUnit" &&
-      value.kind !== "composite"
-    ) {
+    if (value.kind !== "value" && value.kind !== "composite") {
       const formatName = typeof format === "number" ? `base ${format}` : format;
       return this.createError(
         `${formatName} format requires a numeric value, got ${value.kind}`,
@@ -2959,12 +2954,12 @@ export class Evaluator {
 
     // Percentage format requires unitless numeric value
     if (format === "percentage") {
-      if (value.kind !== "number") {
+      if (value.kind !== "value") {
         return this.createError(
           `percentage format requires a unitless numeric value, got ${value.kind}`,
         );
       }
-      if (value.unit) {
+      if (!isDimensionless(value)) {
         return this.createError(
           `percentage format requires a unitless numeric value`,
         );
@@ -2973,14 +2968,7 @@ export class Evaluator {
 
     // Ordinal format requires integers
     if (format === "ordinal") {
-      if (value.kind === "number" && !Number.isInteger(value.value)) {
-        return this.createError(
-          `ordinal format requires integer values, got ${value.value}`,
-        );
-      } else if (
-        value.kind === "derivedUnit" &&
-        !Number.isInteger(value.value)
-      ) {
+      if (value.kind === "value" && !Number.isInteger(value.value)) {
         return this.createError(
           `ordinal format requires integer values, got ${value.value}`,
         );
@@ -3044,7 +3032,7 @@ export class Evaluator {
       ? Number(epochNanoseconds / 1_000_000n) // Convert to milliseconds
       : Number(epochNanoseconds / 1_000_000_000n); // Convert to seconds
 
-    return { kind: "number", value: result };
+    return numVal(result);
   }
 
   /**
@@ -3064,17 +3052,17 @@ export class Evaluator {
 
       switch (property) {
         case "year":
-          return { kind: "number", value: date.year };
+          return numVal(date.year);
         case "month":
-          return { kind: "number", value: date.month };
+          return numVal(date.month);
         case "day":
-          return { kind: "number", value: date.day };
+          return numVal(date.day);
         case "dayOfWeek":
-          return { kind: "number", value: temporal.dayOfWeek };
+          return numVal(temporal.dayOfWeek);
         case "dayOfYear":
-          return { kind: "number", value: temporal.dayOfYear };
+          return numVal(temporal.dayOfYear);
         case "weekOfYear":
-          return { kind: "number", value: temporal.weekOfYear ?? 0 };
+          return numVal(temporal.weekOfYear ?? 0);
         default:
           return this.createError(`Cannot extract ${property} from PlainDate`);
       }
@@ -3084,13 +3072,13 @@ export class Evaluator {
       const time = value.time;
       switch (property) {
         case "hour":
-          return { kind: "number", value: time.hour };
+          return numVal(time.hour);
         case "minute":
-          return { kind: "number", value: time.minute };
+          return numVal(time.minute);
         case "second":
-          return { kind: "number", value: time.second };
+          return numVal(time.second);
         case "millisecond":
-          return { kind: "number", value: time.millisecond || 0 };
+          return numVal(time.millisecond || 0);
         default:
           return this.createError(`Cannot extract ${property} from PlainTime`);
       }
@@ -3110,25 +3098,25 @@ export class Evaluator {
 
       switch (property) {
         case "year":
-          return { kind: "number", value: dt.date.year };
+          return numVal(dt.date.year);
         case "month":
-          return { kind: "number", value: dt.date.month };
+          return numVal(dt.date.month);
         case "day":
-          return { kind: "number", value: dt.date.day };
+          return numVal(dt.date.day);
         case "hour":
-          return { kind: "number", value: dt.time.hour };
+          return numVal(dt.time.hour);
         case "minute":
-          return { kind: "number", value: dt.time.minute };
+          return numVal(dt.time.minute);
         case "second":
-          return { kind: "number", value: dt.time.second };
+          return numVal(dt.time.second);
         case "millisecond":
-          return { kind: "number", value: dt.time.millisecond || 0 };
+          return numVal(dt.time.millisecond || 0);
         case "dayOfWeek":
-          return { kind: "number", value: temporal.dayOfWeek };
+          return numVal(temporal.dayOfWeek);
         case "dayOfYear":
-          return { kind: "number", value: temporal.dayOfYear };
+          return numVal(temporal.dayOfYear);
         case "weekOfYear":
-          return { kind: "number", value: temporal.weekOfYear ?? 0 };
+          return numVal(temporal.weekOfYear ?? 0);
         default:
           return this.createError(
             `Cannot extract ${property} from PlainDateTime`,
@@ -3151,25 +3139,25 @@ export class Evaluator {
 
       switch (property) {
         case "year":
-          return { kind: "number", value: zdt.dateTime.date.year };
+          return numVal(zdt.dateTime.date.year);
         case "month":
-          return { kind: "number", value: zdt.dateTime.date.month };
+          return numVal(zdt.dateTime.date.month);
         case "day":
-          return { kind: "number", value: zdt.dateTime.date.day };
+          return numVal(zdt.dateTime.date.day);
         case "hour":
-          return { kind: "number", value: zdt.dateTime.time.hour };
+          return numVal(zdt.dateTime.time.hour);
         case "minute":
-          return { kind: "number", value: zdt.dateTime.time.minute };
+          return numVal(zdt.dateTime.time.minute);
         case "second":
-          return { kind: "number", value: zdt.dateTime.time.second };
+          return numVal(zdt.dateTime.time.second);
         case "millisecond":
-          return { kind: "number", value: zdt.dateTime.time.millisecond || 0 };
+          return numVal(zdt.dateTime.time.millisecond || 0);
         case "dayOfWeek":
-          return { kind: "number", value: temporal.dayOfWeek };
+          return numVal(temporal.dayOfWeek);
         case "dayOfYear":
-          return { kind: "number", value: temporal.dayOfYear };
+          return numVal(temporal.dayOfYear);
         case "weekOfYear":
-          return { kind: "number", value: temporal.weekOfYear ?? 0 };
+          return numVal(temporal.weekOfYear ?? 0);
         case "offset": {
           // Return offset as a duration or number with minute unit
           const offsetNanoseconds = temporal.offsetNanoseconds;
@@ -3179,7 +3167,7 @@ export class Evaluator {
             if (!minuteUnit) {
               return this.createError("Minute unit not found");
             }
-            return { kind: "number", value: 0, unit: minuteUnit };
+            return numValUnit(0, minuteUnit);
           }
           try {
             const duration = Temporal.Duration.from({
@@ -3212,25 +3200,25 @@ export class Evaluator {
 
       switch (property) {
         case "year":
-          return { kind: "number", value: temporal.year };
+          return numVal(temporal.year);
         case "month":
-          return { kind: "number", value: temporal.month };
+          return numVal(temporal.month);
         case "day":
-          return { kind: "number", value: temporal.day };
+          return numVal(temporal.day);
         case "hour":
-          return { kind: "number", value: temporal.hour };
+          return numVal(temporal.hour);
         case "minute":
-          return { kind: "number", value: temporal.minute };
+          return numVal(temporal.minute);
         case "second":
-          return { kind: "number", value: temporal.second };
+          return numVal(temporal.second);
         case "millisecond":
-          return { kind: "number", value: temporal.millisecond };
+          return numVal(temporal.millisecond);
         case "dayOfWeek":
-          return { kind: "number", value: temporal.dayOfWeek };
+          return numVal(temporal.dayOfWeek);
         case "dayOfYear":
-          return { kind: "number", value: temporal.dayOfYear };
+          return numVal(temporal.dayOfYear);
         case "weekOfYear":
-          return { kind: "number", value: temporal.weekOfYear ?? 0 };
+          return numVal(temporal.weekOfYear ?? 0);
         case "offset": {
           const offsetNanoseconds = temporal.offsetNanoseconds;
           if (offsetNanoseconds === 0) {
@@ -3238,7 +3226,7 @@ export class Evaluator {
             if (!minuteUnit) {
               return this.createError("Minute unit not found");
             }
-            return { kind: "number", value: 0, unit: minuteUnit };
+            return numValUnit(0, minuteUnit);
           }
           try {
             const duration = Temporal.Duration.from({
@@ -3358,20 +3346,12 @@ export class Evaluator {
     precision: number,
     mode: "decimals" | "sigfigs",
   ): Value {
-    if (value.kind === "number") {
-      return {
-        kind: "number",
-        value: this.applyPrecisionToNumber(value.value, precision, mode),
-        unit: value.unit,
-        precision: { count: precision, mode },
-      };
-    } else if (value.kind === "derivedUnit") {
-      return {
-        kind: "derivedUnit",
-        value: this.applyPrecisionToNumber(value.value, precision, mode),
-        terms: value.terms,
-        precision: { count: precision, mode },
-      };
+    if (value.kind === "value") {
+      return numValTerms(
+        this.applyPrecisionToNumber(value.value, precision, mode),
+        value.terms,
+        { count: precision, mode },
+      );
     } else if (value.kind === "composite") {
       const adjustedComponents = value.components.map((comp) => ({
         value: this.applyPrecisionToNumber(comp.value, precision, mode),
@@ -3385,18 +3365,6 @@ export class Evaluator {
   }
 
   // Helper methods
-
-  /**
-   * Extract terms from a numeric value (number, NumberValue, or DerivedUnitValue)
-   */
-  private extractTerms(
-    value: NumberValue | DerivedUnitValue,
-  ): Array<{ unit: Unit; exponent: number }> {
-    if (value.kind === "number") {
-      return value.unit ? [{ unit: value.unit, exponent: 1 }] : [];
-    }
-    return value.terms;
-  }
 
   /**
    * Combine terms from multiplication or division operations
@@ -3493,40 +3461,16 @@ export class Evaluator {
   }
 
   /**
-   * Create result value from combined terms
-   */
-  private createValueFromTerms(
-    value: number,
-    terms: Array<{ unit: Unit; exponent: number }>,
-  ): NumberValue | DerivedUnitValue {
-    // No terms - dimensionless
-    if (terms.length === 0) {
-      return { kind: "number", value };
-    }
-
-    // Single term with exponent 1 - simple unit
-    if (terms.length === 1 && terms[0].exponent === 1) {
-      return { kind: "number", value, unit: terms[0].unit };
-    }
-
-    // Multiple terms or non-unit exponent - derived unit
-    return { kind: "derivedUnit", value, terms };
-  }
-
-  /**
    * Multiply two numeric values (handles all combinations of number/unit/derived)
    */
   private multiplyValues(
     value: number,
-    left: NumberValue | DerivedUnitValue,
-    right: NumberValue | DerivedUnitValue,
-  ): NumberValue | DerivedUnitValue {
-    const leftTerms = this.extractTerms(left);
-    const rightTerms = this.extractTerms(right);
-    const combinedTerms = this.combineTerms(leftTerms, rightTerms);
+    left: NumericValue,
+    right: NumericValue,
+  ): NumericValue {
+    const combinedTerms = this.combineTerms(left.terms, right.terms);
     const { simplified, factor } = this.simplifyTerms(combinedTerms);
-    const finalValue = value * factor;
-    return this.createValueFromTerms(finalValue, simplified);
+    return numValTerms(value * factor, simplified);
   }
 
   /**
@@ -3534,17 +3478,16 @@ export class Evaluator {
    */
   private divideValues(
     value: number,
-    left: NumberValue | DerivedUnitValue,
-    right: NumberValue | DerivedUnitValue,
-  ): NumberValue | DerivedUnitValue {
-    const leftTerms = this.extractTerms(left);
-    const rightTerms = this.extractTerms(right).map((t) => ({
+    left: NumericValue,
+    right: NumericValue,
+  ): NumericValue {
+    const negatedRightTerms = right.terms.map((t) => ({
       unit: t.unit,
       exponent: -t.exponent,
     }));
-    const combinedTerms = this.combineTerms(leftTerms, rightTerms);
+    const combinedTerms = this.combineTerms(left.terms, negatedRightTerms);
     const { simplified, factor } = this.simplifyTerms(combinedTerms);
-    return this.createValueFromTerms(value * factor, simplified);
+    return numValTerms(value * factor, simplified);
   }
 
   /**
@@ -3554,7 +3497,7 @@ export class Evaluator {
     if (value.kind === "boolean") {
       return value;
     }
-    if (value.kind === "number") {
+    if (value.kind === "value") {
       return { kind: "boolean", value: value.value !== 0 };
     }
     return this.createError(`Cannot convert ${value.kind} to boolean`);
@@ -3721,12 +3664,12 @@ export class Evaluator {
   }
 
   /**
-   * Convert a Duration to a NumberValue (single field) or CompositeUnitValue (multiple fields).
+   * Convert a Duration to a NumericValue (single field) or CompositeUnitValue (multiple fields).
    * Inverse of convertTimeToDuration.
    */
   private durationToValue(
     duration: Duration,
-  ): NumberValue | CompositeUnitValue | ErrorValue {
+  ): NumericValue | CompositeUnitValue | ErrorValue {
     const durationToUnit: Array<{ field: keyof Duration; unitId: string }> = [
       { field: "years", unitId: "year" },
       { field: "months", unitId: "month" },
@@ -3752,15 +3695,11 @@ export class Evaluator {
       // Zero duration — return 0 seconds
       const secUnit = this.dataLoader.getUnitById("second");
       if (!secUnit) return this.createError("Cannot resolve second unit");
-      return { kind: "number", value: 0, unit: secUnit };
+      return numValUnit(0, secUnit);
     }
 
     if (components.length === 1) {
-      return {
-        kind: "number",
-        value: components[0].value,
-        unit: components[0].unit,
-      };
+      return numValUnit(components[0].value, components[0].unit);
     }
 
     return { kind: "composite", components };
@@ -3772,7 +3711,7 @@ export class Evaluator {
    */
   private convertCompositeToSingleUnit(
     composite: CompositeUnitValue,
-  ): NumberValue | DerivedUnitValue | ErrorValue {
+  ): NumericValue | ErrorValue {
     if (composite.components.length === 0) {
       return this.createError("Empty composite unit");
     }
@@ -3797,21 +3736,12 @@ export class Evaluator {
       }
     }
 
-    // Return as NumberValue (simple unit) or DerivedUnitValue (derived unit)
     if (targetUnit.dimension) {
       // Simple unit with dimension
-      return {
-        kind: "number",
-        value: totalValue,
-        unit: targetUnit,
-      };
+      return numValUnit(totalValue, targetUnit);
     } else {
       // Dimensionless or derived unit
-      return {
-        kind: "number",
-        value: totalValue,
-        unit: targetUnit,
-      };
+      return numValUnit(totalValue, targetUnit);
     }
   }
 

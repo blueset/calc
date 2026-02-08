@@ -1,9 +1,8 @@
-import { describe, it, expect, beforeAll } from 'vitest';
-import { DataLoader } from '../../src/calculator/data-loader';
-import { UnitConverter } from '../../src/calculator/unit-converter';
-import * as path from 'path';
+import { describe, it, expect, beforeAll } from "vitest";
+import { DataLoader } from "../../src/calculator/data-loader";
+import { UnitConverter } from "../../src/calculator/unit-converter";
 
-describe('UnitConverter', () => {
+describe("UnitConverter", () => {
   let dataLoader: DataLoader;
   let converter: UnitConverter;
 
@@ -13,10 +12,10 @@ describe('UnitConverter', () => {
     converter = new UnitConverter(dataLoader);
   });
 
-  describe('Linear Conversions', () => {
-    it('should convert kilometers to meters', () => {
-      const km = dataLoader.getUnitById('kilometer');
-      const m = dataLoader.getUnitById('meter');
+  describe("Linear Conversions", () => {
+    it("should convert kilometers to meters", () => {
+      const km = dataLoader.getUnitById("kilometer");
+      const m = dataLoader.getUnitById("meter");
       expect(km).toBeDefined();
       expect(m).toBeDefined();
 
@@ -24,9 +23,9 @@ describe('UnitConverter', () => {
       expect(result).toBe(5000);
     });
 
-    it('should convert meters to kilometers', () => {
-      const m = dataLoader.getUnitById('meter');
-      const km = dataLoader.getUnitById('kilometer');
+    it("should convert meters to kilometers", () => {
+      const m = dataLoader.getUnitById("meter");
+      const km = dataLoader.getUnitById("kilometer");
       expect(m).toBeDefined();
       expect(km).toBeDefined();
 
@@ -34,9 +33,9 @@ describe('UnitConverter', () => {
       expect(result).toBe(5);
     });
 
-    it('should convert centimeters to meters', () => {
-      const cm = dataLoader.getUnitById('centimeter');
-      const m = dataLoader.getUnitById('meter');
+    it("should convert centimeters to meters", () => {
+      const cm = dataLoader.getUnitById("centimeter");
+      const m = dataLoader.getUnitById("meter");
       expect(cm).toBeDefined();
       expect(m).toBeDefined();
 
@@ -44,9 +43,9 @@ describe('UnitConverter', () => {
       expect(result).toBe(5.2);
     });
 
-    it('should convert feet to inches', () => {
-      const ft = dataLoader.getUnitById('foot');
-      const inch = dataLoader.getUnitById('inch');
+    it("should convert feet to inches", () => {
+      const ft = dataLoader.getUnitById("foot");
+      const inch = dataLoader.getUnitById("inch");
       expect(ft).toBeDefined();
       expect(inch).toBeDefined();
 
@@ -54,8 +53,8 @@ describe('UnitConverter', () => {
       expect(result).toBeCloseTo(60, 5);
     });
 
-    it('should handle same unit conversion (no-op)', () => {
-      const m = dataLoader.getUnitById('meter');
+    it("should handle same unit conversion (no-op)", () => {
+      const m = dataLoader.getUnitById("meter");
       expect(m).toBeDefined();
 
       const result = converter.convert(42, m!, m!);
@@ -63,13 +62,13 @@ describe('UnitConverter', () => {
     });
   });
 
-  describe('Affine Conversions (Temperature)', () => {
-    it('should convert Celsius to Fahrenheit', () => {
-      const celsius = dataLoader.getUnitById('celsius');
-      const fahrenheit = dataLoader.getUnitById('fahrenheit');
+  describe("Affine Conversions (Temperature)", () => {
+    it("should convert Celsius to Fahrenheit", () => {
+      const celsius = dataLoader.getUnitById("celsius");
+      const fahrenheit = dataLoader.getUnitById("fahrenheit");
 
       if (!celsius || !fahrenheit) {
-        console.log('Temperature units not found in database, skipping test');
+        console.log("Temperature units not found in database, skipping test");
         return;
       }
 
@@ -86,12 +85,12 @@ describe('UnitConverter', () => {
       expect(result3).toBeCloseTo(98.6, 1);
     });
 
-    it('should convert Fahrenheit to Celsius', () => {
-      const fahrenheit = dataLoader.getUnitById('fahrenheit');
-      const celsius = dataLoader.getUnitById('celsius');
+    it("should convert Fahrenheit to Celsius", () => {
+      const fahrenheit = dataLoader.getUnitById("fahrenheit");
+      const celsius = dataLoader.getUnitById("celsius");
 
       if (!celsius || !fahrenheit) {
-        console.log('Temperature units not found in database, skipping test');
+        console.log("Temperature units not found in database, skipping test");
         return;
       }
 
@@ -104,12 +103,12 @@ describe('UnitConverter', () => {
       expect(result2).toBeCloseTo(100, 5);
     });
 
-    it('should convert Celsius to Kelvin', () => {
-      const celsius = dataLoader.getUnitById('celsius');
-      const kelvin = dataLoader.getUnitById('kelvin');
+    it("should convert Celsius to Kelvin", () => {
+      const celsius = dataLoader.getUnitById("celsius");
+      const kelvin = dataLoader.getUnitById("kelvin");
 
       if (!celsius || !kelvin) {
-        console.log('Temperature units not found in database, skipping test');
+        console.log("Temperature units not found in database, skipping test");
         return;
       }
 
@@ -123,49 +122,49 @@ describe('UnitConverter', () => {
     });
   });
 
-  describe('Variant Conversions', () => {
-    it('should convert US gallons to liters', () => {
-      const gallon = dataLoader.getUnitById('gallon');
-      const liter = dataLoader.getUnitById('liter');
+  describe("Variant Conversions", () => {
+    it("should convert US gallons to liters", () => {
+      const gallon = dataLoader.getUnitById("gallon");
+      const liter = dataLoader.getUnitById("liter");
 
       if (!gallon || !liter) {
-        console.log('Volume units not found in database, skipping test');
+        console.log("Volume units not found in database, skipping test");
         return;
       }
 
       // Default should be US variant
-      converter.setSettings({ variant: 'us' });
+      converter.setSettings({ variant: "us" });
 
       // 1 US gallon ≈ 3.785411784 liters
       const result = converter.convert(1, gallon, liter);
       expect(result).toBeCloseTo(3.785411784, 5);
     });
 
-    it('should convert UK gallons to liters', () => {
-      const gallon = dataLoader.getUnitById('gallon');
-      const liter = dataLoader.getUnitById('liter');
+    it("should convert UK gallons to liters", () => {
+      const gallon = dataLoader.getUnitById("gallon");
+      const liter = dataLoader.getUnitById("liter");
 
       if (!gallon || !liter) {
-        console.log('Volume units not found in database, skipping test');
+        console.log("Volume units not found in database, skipping test");
         return;
       }
 
-      converter.setSettings({ variant: 'uk' });
+      converter.setSettings({ variant: "uk" });
 
       // 1 UK gallon ≈ 4.54609 liters
       const result = converter.convert(1, gallon, liter);
       expect(result).toBeCloseTo(4.54609, 5);
 
       // Reset to US variant
-      converter.setSettings({ variant: 'us' });
+      converter.setSettings({ variant: "us" });
     });
   });
 
-  describe('Composite Unit Conversions', () => {
-    it('should convert composite units to single unit (5 ft 7 in to cm)', () => {
-      const ft = dataLoader.getUnitById('foot');
-      const inch = dataLoader.getUnitById('inch');
-      const cm = dataLoader.getUnitById('centimeter');
+  describe("Composite Unit Conversions", () => {
+    it("should convert composite units to single unit (5 ft 7 in to cm)", () => {
+      const ft = dataLoader.getUnitById("foot");
+      const inch = dataLoader.getUnitById("inch");
+      const cm = dataLoader.getUnitById("centimeter");
 
       expect(ft).toBeDefined();
       expect(inch).toBeDefined();
@@ -173,75 +172,75 @@ describe('UnitConverter', () => {
 
       const result = converter.convertComposite(
         [
-          { value: 5, unitId: 'foot' },
-          { value: 7, unitId: 'inch' }
+          { value: 5, unitId: "foot" },
+          { value: 7, unitId: "inch" },
         ],
-        ['centimeter']
+        ["centimeter"],
       );
 
       expect(result.components).toHaveLength(1);
-      expect(result.components[0].unitId).toBe('centimeter');
+      expect(result.components[0].unitId).toBe("centimeter");
 
       // 5 ft 7 in ≈ 170.18 cm
       expect(result.components[0].value).toBeCloseTo(170.18, 1);
     });
 
-    it('should convert single unit to composite (171 cm to ft in)', () => {
-      const cm = dataLoader.getUnitById('centimeter');
-      const ft = dataLoader.getUnitById('foot');
-      const inch = dataLoader.getUnitById('inch');
+    it("should convert single unit to composite (171 cm to ft in)", () => {
+      const cm = dataLoader.getUnitById("centimeter");
+      const ft = dataLoader.getUnitById("foot");
+      const inch = dataLoader.getUnitById("inch");
 
       expect(cm).toBeDefined();
       expect(ft).toBeDefined();
       expect(inch).toBeDefined();
 
       const result = converter.convertComposite(
-        [{ value: 171, unitId: 'centimeter' }],
-        ['foot', 'inch']
+        [{ value: 171, unitId: "centimeter" }],
+        ["foot", "inch"],
       );
 
       expect(result.components).toHaveLength(2);
 
       // 171 cm ≈ 5 ft 7.32 in
-      expect(result.components[0].unitId).toBe('foot');
+      expect(result.components[0].unitId).toBe("foot");
       expect(result.components[0].value).toBe(5); // Integer part
 
-      expect(result.components[1].unitId).toBe('inch');
+      expect(result.components[1].unitId).toBe("inch");
       expect(result.components[1].value).toBeCloseTo(7.32, 1); // Decimal remainder
     });
 
-    it('should handle composite to composite conversion', () => {
+    it("should handle composite to composite conversion", () => {
       const result = converter.convertComposite(
         [
-          { value: 1, unitId: 'meter' },
-          { value: 50, unitId: 'centimeter' }
+          { value: 1, unitId: "meter" },
+          { value: 50, unitId: "centimeter" },
         ],
-        ['foot', 'inch']
+        ["foot", "inch"],
       );
 
       expect(result.components).toHaveLength(2);
 
       // 1.5 m ≈ 4 ft 11.055 in
-      expect(result.components[0].unitId).toBe('foot');
+      expect(result.components[0].unitId).toBe("foot");
       expect(result.components[0].value).toBe(4);
 
-      expect(result.components[1].unitId).toBe('inch');
+      expect(result.components[1].unitId).toBe("inch");
       expect(result.components[1].value).toBeCloseTo(11.055, 1);
     });
 
-    it('should handle time composite units (hours, minutes, seconds)', () => {
-      const hour = dataLoader.getUnitById('hour');
-      const minute = dataLoader.getUnitById('minute');
-      const second = dataLoader.getUnitById('second');
+    it("should handle time composite units (hours, minutes, seconds)", () => {
+      const hour = dataLoader.getUnitById("hour");
+      const minute = dataLoader.getUnitById("minute");
+      const second = dataLoader.getUnitById("second");
 
       if (!hour || !minute || !second) {
-        console.log('Time units not found in database, skipping test');
+        console.log("Time units not found in database, skipping test");
         return;
       }
 
       const result = converter.convertComposite(
-        [{ value: 3665, unitId: 'second' }],
-        ['hour', 'minute', 'second']
+        [{ value: 3665, unitId: "second" }],
+        ["hour", "minute", "second"],
       );
 
       expect(result.components).toHaveLength(3);
@@ -253,10 +252,10 @@ describe('UnitConverter', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should throw error when converting between different dimensions', () => {
-      const meter = dataLoader.getUnitById('meter');
-      const second = dataLoader.getUnitById('second');
+  describe("Error Handling", () => {
+    it("should throw error when converting between different dimensions", () => {
+      const meter = dataLoader.getUnitById("meter");
+      const second = dataLoader.getUnitById("second");
 
       expect(meter).toBeDefined();
       expect(second).toBeDefined();
@@ -266,48 +265,45 @@ describe('UnitConverter', () => {
       }).toThrow(/different dimensions/);
     });
 
-    it('should throw error for unknown unit ID in composite conversion', () => {
+    it("should throw error for unknown unit ID in composite conversion", () => {
       expect(() => {
         converter.convertComposite(
-          [{ value: 5, unitId: 'nonexistent_unit' }],
-          ['meter']
+          [{ value: 5, unitId: "nonexistent_unit" }],
+          ["meter"],
         );
       }).toThrow(/Unknown unit ID/);
     });
 
-    it('should throw error when composite components have different dimensions', () => {
+    it("should throw error when composite components have different dimensions", () => {
       expect(() => {
         converter.convertComposite(
           [
-            { value: 5, unitId: 'meter' },
-            { value: 3, unitId: 'second' }
+            { value: 5, unitId: "meter" },
+            { value: 3, unitId: "second" },
           ],
-          ['foot']
+          ["foot"],
         );
       }).toThrow(/same dimension/);
     });
 
-    it('should throw error when target unit has wrong dimension', () => {
+    it("should throw error when target unit has wrong dimension", () => {
       expect(() => {
-        converter.convertComposite(
-          [{ value: 5, unitId: 'meter' }],
-          ['second']
-        );
+        converter.convertComposite([{ value: 5, unitId: "meter" }], ["second"]);
       }).toThrow(/wrong dimension/);
     });
   });
 
-  describe('Settings Management', () => {
-    it('should get and set conversion settings', () => {
+  describe("Settings Management", () => {
+    it("should get and set conversion settings", () => {
       const initialSettings = converter.getSettings();
-      expect(initialSettings.variant).toBe('us');
+      expect(initialSettings.variant).toBe("us");
 
-      converter.setSettings({ variant: 'uk' });
+      converter.setSettings({ variant: "uk" });
       const updatedSettings = converter.getSettings();
-      expect(updatedSettings.variant).toBe('uk');
+      expect(updatedSettings.variant).toBe("uk");
 
       // Reset
-      converter.setSettings({ variant: 'us' });
+      converter.setSettings({ variant: "us" });
     });
   });
 });
