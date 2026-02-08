@@ -1236,9 +1236,9 @@ export class Formatter {
     const { numerator, denominator } = this.approximateFraction(fracPart, 1000);
 
     if (intPart === 0) {
-      return `${sign}${numerator}/${denominator}`;
+      return `${sign}${numerator}⁄${denominator}`;
     } else {
-      return `${sign}${intPart} ${numerator}/${denominator}`;
+      return `${sign}${intPart} ${numerator}⁄${denominator}`;
     }
   }
 

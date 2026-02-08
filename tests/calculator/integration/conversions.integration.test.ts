@@ -94,7 +94,7 @@ describe("Integration Tests - Conversions", () => {
 
     it("should convert to fraction", () => {
       const result = calculator.calculate("0.75 to fraction");
-      expect(result.results[0].result).toBe("3/4");
+      expect(result.results[0].result).toBe("3⁄4");
     });
 
     it("should convert to scientific notation", () => {
@@ -116,7 +116,7 @@ describe("Integration Tests - Conversions", () => {
 
     it("should convert mixed fractions", () => {
       const result = calculator.calculate("1.75 to fraction");
-      expect(result.results[0].result).toBe("1 3/4");
+      expect(result.results[0].result).toBe("1 3⁄4");
     });
 
     it("should handle infinity in scientific notation", () => {
@@ -139,7 +139,7 @@ describe("Integration Tests - Conversions", () => {
 
     it("should preserve units in fraction", () => {
       const result = calculator.calculate("0.75 kg to fraction");
-      expect(result.results[0].result).toBe("3/4 kg");
+      expect(result.results[0].result).toBe("3⁄4 kg");
     });
 
     it("should preserve units in base conversion", () => {
@@ -161,12 +161,12 @@ describe("Integration Tests - Conversions", () => {
   describe("Presentations with Composite Units", () => {
     it("should apply presentation to each composite component", () => {
       const result = calculator.calculate("5 ft 7.5 in to fraction");
-      expect(result.results[0].result).toBe("5 ft 7 1/2 in");
+      expect(result.results[0].result).toBe("5 ft 7 1⁄2 in");
     });
 
     it("should apply presentation to converted composite component", () => {
       const result = calculator.calculate("1.71 m to ft in to fraction");
-      expect(result.results[0].result).toBe("5 ft 7 41/127 in");
+      expect(result.results[0].result).toBe("5 ft 7 41⁄127 in");
     });
   });
 

@@ -80,75 +80,79 @@ area = width * height
     const nodes = collectNodes(tree);
 
     // Check headings
-    const headings = nodes.filter(n => n.name.startsWith('Heading'));
-    expect(headings.map(n => nodeText(n, DOCUMENT))).toEqual([
-      '# Arithmetic', '# Units', '# Conversions', '# Variables', '# Date/time'
+    const headings = nodes.filter((n) => n.name.startsWith("Heading"));
+    expect(headings.map((n) => nodeText(n, DOCUMENT))).toEqual([
+      "# Arithmetic",
+      "# Units",
+      "# Conversions",
+      "# Variables",
+      "# Date/time",
     ]);
 
     // Check units
-    const units = nodes.filter(n => n.name === 'Unit');
-    const unitTexts = units.map(n => nodeText(n, DOCUMENT));
-    expect(unitTexts).toContain('km');
-    expect(unitTexts).toContain('cm');
-    expect(unitTexts).toContain('ft');
-    expect(unitTexts).toContain('in');
-    expect(unitTexts).toContain('hours');
-    expect(unitTexts).toContain('minutes');
-    expect(unitTexts).toContain('°F');
-    expect(unitTexts).toContain('°C');
-    expect(unitTexts).toContain('mile');
-    expect(unitTexts).toContain('kg');
-    expect(unitTexts).toContain('lbs');
-    expect(unitTexts).toContain('m');
-    expect(unitTexts).toContain('yr');
-    expect(unitTexts).toContain('hour');
-    expect(unitTexts).toContain('minute');
+    const units = nodes.filter((n) => n.name === "Unit");
+    const unitTexts = units.map((n) => nodeText(n, DOCUMENT));
+    expect(unitTexts).toContain("km");
+    expect(unitTexts).toContain("cm");
+    expect(unitTexts).toContain("ft");
+    expect(unitTexts).toContain("in");
+    expect(unitTexts).toContain("hours");
+    expect(unitTexts).toContain("minutes");
+    expect(unitTexts).toContain("°F");
+    expect(unitTexts).toContain("°C");
+    expect(unitTexts).toContain("mile");
+    expect(unitTexts).toContain("kg");
+    expect(unitTexts).toContain("lbs");
+    expect(unitTexts).toContain("m");
+    expect(unitTexts).toContain("yr");
+    expect(unitTexts).toContain("hour");
+    expect(unitTexts).toContain("minute");
 
     // Check variable definitions
-    const varDefs = nodes.filter(n => n.name === 'VariableDefinition');
-    const varDefTexts = varDefs.map(n => nodeText(n, DOCUMENT));
-    expect(varDefTexts).toContain('width');
-    expect(varDefTexts).toContain('height');
-    expect(varDefTexts).toContain('area');
+    const varDefs = nodes.filter((n) => n.name === "VariableDefinition");
+    const varDefTexts = varDefs.map((n) => nodeText(n, DOCUMENT));
+    expect(varDefTexts).toContain("width");
+    expect(varDefTexts).toContain("height");
+    expect(varDefTexts).toContain("area");
 
     // Check variable usages
-    const vars = nodes.filter(n => n.name === 'Variable');
-    const varTexts = vars.map(n => nodeText(n, DOCUMENT));
-    expect(varTexts).toContain('width');
-    expect(varTexts).toContain('height');
+    const vars = nodes.filter((n) => n.name === "Variable");
+    const varTexts = vars.map((n) => nodeText(n, DOCUMENT));
+    expect(varTexts).toContain("width");
+    expect(varTexts).toContain("height");
 
     // Check numbers
-    const numbers = nodes.filter(n => n.name === 'Number');
-    const numberTexts = numbers.map(n => nodeText(n, DOCUMENT));
-    expect(numberTexts).toContain('2');
-    expect(numberTexts).toContain('3');
-    expect(numberTexts).toContain('10');
-    expect(numberTexts).toContain('100');
-    expect(numberTexts).toContain('3.5');
+    const numbers = nodes.filter((n) => n.name === "Number");
+    const numberTexts = numbers.map((n) => nodeText(n, DOCUMENT));
+    expect(numberTexts).toContain("2");
+    expect(numberTexts).toContain("3");
+    expect(numberTexts).toContain("10");
+    expect(numberTexts).toContain("100");
+    expect(numberTexts).toContain("3.5");
 
     // Check operators
-    const operators = nodes.filter(n => n.name === 'Operator');
-    const opTexts = operators.map(n => nodeText(n, DOCUMENT));
-    expect(opTexts).toContain('+');
-    expect(opTexts).toContain('*');
-    expect(opTexts).toContain('-');
-    expect(opTexts).toContain('/');
+    const operators = nodes.filter((n) => n.name === "Operator");
+    const opTexts = operators.map((n) => nodeText(n, DOCUMENT));
+    expect(opTexts).toContain("+");
+    expect(opTexts).toContain("*");
+    expect(opTexts).toContain("-");
+    expect(opTexts).toContain("/");
 
     // Check keywords (conversion operators)
-    const keywords = nodes.filter(n => n.name === 'Keyword');
-    const kwTexts = keywords.map(n => nodeText(n, DOCUMENT));
-    expect(kwTexts).toContain('to');
+    const keywords = nodes.filter((n) => n.name === "Keyword");
+    const kwTexts = keywords.map((n) => nodeText(n, DOCUMENT));
+    expect(kwTexts).toContain("to");
 
     // Check date/time literals
-    const dateTimes = nodes.filter(n => n.name === 'DateTime');
-    const dtTexts = dateTimes.map(n => nodeText(n, DOCUMENT));
-    expect(dtTexts).toContain('2025.12.11');        // PlainDate in BinaryExpr
-    expect(dtTexts).toContain('12:30');              // PlainTime in Conversion
-    expect(dtTexts).toContain('12:20');              // PlainTime in BinaryExpr
-    expect(dtTexts).toContain('12:45 UTC');          // ZonedDateTime (single span)
-    expect(dtTexts).toContain('11:35 New York');     // ZonedDateTime (single span)
-    expect(dtTexts).toContain('2025-12-31 12:30');   // PlainDateTime in Conversion
-    expect(dtTexts).toContain('Tokyo');              // TimezoneName (conversion target)
+    const dateTimes = nodes.filter((n) => n.name === "DateTime");
+    const dtTexts = dateTimes.map((n) => nodeText(n, DOCUMENT));
+    expect(dtTexts).toContain("2025.12.11"); // PlainDate in BinaryExpr
+    expect(dtTexts).toContain("12:30"); // PlainTime in Conversion
+    expect(dtTexts).toContain("12:20"); // PlainTime in BinaryExpr
+    expect(dtTexts).toContain("12:45 UTC"); // ZonedDateTime (single span)
+    expect(dtTexts).toContain("11:35 New York"); // ZonedDateTime (single span)
+    expect(dtTexts).toContain("2025-12-31 12:30"); // PlainDateTime in Conversion
+    expect(dtTexts).toContain("Tokyo"); // TimezoneName (conversion target)
 
     // Verify all spans extract correct text (no overshoot)
     for (const node of nodes) {
@@ -156,7 +160,7 @@ area = width * height
       expect(node.from).toBeGreaterThanOrEqual(0);
       expect(node.to).toBeGreaterThan(node.from);
       expect(node.to).toBeLessThanOrEqual(DOCUMENT.length);
-      expect(text).not.toContain('\n');
+      expect(text).not.toContain("\n");
     }
   });
 
@@ -165,9 +169,9 @@ area = width * height
     const ast = calculator.parse(doc).ast;
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
-    const unitNodes = nodes.filter(n => n.name === 'Unit');
+    const unitNodes = nodes.filter((n) => n.name === "Unit");
 
-    expect(unitNodes.map(n => nodeText(n, doc))).toEqual(['°F', '°C']);
+    expect(unitNodes.map((n) => nodeText(n, doc))).toEqual(["°F", "°C"]);
   });
 
   it("should correctly highlight bare degree symbol", () => {
@@ -175,9 +179,9 @@ area = width * height
     const ast = calculator.parse(doc).ast;
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
-    const unitNodes = nodes.filter(n => n.name === 'Unit');
+    const unitNodes = nodes.filter((n) => n.name === "Unit");
 
-    expect(unitNodes.map(n => nodeText(n, doc))).toEqual(['°']);
+    expect(unitNodes.map((n) => nodeText(n, doc))).toEqual(["°"]);
   });
 
   it("should correctly highlight prime and double prime symbols", () => {
@@ -185,9 +189,9 @@ area = width * height
     const ast = calculator.parse(doc).ast;
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
-    const unitNodes = nodes.filter(n => n.name === 'Unit');
+    const unitNodes = nodes.filter((n) => n.name === "Unit");
 
-    expect(unitNodes.map(n => nodeText(n, doc))).toEqual(["'", '"']);
+    expect(unitNodes.map((n) => nodeText(n, doc))).toEqual(["'", '"']);
   });
 
   it("should highlight numbers in expressions", () => {
@@ -196,11 +200,11 @@ area = width * height
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
 
-    const numbers = nodes.filter(n => n.name === 'Number');
-    expect(numbers.map(n => nodeText(n, doc))).toEqual(['42', '3.14']);
+    const numbers = nodes.filter((n) => n.name === "Number");
+    expect(numbers.map((n) => nodeText(n, doc))).toEqual(["42", "3.14"]);
 
-    const operators = nodes.filter(n => n.name === 'Operator');
-    expect(operators.map(n => nodeText(n, doc))).toEqual(['+']);
+    const operators = nodes.filter((n) => n.name === "Operator");
+    expect(operators.map((n) => nodeText(n, doc))).toEqual(["+"]);
   });
 
   it("should highlight conversion keywords", () => {
@@ -209,8 +213,8 @@ area = width * height
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
 
-    const keywords = nodes.filter(n => n.name === 'Keyword');
-    expect(keywords.map(n => nodeText(n, doc))).toEqual(['to']);
+    const keywords = nodes.filter((n) => n.name === "Keyword");
+    expect(keywords.map((n) => nodeText(n, doc))).toEqual(["to"]);
   });
 
   it("should highlight conditional keywords", () => {
@@ -219,11 +223,15 @@ area = width * height
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
 
-    const keywords = nodes.filter(n => n.name === 'Keyword');
-    expect(keywords.map(n => nodeText(n, doc))).toEqual(['if', 'then', 'else']);
+    const keywords = nodes.filter((n) => n.name === "Keyword");
+    expect(keywords.map((n) => nodeText(n, doc))).toEqual([
+      "if",
+      "then",
+      "else",
+    ]);
 
-    const booleans = nodes.filter(n => n.name === 'BooleanLiteral');
-    expect(booleans.map(n => nodeText(n, doc))).toEqual(['true']);
+    const booleans = nodes.filter((n) => n.name === "BooleanLiteral");
+    expect(booleans.map((n) => nodeText(n, doc))).toEqual(["true"]);
   });
 
   it("should highlight hex numbers", () => {
@@ -232,8 +240,8 @@ area = width * height
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
 
-    const numbers = nodes.filter(n => n.name === 'Number');
-    expect(numbers.map(n => nodeText(n, doc))).toEqual(['0xFF']);
+    const numbers = nodes.filter((n) => n.name === "Number");
+    expect(numbers.map((n) => nodeText(n, doc))).toEqual(["0xFF"]);
   });
 
   it("should highlight constants", () => {
@@ -242,8 +250,8 @@ area = width * height
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
 
-    const constants = nodes.filter(n => n.name === 'Constant');
-    expect(constants.map(n => nodeText(n, doc))).toEqual(['pi', 'e']);
+    const constants = nodes.filter((n) => n.name === "Constant");
+    expect(constants.map((n) => nodeText(n, doc))).toEqual(["pi", "e"]);
   });
 
   it("should highlight functions", () => {
@@ -252,11 +260,11 @@ area = width * height
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
 
-    const funcs = nodes.filter(n => n.name === 'FunctionCall');
-    expect(funcs.map(n => nodeText(n, doc))).toEqual(['sin']);
+    const funcs = nodes.filter((n) => n.name === "FunctionCall");
+    expect(funcs.map((n) => nodeText(n, doc))).toEqual(["sin"]);
 
-    const constants = nodes.filter(n => n.name === 'Constant');
-    expect(constants.map(n => nodeText(n, doc))).toEqual(['pi']);
+    const constants = nodes.filter((n) => n.name === "Constant");
+    expect(constants.map((n) => nodeText(n, doc))).toEqual(["pi"]);
   });
 
   it("should highlight presentation formats", () => {
@@ -265,18 +273,18 @@ area = width * height
     const tree = buildSemanticTree(ast, doc);
     const nodes = collectNodes(tree);
 
-    const numbers = nodes.filter(n => n.name === 'Number');
-    expect(numbers.map(n => nodeText(n, doc))).toContain('99');
-    expect(numbers.map(n => nodeText(n, doc))).toContain('98');
-    expect(numbers.map(n => nodeText(n, doc))).toContain('120 base 3');
+    const numbers = nodes.filter((n) => n.name === "Number");
+    expect(numbers.map((n) => nodeText(n, doc))).toContain("99");
+    expect(numbers.map((n) => nodeText(n, doc))).toContain("98");
+    expect(numbers.map((n) => nodeText(n, doc))).toContain("120 base 3");
 
-    const operators = nodes.filter(n => n.name === 'Operator');
-    expect(operators.map(n => nodeText(n, doc))).toEqual(['/']);
+    const operators = nodes.filter((n) => n.name === "Operator");
+    expect(operators.map((n) => nodeText(n, doc))).toEqual(["/"]);
 
-    const keywords = nodes.filter(n => n.name === 'Keyword');
-    const kwTexts = keywords.map(n => nodeText(n, doc));
-    expect(kwTexts).toContain('to');
-    expect(kwTexts).toContain('fraction');
-    expect(kwTexts).toContain('base 9');
+    const keywords = nodes.filter((n) => n.name === "Keyword");
+    const kwTexts = keywords.map((n) => nodeText(n, doc));
+    expect(kwTexts).toContain("to");
+    expect(kwTexts).toContain("fraction");
+    expect(kwTexts).toContain("base 9");
   });
 });

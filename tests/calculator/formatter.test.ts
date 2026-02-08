@@ -582,15 +582,15 @@ describe("Formatter", () => {
 
     it("should format fraction (simple)", () => {
       const formatter = new Formatter();
-      expect(formatter.formatPresentation(0.5, "fraction")).toBe("1/2");
-      expect(formatter.formatPresentation(0.25, "fraction")).toBe("1/4");
-      expect(formatter.formatPresentation(0.75, "fraction")).toBe("3/4");
+      expect(formatter.formatPresentation(0.5, "fraction")).toBe("1⁄2");
+      expect(formatter.formatPresentation(0.25, "fraction")).toBe("1⁄4");
+      expect(formatter.formatPresentation(0.75, "fraction")).toBe("3⁄4");
     });
 
     it("should format fraction (mixed number)", () => {
       const formatter = new Formatter();
-      expect(formatter.formatPresentation(2.5, "fraction")).toBe("2 1/2");
-      expect(formatter.formatPresentation(3.75, "fraction")).toBe("3 3/4");
+      expect(formatter.formatPresentation(2.5, "fraction")).toBe("2 1⁄2");
+      expect(formatter.formatPresentation(3.75, "fraction")).toBe("3 3⁄4");
     });
 
     it("should format fraction (approximate)", () => {
@@ -598,7 +598,7 @@ describe("Formatter", () => {
       // 1/3 = 0.333333... Use a closer approximation
       const result = formatter.formatPresentation(0.3333333, "fraction");
       // Should approximate to 1/3
-      expect(result).toMatch(/1\/3/);
+      expect(result).toBe("1⁄3");
     });
 
     it("should format scientific notation", () => {

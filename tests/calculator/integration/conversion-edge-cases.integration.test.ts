@@ -21,7 +21,7 @@ describe("Integration Tests - Conversion Edge Cases", () => {
     it("should handle double conversions", () => {
       const result = calculator.calculate("10 m to km to fraction");
       // 10 m = 0.01 km = 1/100 km
-      expect(result.results[0].result).toBe("1/100 km");
+      expect(result.results[0].result).toBe("1⁄100 km");
     });
 
     it("should handle triple conversions", () => {

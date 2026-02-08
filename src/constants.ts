@@ -37,39 +37,7 @@ now + 2 months 3 days
 `;
 
 export const DEMO_DOCUMENT = `# Welcome to ${APP_NAME}!
-# Try editing any line to see results update instantly.
-
-# Arithmetic
-2 + 3
-10 * 4 - 7
-(100 + 50) / 3
-2 ^ 10
-
-# Percentages
-200 + 15%
-50% of 80
-
-# Units & conversions
-5 km to miles
-170 cm to ft in
-100 °F to °C
-3.5 hours + 45 minutes to minutes
-
-# Variables
-price = 49.99
-qty = 12
-subtotal = price * qty
-tax = subtotal * 8.5%
-total = subtotal + tax
-
-# Currency
-1 USD to EUR
-100 JPY to GBP
-
-# Functions
-sqrt(144)
-sin(45 deg)
-log(1000)
+Manual goes here.
 `;
 
 export const FONT_SIZE_MAP = {
@@ -97,6 +65,21 @@ export const SUPERSCRIPTS: Record<string, string> = {
   "9": "⁹",
   "-": "⁻",
   ".": "·",
+};
+
+export const SUBSCRIPTS: Record<string, string> = {
+  "0": "₀",
+  "1": "₁",
+  "2": "₂",
+  "3": "₃",
+  "4": "₄",
+  "5": "₅",
+  "6": "₆",
+  "7": "₇",
+  "8": "₈",
+  "9": "₉",
+  "-": "₋",
+  ".": ".",
 };
 
 export const DOCUMENT_STORAGE_KEY = "calc-document";
