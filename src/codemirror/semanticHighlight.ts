@@ -138,7 +138,19 @@ export function buildSemanticTree(ast: Document, docText: string): Tree {
       case "Heading": {
         const from = lineStart;
         const to = lineStart + (lines[lineIndex]?.length ?? 0);
-        if (from < to) spans.push({ typeId: NodeID.Heading, from, to });
+        if (from < to) {
+          const match = lines[lineIndex]?.match(/^(#+)\s/);
+          const level = match ? Math.min(match[1].length, 6) : 1;
+          const headingNodeIds = [
+            NodeID.Heading1,
+            NodeID.Heading2,
+            NodeID.Heading3,
+            NodeID.Heading4,
+            NodeID.Heading5,
+            NodeID.Heading6,
+          ];
+          spans.push({ typeId: headingNodeIds[level - 1], from, to });
+        }
         break;
       }
       case "VariableAssignment": {

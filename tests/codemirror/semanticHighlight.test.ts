@@ -80,7 +80,7 @@ area = width * height
     const nodes = collectNodes(tree);
 
     // Check headings
-    const headings = nodes.filter(n => n.name === 'Heading');
+    const headings = nodes.filter(n => n.name.startsWith('Heading'));
     expect(headings.map(n => nodeText(n, DOCUMENT))).toEqual([
       '# Arithmetic', '# Units', '# Conversions', '# Variables', '# Date/time'
     ]);

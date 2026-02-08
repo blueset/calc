@@ -38,8 +38,38 @@ export const lightTheme = EditorView.theme(
 
 const lightHighlightStyle = HighlightStyle.define([
   {
-    tag: tags.heading,
-    fontWeight: "bold",
+    tag: tags.heading1,
+    fontWeight: "900",
+    color: "#1a1a1a",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading2,
+    fontWeight: "800",
+    color: "#1a1a1a",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading3,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading4,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading5,
+    fontWeight: "500",
+    color: "#1a1a1a",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading6,
+    fontWeight: "400",
     color: "#1a1a1a",
     textDecoration: "underline",
   },
@@ -95,8 +125,38 @@ export const darkTheme = EditorView.theme(
 
 const darkHighlightStyle = HighlightStyle.define([
   {
-    tag: tags.heading,
-    fontWeight: "bold",
+    tag: tags.heading1,
+    fontWeight: "900",
+    color: "#e0e0e0",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading2,
+    fontWeight: "800",
+    color: "#e0e0e0",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading3,
+    fontWeight: "700",
+    color: "#e0e0e0",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading4,
+    fontWeight: "600",
+    color: "#e0e0e0",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading5,
+    fontWeight: "500",
+    color: "#e0e0e0",
+    textDecoration: "underline",
+  },
+  {
+    tag: tags.heading6,
+    fontWeight: "400",
     color: "#e0e0e0",
     textDecoration: "underline",
   },
