@@ -31,6 +31,8 @@ now + 2 months 3 days
 
 # Currency
 100 USD to EUR
+100 USD + 215 CAD
+100 USD/person * 3 person/day * 5 days in JPY
 
 `;
 

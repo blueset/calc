@@ -5,6 +5,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { cn } from "@/lib/utils";
 import { FONT_FAMILY_MAP } from "@/constants";
 import { ResultCard } from "./ResultCard";
+import { RovingFocusGroup } from "@radix-ui/react-roving-focus";
 
 interface ResultsPanelProps {
   results: LineResult[];
@@ -14,6 +15,7 @@ interface ResultsPanelProps {
   activeLine?: number;
   fontSize?: number;
   fontFamily?: string;
+  onFocusLine?: (line: number) => void;
 }
 
 export function ResultsPanel({
@@ -24,6 +26,7 @@ export function ResultsPanel({
   activeLine,
   fontSize = 15,
   fontFamily = "monospace",
+  onFocusLine,
 }: ResultsPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { debugMode } = useSettings().settings;
@@ -43,39 +46,42 @@ export function ResultsPanel({
       className="h-full overflow-hidden"
       style={{ fontFamily: ff, fontSize: `${fontSize}px` }}
     >
-      <div className="relative" style={{ height: contentHeight || "auto" }}>
-        {linePositions.map((pos) => {
-          const result = results.find((r) => r.line === pos.line);
-          if (pos.height === 0) return null;
-          if (!result?.result || (!debugMode && result.hasError)) {
+      <RovingFocusGroup asChild orientation="vertical" loop>
+        <div className="relative" style={{ height: contentHeight || "auto" }}>
+          {linePositions.map((pos) => {
+            const result = results.find((r) => r.line === pos.line);
+            if (pos.height === 0) return null;
+            if (!result?.result || (!debugMode && result.hasError)) {
+              return (
+                <div
+                  key={pos.line}
+                  className={cn(
+                    "right-0 left-0 absolute",
+                    pos.line === activeLine && "bg-accent dark:bg-accent/40",
+                  )}
+                  style={{
+                    top: pos.top + 4,
+                    height: pos.height,
+                  }}
+                />
+              );
+            }
+
             return (
-              <div
+              <ResultCard
                 key={pos.line}
-                className={cn(
-                  "right-0 left-0 absolute",
-                  pos.line === activeLine && "bg-accent dark:bg-accent/40",
-                )}
-                style={{
-                  top: pos.top + 4,
-                  height: pos.height,
-                }}
+                result={result}
+                top={pos.top}
+                height={pos.height}
+                isActive={pos.line === activeLine}
+                fontFamily={ff}
+                debugMode={debugMode}
+                onFocusLine={onFocusLine}
               />
             );
-          }
-
-          return (
-            <ResultCard
-              key={pos.line}
-              result={result}
-              top={pos.top}
-              height={pos.height}
-              isActive={pos.line === activeLine}
-              fontFamily={ff}
-              debugMode={debugMode}
-            />
-          );
-        })}
-      </div>
+          })}
+        </div>
+      </RovingFocusGroup>
     </div>
   );
 }

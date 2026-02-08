@@ -123,6 +123,20 @@ function AppContent() {
     [],
   );
 
+  const handleFocusLine = useCallback((line: number) => {
+    const view = editorViewRef.current;
+    if (!view) return;
+    const pos = view.state.doc.line(line).from;
+    const rect = view.scrollDOM.getBoundingClientRect();
+    const lineTop = view.coordsAtPos(pos)?.top ?? 0;
+    const lineBottom = view.coordsAtPos(pos)?.bottom ?? 0;
+    if (lineTop < rect.top || lineBottom > rect.bottom) {
+      view.dispatch({
+        effects: EditorView.scrollIntoView(pos, { y: "center" }),
+      });
+    }
+  }, []);
+
   const handleThemeToggle = useCallback(() => {
     const next = resolvedTheme === "light" ? "dark" : "light";
     updateSetting("theme", next);
@@ -177,6 +191,7 @@ function AppContent() {
               activeLine={activeLine}
               fontSize={fontSize}
               fontFamily={settings.fontFamily}
+              onFocusLine={handleFocusLine}
             />
           </div>
         </div>
