@@ -18,7 +18,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@iconify-json/fluent": "^1.2.38",
-    "@iconify-json/simple-icons": "^1.2.69",
+    "@iconify-json/simple-icons": "^1.2.70",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
     "@types/moo": "^0.5.10",
@@ -33,7 +33,7 @@
     "eslint": "^9.39.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.0",
-    "fast-xml-parser": "^5.3.3",
+    "fast-xml-parser": "^5.3.5",
     "globals": "^17.3.0",
     "icu": "^2.1.0",
     "nodemon": "^3.1.11",
@@ -48,11 +48,11 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
-    "@codemirror/commands": "^6.10.1",
+    "@codemirror/commands": "^6.10.2",
     "@codemirror/language": "^6.12.1",
     "@codemirror/lint": "^6.9.3",
     "@codemirror/state": "^6.5.4",
-    "@codemirror/view": "^6.39.12",
+    "@codemirror/view": "^6.39.13",
     "@js-temporal/polyfill": "^0.5.1",
     "@lezer/highlight": "^1.2.3",
     "@lezer/markdown": "^1.6.3",
@@ -65,7 +65,7 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "shadcn": "^3.8.3",
+    "shadcn": "^3.8.4",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18"
   }
