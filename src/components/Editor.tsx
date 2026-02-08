@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, RefObject } from "react";
+import { basicSetup } from "codemirror";
 import { EditorState, Compartment } from "@codemirror/state";
 import {
   EditorView,
@@ -8,11 +9,7 @@ import {
   drawSelection,
 } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import {
-  bracketMatching,
-  foldGutter,
-  foldKeymap,
-} from "@codemirror/language";
+import { bracketMatching, foldGutter, foldKeymap } from "@codemirror/language";
 import { calcLanguage } from "@/codemirror/language";
 import {
   semanticTreeField,
@@ -118,7 +115,13 @@ export function Editor({
     const wrapCompartment = wrapCompartmentRef.current;
 
     const debugExtensions = debugMode
-      ? [errorLintField, evalTooltipExtension(() => resultsRef.current, () => astRef.current)]
+      ? [
+          errorLintField,
+          evalTooltipExtension(
+            () => resultsRef.current,
+            () => astRef.current,
+          ),
+        ]
       : [];
 
     const currentTheme =
@@ -129,13 +132,8 @@ export function Editor({
     const state = EditorState.create({
       doc: initialDoc,
       extensions: [
-        lineNumbers(),
-        drawSelection(),
-        highlightActiveLine(),
-        bracketMatching(),
-        history(),
+        basicSetup,
         keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
-        foldGutter(),
         foldHeadingsService,
         calcLanguage,
         semanticTreeField,
@@ -151,7 +149,9 @@ export function Editor({
             onChangeRef.current(update.state.doc.toString());
           }
           if (update.selectionSet || update.docChanged) {
-            const line = update.state.doc.lineAt(update.state.selection.main.head).number;
+            const line = update.state.doc.lineAt(
+              update.state.selection.main.head,
+            ).number;
             onActiveLineRef.current?.(line);
           }
         }),
@@ -190,7 +190,13 @@ export function Editor({
     const view = viewRef.current;
     if (!view) return;
     const debugExtensions = debugMode
-      ? [errorLintField, evalTooltipExtension(() => resultsRef.current, () => astRef.current)]
+      ? [
+          errorLintField,
+          evalTooltipExtension(
+            () => resultsRef.current,
+            () => astRef.current,
+          ),
+        ]
       : [];
     view.dispatch({
       effects: debugCompartmentRef.current.reconfigure(debugExtensions),
@@ -204,8 +210,8 @@ export function Editor({
     view.dispatch({
       effects: themeCompartmentRef.current.reconfigure(
         resolvedTheme === "dark"
-        ? [darkTheme, darkHighlight]
-        : [lightTheme, lightHighlight],
+          ? [darkTheme, darkHighlight]
+          : [lightTheme, lightHighlight],
       ),
     });
   }, [resolvedTheme]);
@@ -240,10 +246,7 @@ export function Editor({
     const tree = buildSemanticTree(ast, docText);
     const mdRegions = extractMarkdownRegions(ast, docText);
     view.dispatch({
-      effects: [
-        setSemanticTree.of(tree),
-        setMarkdownRegions.of(mdRegions),
-      ],
+      effects: [setSemanticTree.of(tree), setMarkdownRegions.of(mdRegions)],
     });
   }, [ast]);
 
