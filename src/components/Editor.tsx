@@ -25,6 +25,12 @@ import {
   setErrorDiagnostics,
   extractErrorDiagnostics,
 } from "@/codemirror/errorLinting";
+import {
+  markdownRegionsField,
+  markdownOverlayPlugin,
+  setMarkdownRegions,
+  extractMarkdownRegions,
+} from "@/codemirror/markdownOverlay";
 import { evalTooltipExtension } from "@/codemirror/evalTooltip";
 import { resultAlignPlugin, type LinePosition } from "@/codemirror/resultAlign";
 import { foldHeadingsService } from "@/codemirror/foldHeadings";
@@ -134,6 +140,8 @@ export function Editor({
         calcLanguage,
         semanticTreeField,
         semanticHighlightPlugin,
+        markdownRegionsField,
+        markdownOverlayPlugin,
         debugCompartment.of(debugExtensions),
         fontCompartment.of(getFontTheme(fontSize, fontFamily)),
         wrapCompartment.of(lineWrappingProp ? EditorView.lineWrapping : []),
@@ -224,14 +232,18 @@ export function Editor({
     });
   }, [lineWrappingProp]);
 
-  // Update semantic highlights when AST changes
+  // Update semantic highlights and markdown overlay when AST changes
   useEffect(() => {
     const view = viewRef.current;
     if (!view || !ast) return;
     const docText = view.state.doc.toString();
     const tree = buildSemanticTree(ast, docText);
+    const mdRegions = extractMarkdownRegions(ast, docText);
     view.dispatch({
-      effects: setSemanticTree.of(tree),
+      effects: [
+        setSemanticTree.of(tree),
+        setMarkdownRegions.of(mdRegions),
+      ],
     });
   }, [ast]);
 

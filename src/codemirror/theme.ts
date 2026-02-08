@@ -85,6 +85,22 @@ const lightHighlightStyle = HighlightStyle.define([
   { tag: tags.bool, color: "#c41a16" },
   { tag: tags.special(tags.string), color: "#2e7d32" },
   { tag: tags.definition(tags.variableName), color: "#1a73e8" },
+  // Markdown inline styles
+  { tag: tags.emphasis, fontStyle: "italic" },
+  { tag: tags.strong, fontWeight: "bold" },
+  { tag: tags.link, color: "#1a73e8", textDecoration: "underline" },
+  { tag: tags.url, color: "#1a73e8" },
+  {
+    tag: tags.monospace,
+    color: "#c41a16",
+    backgroundColor: "rgba(0,0,0,0.05)",
+    borderRadius: "3px",
+  },
+  { tag: tags.quote, color: "#666" },
+  { tag: tags.list, color: "#c41a16" },
+  { tag: tags.contentSeparator, color: "#999" },
+  { tag: tags.processingInstruction, color: "#999" },
+  { tag: tags.strikethrough, textDecoration: "line-through" },
 ]);
 
 export const lightHighlight = syntaxHighlighting(lightHighlightStyle);
@@ -172,6 +188,22 @@ const darkHighlightStyle = HighlightStyle.define([
   { tag: tags.bool, color: "#ff7b72" },
   { tag: tags.special(tags.string), color: "#56d364" },
   { tag: tags.definition(tags.variableName), color: "#6cb6ff" },
+  // Markdown inline styles
+  { tag: tags.emphasis, fontStyle: "italic" },
+  { tag: tags.strong, fontWeight: "bold" },
+  { tag: tags.link, color: "#6cb6ff", textDecoration: "underline" },
+  { tag: tags.url, color: "#6cb6ff", textDecoration: "underline" },
+  {
+    tag: tags.monospace,
+    color: "#ff7b72",
+    backgroundColor: "rgba(255,255,255,0.07)",
+    borderRadius: "3px",
+  },
+  { tag: tags.quote, color: "#8b949e", fontStyle: "italic" },
+  { tag: tags.list, color: "#ff7b72" },
+  { tag: tags.contentSeparator, color: "#666" },
+  { tag: tags.processingInstruction, color: "#666" },
+  { tag: tags.strikethrough, textDecoration: "line-through" },
 ]);
 
 export const darkHighlight = syntaxHighlighting(darkHighlightStyle);
