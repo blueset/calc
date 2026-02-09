@@ -28,6 +28,7 @@ interface Unit {
   names: string[];
   conversion: UnitConversion;
   isBaseUnit?: boolean;
+  countAsTerms?: number; // visual term count (default 1); e.g. m/s = 2, kWh = 2
 }
 
 interface DisplayName {
@@ -401,6 +402,7 @@ function generateDataRateUnits(
     ],
     conversion: { type: "linear", factor: baseFactorToBit },
     isBaseUnit: baseFactorToBit === 1 ? true : undefined,
+    countAsTerms: 2,
   });
 
   // Decimal SI prefixes (kilo and larger)
@@ -1102,6 +1104,7 @@ const staticUnits: Unit[] = [
     displayName: { symbol: "W h", singular: "watt hour", plural: "watt hours" },
     names: ["Wh", "watthour", "watt hour", "watt hours"],
     conversion: { type: "linear", factor: 3600 }, // joules (1 Wh = 3600 J)
+    countAsTerms: 2,
   },
   {
     id: "kilowatt_hour",
@@ -1113,6 +1116,7 @@ const staticUnits: Unit[] = [
     },
     names: ["kWh", "kilowatthour", "kilowatt hour", "kilowatt hours"],
     conversion: { type: "linear", factor: 3600000 }, // joules (1 kWh = 3,600,000 J)
+    countAsTerms: 2,
   },
 
   // ---- Speed ----
@@ -1127,6 +1131,7 @@ const staticUnits: Unit[] = [
     names: ["m/s", "meter per second", "meters per second", "mps"],
     conversion: { type: "linear", factor: 1 },
     isBaseUnit: true,
+    countAsTerms: 2,
   },
   {
     id: "miles_per_hour",
@@ -1349,6 +1354,7 @@ const staticUnits: Unit[] = [
     names: ["beat/s", "beat per second", "beats per second"],
     conversion: { type: "linear", factor: 1 }, // Base unit for beat_rate
     isBaseUnit: true,
+    countAsTerms: 2,
   },
   {
     id: "bpm",

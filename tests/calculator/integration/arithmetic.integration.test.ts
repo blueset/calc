@@ -104,7 +104,7 @@ describe("Integration Tests - Arithmetic", () => {
 
     it("should create derived units from multiplication", () => {
       let result = calculator.calculate("5 N * 2 m");
-      expect(result.results[0].result).toBe("10 N m");
+      expect(result.results[0].result).toBe("10 J");
 
       // Test multiplication with derived units as left operand (unit cancellation)
       result = calculator.calculate("3 kg/m^2 * 2 m^2");
@@ -212,7 +212,7 @@ describe("Integration Tests - Arithmetic", () => {
 10 N · 2 m`);
       expect(result.results[0].result).toContain("15 m");
       expect(result.results[1].result).toContain("5 kg");
-      expect(result.results[2].result).toContain("20 N m");
+      expect(result.results[2].result).toContain("20 J");
     });
   });
 });

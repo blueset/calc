@@ -95,6 +95,78 @@ describe("Integration Tests - Advanced Units", () => {
     });
   });
 
+  describe("Term Reduction", () => {
+    it("should reduce cc/cm to cm²", () => {
+      const result = calculator.calculate("100 cc / 1 cm");
+      expect(result.results[0].result).toBe("100 cm²");
+    });
+
+    it("should reduce L/m to m² via Step 2 (area)", () => {
+      // 1 L / 1 m: Step 1 can't find a unit matching factor^2 = 0.001.
+      // Step 2: dimMap = {length:2} = area → square_meter (countAsTerms 1 < 2 terms)
+      const result = calculator.calculate("1 L / 1 m");
+      expect(result.results[0].result).toBe("0.001 m²");
+    });
+
+    it("should not convert when one operand is dimensionless", () => {
+      const result = calculator.calculate("2 * 30 km/h");
+      expect(result.results[0].result).toBe("60 km/h");
+    });
+
+    it("should not convert literal speed expressions", () => {
+      const result = calculator.calculate("60 km/h");
+      expect(result.results[0].result).toBe("60 km/h");
+    });
+
+    it("should reduce N·m to J (energy)", () => {
+      const result = calculator.calculate("10 N * 2 m");
+      expect(result.results[0].result).toBe("20 J");
+    });
+
+    it("should preserve km/h from variable division", () => {
+      const result = calculator.calculate(`distance = 100 km
+time = 2 h
+distance / time`);
+      expect(result.results[2].result).toBe("50 km/h");
+    });
+
+    it("should reduce cc * cm^2 to cm^5 via single-base consolidation", () => {
+      // cc = volume = length³ (factor 1e-6), cm² = length² (factor 1e-4)
+      // totalBaseExp = 3 + 2 = 5, combinedFactor = 1e-6 * 1e-4 = 1e-10
+      // cm factor = 0.01, 0.01^5 = 1e-10 ✓
+      const result = calculator.calculate("1 cc * 1 cm^2");
+      expect(result.results[0].result).toBe("1 cm⁵");
+    });
+
+    it("should handle area/length reduction to length", () => {
+      // 1 ha / 1 km: ha = area (length², factor 10000), km = length (factor 1000)
+      // totalBaseExp = 2 + (-1) = 1, combinedFactor = 10000 / 1000 = 10
+      // Need unit where factor^1 = 10 → decameter (dam) = 10
+      const result = calculator.calculate("1 ha / 1 km");
+      expect(result.results[0].result).toBe("1 dam");
+    });
+
+    it("should reduce data/rate to time (GB / Mbps → seconds)", () => {
+      const result = calculator.calculate("1 GB / 100 Mbps");
+      expect(result.results[0].result).toBe("80 s");
+    });
+
+    it("should reduce kg·m/s² to N (force)", () => {
+      const result = calculator.calculate("1 kg * 1 m / 1 s^2");
+      expect(result.results[0].result).toBe("1 N");
+    });
+
+    it("should reduce J/s to W (power)", () => {
+      const result = calculator.calculate("1 J / 1 s");
+      expect(result.results[0].result).toBe("1 W");
+    });
+
+    it("should not reduce km/h to m/s (countAsTerms guard)", () => {
+      const result = calculator.calculate("100 km / 2 h");
+      expect(result.results[0].result).toBe("50 km/h");
+    });
+  });
+
   describe("Composite Units", () => {
     it("should handle composite length units", () => {
       const result = calculator.calculate("5 m 20 cm");

@@ -475,7 +475,7 @@ export function evaluateNumberArithmetic(
   // Multiplication - combine units
   if (op === "*") {
     const result = leftValue * rightValue;
-    return multiplyValues(result, left, right, deps.settings.variant);
+    return multiplyValues(result, left, right, deps);
   }
 
   // Division
@@ -504,7 +504,7 @@ export function evaluateNumberArithmetic(
     }
 
     // General case: use term combination
-    return divideValues(result, left, right, deps.settings.variant);
+    return divideValues(result, left, right, deps);
   }
 
   // Modulo

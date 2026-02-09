@@ -33,6 +33,7 @@ export interface Unit {
 
   // Flags
   isBaseUnit?: boolean; // true for the base unit of the dimension
+  countAsTerms?: number; // visual term count (default 1); e.g. m/s = 2, kWh = 2
 }
 
 export interface DisplayName {

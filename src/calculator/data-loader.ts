@@ -150,6 +150,8 @@ export class DataLoader {
 
   // Dimension lookup
   private dimensionById = new Map<string, Dimension>();
+  private unitsByDimension = new Map<string, Unit[]>();
+  private dimensionBySignature = new Map<string, Dimension>();
 
   // Currency data
   private unambiguousCurrencies: UnambiguousCurrency[] = [];
@@ -205,20 +207,22 @@ export class DataLoader {
       this.dimensionById.set(dimension.id, dimension);
     }
 
-    // Build unit lookups and trie
+    // Build unit lookups, trie, and dimension index
     for (const unit of this.units) {
       // By ID
       this.unitById.set(unit.id, unit);
 
+      // By dimension
+      if (!this.unitsByDimension.has(unit.dimension)) {
+        this.unitsByDimension.set(unit.dimension, []);
+      }
+      this.unitsByDimension.get(unit.dimension)!.push(unit);
+
       // Insert all name variants into the trie and lookup maps
       for (const name of unit.names) {
-        // Insert into trie
         this.unitTrie.insert(name, unit);
-
-        // Case-sensitive map
         this.unitByCaseSensitiveName.set(name, unit);
 
-        // Case-insensitive map (can have multiple units)
         const lowerName = name.toLowerCase();
         if (!this.unitByCaseInsensitiveName.has(lowerName)) {
           this.unitByCaseInsensitiveName.set(lowerName, []);
@@ -227,6 +231,15 @@ export class DataLoader {
         if (!existing.includes(unit)) {
           existing.push(unit);
         }
+      }
+    }
+
+    // Build dimensionBySignature index (for derived dimensions)
+    for (const dimension of this.dimensions) {
+      if (dimension.derivedFrom?.length) {
+        const map = new Map(dimension.derivedFrom.map(c => [c.dimension, c.exponent]));
+        const sig = this.buildSignatureFromMap(map);
+        this.dimensionBySignature.set(sig, dimension);
       }
     }
   }
@@ -405,6 +418,32 @@ export class DataLoader {
    */
   getDimensionById(id: string): Dimension | undefined {
     return this.dimensionById.get(id);
+  }
+
+  /**
+   * Get all units in a given dimension
+   */
+  getUnitsByDimension(dimensionId: string): Unit[] {
+    return this.unitsByDimension.get(dimensionId) || [];
+  }
+
+  /**
+   * Get a named dimension by its base-dimension signature.
+   * Signature format: sorted "dim:exp" entries joined by comma.
+   * Example: "length:2" for area, "mass:1,length:2,time:-3" for power
+   */
+  getDimensionBySignature(signature: string): Dimension | undefined {
+    return this.dimensionBySignature.get(signature);
+  }
+
+  /**
+   * Build a dimension signature from a map of base dimensions.
+   */
+  buildSignatureFromMap(dimMap: Map<string, number>): string {
+    return Array.from(dimMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([dim, exp]) => `${dim}:${exp}`)
+      .join(',');
   }
 
   /**

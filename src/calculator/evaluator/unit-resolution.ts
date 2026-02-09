@@ -292,32 +292,18 @@ export function computeDimension(
     // Get the dimension of this unit
     const dimension = deps.dataLoader.getDimensionById(term.unit.dimension);
 
-    // Handle user-defined dimensions (not in dimension database)
+    // Handle dimensions not in the database (user-defined, currency)
     if (!dimension) {
-      // User-defined units have dimensions like "user_defined_person"
-      // Treat them as their own base dimensions
-      if (term.unit.dimension.startsWith("user_defined_")) {
+      if (isSpecialDimension(term.unit.dimension)) {
         const currentExp = dimensionMap.get(term.unit.dimension) || 0;
         dimensionMap.set(term.unit.dimension, currentExp + term.exponent);
         continue;
       }
-
-      // Handle currency dimensions (not in units database)
-      // Currency dimension or ambiguous currency dimensions (currency_symbol_*)
-      if (
-        term.unit.dimension === "currency" ||
-        term.unit.dimension.startsWith("currency_symbol_")
-      ) {
-        const currentExp = dimensionMap.get(term.unit.dimension) || 0;
-        dimensionMap.set(term.unit.dimension, currentExp + term.exponent);
-        continue;
-      }
-
       throw new Error(`Unknown dimension: ${term.unit.dimension}`);
     }
 
     // If it's a base dimension, add directly
-    if (!dimension.derivedFrom || dimension.derivedFrom.length === 0) {
+    if (!dimension.derivedFrom?.length) {
       const currentExp = dimensionMap.get(dimension.id) || 0;
       dimensionMap.set(dimension.id, currentExp + term.exponent);
     } else {
@@ -423,6 +409,19 @@ export function combineTerms(
 }
 
 /**
+ * Get the effective linear factor for a unit, handling linear/affine/variant conversions.
+ */
+function getEffectiveFactor(
+  unit: Unit,
+  variant?: EvaluatorSettings["variant"],
+): number {
+  if (unit.conversion.type === "linear" || unit.conversion.type === "affine") {
+    return unit.conversion.factor;
+  }
+  return variant ? unit.conversion.variants[variant].factor : 1.0;
+}
+
+/**
  * Simplify terms by converting compatible units and canceling opposing exponents
  * Returns simplified terms and a conversion factor to apply to the numeric value
  */
@@ -461,15 +460,7 @@ export function simplifyTerms(
 
       // Apply conversion factors to the numeric value
       for (const term of dimTerms) {
-        // Factor raised to the power of the exponent
-        const unitFactor =
-          term.unit.conversion.type === "linear"
-            ? term.unit.conversion.factor
-            : term.unit.conversion.type === "affine"
-              ? term.unit.conversion.factor
-              : variant
-                ? term.unit.conversion.variants[variant].factor
-                : 1.0;
+        const unitFactor = getEffectiveFactor(term.unit, variant);
         const conversionFactor = Math.pow(unitFactor, term.exponent);
         factor *= conversionFactor;
       }
@@ -486,6 +477,210 @@ export function simplifyTerms(
   return { simplified, factor };
 }
 
+// ── Post-simplification term reduction ──────────────────────────────
+
+/**
+ * Floating point approximate equality with relative epsilon
+ */
+function approxEqual(a: number, b: number): boolean {
+  const denom = Math.max(Math.abs(a), Math.abs(b), 1e-15);
+  return Math.abs(a - b) / denom < 1e-9;
+}
+
+/** Check if a dimension ID is a special (currency or user-defined) dimension */
+function isSpecialDimension(dim: string): boolean {
+  return (
+    dim === "currency" ||
+    dim.startsWith("currency_symbol_") ||
+    dim.startsWith("user_defined_")
+  );
+}
+
+/**
+ * Reduce terms after simplifyTerms by consolidating across different dimensions.
+ *
+ * Step 1: Group terms whose dimensions expand to a single base dimension.
+ *         If multiple terms share the same base dimension, find a unit whose
+ *         factor^totalExp matches the combined factor.
+ *
+ * Step 2: Check if the full base-dimension signature of remaining terms
+ *         matches a named derived dimension → convert to that dimension's base unit.
+ *
+ * Guards: skip when terms.length <= 1, either operand was dimensionless,
+ *         or any term has currency/user-defined dimension.
+ */
+export function reduceTerms(
+  terms: Array<{ unit: Unit; exponent: number }>,
+  value: number,
+  deps: EvaluatorDeps,
+  leftTerms: Array<{ unit: Unit; exponent: number }>,
+  rightTerms: Array<{ unit: Unit; exponent: number }>,
+): { reduced: Array<{ unit: Unit; exponent: number }>; value: number } {
+  // Guard: already minimal
+  if (terms.length <= 1) {
+    return { reduced: terms, value };
+  }
+
+  // Guard: either operand was dimensionless → skip (prevents 2 * 30 km/h → m/s)
+  if (leftTerms.length === 0 || rightTerms.length === 0) {
+    return { reduced: terms, value };
+  }
+
+  // Guard: skip if any term has currency or user-defined dimension
+  if (terms.some((t) => isSpecialDimension(t.unit.dimension))) {
+    return { reduced: terms, value };
+  }
+
+  // ── Step 1: Single-base-dimension consolidation ──────────────────
+
+  // For each term, determine if its dimension expands to a single base dimension
+  // (e.g., volume -> length^3 is single-base; force -> mass*length*time^-2 is multi-base)
+  const termBaseDimInfo: Array<{
+    baseDim: string;
+    dimExponent: number;
+  } | null> = terms.map((term) => {
+    const dimension = deps.dataLoader.getDimensionById(term.unit.dimension);
+    if (!dimension) return null;
+
+    if (!dimension.derivedFrom?.length) {
+      return { baseDim: dimension.id, dimExponent: 1 };
+    }
+    if (dimension.derivedFrom.length === 1) {
+      return {
+        baseDim: dimension.derivedFrom[0].dimension,
+        dimExponent: dimension.derivedFrom[0].exponent,
+      };
+    }
+    return null; // Multi-base derived dimension
+  });
+
+  // Group by base dimension (only single-base terms)
+  const byBaseDim = new Map<string, number[]>();
+  for (let i = 0; i < terms.length; i++) {
+    const info = termBaseDimInfo[i];
+    if (info) {
+      if (!byBaseDim.has(info.baseDim)) {
+        byBaseDim.set(info.baseDim, []);
+      }
+      byBaseDim.get(info.baseDim)!.push(i);
+    }
+  }
+
+  let currentValue = value;
+  const resultTerms: Array<{ unit: Unit; exponent: number }> = [];
+  const consumedIndices = new Set<number>();
+
+  for (const [baseDim, indices] of byBaseDim) {
+    if (indices.length < 2) continue; // No consolidation needed
+
+    // Compute totalBaseExponent and combinedFactor
+    let totalBaseExponent = 0;
+    let combinedFactor = 1;
+
+    for (const idx of indices) {
+      const term = terms[idx];
+      const info = termBaseDimInfo[idx]!;
+      totalBaseExponent += term.exponent * info.dimExponent;
+      const unitFactor = getEffectiveFactor(term.unit, deps.settings.variant);
+      combinedFactor *= Math.pow(unitFactor, term.exponent);
+    }
+
+    if (totalBaseExponent === 0) {
+      // Terms cancel completely — apply combined factor to value
+      currentValue *= combinedFactor;
+      for (const idx of indices) consumedIndices.add(idx);
+      continue;
+    }
+
+    // Find a unit in baseDim where unit.factor^totalBaseExponent ≈ combinedFactor
+    const baseDimension = deps.dataLoader.getDimensionById(baseDim);
+    if (!baseDimension) continue;
+
+    const candidateUnits = deps.dataLoader.getUnitsByDimension(baseDim);
+    let foundUnit: Unit | null = null;
+
+    for (const candidate of candidateUnits) {
+      const candidateFactor = getEffectiveFactor(
+        candidate,
+        deps.settings.variant,
+      );
+      const candidatePower = Math.pow(candidateFactor, totalBaseExponent);
+      if (approxEqual(candidatePower, combinedFactor)) {
+        foundUnit = candidate;
+        break;
+      }
+    }
+
+    if (foundUnit) {
+      resultTerms.push({ unit: foundUnit, exponent: totalBaseExponent });
+      for (const idx of indices) consumedIndices.add(idx);
+      // No factor adjustment needed — foundUnit.factor^totalExp ≈ combinedFactor
+    }
+  }
+
+  // Add unconsumed terms
+  for (let i = 0; i < terms.length; i++) {
+    if (!consumedIndices.has(i)) {
+      resultTerms.push(terms[i]);
+    }
+  }
+
+  // ── Step 2: Named dimension matching ─────────────────────────────
+  // Compute the base-dimension signature of all remaining terms. If it
+  // matches a named derived dimension or a single base dimension, convert
+  // to that dimension's base unit — but only when the result has fewer
+  // perceived terms (using countAsTerms) than the input.
+
+  if (resultTerms.length > 1) {
+    const dimMap = computeDimension(deps, resultTerms);
+
+    // Skip if any special dimensions remain
+    if (!Array.from(dimMap.keys()).some(isSpecialDimension)) {
+      // Try named derived dimension first, then single base dimension fallback
+      let targetUnit: Unit | undefined;
+      let targetExponent = 1;
+
+      const signature = deps.dataLoader.buildSignatureFromMap(dimMap);
+      const namedDimension = deps.dataLoader.getDimensionBySignature(signature);
+
+      if (namedDimension) {
+        targetUnit = deps.dataLoader.getUnitById(namedDimension.baseUnit);
+      } else if (dimMap.size === 1) {
+        // Single base dimension (e.g., {time:1} from GB/Mbps)
+        const [dimId, exp] = dimMap.entries().next().value!;
+        const baseDimension = deps.dataLoader.getDimensionById(dimId);
+        if (baseDimension) {
+          targetUnit = deps.dataLoader.getUnitById(baseDimension.baseUnit);
+          targetExponent = exp;
+        }
+      }
+
+      if (targetUnit) {
+        const targetTermCount = targetUnit.countAsTerms ?? 1;
+        if (targetTermCount < resultTerms.length) {
+          let conversionFactor = 1;
+          for (const term of resultTerms) {
+            const f = getEffectiveFactor(term.unit, deps.settings.variant);
+            conversionFactor *= Math.pow(f, term.exponent);
+          }
+          const baseUnitFactor = getEffectiveFactor(
+            targetUnit,
+            deps.settings.variant,
+          );
+          conversionFactor /= Math.pow(baseUnitFactor, targetExponent);
+
+          return {
+            reduced: [{ unit: targetUnit, exponent: targetExponent }],
+            value: currentValue * conversionFactor,
+          };
+        }
+      }
+    }
+  }
+
+  return { reduced: resultTerms, value: currentValue };
+}
+
 /**
  * Multiply two numeric values (handles all combinations of number/unit/derived)
  */
@@ -493,11 +688,21 @@ export function multiplyValues(
   value: number,
   left: NumericValue,
   right: NumericValue,
-  variant?: EvaluatorSettings["variant"],
+  deps: EvaluatorDeps,
 ): NumericValue {
   const combinedTerms = combineTerms(left.terms, right.terms);
-  const { simplified, factor } = simplifyTerms(combinedTerms, variant);
-  return numValTerms(value * factor, simplified);
+  const { simplified, factor } = simplifyTerms(
+    combinedTerms,
+    deps.settings.variant,
+  );
+  const { reduced, value: reducedValue } = reduceTerms(
+    simplified,
+    value * factor,
+    deps,
+    left.terms,
+    right.terms,
+  );
+  return numValTerms(reducedValue, reduced);
 }
 
 /**
@@ -507,13 +712,23 @@ export function divideValues(
   value: number,
   left: NumericValue,
   right: NumericValue,
-  variant?: EvaluatorSettings["variant"],
+  deps: EvaluatorDeps,
 ): NumericValue {
   const negatedRightTerms = right.terms.map((t) => ({
     unit: t.unit,
     exponent: -t.exponent,
   }));
   const combinedTerms = combineTerms(left.terms, negatedRightTerms);
-  const { simplified, factor } = simplifyTerms(combinedTerms, variant);
-  return numValTerms(value * factor, simplified);
+  const { simplified, factor } = simplifyTerms(
+    combinedTerms,
+    deps.settings.variant,
+  );
+  const { reduced, value: reducedValue } = reduceTerms(
+    simplified,
+    value * factor,
+    deps,
+    left.terms,
+    negatedRightTerms,
+  );
+  return numValTerms(reducedValue, reduced);
 }

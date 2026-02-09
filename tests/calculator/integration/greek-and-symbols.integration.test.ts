@@ -256,8 +256,8 @@ phi == φ`);
     it("should use · for derived units", () => {
       const result = calculator.calculate(`10 N · 2 m
 5 kg · 10 m/s²`);
-      expect(result.results[0].result).toBe("20 N m");
-      expect(result.results[1].result).toBe("50 kg m/s²");
+      expect(result.results[0].result).toBe("20 J");
+      expect(result.results[1].result).toBe("50 N");
     });
   });
 

@@ -20,7 +20,7 @@ export const DEFAULT_DOCUMENT = `# Arithmetic
 # Variables
 size = 12.59 GiB
 speed = 100 Mbps
-time = size / speed in min
+time = size / speed in min sec
 
 # Date & Time
 now
