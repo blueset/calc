@@ -71,7 +71,7 @@ React + Vite + Tailwind CSS 4 + shadcn/ui components. CodeMirror 6 editor with c
 
 | Module | Role |
 |--------|------|
-| `evaluator.ts` | Very large file. Expression evaluation, variable scoping, unit arithmetic, date math. Public: `evaluateDocument`, `createContext`, `tryEvaluateLine`, `commitAssignment` |
+| `evaluator/*.ts` | Expression evaluation, variable scoping, unit arithmetic, date math. Public: `evaluateDocument`, `createContext`, `tryEvaluateLine`, `commitAssignment` |
 | `unit-converter.ts` | Unit conversion engine. Temperature etc. must use `unitConverter.convert()`, not factor-based |
 | `currency.ts` | Currency conversion using exchange rates |
 | `date-time.ts` | Date/time operations using `@js-temporal/polyfill` |
