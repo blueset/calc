@@ -71,15 +71,9 @@ export function evaluateConditional(
   }
 
   if (conditionBool.value) {
-    return evalExpr(
-      expr.then as NearleyAST.ExpressionNode,
-      context,
-    );
+    return evalExpr(expr.then as NearleyAST.ExpressionNode, context);
   } else {
-    return evalExpr(
-      expr.else as NearleyAST.ExpressionNode,
-      context,
-    );
+    return evalExpr(expr.else as NearleyAST.ExpressionNode, context);
   }
 }
 
@@ -94,16 +88,10 @@ export function evaluateBinary(
   expr: NearleyAST.BinaryExpressionNode,
   context: EvaluationContext,
 ): Value {
-  const left = evalExpr(
-    expr.left as NearleyAST.ExpressionNode,
-    context,
-  );
+  const left = evalExpr(expr.left as NearleyAST.ExpressionNode, context);
   if (left.kind === "error") return left;
 
-  const right = evalExpr(
-    expr.right as NearleyAST.ExpressionNode,
-    context,
-  );
+  const right = evalExpr(expr.right as NearleyAST.ExpressionNode, context);
   if (right.kind === "error") return right;
 
   const op = expr.operator;
@@ -169,7 +157,11 @@ export function evaluateBinary(
 /**
  * Evaluate logical operators (&& and ||)
  */
-export function evaluateLogical(op: "&&" | "||", left: Value, right: Value): Value {
+export function evaluateLogical(
+  op: "&&" | "||",
+  left: Value,
+  right: Value,
+): Value {
   const leftBool = toBoolean(left);
   if (leftBool.kind === "error") return leftBool;
 
@@ -244,9 +236,7 @@ export function evaluateComparison(
       }
     } else if (leftCmpU || rightCmpU) {
       // One has unit, other doesn't
-      return createError(
-        `Cannot compare dimensioned and dimensionless values`,
-      );
+      return createError(`Cannot compare dimensioned and dimensionless values`);
     }
 
     switch (op) {
@@ -274,9 +264,7 @@ export function evaluateComparison(
 
     // Both must have units (dimensionless numbers handled above)
     if (leftTerms.length === 0 || rightTerms.length === 0) {
-      return createError(
-        "Cannot compare dimensioned and dimensionless values",
-      );
+      return createError("Cannot compare dimensioned and dimensionless values");
     }
 
     const leftDim = computeDimension(deps, leftTerms);
@@ -345,11 +333,7 @@ export function evaluateArithmetic(
   let convertedRight = right;
 
   // If left is a date/time type and right is a number with time dimension, convert right to duration
-  if (
-    isDateTimeValue(left) &&
-    right.kind === "value" &&
-    isSimpleUnit(right)
-  ) {
+  if (isDateTimeValue(left) && right.kind === "value" && isSimpleUnit(right)) {
     const rightTimeUnit = getUnit(right)!;
     if (rightTimeUnit.dimension === "time") {
       const duration = convertTimeToDuration(deps, right.value, rightTimeUnit);
@@ -392,9 +376,7 @@ export function evaluateArithmetic(
     return evaluateNumberArithmetic(deps, op, convertedLeft, convertedRight);
   }
 
-  return createError(
-    `Cannot perform ${op} on ${left.kind} and ${right.kind}`,
-  );
+  return createError(`Cannot perform ${op} on ${left.kind} and ${right.kind}`);
 }
 
 /**
@@ -435,9 +417,7 @@ export function evaluateNumberArithmetic(
           leftU,
         );
         const result =
-          op === "+"
-            ? leftValue + convertedRight
-            : leftValue - convertedRight;
+          op === "+" ? leftValue + convertedRight : leftValue - convertedRight;
         return numValUnit(result, leftU);
       } catch (e) {
         return createError(`Conversion error: ${e}`);
@@ -495,7 +475,7 @@ export function evaluateNumberArithmetic(
   // Multiplication - combine units
   if (op === "*") {
     const result = leftValue * rightValue;
-    return multiplyValues(result, left, right);
+    return multiplyValues(result, left, right, deps.settings.variant);
   }
 
   // Division
@@ -524,7 +504,7 @@ export function evaluateNumberArithmetic(
     }
 
     // General case: use term combination
-    return divideValues(result, left, right);
+    return divideValues(result, left, right, deps.settings.variant);
   }
 
   // Modulo
@@ -547,9 +527,7 @@ export function evaluateNumberArithmetic(
       const powLeftU = getUnit(left);
       if (powLeftU) {
         // Check if this unit's dimension is derived
-        const dimension = deps.dataLoader.getDimensionById(
-          powLeftU.dimension,
-        );
+        const dimension = deps.dataLoader.getDimensionById(powLeftU.dimension);
         if (
           dimension &&
           dimension.derivedFrom &&
@@ -636,9 +614,7 @@ export function evaluateNumberArithmetic(
       // Dimensionless number
       return numVal(result);
     }
-    return createError(
-      `Exponent must be dimensionless, got ${right.kind}`,
-    );
+    return createError(`Exponent must be dimensionless, got ${right.kind}`);
   }
 
   return createError(`Unknown arithmetic operator: ${op}`);
@@ -700,10 +676,7 @@ export function evaluateUnary(
   expr: NearleyAST.UnaryExpressionNode,
   context: EvaluationContext,
 ): Value {
-  const operand = evalExpr(
-    expr.argument as NearleyAST.ExpressionNode,
-    context,
-  );
+  const operand = evalExpr(expr.argument as NearleyAST.ExpressionNode, context);
   if (operand.kind === "error") return operand;
 
   const op = expr.operator;
@@ -736,9 +709,7 @@ export function evaluateUnary(
 
   if (op === "tilde") {
     if (operand.kind !== "value") {
-      return createError(
-        `Bitwise NOT requires a number, got ${operand.kind}`,
-      );
+      return createError(`Bitwise NOT requires a number, got ${operand.kind}`);
     }
     if (!isDimensionless(operand)) {
       return createError(`Bitwise NOT requires dimensionless value`);
@@ -758,17 +729,12 @@ export function evaluatePostfix(
   expr: NearleyAST.PostfixExpressionNode,
   context: EvaluationContext,
 ): Value {
-  const operand = evalExpr(
-    expr.argument as NearleyAST.ExpressionNode,
-    context,
-  );
+  const operand = evalExpr(expr.argument as NearleyAST.ExpressionNode, context);
   if (operand.kind === "error") return operand;
 
   if (expr.operator === "bang") {
     if (operand.kind !== "value") {
-      return createError(
-        `Factorial requires a number, got ${operand.kind}`,
-      );
+      return createError(`Factorial requires a number, got ${operand.kind}`);
     }
     if (!isDimensionless(operand)) {
       return createError(`Factorial requires dimensionless value`);
@@ -776,9 +742,7 @@ export function evaluatePostfix(
 
     const n = operand.value;
     if (n < 0 || !Number.isInteger(n)) {
-      return createError(
-        `Factorial requires non-negative integer, got ${n}`,
-      );
+      return createError(`Factorial requires non-negative integer, got ${n}`);
     }
 
     let result = 1;
@@ -868,10 +832,7 @@ export function evaluateFunctionCall(
         );
         args.push(convertedValue);
       } catch (error) {
-        console.error(
-          `Unit conversion error in function ${expr.name}:`,
-          error,
-        );
+        console.error(`Unit conversion error in function ${expr.name}:`, error);
         return createError(
           `Cannot convert ${argUnit.displayName.singular} to ${firstArgUnit.displayName.singular} in function call`,
         );
@@ -916,9 +877,7 @@ export function evaluateFunctionCall(
   if (compositeArg) {
     const converted = convertCompositeToSingleUnit(deps, compositeArg);
     if (converted.kind === "error") return converted;
-    const funcResult = deps.mathFunctions.execute(expr.name, [
-      converted.value,
-    ]);
+    const funcResult = deps.mathFunctions.execute(expr.name, [converted.value]);
     if (funcResult.error) return createError(funcResult.error);
     // Re-composite into the original units
     const resultAsSimple = numValUnit(funcResult.value, getUnit(converted)!);

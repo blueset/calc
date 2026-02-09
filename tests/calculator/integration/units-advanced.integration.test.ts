@@ -84,6 +84,15 @@ describe("Integration Tests - Advanced Units", () => {
       expect(result.results[8].result).toBe("1.01 km/t");
       expect(result.results[9].result).toMatch(/1.503\d+ ft\/lb/);
     });
+
+    it("should handle mixed derived units with variant conversions", () => {
+      const result = calculator.calculate(`1 tsp to mL
+1 tsp / 1 ml
+1 tsp/s / 1 ml/s`);
+      expect(result.results[0].result).toMatch(/4\.9289\d+ mL/);
+      expect(result.results[1].result).toMatch(/4\.9289\d+$/);
+      expect(result.results[2].result).toMatch(/4\.9289\d+$/);
+    });
   });
 
   describe("Composite Units", () => {

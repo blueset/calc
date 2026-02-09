@@ -11,6 +11,7 @@ import { createError } from "./eval-helpers";
 import {
   type NumericValue,
   type ErrorValue,
+  type EvaluatorSettings,
   numValTerms,
 } from "./values";
 
@@ -26,9 +27,7 @@ export function parseNumericalValue(
     const cleaned = node.value.replaceAll("_", "");
     // Validate base range
     if (node.base < 2 || node.base > 36) {
-      return createError(
-        `Base must be between 2 and 36, got ${node.base}`,
-      );
+      return createError(`Base must be between 2 and 36, got ${node.base}`);
     }
     // For arbitrary base literals (e.g., "ABC base 10"), validate digits
     // Regular decimal literals (subType !== ArbitraryBase*) skip validation
@@ -140,8 +139,7 @@ export function resolveCurrencyUnit(
   }
 
   // Check if it's an ambiguous currency symbol (like $, £, ¥)
-  const ambiguous =
-    deps.dataLoader.getAmbiguousCurrencyByAdjacentSymbol(name);
+  const ambiguous = deps.dataLoader.getAmbiguousCurrencyByAdjacentSymbol(name);
   if (ambiguous) {
     return {
       id: ambiguous.dimension, // Use dimension as ID for ambiguous currencies
@@ -428,7 +426,10 @@ export function combineTerms(
  * Simplify terms by converting compatible units and canceling opposing exponents
  * Returns simplified terms and a conversion factor to apply to the numeric value
  */
-export function simplifyTerms(terms: Array<{ unit: Unit; exponent: number }>): {
+export function simplifyTerms(
+  terms: Array<{ unit: Unit; exponent: number }>,
+  variant?: EvaluatorSettings["variant"],
+): {
   simplified: Array<{ unit: Unit; exponent: number }>;
   factor: number;
 } {
@@ -466,7 +467,9 @@ export function simplifyTerms(terms: Array<{ unit: Unit; exponent: number }>): {
             ? term.unit.conversion.factor
             : term.unit.conversion.type === "affine"
               ? term.unit.conversion.factor
-              : 1.0; // variant conversion doesn't have a simple factor
+              : variant
+                ? term.unit.conversion.variants[variant].factor
+                : 1.0;
         const conversionFactor = Math.pow(unitFactor, term.exponent);
         factor *= conversionFactor;
       }
@@ -490,9 +493,10 @@ export function multiplyValues(
   value: number,
   left: NumericValue,
   right: NumericValue,
+  variant?: EvaluatorSettings["variant"],
 ): NumericValue {
   const combinedTerms = combineTerms(left.terms, right.terms);
-  const { simplified, factor } = simplifyTerms(combinedTerms);
+  const { simplified, factor } = simplifyTerms(combinedTerms, variant);
   return numValTerms(value * factor, simplified);
 }
 
@@ -503,12 +507,13 @@ export function divideValues(
   value: number,
   left: NumericValue,
   right: NumericValue,
+  variant?: EvaluatorSettings["variant"],
 ): NumericValue {
   const negatedRightTerms = right.terms.map((t) => ({
     unit: t.unit,
     exponent: -t.exponent,
   }));
   const combinedTerms = combineTerms(left.terms, negatedRightTerms);
-  const { simplified, factor } = simplifyTerms(combinedTerms);
+  const { simplified, factor } = simplifyTerms(combinedTerms, variant);
   return numValTerms(value * factor, simplified);
 }
