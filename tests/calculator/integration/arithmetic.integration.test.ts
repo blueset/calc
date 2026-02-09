@@ -89,7 +89,7 @@ describe("Integration Tests - Arithmetic", () => {
 
     it("should add compatible user-defined units", () => {
       const result = calculator.calculate("3 trip + 2 trip");
-      expect(result.results[0].result).toBe("5 trip");
+      expect(result.results[0].result).toBe("5 trips");
     });
 
     it("should subtract compatible units with fractional result", () => {
@@ -150,7 +150,7 @@ describe("Integration Tests - Arithmetic", () => {
 
       // Test division with user-defined derived units (unit cancellation)
       result = calculator.calculate("500 click/person / 5 USD/person");
-      expect(result.results[0].result).toBe("100 click/USD");
+      expect(result.results[0].result).toBe("100 clicks/USD");
     });
 
     it("should combine conversion with arithmetic", () => {

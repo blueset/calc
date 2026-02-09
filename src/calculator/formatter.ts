@@ -35,10 +35,15 @@ import { SUPERSCRIPTS } from "@/constants";
 export class Formatter {
   private settings: Settings;
   private dataLoader: DataLoader | null;
+  private readonly pluralRules = new Intl.PluralRules("en");
 
   constructor(settings: Settings = defaultSettings, dataLoader?: DataLoader) {
     this.settings = settings;
     this.dataLoader = dataLoader || null;
+  }
+
+  private shouldPluralize(value: number): boolean {
+    return this.pluralRules.select(Math.abs(value)) !== "one";
   }
 
   /**
@@ -113,7 +118,7 @@ export class Formatter {
         return formattedNumber;
       }
 
-      const unitStr = this.formatDerivedUnit(innerValue.terms);
+      const unitStr = this.formatDerivedUnit(innerValue.terms, innerValue.value);
       return `${formattedNumber}${this.getUnitSeparator(unitStr)}${unitStr}`;
     }
 
@@ -125,7 +130,10 @@ export class Formatter {
           typeof format === "number"
             ? this.formatBase(comp.value, format)
             : this.formatPresentation(comp.value, format);
-        const unitStr = this.formatUnit(comp.unit);
+        const unitStr = this.formatUnit(
+          comp.unit,
+          this.shouldPluralize(comp.value),
+        );
         parts.push(
           `${formattedValue}${this.getUnitSeparator(unitStr)}${unitStr}`,
         );
@@ -319,7 +327,7 @@ export class Formatter {
     }
 
     if (value.terms.length > 0) {
-      const unitStr = this.formatDerivedUnit(value.terms);
+      const unitStr = this.formatDerivedUnit(value.terms, value.value);
       return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
     }
 
@@ -736,7 +744,7 @@ export class Formatter {
   /**
    * Format a unit (display name based on settings)
    */
-  private formatUnit(unit: Unit): string {
+  private formatUnit(unit: Unit, pluralize: boolean = false): string {
     // Check ambiguous currency first - display as symbol not dimension
     if (unit.dimension?.startsWith("currency_symbol_")) {
       return this.getAmbiguousSymbol(unit.dimension);
@@ -748,7 +756,9 @@ export class Formatter {
     ) {
       return unit.displayName.symbol;
     } else {
-      // Use singular or plural based on context (for now, always use singular)
+      if (pluralize && unit.displayName.plural) {
+        return unit.displayName.plural;
+      }
       return unit.displayName.singular;
     }
   }
@@ -762,7 +772,7 @@ export class Formatter {
       // Fallback to the unit ID if not found
       return unitId;
     }
-    return this.formatUnit(unit /* TODO: count */);
+    return this.formatUnit(unit, this.shouldPluralize(count));
   }
 
   /**
@@ -771,14 +781,22 @@ export class Formatter {
    */
   private formatDerivedUnit(
     terms: Array<{ unit: Unit; exponent: number }>,
+    value?: number,
   ): string {
     // Separate into numerator and denominator
     const numerator = terms.filter((t) => t.exponent > 0);
     const denominator = terms.filter((t) => t.exponent < 0);
 
+    const shouldPluralizeLastNum =
+      value !== undefined && this.shouldPluralize(value);
+
     // Format numerator
-    const numParts = numerator.map((t) =>
-      this.formatUnitTerm(t.unit, t.exponent),
+    const numParts = numerator.map((t, i) =>
+      this.formatUnitTerm(
+        t.unit,
+        t.exponent,
+        shouldPluralizeLastNum && i === numerator.length - 1,
+      ),
     );
     const numStr = numParts.join(" ");
 
@@ -805,8 +823,12 @@ export class Formatter {
    * Format a single unit term with exponent
    * Uses Unicode superscripts for exponents > 1
    */
-  private formatUnitTerm(unit: Unit, exponent: number): string {
-    const unitStr = this.formatUnit(unit);
+  private formatUnitTerm(
+    unit: Unit,
+    exponent: number,
+    pluralize: boolean = false,
+  ): string {
+    const unitStr = this.formatUnit(unit, pluralize);
 
     if (exponent === 1) {
       return unitStr;

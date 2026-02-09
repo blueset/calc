@@ -266,7 +266,7 @@ pi`);
         unitDisplayStyle: "name",
       });
       const result = calculator.calculate("5 km");
-      expect(result.results[0].result).toBe("5 kilometer");
+      expect(result.results[0].result).toBe("5 kilometers");
     });
 
     it("should apply unit style to temperature units", () => {
@@ -274,7 +274,7 @@ pi`);
         unitDisplayStyle: "name",
       });
       const result = calculator.calculate("25 °C");
-      expect(result.results[0].result).toBe("25 degree Celsius");
+      expect(result.results[0].result).toBe("25 degrees Celsius");
     });
   });
 

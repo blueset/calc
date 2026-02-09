@@ -198,7 +198,7 @@ describe("Formatter", () => {
         terms: [{ unit: meterUnit, exponent: 1 }],
         value: 5,
       };
-      expect(formatter.format(value)).toBe("5 meter");
+      expect(formatter.format(value)).toBe("5 meters");
     });
 
     it("should format fractional values with units", () => {
@@ -528,7 +528,7 @@ describe("Formatter", () => {
           milliseconds: 0,
         },
       };
-      expect(formatter.format(value)).toBe("0 millisecond");
+      expect(formatter.format(value)).toBe("0 milliseconds");
     });
   });
 

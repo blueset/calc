@@ -209,6 +209,21 @@
       "baseUnit": "dot"
     },
     {
+      "id": "printing_density",
+      "name": "Printing Density",
+      "baseUnit": "dot_per_meter",
+      "derivedFrom": [
+        {
+          "dimension": "printing",
+          "exponent": 1
+        },
+        {
+          "dimension": "length",
+          "exponent": -1
+        }
+      ]
+    },
+    {
       "id": "operation",
       "name": "Operation",
       "baseUnit": "operation"
@@ -1965,6 +1980,60 @@
       "conversion": {
         "type": "linear",
         "factor": 1
+      }
+    },
+    {
+      "id": "dot_per_meter",
+      "dimension": "printing_density",
+      "displayName": {
+        "symbol": "dot/m",
+        "singular": "dot per meter",
+        "plural": "dots per meter"
+      },
+      "names": [
+        "dot/m",
+        "dot per meter",
+        "dots per meter"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 1
+      },
+      "isBaseUnit": true,
+      "countAsTerms": 2
+    },
+    {
+      "id": "dpi",
+      "dimension": "printing_density",
+      "displayName": {
+        "symbol": "dpi",
+        "singular": "dpi",
+        "plural": "dpi"
+      },
+      "names": [
+        "dpi",
+        "dots per inch"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 39.37007874015748
+      }
+    },
+    {
+      "id": "ppi",
+      "dimension": "printing_density",
+      "displayName": {
+        "symbol": "ppi",
+        "singular": "ppi",
+        "plural": "ppi"
+      },
+      "names": [
+        "ppi",
+        "pixels per inch"
+      ],
+      "conversion": {
+        "type": "linear",
+        "factor": 39.37007874015748
       }
     },
     {

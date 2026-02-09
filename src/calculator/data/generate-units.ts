@@ -219,6 +219,15 @@ const dimensions: Dimension[] = [
   { id: "resistance", name: "Electrical Resistance", baseUnit: "ohm" },
   { id: "luminous_intensity", name: "Luminous Intensity", baseUnit: "candela" },
   { id: "printing", name: "Printing/Display", baseUnit: "dot" },
+  {
+    id: "printing_density",
+    name: "Printing Density",
+    baseUnit: "dot_per_meter",
+    derivedFrom: [
+      { dimension: "printing", exponent: 1 },
+      { dimension: "length", exponent: -1 },
+    ],
+  },
   { id: "operation", name: "Operation", baseUnit: "operation" },
   {
     id: "operation_rate",
@@ -1379,6 +1388,35 @@ const staticUnits: Unit[] = [
     displayName: { symbol: "px", singular: "pixel", plural: "pixels" },
     names: ["px", "pixel", "pixels"],
     conversion: { type: "linear", factor: 1 }, // 1 pixel = 1 dot
+  },
+
+  // ---- Printing Density ----
+  {
+    id: "dot_per_meter",
+    dimension: "printing_density",
+    displayName: {
+      symbol: "dot/m",
+      singular: "dot per meter",
+      plural: "dots per meter",
+    },
+    names: ["dot/m", "dot per meter", "dots per meter"],
+    conversion: { type: "linear", factor: 1 },
+    isBaseUnit: true,
+    countAsTerms: 2,
+  },
+  {
+    id: "dpi",
+    dimension: "printing_density",
+    displayName: { symbol: "dpi", singular: "dpi", plural: "dpi" },
+    names: ["dpi", "dots per inch"],
+    conversion: { type: "linear", factor: 1 / 0.0254 }, // 1 dpi = 1 dot / 0.0254 m
+  },
+  {
+    id: "ppi",
+    dimension: "printing_density",
+    displayName: { symbol: "ppi", singular: "ppi", plural: "ppi" },
+    names: ["ppi", "pixels per inch"],
+    conversion: { type: "linear", factor: 1 / 0.0254 }, // same as dpi (1 pixel = 1 dot)
   },
 ];
 

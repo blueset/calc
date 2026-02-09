@@ -409,6 +409,24 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
             Units
           </h3>
 
+          <SettingRow label="Unit Style">
+            <ToggleGroup
+              value={[settings.unitDisplayStyle]}
+              onValueChange={(val) => {
+                if (val.length > 0)
+                  updateSetting(
+                    "unitDisplayStyle",
+                    val[val.length - 1] as SettingsState["unitDisplayStyle"],
+                  );
+              }}
+              variant="outlinePrimary"
+              size="sm"
+            >
+              <ToggleGroupItem value="symbol">Symbol</ToggleGroupItem>
+              <ToggleGroupItem value="name">Name</ToggleGroupItem>
+            </ToggleGroup>
+          </SettingRow>
+
           <SettingRow label="Imperial units">
             <ToggleGroup
               value={[settings.imperialUnits]}

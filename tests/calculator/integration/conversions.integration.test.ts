@@ -67,7 +67,7 @@ describe("Integration Tests - Conversions", () => {
 
     it("should convert derived units with user-defined units", () => {
       const result = calculator.calculate("100 person/sq ft to person/km^2");
-      expect(result.results[0].result).toMatch("1 076 391 042 person/km²");
+      expect(result.results[0].result).toMatch("1 076 391 042 people/km²");
     });
 
     it("should convert from composite units to single unit", () => {
