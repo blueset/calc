@@ -175,7 +175,7 @@ export function resolveUnitNode(
     names: [singular, plural],
     conversion: { type: "linear", factor: 1.0 },
     displayName: {
-      symbol: singular,
+      symbol: "",
       singular: singular,
       plural: plural,
     },

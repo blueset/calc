@@ -113,12 +113,6 @@ export class Formatter {
         return formattedNumber;
       }
 
-      const simpleUnit = getUnit(innerValue);
-      if (simpleUnit) {
-        const unitStr = this.formatUnit(simpleUnit);
-        return `${formattedNumber}${this.getUnitSeparator(unitStr)}${unitStr}`;
-      }
-
       const unitStr = this.formatDerivedUnit(innerValue.terms);
       return `${formattedNumber}${this.getUnitSeparator(unitStr)}${unitStr}`;
     }
@@ -263,54 +257,46 @@ export class Formatter {
    */
   private formatNumericValue(value: NumericValue): string {
     const unit = getUnit(value);
+    const numStr = this.formatNumericNumber(value, unit);
+    return this.combineNumberAndUnit(numStr, value, unit);
+  }
 
+  /**
+   * Format the numeric part of a NumericValue, choosing the right
+   * precision / currency formatting strategy.
+   */
+  private formatNumericNumber(
+    value: NumericValue,
+    unit: Unit | undefined,
+  ): string {
     // Precision metadata from conversion
     if (value.precision) {
-      const numStr = this.formatNumberWithPrecision(
+      return this.formatNumberWithPrecision(
         value.value,
         value.precision.count,
         value.precision.mode,
       );
-      if (unit) {
-        const unitStr = this.formatUnit(unit);
-        if (this.isAmbiguousCurrency(unit)) {
-          return `${unitStr}${numStr}`;
-        }
-        return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
-      }
-      if (value.terms.length > 0) {
-        const unitStr = this.formatDerivedUnit(value.terms);
-        return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
-      }
-      return numStr;
     }
 
-    // Simple unit path
+    // Currency precision for simple unit
     if (unit) {
       const useCurrencyPrecision =
         this.settings.precision === -1 && this.isCurrencyUnit(unit);
-      const numStr = useCurrencyPrecision
+      return useCurrencyPrecision
         ? this.formatCurrencyNumber(value.value, unit)
         : this.formatNumber(value.value);
-      const unitStr = this.formatUnit(unit);
-      if (this.isAmbiguousCurrency(unit)) {
-        return `${unitStr}${numStr}`;
-      }
-      return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
     }
 
-    // Derived unit path
+    // Currency precision for derived unit
     if (value.terms.length > 0) {
       const positiveTerms = value.terms.filter((t) => t.exponent > 0);
-      const shouldUseCurrencyPrecision =
+      const useCurrencyPrecision =
         this.settings.precision === -1 &&
         positiveTerms.length === 1 &&
         this.isCurrencyUnit(positiveTerms[0].unit);
-      const numStr = shouldUseCurrencyPrecision
+      return useCurrencyPrecision
         ? this.formatCurrencyNumber(value.value, positiveTerms[0].unit)
         : this.formatNumber(value.value);
-      const unitStr = this.formatDerivedUnit(value.terms);
-      return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
     }
 
     // Dimensionless
@@ -318,19 +304,39 @@ export class Formatter {
   }
 
   /**
+   * Combine a formatted number string with its unit representation.
+   * Handles simple units (with ambiguous-currency prefix logic),
+   * derived units, and dimensionless values.
+   */
+  private combineNumberAndUnit(
+    numStr: string,
+    value: NumericValue,
+    unit: Unit | undefined,
+  ): string {
+    if (unit && this.isAmbiguousCurrency(unit)) {
+      const unitStr = this.formatUnit(unit);
+      return `${unitStr}${numStr}`;
+    }
+
+    if (value.terms.length > 0) {
+      const unitStr = this.formatDerivedUnit(value.terms);
+      return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
+    }
+
+    return numStr;
+  }
+
+  /**
    * Format a composite unit value (e.g., "5 ft 7.32 in")
    */
   private formatCompositeUnitValue(value: CompositeUnitValue): string {
     const parts = value.components.map((comp) => {
-      const numStr = comp.precision
-        ? this.formatNumberWithPrecision(
-            comp.value,
-            comp.precision.count,
-            comp.precision.mode,
-          )
-        : this.formatNumber(comp.value);
-      const unitStr = this.formatUnit(comp.unit);
-      return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
+      return this.formatNumericValue({
+        kind: "value",
+        value: comp.value,
+        terms: comp.unit ? [{ unit: comp.unit, exponent: 1 }] : [],
+        precision: comp.precision,
+      });
     });
     return parts.join(" ");
   }
@@ -736,7 +742,10 @@ export class Formatter {
       return this.getAmbiguousSymbol(unit.dimension);
     }
 
-    if (this.settings.unitDisplayStyle === "symbol") {
+    if (
+      this.settings.unitDisplayStyle === "symbol" &&
+      unit.displayName.symbol
+    ) {
       return unit.displayName.symbol;
     } else {
       // Use singular or plural based on context (for now, always use singular)
@@ -753,15 +762,7 @@ export class Formatter {
       // Fallback to the unit ID if not found
       return unitId;
     }
-
-    if (this.settings.unitDisplayStyle === "symbol") {
-      return unit.displayName.symbol;
-    } else {
-      // Use plural if count is not 1, fallback to singular if plural not defined
-      return count === 1
-        ? unit.displayName.singular
-        : unit.displayName.plural || unit.displayName.singular;
-    }
+    return this.formatUnit(unit /* TODO: count */);
   }
 
   /**

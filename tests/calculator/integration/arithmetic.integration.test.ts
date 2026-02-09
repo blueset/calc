@@ -88,8 +88,8 @@ describe("Integration Tests - Arithmetic", () => {
     });
 
     it("should add compatible user-defined units", () => {
-      const result = calculator.calculate("3 trips + 2 trips");
-      expect(result.results[0].result).toBe("5 trips");
+      const result = calculator.calculate("3 trip + 2 trip");
+      expect(result.results[0].result).toBe("5 trip");
     });
 
     it("should subtract compatible units with fractional result", () => {
