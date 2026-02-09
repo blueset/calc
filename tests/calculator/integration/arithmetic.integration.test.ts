@@ -113,7 +113,7 @@ describe("Integration Tests - Arithmetic", () => {
 
     it("should create derived units from multiplication with user-defined units", () => {
       // Test multiplication with user-defined derived units (unit cancellation)
-      let result = calculator.calculate("10 USD/person * 3 person");
+      let result = calculator.calculate("10 USD/person * 3 people");
       // With currency-specific formatting, USD shows 2 decimal places
       expect(result.results[0].result).toBe("30.00 USD");
 

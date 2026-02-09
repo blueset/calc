@@ -1,9 +1,6 @@
 import * as NearleyAST from "../nearley/types";
 import type { Unit } from "../types/types";
-import {
-  isDegreeUnit,
-  UnitResolutionContext,
-} from "../ast-helpers";
+import { isDegreeUnit, UnitResolutionContext } from "../ast-helpers";
 export type { UnitResolutionContext } from "../ast-helpers";
 import { SUPERSCRIPTS } from "@/constants";
 import type { EvaluatorDeps } from "./eval-helpers";
@@ -14,6 +11,7 @@ import {
   type EvaluatorSettings,
   numValTerms,
 } from "./values";
+import pluralize from "pluralize";
 
 // ── Numeric parsing ─────────────────────────────────────────────────
 
@@ -118,8 +116,6 @@ export function resolveNearleyUnit(
 
 /**
  * Resolve a UnitNode directly to a Unit object using DataLoader's public API.
- * Consolidates the old resolveUnitFromNode + resolveUnitById two-step pipeline
- * into a single function that avoids redundant re-queries.
  */
 export function resolveUnitNode(
   deps: EvaluatorDeps,
@@ -170,15 +166,18 @@ export function resolveUnitNode(
   }
 
   // Step 5: User-defined unit fallback
+  const singular = pluralize.singular(name);
+  const plural = pluralize.plural(name);
+  const id = singular.toLowerCase();
   return {
-    id: name,
-    dimension: `user_defined_${name}`,
-    names: [name],
+    id: id,
+    dimension: `user_defined_${id}`,
+    names: [singular, plural],
     conversion: { type: "linear", factor: 1.0 },
     displayName: {
-      symbol: name,
-      singular: name,
-      plural: name + "s",
+      symbol: singular,
+      singular: singular,
+      plural: plural,
     },
   };
 }
