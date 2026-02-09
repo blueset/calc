@@ -118,7 +118,10 @@ export class Formatter {
         return formattedNumber;
       }
 
-      const unitStr = this.formatDerivedUnit(innerValue.terms, innerValue.value);
+      const unitStr = this.formatDerivedUnit(
+        innerValue.terms,
+        innerValue.value,
+      );
       return `${formattedNumber}${this.getUnitSeparator(unitStr)}${unitStr}`;
     }
 
@@ -802,7 +805,7 @@ export class Formatter {
 
     // Format denominator
     if (denominator.length === 0) {
-      return numStr || "1"; // dimensionless if empty
+      return numStr || ""; // dimensionless if empty
     }
 
     const denomParts = denominator.map((t) =>
@@ -812,11 +815,11 @@ export class Formatter {
 
     // If single term in denominator, use "/" notation without parentheses
     if (denominator.length === 1) {
-      return `${numStr || "1"}/${denomStr}`;
+      return `${numStr || ""}/${denomStr}`;
     }
 
     // Multiple terms in denominator, use parentheses
-    return `${numStr || "1"}/(${denomStr})`;
+    return `${numStr || ""}/(${denomStr})`;
   }
 
   /**
