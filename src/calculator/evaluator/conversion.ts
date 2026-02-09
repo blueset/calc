@@ -1,11 +1,7 @@
 import * as NearleyAST from "../nearley/types";
 import type { Unit } from "../types/types";
 import type { PlainDateTime } from "../date-time";
-import {
-  resolveUnitFromNode,
-  isDegreeUnit,
-  UnitResolutionContext,
-} from "../ast-helpers";
+import { isDegreeUnit } from "../ast-helpers";
 import { Temporal } from "@js-temporal/polyfill";
 import {
   toTemporalZonedDateTime,
@@ -31,7 +27,8 @@ import {
 } from "./values";
 import {
   resolveNearleyUnitTerms,
-  resolveUnitById,
+  resolveUnitNode,
+  type UnitResolutionContext,
   computeDimension,
   areDimensionsCompatible,
   formatDimension,
@@ -146,18 +143,7 @@ export function convertToNearleyUnit(
       const unitContext: UnitResolutionContext = {
         hasDegreeUnit: hasDegreeInTarget,
       };
-      const resolved = resolveUnitFromNode(
-        term.unit,
-        deps.dataLoader,
-        unitContext,
-      );
-      const unit = resolveUnitById(deps, resolved.id, resolved.displayName);
-      if (!unit) {
-        return createError(
-          `Unknown unit "${term.unit.name}" in composite target`,
-        );
-      }
-      resolvedUnits.push(unit);
+      resolvedUnits.push(resolveUnitNode(deps, term.unit, unitContext));
     }
 
     // Handle composite source → composite target: flatten to single unit first
@@ -199,15 +185,7 @@ export function convertToNearleyUnit(
   // Single term or derived unit
   if (terms.length === 1 && terms[0].exponent === 1) {
     // Simple unit target
-    const resolved = resolveUnitFromNode(terms[0].unit, deps.dataLoader);
-    const targetUnit = resolveUnitById(
-      deps,
-      resolved.id,
-      resolved.displayName,
-    );
-    if (!targetUnit) {
-      return createError(`Unknown target unit "${terms[0].unit.name}"`);
-    }
+    const targetUnit = resolveUnitNode(deps, terms[0].unit);
     return convertToSimpleUnit(deps, value, targetUnit);
   }
 

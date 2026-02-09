@@ -6,7 +6,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import * as NearleyAST from '../../src/calculator/nearley/types';
 import {
   resolveUnitFromNode,
-  resolveUnitsExpression,
   isDegreeUnit,
   hasDegreeInUnits
 } from '../../src/calculator/ast-helpers';
@@ -118,60 +117,6 @@ describe('Unit Resolution Functions', () => {
       const result = resolveUnitFromNode(node, dataLoader);
       expect(result.id).toBe('USD');
       expect(result.displayName).toBe('USD');
-    });
-  });
-
-  describe('resolveUnitsExpression', () => {
-    it('should resolve simple unit expression', () => {
-      const node: NearleyAST.UnitsNode = {
-        type: 'Units',
-        subType: 'simple',
-        terms: [{
-          type: 'UnitWithExponent',
-          unit: { type: 'Unit', name: 'meter', matched: 'unit', offset: 0 },
-          exponent: 1,
-          offset: 0
-        }],
-        offset: 0
-      };
-
-      const result = resolveUnitsExpression(node, dataLoader);
-      expect('id' in result).toBe(true);
-      if ('id' in result) {
-        expect(result.id).toBe('meter');
-      }
-    });
-
-    it('should resolve derived unit expression', () => {
-      const node: NearleyAST.UnitsNode = {
-        type: 'Units',
-        subType: 'derived',
-        terms: [
-          {
-            type: 'UnitWithExponent',
-            unit: { type: 'Unit', name: 'meter', matched: 'unit', offset: 0 },
-            exponent: 1,
-            offset: 0
-          },
-          {
-            type: 'UnitWithExponent',
-            unit: { type: 'Unit', name: 'second', matched: 'unit', offset: 0 },
-            exponent: -1,
-            offset: 0
-          }
-        ],
-        offset: 0
-      };
-
-      const result = resolveUnitsExpression(node, dataLoader);
-      expect('terms' in result).toBe(true);
-      if ('terms' in result) {
-        expect(result.terms).toHaveLength(2);
-        expect(result.terms[0].id).toBe('meter');
-        expect(result.terms[0].exponent).toBe(1);
-        expect(result.terms[1].id).toBe('second');
-        expect(result.terms[1].exponent).toBe(-1);
-      }
     });
   });
 

@@ -1,10 +1,10 @@
 import * as NearleyAST from "../nearley/types";
 import type { Unit } from "../types/types";
 import {
-  resolveUnitFromNode,
   isDegreeUnit,
   UnitResolutionContext,
 } from "../ast-helpers";
+export type { UnitResolutionContext } from "../ast-helpers";
 import { SUPERSCRIPTS } from "@/constants";
 import type { EvaluatorDeps } from "./eval-helpers";
 import { createError } from "./eval-helpers";
@@ -109,16 +109,78 @@ export function resolveNearleyUnit(
 
   // UnitsNode - should be a single term for simple resolution
   if (unitNode.terms.length === 1 && unitNode.terms[0].exponent === 1) {
-    const resolved = resolveUnitFromNode(
-      unitNode.terms[0].unit,
-      deps.dataLoader,
-      unitContext,
-    );
-    return resolveUnitById(deps, resolved.id, resolved.displayName);
+    return resolveUnitNode(deps, unitNode.terms[0].unit, unitContext);
   }
 
   // Multi-term or non-1 exponent: not a simple unit
   return null;
+}
+
+/**
+ * Resolve a UnitNode directly to a Unit object using DataLoader's public API.
+ * Consolidates the old resolveUnitFromNode + resolveUnitById two-step pipeline
+ * into a single function that avoids redundant re-queries.
+ */
+export function resolveUnitNode(
+  deps: EvaluatorDeps,
+  node: NearleyAST.UnitNode,
+  context: UnitResolutionContext = { hasDegreeUnit: false },
+): Unit {
+  let name = node.name;
+
+  // Context-aware prime/doublePrime conversion
+  if (name === "prime") {
+    name = context.hasDegreeUnit ? "arcminute" : "ft";
+  } else if (name === "doublePrime") {
+    name = context.hasDegreeUnit ? "arcsecond" : "in";
+  }
+
+  // Step 1: Exact case-sensitive unit match
+  const exactUnit = deps.dataLoader.getUnitByName(name);
+  if (exactUnit) return exactUnit;
+
+  // Step 2: Currency by exact code
+  const currencyByCode = deps.dataLoader.getCurrencyByCode(name);
+  if (currencyByCode && currencyByCode.code === name) {
+    const currUnit = createCurrencyUnit(deps, currencyByCode.code);
+    if (currUnit) return currUnit;
+  }
+
+  // Step 3: Currency by exact name
+  const currenciesByName = deps.dataLoader.getCurrenciesByName(name);
+  for (const currency of currenciesByName) {
+    if (currency.names.includes(name)) {
+      const currUnit = createCurrencyUnit(deps, currency.code);
+      if (currUnit) return currUnit;
+    }
+  }
+
+  // Step 4: Case-insensitive unit fallback (with similarity scoring)
+  const fallbackUnit = deps.dataLoader.getUnitByNameWithFallback(name);
+  if (fallbackUnit) return fallbackUnit;
+
+  // Step 5: Case-insensitive currency fallback
+  if (currencyByCode) {
+    const currUnit = createCurrencyUnit(deps, currencyByCode.code);
+    if (currUnit) return currUnit;
+  }
+  for (const currency of currenciesByName) {
+    const currUnit = createCurrencyUnit(deps, currency.code);
+    if (currUnit) return currUnit;
+  }
+
+  // Step 5: User-defined unit fallback
+  return {
+    id: name,
+    dimension: `user_defined_${name}`,
+    names: [name],
+    conversion: { type: "linear", factor: 1.0 },
+    displayName: {
+      symbol: name,
+      singular: name,
+      plural: name + "s",
+    },
+  };
 }
 
 /**
@@ -209,7 +271,7 @@ export function resolveUnitById(
   deps: EvaluatorDeps,
   unitId: string,
   displayName: string,
-): Unit | null {
+): Unit {
   // STEP 1: Try regular unit database
   const unit = deps.dataLoader.getUnitById(unitId);
   if (unit) return unit;
@@ -266,9 +328,7 @@ export function resolveNearleyUnitTerms(
       hasDegree = true;
     }
     const ctx: UnitResolutionContext = { hasDegreeUnit: hasDegree };
-    const resolved = resolveUnitFromNode(term.unit, deps.dataLoader, ctx);
-    const unit = resolveUnitById(deps, resolved.id, resolved.displayName);
-    if (!unit) return null;
+    const unit = resolveUnitNode(deps, term.unit, ctx);
     terms.push({ unit, exponent: term.exponent });
   }
   return terms;
