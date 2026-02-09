@@ -27,7 +27,7 @@ export const lightTheme = EditorView.theme(
     ".cm-selectionBackground": { backgroundColor: "#d0e8ff" },
     "&.cm-focused .cm-selectionBackground": { backgroundColor: "#b3d4fc" },
     ".cm-foldGutter span": { color: "#999" },
-
+    ".cm-selectionMatch": { backgroundColor: "#99ff7720" },
     ".cm-calc-error": {
       textDecoration: "underline wavy #d32f2f",
       textDecorationSkipInk: "none",
@@ -96,7 +96,7 @@ const lightHighlightStyle = HighlightStyle.define([
     backgroundColor: "rgba(0,0,0,0.05)",
     borderRadius: "3px",
   },
-  { tag: tags.quote, color: "#666" },
+  { tag: tags.quote, color: "#666", fontStyle: "italic" },
   { tag: tags.list, color: "#c41a16" },
   { tag: tags.contentSeparator, color: "#999" },
   { tag: tags.processingInstruction, color: "#999" },
@@ -130,7 +130,7 @@ export const darkTheme = EditorView.theme(
     ".cm-selectionBackground": { backgroundColor: "#264f78" },
     "&.cm-focused .cm-selectionBackground": { backgroundColor: "#264f78" },
     ".cm-foldGutter span": { color: "#666" },
-
+    ".cm-selectionMatch": { backgroundColor: "#99ff7710" },
     ".cm-calc-error": {
       textDecoration: "underline wavy #ff6b6b",
       textDecorationSkipInk: "none",

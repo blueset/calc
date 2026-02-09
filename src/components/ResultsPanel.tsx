@@ -3,7 +3,7 @@ import type { LineResult } from "@/calculator/calculator";
 import type { LinePosition } from "@/codemirror/resultAlign";
 import { useSettings } from "@/hooks/useSettings";
 import { cn } from "@/lib/utils";
-import { FONT_FAMILY_MAP } from "@/constants";
+import { FONT_CLASS_MAP } from "@/constants";
 import { ResultCard } from "./ResultCard";
 import { RovingFocusGroup } from "@radix-ui/react-roving-focus";
 
@@ -38,13 +38,13 @@ export function ResultsPanel({
     }
   }, [scrollTop]);
 
-  const ff = FONT_FAMILY_MAP[fontFamily] || fontFamily;
+  const ff = FONT_CLASS_MAP[fontFamily] || fontFamily;
 
   return (
     <div
       ref={scrollRef}
-      className="h-full overflow-hidden"
-      style={{ fontFamily: ff, fontSize: `${fontSize}px` }}
+      className={cn(`h-full overflow-hidden`, ff)}
+      style={{ fontSize: `${fontSize}px` }}
     >
       <RovingFocusGroup asChild orientation="vertical" loop>
         <div className="relative" style={{ height: contentHeight || "auto" }}>

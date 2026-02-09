@@ -75,7 +75,7 @@ Decimals, scientific notation, underscore separators, and different bases.
 0o777
 ABC base 16
 1010 base 2
-HELLO base 30
+He.llo base 30
 
 Percentages are evaluated as decimals:
 
@@ -87,8 +87,7 @@ Built-in mathematical constants (case-insensitive):
 
 pi
 e
-phi
-sqrt2
+phi # The golden ratio
 Infinity
 
 ## Functions
@@ -306,8 +305,8 @@ Convert to mixed units:
 5000 seconds to hr min sec
 
 ### Chained Conversions
-5 km to m in cm
-100 USD to EUR to GBP
+5 km to m to hex
+100 USD to EUR to 6 decimals
 
 ## Currency
 Supports ISO codes, symbols, and names with live exchange rates.
@@ -340,8 +339,8 @@ CA$75
 10000 JPY to USD
 
 ### Derived Currency Units
-150 USD/person * 4 person
-75 EUR/hour * 8 hours
+150 USD / 4 people
+75 EUR/hour * 1 month
 
 ## Date & Time
 ### Date Formats
@@ -497,7 +496,7 @@ Lines starting with \`#\` become headings (like this manual). Use \`#\` through 
 ### Comments
 Add \`#\` anywhere on a line for inline comments:
 
-100 * 1.08  # price with tax
+$100 * 1.08  # price with tax
 365.25 * 24  # hours in a year
 
 ### Plain Text
@@ -532,6 +531,18 @@ export const FONT_FAMILY_MAP: Record<string, string> = {
   monospace: "var(--font-mono)",
   "sans-serif": "var(--font-sans)",
   serif: "var(--font-serif)",
+};
+
+export const FONT_FEATURE_SETTINGS_MAP: Record<string, string> = {
+  monospace: "var(--font-mono-feature-settings)",
+  "sans-serif": "var(--font-sans-feature-settings)",
+  serif: "var(--font-serif-feature-settings)",
+};
+
+export const FONT_CLASS_MAP: Record<string, string> = {
+  monospace: "font-mono",
+  "sans-serif": "font-sans",
+  serif: "font-serif",
 };
 
 export const SUPERSCRIPTS: Record<string, string> = {

@@ -33,7 +33,7 @@ import {
 } from "@/codemirror/theme";
 import type { Document } from "@/calculator/document";
 import type { LineResult, CalculationResult } from "@/calculator/calculator";
-import { FONT_FAMILY_MAP } from "@/constants";
+import { FONT_FAMILY_MAP, FONT_FEATURE_SETTINGS_MAP } from "@/constants";
 
 interface EditorProps {
   initialDoc: string;
@@ -88,9 +88,11 @@ export function Editor({
 
   const getFontTheme = useCallback((size: number, family: string) => {
     const ff = FONT_FAMILY_MAP[family] || family;
+    const ffs = FONT_FEATURE_SETTINGS_MAP[family] || "normal";
     return EditorView.theme({
       ".cm-content": {
         fontFamily: ff,
+        fontFeatureSettings: ffs,
         fontSize: `${size}px`,
         lineHeight: "1.6",
       },
@@ -156,13 +158,11 @@ export function Editor({
     });
 
     return view;
-  }, [
-    initialDoc,
-    editorViewRef,
     // Note: debugMode, resolvedTheme, fontSize, fontFamily are intentionally omitted.
     // These are handled dynamically via Compartments in the useEffects below.
     // Including them would cause unnecessary editor recreation.
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDoc, editorViewRef]);
 
   useEffect(() => {
     const view = createView();
