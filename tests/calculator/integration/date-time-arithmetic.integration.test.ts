@@ -20,7 +20,7 @@ describe("Integration Tests - Date and Time Arithmetic", () => {
   describe("Date and Time Arithmetic", () => {
     it("should add time durations", () => {
       const result = calculator.calculate("2 days + 3 hours");
-      expect(result.results[0].result).toBe("2.125 day");
+      expect(result.results[0].result).toBe("2.125 day");
     });
 
     it("should subtract dates", () => {
@@ -167,25 +167,25 @@ describe("Integration Tests - Date and Time Arithmetic", () => {
     it("should handle duration + duration arithmetic", () => {
       // time number + time number → time number
       const result = calculator.calculate("2 days + 3 hours + 30 minutes");
-      expect(result.results[0].result).toMatch(/2\.1458\d* day/);
+      expect(result.results[0].result).toMatch(/2\.1458\d* day/);
     });
 
     it("should handle duration subtraction", () => {
       // Duration - duration → duration
       const result = calculator.calculate("5 days - 2 days");
-      expect(result.results[0].result).toBe("3 day");
+      expect(result.results[0].result).toBe("3 day");
     });
 
     it("should handle duration multiplication", () => {
       // Duration * scalar → duration
       const result = calculator.calculate("2 hours * 3");
-      expect(result.results[0].result).toBe("6 h");
+      expect(result.results[0].result).toBe("6 h");
     });
 
     it("should handle duration division", () => {
       // Duration / scalar → duration
       const result = calculator.calculate("10 days / 2");
-      expect(result.results[0].result).toBe("5 day");
+      expect(result.results[0].result).toBe("5 day");
     });
 
     it("should reduce non-calendar durations to integer nanoseconds", () => {
@@ -193,7 +193,7 @@ describe("Integration Tests - Date and Time Arithmetic", () => {
       // should be reduced to integer nanoseconds
       const result = calculator.calculate("1.5 hours + 30 minutes");
       // 1.5 hours + 0.5 hours = 2 hours = 7200 seconds
-      expect(result.results[0].result).toBe("2 h");
+      expect(result.results[0].result).toBe("2 h");
     });
   });
 });

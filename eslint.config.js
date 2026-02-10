@@ -40,6 +40,12 @@ export default defineConfig([
       ],
       "@typescript-eslint/no-explicit-any": "warn",
       "react-hooks/set-state-in-effect": "warn",
+      "no-irregular-whitespace": [
+        "error",
+        {
+          skipRegExps: true,
+        },
+      ],
     },
   },
 ]);

@@ -145,7 +145,7 @@ ln(1)`);
 
     it("should handle round with units", () => {
       const result = calculator.calculate("round(18.9 kg)");
-      expect(result.results[0].result).toBe("19 kg");
+      expect(result.results[0].result).toBe("19 kg");
     });
 
     it("should handle round with nearest parameter", () => {
@@ -163,9 +163,9 @@ round(3.6, 2)`);
       const result = calculator.calculate(`round(6200 m, 5 km)
 round(7800 m, 5 km)
 round(18.7 kg, 5 kg)`);
-      expect(result.results[0].result).toBe("5 km");
-      expect(result.results[1].result).toBe("10 km");
-      expect(result.results[2].result).toBe("20 kg");
+      expect(result.results[0].result).toBe("5 km");
+      expect(result.results[1].result).toBe("10 km");
+      expect(result.results[2].result).toBe("20 kg");
     });
 
     it("should handle floor", () => {
@@ -213,20 +213,20 @@ trunc(17.3, 5)`);
     it("should handle floor with units and nearest parameter", () => {
       const result = calculator.calculate(`floor(6200 m, 5 km)
 floor(7800 m, 5 km)`);
-      expect(result.results[0].result).toBe("5 km");
-      expect(result.results[1].result).toBe("5 km");
+      expect(result.results[0].result).toBe("5 km");
+      expect(result.results[1].result).toBe("5 km");
     });
 
     it("should handle ceil with units and nearest parameter", () => {
       const result = calculator.calculate(`ceil(4100 m, 5 km)
 ceil(6200 m, 5 km)`);
-      expect(result.results[0].result).toBe("5 km");
-      expect(result.results[1].result).toBe("10 km");
+      expect(result.results[0].result).toBe("5 km");
+      expect(result.results[1].result).toBe("10 km");
     });
 
     it("should handle trunc with units and nearest parameter", () => {
       const result = calculator.calculate("trunc(6200 m, 5 km)");
-      expect(result.results[0].result).toBe("5 km");
+      expect(result.results[0].result).toBe("5 km");
     });
 
     it("should handle frac", () => {
@@ -247,49 +247,49 @@ sign(0)`);
   describe("Unit-preserving functions with derived units", () => {
     it("should preserve derived units through round", () => {
       const result = calculator.calculate("round(5.7 m/s)");
-      expect(result.results[0].result).toBe("6 m/s");
+      expect(result.results[0].result).toBe("6 m/s");
     });
 
     it("should preserve derived units through abs", () => {
       const result = calculator.calculate("abs(-9.8 m/s^2)");
-      expect(result.results[0].result).toBe("9.8 m/s²");
+      expect(result.results[0].result).toBe("9.8 m/s²");
     });
 
     it("should preserve derived units through floor", () => {
       const result = calculator.calculate("floor(3.2 m^2)");
-      expect(result.results[0].result).toBe("3 m²");
+      expect(result.results[0].result).toBe("3 m²");
     });
 
     it("should preserve derived units through ceil", () => {
       const result = calculator.calculate("ceil(2.1 m/s)");
-      expect(result.results[0].result).toBe("3 m/s");
+      expect(result.results[0].result).toBe("3 m/s");
     });
 
     it("should preserve derived units through trunc", () => {
       const result = calculator.calculate("trunc(7.9 m^2)");
-      expect(result.results[0].result).toBe("7 m²");
+      expect(result.results[0].result).toBe("7 m²");
     });
   });
 
   describe("Unit-preserving functions with composite units", () => {
     it("should floor composite units correctly", () => {
       const result = calculator.calculate("floor(5 ft 6.7 in)");
-      expect(result.results[0].result).toBe("5 ft 6 in");
+      expect(result.results[0].result).toBe("5 ft 6 in");
     });
 
     it("should ceil composite units correctly", () => {
       const result = calculator.calculate("ceil(5 ft 6.3 in)");
-      expect(result.results[0].result).toBe("5 ft 7 in");
+      expect(result.results[0].result).toBe("5 ft 7 in");
     });
 
     it("should trunc composite units from conversion", () => {
       const result = calculator.calculate("trunc(10 m to ft in)");
-      expect(result.results[0].result).toBe("32 ft 9 in");
+      expect(result.results[0].result).toBe("32 ft 9 in");
     });
 
     it("should round composite units from conversion", () => {
       const result = calculator.calculate("round(10 m to ft in)");
-      expect(result.results[0].result).toBe("32 ft 10 in");
+      expect(result.results[0].result).toBe("32 ft 10 in");
     });
 
     it("should support nearest parameter with composite units", () => {
@@ -297,20 +297,20 @@ sign(0)`);
       // 32 ft 9.7 in = 393.7 in; round(393.7, 6) = 396 in = 33 ft 0 in
       const result = calculator.calculate(`round(32 ft 8.7 in, 6 in)
 round(32 ft 9.7 in, 6 in)`);
-      expect(result.results[0].result).toBe("32 ft 6 in");
-      expect(result.results[1].result).toBe("33 ft 0 in");
+      expect(result.results[0].result).toBe("32 ft 6 in");
+      expect(result.results[1].result).toBe("33 ft 0 in");
     });
   });
 
   describe("Unit-preserving functions with durations", () => {
     it("should round a multi-field duration via composite path", () => {
       const result = calculator.calculate("round(2 hours 30.5 minutes)");
-      expect(result.results[0].result).toBe("2 h 31 min");
+      expect(result.results[0].result).toBe("2 h 31 min");
     });
 
     it("should floor a single-field duration", () => {
       const result = calculator.calculate("floor(3.7 hours)");
-      expect(result.results[0].result).toBe("3 h");
+      expect(result.results[0].result).toBe("3 h");
     });
   });
 

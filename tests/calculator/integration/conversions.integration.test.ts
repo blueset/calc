@@ -20,18 +20,18 @@ describe("Integration Tests - Conversions", () => {
   describe("Unit Conversions", () => {
     it("should convert between metric units", () => {
       const result = calculator.calculate("5 km to m");
-      expect(result.results[0].result).toBe("5 000 m");
+      expect(result.results[0].result).toBe("5 000 m");
     });
 
     it("should convert using Unicode arrow operator →", () => {
       // SPECS.md mentions both -> and → should work
       const result = calculator.calculate("5 km → m");
-      expect(result.results[0].result).toBe("5 000 m");
+      expect(result.results[0].result).toBe("5 000 m");
     });
 
     it("should convert between imperial and metric", () => {
       const result = calculator.calculate("10 inches in cm");
-      expect(result.results[0].result).toBe("25.4 cm");
+      expect(result.results[0].result).toBe("25.4 cm");
     });
 
     it("should convert between temperature units", () => {
@@ -50,29 +50,31 @@ describe("Integration Tests - Conversions", () => {
 12 ha to km m
 20 km^2 to ha
 20 km m to ha`);
-      expect(result.results[0].result).toMatch(/96.56\d* km\/h/);
-      expect(result.results[1].result).toBe("250 g/s");
-      expect(result.results[2].result).toBe("12 000 000 m²");
-      expect(result.results[3].result).toBe("12 000 km m");
-      expect(result.results[4].result).toBe("0.12 km²");
-      expect(result.results[5].result).toBe("120 km m");
-      expect(result.results[6].result).toBe("2 000 ha");
-      expect(result.results[7].result).toBe("2 ha");
+      expect(result.results[0].result).toMatch(/96.56\d* km\/h/);
+      expect(result.results[1].result).toBe("250 g/s");
+      expect(result.results[2].result).toBe("12 000 000 m²");
+      expect(result.results[3].result).toBe("12 000 km m");
+      expect(result.results[4].result).toBe("0.12 km²");
+      expect(result.results[5].result).toBe("120 km m");
+      expect(result.results[6].result).toBe("2 000 ha");
+      expect(result.results[7].result).toBe("2 ha");
     });
 
     it("should convert to composite units", () => {
       const result = calculator.calculate("171 cm to ft in");
-      expect(result.results[0].result).toMatch(/5 ft 7.32\d* in/);
+      expect(result.results[0].result).toMatch(/5 ft 7.32\d* in/);
     });
 
     it("should convert derived units with user-defined units", () => {
       const result = calculator.calculate("100 person/sq ft to person/km^2");
-      expect(result.results[0].result).toMatch("1 076 391 042 people/km²");
+      expect(result.results[0].result).toBe(
+        "1 076\u202F391\u202F042\u202Fpeople/km²",
+      );
     });
 
     it("should convert from composite units to single unit", () => {
       const result = calculator.calculate("6 ft 3 in to cm");
-      expect(result.results[0].result).toMatch(/190.5\d* cm/);
+      expect(result.results[0].result).toMatch(/190.5\d* cm/);
     });
   });
 
@@ -116,7 +118,7 @@ describe("Integration Tests - Conversions", () => {
 
     it("should convert mixed fractions", () => {
       const result = calculator.calculate("1.75 to fraction");
-      expect(result.results[0].result).toBe("1 3⁄4");
+      expect(result.results[0].result).toBe("1 3⁄4");
     });
 
     it("should handle infinity in scientific notation", () => {
@@ -139,39 +141,39 @@ describe("Integration Tests - Conversions", () => {
   describe("Presentations with Units", () => {
     it("should preserve units in scientific notation", () => {
       const result = calculator.calculate("5000 km to scientific");
-      expect(result.results[0].result).toBe("5e+3 km");
+      expect(result.results[0].result).toBe("5e+3 km");
     });
 
     it("should preserve units in fraction", () => {
       const result = calculator.calculate("0.75 kg to fraction");
-      expect(result.results[0].result).toBe("3⁄4 kg");
+      expect(result.results[0].result).toBe("3⁄4 kg");
     });
 
     it("should preserve units in base conversion", () => {
       const result = calculator.calculate("100 inches to base 7");
-      expect(result.results[0].result).toBe("202 (base 7) in");
+      expect(result.results[0].result).toBe("202 (base 7) in");
     });
 
     it("should preserve units with hex", () => {
       const result = calculator.calculate("255 meters to hex");
-      expect(result.results[0].result).toBe("0xFF m");
+      expect(result.results[0].result).toBe("0xFF m");
     });
 
     it("should preserve units with binary", () => {
       const result = calculator.calculate("15 kg to binary");
-      expect(result.results[0].result).toBe("0b1111 kg");
+      expect(result.results[0].result).toBe("0b1111 kg");
     });
   });
 
   describe("Presentations with Composite Units", () => {
     it("should apply presentation to each composite component", () => {
       const result = calculator.calculate("5 ft 7.5 in to fraction");
-      expect(result.results[0].result).toBe("5 ft 7 1⁄2 in");
+      expect(result.results[0].result).toBe("5 ft 7 1⁄2 in");
     });
 
     it("should apply presentation to converted composite component", () => {
       const result = calculator.calculate("1.71 m to ft in to fraction");
-      expect(result.results[0].result).toBe("5 ft 7 41⁄127 in");
+      expect(result.results[0].result).toBe("5 ft 7 41⁄127 in");
     });
   });
 
@@ -233,7 +235,7 @@ describe("Integration Tests - Conversions", () => {
     it("should display angle unit for inverse trig in radians", () => {
       const radianCalc = new Calculator(dataLoader, { angleUnit: "radian" });
       const result = radianCalc.calculate("asin(0.5)");
-      expect(result.results[0].result).toMatch(/0\.52\d* rad/);
+      expect(result.results[0].result).toMatch(/0\.52\d* rad/);
     });
 
     it("should display angle unit for acos in degrees", () => {

@@ -90,7 +90,7 @@ y = x + 5`;
       const input = "5 km";
       const nearleyResult = nearleyCalculator.calculate(input);
 
-      expect(nearleyResult.results[0].result).toBe("5 km");
+      expect(nearleyResult.results[0].result).toBe("5 km");
       expect(nearleyResult.results[0].hasError).toBe(false);
     });
 
@@ -101,14 +101,14 @@ y = x + 5`;
       // Both parsers should produce the same result
       expect(nearleyResult.results[0].hasError).toBe(false);
       // Value should be 5000 m (formatting may vary based on settings)
-      expect(nearleyResult.results[0].result).toMatch(/5\s?000 m/);
+      expect(nearleyResult.results[0].result).toMatch(/5 000 m/);
     });
 
     it("should handle cross-unit arithmetic", () => {
       const input = "5 m + 20 cm";
       const nearleyResult = nearleyCalculator.calculate(input);
 
-      expect(nearleyResult.results[0].result).toBe("5.2 m");
+      expect(nearleyResult.results[0].result).toBe("5.2 m");
       expect(nearleyResult.results[0].hasError).toBe(false);
     });
   });

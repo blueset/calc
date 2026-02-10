@@ -49,7 +49,7 @@ sinh(2)`);
     it("should handle large values", () => {
       const result = calculator.calculate("sinh(10)");
       expect(result.results[0].hasError).toBe(false);
-      expect(result.results[0].result).toMatch(/11 013\.232\d+/);
+      expect(result.results[0].result).toMatch(/11 013\.232\d+/);
     });
   });
 

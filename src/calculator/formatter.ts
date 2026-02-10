@@ -141,7 +141,7 @@ export class Formatter {
           `${formattedValue}${this.getUnitSeparator(unitStr)}${unitStr}`,
         );
       }
-      return parts.join(" ");
+      return parts.join("\u202F"); // Use narrow no-break space between components
     }
 
     return `Error: Cannot apply ${formatName} format to ${innerValue.kind}`;
@@ -490,7 +490,7 @@ export class Formatter {
    * Returns space only if unit starts with a letter, otherwise empty string
    */
   private getUnitSeparator(unitStr: string): string {
-    return /^[\p{Letter}]/u.test(unitStr) ? " " : "";
+    return /^[\p{Letter}]/u.test(unitStr) ? "\u202F" : "";
   }
 
   /**
@@ -801,7 +801,7 @@ export class Formatter {
         shouldPluralizeLastNum && i === numerator.length - 1,
       ),
     );
-    const numStr = numParts.join(" ");
+    const numStr = numParts.join("\u202F"); // Use narrow no-break space between units
 
     // Format denominator
     if (denominator.length === 0) {
@@ -811,7 +811,7 @@ export class Formatter {
     const denomParts = denominator.map((t) =>
       this.formatUnitTerm(t.unit, -t.exponent),
     );
-    const denomStr = denomParts.join(" ");
+    const denomStr = denomParts.join("\u202F"); // Use narrow no-break space between units
 
     // If single term in denominator, use "/" notation without parentheses
     if (denominator.length === 1) {
@@ -1268,7 +1268,7 @@ export class Formatter {
     if (intPart === 0) {
       return `${sign}${numerator}⁄${denominator}`;
     } else {
-      return `${sign}${intPart} ${numerator}⁄${denominator}`;
+      return `${sign}${intPart}\u202F${numerator}⁄${denominator}`;
     }
   }
 

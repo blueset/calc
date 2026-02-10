@@ -1504,7 +1504,7 @@
       "id": "watt_hour",
       "dimension": "energy",
       "displayName": {
-        "symbol": "W h",
+        "symbol": "W h",
         "singular": "watt hour",
         "plural": "watt hours"
       },
@@ -1524,7 +1524,7 @@
       "id": "kilowatt_hour",
       "dimension": "energy",
       "displayName": {
-        "symbol": "kW h",
+        "symbol": "kW h",
         "singular": "kilowatt hour",
         "plural": "kilowatt hours"
       },

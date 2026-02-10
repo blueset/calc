@@ -226,7 +226,7 @@ describe("Calculator - Full Calculation Pipeline", () => {
       expect(result.results.length).toBe(2);
       expect(result.results[0].result).toContain("5.2");
       expect(result.results[0].result).toContain("m");
-      expect(result.results[1].result).toContain("100 000"); // With digit grouping
+      expect(result.results[1].result).toContain("100 000"); // With digit grouping
       expect(result.results[1].result).toContain("m");
     });
 
@@ -347,7 +347,7 @@ some_text
       const result = calculator.calculate(input);
 
       expect(result.results.length).toBe(1);
-      expect(result.results[0].result).toBe("10.5 ft");
+      expect(result.results[0].result).toBe("10.5 ft");
     });
 
     it("should handle date arithmetic", () => {

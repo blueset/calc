@@ -46,13 +46,13 @@ pi`);
   });
 
   describe("Digit Grouping Separator", () => {
-    it("should use space separator (default)", () => {
+    it("should use narrow no-break space separator (default)", () => {
       const calculator = new Calculator(dataLoader, {
-        digitGroupingSeparator: " ",
+        digitGroupingSeparator: "\u202F",
         digitGroupingSize: "3",
       });
       const result = calculator.calculate("1234567");
-      expect(result.results[0].result).toBe("1 234 567");
+      expect(result.results[0].result).toBe("1 234 567");
     });
 
     it("should use no separator", () => {
@@ -177,7 +177,7 @@ pi`);
         precision: 3,
       });
       const result = calculator.calculate("10 m / 3");
-      expect(result.results[0].result).toBe("3.333 m");
+      expect(result.results[0].result).toBe("3.333 m");
     });
   });
 
@@ -217,7 +217,7 @@ pi`);
 
     it("should handle formatting with very large numbers", () => {
       const calculator = new Calculator(dataLoader, {
-        digitGroupingSeparator: " ",
+        digitGroupingSeparator: "\u202F",
         digitGroupingSize: "3",
         precision: 0,
       });
@@ -257,7 +257,7 @@ pi`);
         unitDisplayStyle: "symbol",
       });
       const result = calculator.calculate("5 kilometer");
-      expect(result.results[0].result).toBe("5 km");
+      expect(result.results[0].result).toBe("5 km");
       expect(result.results[0].result).not.toContain("kilometer");
     });
 
@@ -266,7 +266,7 @@ pi`);
         unitDisplayStyle: "name",
       });
       const result = calculator.calculate("5 km");
-      expect(result.results[0].result).toBe("5 kilometers");
+      expect(result.results[0].result).toBe("5 kilometers");
     });
 
     it("should apply unit style to temperature units", () => {
@@ -274,7 +274,7 @@ pi`);
         unitDisplayStyle: "name",
       });
       const result = calculator.calculate("25 °C");
-      expect(result.results[0].result).toBe("25 degrees Celsius");
+      expect(result.results[0].result).toBe("25 degrees Celsius");
     });
   });
 
@@ -342,7 +342,7 @@ pi`);
         angleUnit: "radian",
       });
       const result = calculator.calculate("asin(0.5)");
-      expect(result.results[0].result).toMatch(/0.5235\d* rad/);
+      expect(result.results[0].result).toMatch(/0.5235\d* rad/);
     });
 
     it("should affect sin/cos/tan calculations", () => {
@@ -367,7 +367,7 @@ pi`);
         imperialUnits: "us",
       });
       const result = calculator.calculate("1 gallon to liters");
-      expect(result.results[0].result).toMatch(/3.78541\d* L/);
+      expect(result.results[0].result).toMatch(/3.78541\d* L/);
     });
 
     it("should use UK imperial units", () => {
@@ -376,7 +376,7 @@ pi`);
       });
       const result = calculator.calculate("1 gallon to liters");
       // UK gallon is different from US gallon
-      expect(result.results[0].result).toMatch(/4.54609\d* L/);
+      expect(result.results[0].result).toMatch(/4.54609\d* L/);
     });
   });
 
@@ -411,10 +411,10 @@ pi`);
     it("should preserve unit formatting with custom settings", () => {
       const calculator = new Calculator(dataLoader, {
         precision: 2,
-        digitGroupingSeparator: " ",
+        digitGroupingSeparator: "\u202F",
       });
       const result = calculator.calculate("1234.5678 kg");
-      expect(result.results[0].result).toBe("1 234.57 kg");
+      expect(result.results[0].result).toBe("1 234.57 kg");
     });
   });
 });

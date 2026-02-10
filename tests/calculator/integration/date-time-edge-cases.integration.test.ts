@@ -143,16 +143,16 @@ describe("Integration Tests - Date/Time Edge Cases", () => {
         const result = calculator.calculate(`1 hour + 30 minutes
 2 days + 12 hours
 1 year + 6 months`);
-        expect(result.results[0].result).toContain("1.5 h");
-        expect(result.results[1].result).toContain("2.5 day");
-        expect(result.results[2].result).toContain("1.5 yr");
+        expect(result.results[0].result).toContain("1.5 h");
+        expect(result.results[1].result).toContain("2.5 day");
+        expect(result.results[2].result).toContain("1.5 yr");
       });
 
       it("should add mixed unit durations", () => {
         const result = calculator.calculate(`1 h 30 min + 45 min
 2 days 6 hours + 18 hours`);
-        expect(result.results[0].result).toBe("2.25 h");
-        expect(result.results[1].result).toBe("3 day");
+        expect(result.results[0].result).toBe("2.25 h");
+        expect(result.results[1].result).toBe("3 day");
       });
     });
 
@@ -256,9 +256,9 @@ describe("Integration Tests - Date/Time Edge Cases", () => {
         const result = calculator.calculate(`2 hours * 3
 1 day * 7
 30 minutes * 2.5`);
-        expect(result.results[0].result).toContain("6 h");
-        expect(result.results[1].result).toContain("7 day");
-        expect(result.results[2].result).toContain("75 min");
+        expect(result.results[0].result).toContain("6 h");
+        expect(result.results[1].result).toContain("7 day");
+        expect(result.results[2].result).toContain("75 min");
       });
     });
 
@@ -267,9 +267,9 @@ describe("Integration Tests - Date/Time Edge Cases", () => {
         const result = calculator.calculate(`6 hours / 2
 1 week / 7
 90 minutes / 3`);
-        expect(result.results[0].result).toBe("3 h");
-        expect(result.results[1].result).toMatch(/0.142857\d+ wk/);
-        expect(result.results[2].result).toBe("30 min");
+        expect(result.results[0].result).toBe("3 h");
+        expect(result.results[1].result).toMatch(/0.142857\d+ wk/);
+        expect(result.results[2].result).toBe("30 min");
       });
     });
 
@@ -319,8 +319,8 @@ date + 3 months`);
     it("should convert between weeks and days", () => {
       const result = calculator.calculate(`1 week to days
 14 days to weeks`);
-      expect(result.results[0].result).toContain("7 day");
-      expect(result.results[1].result).toContain("2 wk");
+      expect(result.results[0].result).toContain("7 day");
+      expect(result.results[1].result).toContain("2 wk");
     });
   });
 
@@ -356,7 +356,7 @@ date + 3 months`);
       const result = calculator.calculate(`2023 Jan 1 - 2023 Jan 15
 abs(2023 Jan 1 - 2023 Jan 15)`);
       expect(result.results[0].result).toContain("-14 day");
-      expect(result.results[1].result).toContain("14 day"); // Duration should be implicitly converted to NumberWithUnit or CompositeValue
+      expect(result.results[1].result).toContain("14 day"); // Duration should be implicitly converted to NumberWithUnit or CompositeValue
     });
   });
 
@@ -371,8 +371,8 @@ abs(2023 Jan 1 - 2023 Jan 15)`);
     it("should preserve precision in duration operations", () => {
       const result = calculator.calculate(`1.5 hours + 2.7 hours
 1 day 12 hours 30 minutes`);
-      expect(result.results[0].result).toContain("4.2 h");
-      expect(result.results[1].result).toBe("1 day 12 h 30 min");
+      expect(result.results[0].result).toContain("4.2 h");
+      expect(result.results[1].result).toBe("1 day 12 h 30 min");
     });
   });
 });

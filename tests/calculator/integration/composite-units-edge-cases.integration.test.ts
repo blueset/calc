@@ -41,13 +41,13 @@ describe("Integration Tests - Composite Units Edge Cases", () => {
     it("should handle prime symbol as feet outside degree context", () => {
       // Without degree context, ′ is feet
       const result = calculator.calculate("5′");
-      expect(result.results[0].result).toBe("5 ft");
+      expect(result.results[0].result).toBe("5 ft");
     });
 
     it("should handle double prime as inches outside degree context", () => {
       // Without degree context, ″ is inches
       const result = calculator.calculate("10″");
-      expect(result.results[0].result).toBe("10 in");
+      expect(result.results[0].result).toBe("10 in");
     });
   });
 
@@ -55,23 +55,23 @@ describe("Integration Tests - Composite Units Edge Cases", () => {
     it("should handle negated composite length", () => {
       const result = calculator.calculate("-(5 ft 6 in)");
       // Should negate the entire composite
-      expect(result.results[0].result).toBe("-5 ft -6 in");
+      expect(result.results[0].result).toBe("-5 ft -6 in");
     });
 
     it("should handle negated composite time", () => {
       const result = calculator.calculate("-(2 hours 30 minutes)");
-      expect(result.results[0].result).toBe("-2 h -30 min");
+      expect(result.results[0].result).toBe("-2 h -30 min");
     });
 
     it("should handle arithmetic with negated composites", () => {
       const result = calculator.calculate("10 ft - (5 ft 6 in)");
       // 10 ft - 5.5 ft = 4.5 ft = 4 ft 6 in
-      expect(result.results[0].result).toBe("4.5 ft");
+      expect(result.results[0].result).toBe("4.5 ft");
     });
 
     it("should handle composite with fractional parts", () => {
       const result = calculator.calculate("5 ft 10.5 in");
-      expect(result.results[0].result).toBe("5 ft 10.5 in");
+      expect(result.results[0].result).toBe("5 ft 10.5 in");
     });
   });
 
@@ -88,19 +88,19 @@ describe("Integration Tests - Composite Units Edge Cases", () => {
 
     it("should convert decimal feet to composite length notation", () => {
       const result = calculator.calculate("45.5 ft to ′ ″");
-      expect(result.results[0].result).toBe("45 ft 6 in");
+      expect(result.results[0].result).toBe("45 ft 6 in");
     });
 
     it("should convert between composite length units", () => {
       const result = calculator.calculate("1 ft 6 in to cm");
       // 1.5 ft = 45.72 cm
-      expect(result.results[0].result).toMatch(/45\.72\d* cm/);
+      expect(result.results[0].result).toMatch(/45\.72\d* cm/);
     });
 
     it("should convert to composite from single unit", () => {
       const result = calculator.calculate("100 cm to ft in");
       // 100 cm ≈ 3 ft 3.37 in
-      expect(result.results[0].result).toMatch(/3 ft 3\.37\d* in/);
+      expect(result.results[0].result).toMatch(/3 ft 3\.37\d* in/);
     });
   });
 });

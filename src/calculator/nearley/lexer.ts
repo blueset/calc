@@ -61,7 +61,7 @@ function buildNumberPattern(
 }
 
 export const lexer = moo.compile({
-  ws: /[ \t]+/u,
+  ws: /\p{Z}+/u,
   // ampmTime: buildAmPmTimePattern(),
   plainTime: /(?:2[0-3]|[01]?[0-9]):[0-5][0-9](?::[0-5][0-9])?/u,
 

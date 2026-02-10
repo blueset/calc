@@ -261,13 +261,13 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
               <SelectTrigger size="sm">
                 <SelectValue>
                   {(value) =>
-                    value === "" ? "None" : value === " " ? "Space" : value
+                    value === "" ? "None" : value === "\u202F" ? "Space" : value
                   }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">None</SelectItem>
-                <SelectItem value=" ">Space</SelectItem>
+                <SelectItem value="\u202F">Space</SelectItem>
                 <SelectItem value=",">Comma</SelectItem>
                 <SelectItem value=".">Dot</SelectItem>
                 <SelectItem value="′">Prime</SelectItem>

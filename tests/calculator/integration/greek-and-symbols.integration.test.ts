@@ -103,68 +103,68 @@ phi == φ`);
       const result = calculator.calculate(`1 μm
 10 μm
 1000 μm`);
-      expect(result.results[0].result).toBe("1 μm");
-      expect(result.results[1].result).toBe("10 μm");
-      expect(result.results[2].result).toBe("1 000 μm");
+      expect(result.results[0].result).toBe("1 μm");
+      expect(result.results[1].result).toBe("10 μm");
+      expect(result.results[2].result).toBe("1 000 μm");
     });
 
     it("should recognize μ as micro prefix for grams", () => {
       const result = calculator.calculate(`1 μg
 100 μg
 1000 μg`);
-      expect(result.results[0].result).toBe("1 μg");
-      expect(result.results[1].result).toBe("100 μg");
-      expect(result.results[2].result).toBe("1 000 μg");
+      expect(result.results[0].result).toBe("1 μg");
+      expect(result.results[1].result).toBe("100 μg");
+      expect(result.results[2].result).toBe("1 000 μg");
     });
 
     it("should recognize μ as micro prefix for amperes", () => {
       const result = calculator.calculate(`1 μA
 50 μA
 1000 μA`);
-      expect(result.results[0].result).toBe("1 μA");
-      expect(result.results[1].result).toBe("50 μA");
-      expect(result.results[2].result).toBe("1 000 μA");
+      expect(result.results[0].result).toBe("1 μA");
+      expect(result.results[1].result).toBe("50 μA");
+      expect(result.results[2].result).toBe("1 000 μA");
     });
 
     it("should recognize μ as micro prefix for seconds", () => {
       const result = calculator.calculate(`1 μs
 100 μs
 1000 μs`);
-      expect(result.results[0].result).toBe("1 μs");
-      expect(result.results[1].result).toBe("100 μs");
-      expect(result.results[2].result).toBe("1 000 μs");
+      expect(result.results[0].result).toBe("1 μs");
+      expect(result.results[1].result).toBe("100 μs");
+      expect(result.results[2].result).toBe("1 000 μs");
     });
 
     it("should recognize μ as micro prefix for liters", () => {
       const result = calculator.calculate(`1 μL
 500 μL`);
-      expect(result.results[0].result).toBe("1 μL");
-      expect(result.results[1].result).toBe("500 μL");
+      expect(result.results[0].result).toBe("1 μL");
+      expect(result.results[1].result).toBe("500 μL");
     });
 
     it("should recognize μ as micro prefix for volts", () => {
       const result = calculator.calculate(`1 μV
 100 μV`);
-      expect(result.results[0].result).toBe("1 μV");
-      expect(result.results[1].result).toBe("100 μV");
+      expect(result.results[0].result).toBe("1 μV");
+      expect(result.results[1].result).toBe("100 μV");
     });
 
     it("should convert between μ-prefixed units and base units", () => {
       const result = calculator.calculate(`1000 μm to mm
 1000 μg to mg
 1000 μA to mA`);
-      expect(result.results[0].result).toBe("1 mm");
-      expect(result.results[1].result).toBe("1 mg");
-      expect(result.results[2].result).toBe("1 mA");
+      expect(result.results[0].result).toBe("1 mm");
+      expect(result.results[1].result).toBe("1 mg");
+      expect(result.results[2].result).toBe("1 mA");
     });
 
     it("should handle arithmetic with μ-prefixed units", () => {
       const result = calculator.calculate(`10 μm + 5 μm
 100 μg * 2
 1000 μA / 10`);
-      expect(result.results[0].result).toBe("15 μm");
-      expect(result.results[1].result).toBe("200 μg");
-      expect(result.results[2].result).toBe("100 μA");
+      expect(result.results[0].result).toBe("15 μm");
+      expect(result.results[1].result).toBe("200 μg");
+      expect(result.results[2].result).toBe("100 μA");
     });
   });
 
@@ -173,23 +173,23 @@ phi == φ`);
       const result = calculator.calculate(`1 Å
 10 Å
 100 Å`);
-      expect(result.results[0].result).toBe("1 Å");
-      expect(result.results[1].result).toBe("10 Å");
-      expect(result.results[2].result).toBe("100 Å");
+      expect(result.results[0].result).toBe("1 Å");
+      expect(result.results[1].result).toBe("10 Å");
+      expect(result.results[2].result).toBe("100 Å");
     });
 
     it("should convert angstroms to other length units", () => {
       const result = calculator.calculate(`10 Å to nm
 1 Å to m`);
-      expect(result.results[0].result).toBe("1 nm");
-      expect(result.results[1].result).toBe("1e-10 m");
+      expect(result.results[0].result).toBe("1 nm");
+      expect(result.results[1].result).toBe("1e-10 m");
     });
 
     it("should handle both Å symbol and word form", () => {
       const result = calculator.calculate(`1 Å
 1 angstrom`);
-      expect(result.results[0].result).toBe("1 Å");
-      expect(result.results[1].result).toBe("1 Å");
+      expect(result.results[0].result).toBe("1 Å");
+      expect(result.results[1].result).toBe("1 Å");
     });
   });
 
@@ -224,8 +224,8 @@ phi == φ`);
     it("should use × with units", () => {
       const result = calculator.calculate(`5 m × 3
 10 kg × 2.5`);
-      expect(result.results[0].result).toBe("15 m");
-      expect(result.results[1].result).toBe("25 kg");
+      expect(result.results[0].result).toBe("15 m");
+      expect(result.results[1].result).toBe("25 kg");
     });
 
     it("should handle × in complex expressions", () => {
@@ -249,15 +249,15 @@ phi == φ`);
     it("should use · with units", () => {
       const result = calculator.calculate(`5 m · 3
 10 kg · 2.5`);
-      expect(result.results[0].result).toBe("15 m");
-      expect(result.results[1].result).toBe("25 kg");
+      expect(result.results[0].result).toBe("15 m");
+      expect(result.results[1].result).toBe("25 kg");
     });
 
     it("should use · for derived units", () => {
       const result = calculator.calculate(`10 N · 2 m
 5 kg · 10 m/s²`);
-      expect(result.results[0].result).toBe("20 J");
-      expect(result.results[1].result).toBe("50 N");
+      expect(result.results[0].result).toBe("20 J");
+      expect(result.results[1].result).toBe("50 N");
     });
   });
 
@@ -274,8 +274,8 @@ phi == φ`);
     it("should use ÷ with units", () => {
       const result = calculator.calculate(`20 m ÷ 4
 100 kg ÷ 5`);
-      expect(result.results[0].result).toBe("5 m");
-      expect(result.results[1].result).toBe("20 kg");
+      expect(result.results[0].result).toBe("5 m");
+      expect(result.results[1].result).toBe("20 kg");
     });
 
     it("should handle ÷ in complex expressions", () => {
@@ -289,7 +289,7 @@ phi == φ`);
   describe("Currency Symbols", () => {
     it("should recognize unambiguous € (Euro) symbol", () => {
       const result = calculator.calculate("€100");
-      expect(result.results[0].result).toBe("100.00 EUR");
+      expect(result.results[0].result).toBe("100.00 EUR");
     });
 
     it("should recognize ambiguous £ (Pound) symbol", () => {
@@ -299,12 +299,12 @@ phi == φ`);
 
     it("should recognize ambiguous ¥ (Yen) symbol", () => {
       const result = calculator.calculate("¥1000");
-      expect(result.results[0].result).toBe("¥1 000.00");
+      expect(result.results[0].result).toBe("¥1 000.00");
     });
 
     it("should recognize unambiguous ₹ (Rupee) symbol", () => {
       const result = calculator.calculate("₹500");
-      expect(result.results[0].result).toBe("500.00 INR");
+      expect(result.results[0].result).toBe("500.00 INR");
     });
 
     it("should recognize ambiguous $ (Dollar) symbol", () => {
@@ -314,26 +314,26 @@ phi == φ`);
 
     it("should recognize unambiguous ₽ (Ruble) symbol", () => {
       const result = calculator.calculate("₽1000");
-      expect(result.results[0].result).toBe("1 000.00 RUB");
+      expect(result.results[0].result).toBe("1 000.00 RUB");
     });
 
     it("should recognize ambiguous ₩ (Won) symbol", () => {
       const result = calculator.calculate("₩10000");
-      expect(result.results[0].result).toBe("₩10 000.00");
+      expect(result.results[0].result).toBe("₩10 000.00");
     });
 
     it("should recognize unambiguous ฿ (Baht) symbol", () => {
       const result = calculator.calculate("฿500");
-      expect(result.results[0].result).toBe("500.00 THB");
+      expect(result.results[0].result).toBe("500.00 THB");
     });
 
     it("should use currency symbols in arithmetic", () => {
       const result = calculator.calculate(`€100 + €50
 £200 - £75
 ¥1000 * 2`);
-      expect(result.results[0].result).toBe("150.00 EUR");
+      expect(result.results[0].result).toBe("150.00 EUR");
       expect(result.results[1].result).toBe("£125.00");
-      expect(result.results[2].result).toBe("¥2 000.00");
+      expect(result.results[2].result).toBe("¥2 000.00");
     });
   });
 
@@ -354,8 +354,8 @@ phi == φ`);
       const result = calculator.calculate(`10 μm × 5
 €100 ÷ 4
 1‰ · 1000`);
-      expect(result.results[0].result).toBe("50 μm");
-      expect(result.results[1].result).toBe("25.00 EUR");
+      expect(result.results[0].result).toBe("50 μm");
+      expect(result.results[1].result).toBe("25.00 EUR");
       expect(result.results[2].result).toBe("1");
     });
 
@@ -363,8 +363,8 @@ phi == φ`);
       const result = calculator.calculate(`r = 5 μm
 π × r^2
 (€100 + €50) ÷ 3`);
-      expect(result.results[1].result).toMatch(/78\.5\d+ μm²/);
-      expect(result.results[2].result).toBe("50.00 EUR");
+      expect(result.results[1].result).toMatch(/78\.5\d+ μm²/);
+      expect(result.results[2].result).toBe("50.00 EUR");
     });
   });
 
@@ -427,8 +427,8 @@ phi == φ`);
         9.5192,
         2,
       );
-      expect(result.results[1].result).toBe("50.00 EUR");
-      expect(result.results[2].result).toBe("50 μm");
+      expect(result.results[1].result).toBe("50.00 EUR");
+      expect(result.results[2].result).toBe("50 μm");
     });
 
     it("should preserve symbol units in results", () => {
@@ -438,8 +438,8 @@ z = 5‰
 x + x
 y + y
 z * 2`);
-      expect(result.results[3].result).toBe("20 μm");
-      expect(result.results[4].result).toBe("200.00 EUR");
+      expect(result.results[3].result).toBe("20 μm");
+      expect(result.results[4].result).toBe("200.00 EUR");
       expect(result.results[5].result).toBe("0.01");
     });
   });

@@ -51,12 +51,12 @@ export interface Settings {
   /**
    * Digit grouping separator (default: ' ')
    * - '': No grouping (1234567)
-   * - ' ': Space separator (1 234 567)
+   * - '\u202F': Narrow no-break space separator (1\u{202F}234\u{202F}567)
    * - ',': Comma separator (1,234,567)
    * - '.': Dot separator (1.234.567)
    * - '′': Prime symbol separator (1′234′567)
    */
-  digitGroupingSeparator: "" | " " | "," | "." | "′";
+  digitGroupingSeparator: "" | "\u202F" | "," | "." | "′";
 
   /**
    * Digit grouping size (default: '3')
@@ -123,7 +123,7 @@ export const defaultSettings: Settings = {
   precision: -1, // Automatic precision
   angleUnit: "degree",
   decimalSeparator: ".",
-  digitGroupingSeparator: " ",
+  digitGroupingSeparator: "\u202F", // Narrow no-break space
   digitGroupingSize: "3", // European style (3 digits)
 
   // Date/time defaults

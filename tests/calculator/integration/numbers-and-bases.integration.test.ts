@@ -32,13 +32,13 @@ describe("Integration Tests - Numbers and Bases", () => {
 
     it("should handle numbers with underscore separator", () => {
       const result = calculator.calculate("1_000");
-      expect(result.results[0].result).toBe("1 000");
+      expect(result.results[0].result).toBe("1 000");
     });
 
     it("should handle scientific notation", () => {
       const result = calculator.calculate("2.5e3");
       // Formatter adds digit grouping separator (space by default)
-      expect(result.results[0].result).toBe("2 500");
+      expect(result.results[0].result).toBe("2 500");
 
       const result2 = calculator.calculate("4.8E-2");
       expect(result2.results[0].result).toBe("0.048");
@@ -75,14 +75,14 @@ describe("Integration Tests - Numbers and Bases", () => {
 
     it("should handle arbitrary bases", () => {
       let result = calculator.calculate("ABC base 36");
-      expect(result.results[0].result).toBe("13 368");
+      expect(result.results[0].result).toBe("13 368");
 
       // Mixed case
       result = calculator.calculate("1A2b base 36");
-      expect(result.results[0].result).toBe("59 699");
+      expect(result.results[0].result).toBe("59 699");
 
       result = calculator.calculate("Hello base 30");
-      expect(result.results[0].result).toBe("14 167 554");
+      expect(result.results[0].result).toBe("14 167 554");
     });
   });
 

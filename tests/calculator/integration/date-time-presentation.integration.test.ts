@@ -118,7 +118,7 @@ describe("Integration Tests - Date/Time Presentation Conversions", () => {
 1970 Jan 01 01:00 UTC to Unix
 1970 Jan 01 00:00 UTC to Unix seconds`);
       expect(result.results[0].result).toBe("0");
-      expect(result.results[1].result).toBe("3 600");
+      expect(result.results[1].result).toBe("3 600");
       expect(result.results[2].result).toBe("0");
     });
 
@@ -127,9 +127,9 @@ describe("Integration Tests - Date/Time Presentation Conversions", () => {
       const result = calculator.calculate(`1970 Jan 01 00:00 to Unix
 1970 Jan 01 01:00 to Unix
 1970 Jan 01 00:00 to Unix seconds`);
-      expect(result.results[0].result).toBe("28 800");
-      expect(result.results[1].result).toBe("32 400");
-      expect(result.results[2].result).toBe("28 800");
+      expect(result.results[0].result).toBe("28 800");
+      expect(result.results[1].result).toBe("32 400");
+      expect(result.results[2].result).toBe("28 800");
     });
 
     it("should convert to Unix milliseconds", () => {
@@ -138,8 +138,8 @@ describe("Integration Tests - Date/Time Presentation Conversions", () => {
 1970 Jan 01 01:00 UTC to Unix milliseconds
 1970 Jan 01 00:00:01 UTC to Unix milliseconds`);
       expect(result.results[0].result).toBe("0");
-      expect(result.results[1].result).toBe("3 600 000");
-      expect(result.results[2].result).toBe("1 000");
+      expect(result.results[1].result).toBe("3 600 000");
+      expect(result.results[2].result).toBe("1 000");
     });
 
     it("should plain date time convert to Unix milliseconds", () => {
@@ -148,30 +148,30 @@ describe("Integration Tests - Date/Time Presentation Conversions", () => {
         calculator.calculate(`1970 Jan 01 00:00 to Unix milliseconds
 1970 Jan 01 01:00 to Unix milliseconds
 1970 Jan 01 00:00:01 to Unix milliseconds`);
-      expect(result.results[0].result).toBe("28 800 000");
-      expect(result.results[1].result).toBe("32 400 000");
-      expect(result.results[2].result).toBe("28 801 000");
+      expect(result.results[0].result).toBe("28 800 000");
+      expect(result.results[1].result).toBe("32 400 000");
+      expect(result.results[2].result).toBe("28 801 000");
     });
 
     it("should handle dates after epoch", () => {
       const result = calculator.calculate(`2000 Jan 01 00:00 UTC to Unix
 2023 Jan 01 00:00 UTC to Unix`);
-      expect(result.results[0].result).toBe("946 684 800");
-      expect(result.results[1].result).toBe("1 672 531 200");
+      expect(result.results[0].result).toBe("946 684 800");
+      expect(result.results[1].result).toBe("1 672 531 200");
     });
 
     it("should handle dates before epoch", () => {
       const result = calculator.calculate(`1969 Dec 31 23:00 UTC to Unix
 1960 Jan 01 00:00 UTC to Unix`);
-      expect(result.results[0].result).toBe("-3 600");
-      expect(result.results[1].result).toBe("-315 619 200");
+      expect(result.results[0].result).toBe("-3 600");
+      expect(result.results[1].result).toBe("-315 619 200");
     });
 
     it("should handle timezone offsets in Unix conversion", () => {
       const result = calculator.calculate(`1970 Jan 01 01:00 UTC+1 to Unix
 1970 Jan 01 01:00 UTC-1 to Unix`);
       expect(result.results[0].result).toBe("0"); // 01:00 UTC+1 = 00:00 UTC
-      expect(result.results[1].result).toBe("7 200"); // 01:00 UTC-1 = 02:00 UTC
+      expect(result.results[1].result).toBe("7 200"); // 01:00 UTC-1 = 02:00 UTC
     });
   });
 
@@ -188,8 +188,8 @@ dt to Unix milliseconds`);
         "1970-01-01T01:00:00+00:00[Etc/UTC]",
       );
       expect(result.results[3].result).toBe("Thu, 01 Jan 1970 01:00:00 +0000");
-      expect(result.results[4].result).toBe("3 600");
-      expect(result.results[5].result).toBe("3 600 000");
+      expect(result.results[4].result).toBe("3 600");
+      expect(result.results[5].result).toBe("3 600 000");
     });
 
     it("should apply conversions in sequence", () => {

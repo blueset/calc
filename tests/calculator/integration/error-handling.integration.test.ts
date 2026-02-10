@@ -249,7 +249,7 @@ ABC base`);
     it("should error on adding different currencies without conversion", () => {
       const result = calculator.calculate("100 USD + 50 EUR");
       expect(result.results[0].hasError).toBe(false);
-      expect(result.results[0].result).toBe("158.82 USD"); // 50 EUR → 58.82 USD
+      expect(result.results[0].result).toBe("158.82 USD"); // 50 EUR → 58.82 USD
     });
 
     it("should error on ambiguous currency operation", () => {
@@ -402,7 +402,7 @@ round((10 USD + 5 EUR))`);
       expect(result.results[1].hasError).toBe(true);
       expect(result.results[1].result).toBeTruthy();
       expect(result.results[2].hasError).toBe(false);
-      expect(result.results[2].result).toBe("16.00 USD");
+      expect(result.results[2].result).toBe("16.00 USD");
     });
   });
 

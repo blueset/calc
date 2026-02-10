@@ -1110,7 +1110,7 @@ const staticUnits: Unit[] = [
   {
     id: "watt_hour",
     dimension: "energy",
-    displayName: { symbol: "W h", singular: "watt hour", plural: "watt hours" },
+    displayName: { symbol: "W h", singular: "watt hour", plural: "watt hours" },
     names: ["Wh", "watthour", "watt hour", "watt hours"],
     conversion: { type: "linear", factor: 3600 }, // joules (1 Wh = 3600 J)
     countAsTerms: 2,
@@ -1119,7 +1119,7 @@ const staticUnits: Unit[] = [
     id: "kilowatt_hour",
     dimension: "energy",
     displayName: {
-      symbol: "kW h",
+      symbol: "kW h",
       singular: "kilowatt hour",
       plural: "kilowatt hours",
     },

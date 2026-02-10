@@ -84,48 +84,48 @@ describe("Integration Tests - Arithmetic", () => {
   describe("Cross-Unit Arithmetic", () => {
     it("should add compatible units", () => {
       const result = calculator.calculate("5 m + 20 cm");
-      expect(result.results[0].result).toBe("5.2 m");
+      expect(result.results[0].result).toBe("5.2 m");
     });
 
     it("should add compatible user-defined units", () => {
       const result = calculator.calculate("3 trip + 2 trip");
-      expect(result.results[0].result).toBe("5 trips");
+      expect(result.results[0].result).toBe("5 trips");
     });
 
     it("should subtract compatible units with fractional result", () => {
       const result = calculator.calculate("2 hr - 30 min");
-      expect(result.results[0].result).toBe("1.5 h");
+      expect(result.results[0].result).toBe("1.5 h");
     });
 
     it("should multiply unit by number", () => {
       const result = calculator.calculate("3 kg * 2");
-      expect(result.results[0].result).toBe("6 kg");
+      expect(result.results[0].result).toBe("6 kg");
     });
 
     it("should create derived units from multiplication", () => {
       let result = calculator.calculate("5 N * 2 m");
-      expect(result.results[0].result).toBe("10 J");
+      expect(result.results[0].result).toBe("10 J");
 
       // Test multiplication with derived units as left operand (unit cancellation)
       result = calculator.calculate("3 kg/m^2 * 2 m^2");
-      expect(result.results[0].result).toBe("6 kg");
+      expect(result.results[0].result).toBe("6 kg");
     });
 
     it("should create derived units from multiplication with user-defined units", () => {
       // Test multiplication with user-defined derived units (unit cancellation)
       let result = calculator.calculate("10 USD/person * 3 people");
       // With currency-specific formatting, USD shows 2 decimal places
-      expect(result.results[0].result).toBe("30.00 USD");
+      expect(result.results[0].result).toBe("30.00 USD");
 
       result = calculator.calculate(
         "1000 click * 0.25 person/click * 0.001 USD/person",
       );
-      expect(result.results[0].result).toBe("0.25 USD");
+      expect(result.results[0].result).toBe("0.25 USD");
     });
 
     it("should divide unit by number", () => {
       const result = calculator.calculate("4 m / 2");
-      expect(result.results[0].result).toBe("2 m");
+      expect(result.results[0].result).toBe("2 m");
     });
 
     it("should create derived units from division", () => {
@@ -139,35 +139,35 @@ describe("Integration Tests - Arithmetic", () => {
       // 60 kg/cm² / 2 h/m² = (60/2) * kg/cm² * m²/h = 30 kg·m²/(cm²·h)
       // With unit conversion: cm² to m² gives factor of 10000
       // Result: 30 * 10000 = 300000 kg/h
-      expect(result.results[0].result).toBe("300 000 kg/h");
+      expect(result.results[0].result).toBe("300 000 kg/h");
     });
 
     it("should create derived units from division with user-defined units", () => {
       // Test division creating derived units with user-defined units
       let result = calculator.calculate("1000 USD / 5 person / 2 day");
       // USD gets currency precision (2 decimals) since it's the only positive exponent unit
-      expect(result.results[0].result).toBe("100.00 USD/(person day)");
+      expect(result.results[0].result).toBe("100.00 USD/(person day)");
 
       // Test division with user-defined derived units (unit cancellation)
       result = calculator.calculate("500 click/person / 5 USD/person");
-      expect(result.results[0].result).toBe("100 clicks/USD");
+      expect(result.results[0].result).toBe("100 clicks/USD");
     });
 
     it("should combine conversion with arithmetic", () => {
       const result = calculator.calculate("5 km + 200 m to m");
-      expect(result.results[0].result).toBe("5 200 m");
+      expect(result.results[0].result).toBe("5 200 m");
     });
   });
 
   describe("Alternative Operators", () => {
     it("should handle per operator for derived units", () => {
       const result = calculator.calculate("60 km per h");
-      expect(result.results[0].result).toContain("60 km/h");
+      expect(result.results[0].result).toContain("60 km/h");
     });
 
     it("should handle per operator for division", () => {
       const result = calculator.calculate("60 km per 2 h");
-      expect(result.results[0].result).toContain("30 km/h");
+      expect(result.results[0].result).toContain("30 km/h");
     });
 
     it("should handle × symbol for multiplication", () => {
@@ -210,9 +210,9 @@ describe("Integration Tests - Arithmetic", () => {
       const result = calculator.calculate(`5 m × 3
 20 kg ÷ 4
 10 N · 2 m`);
-      expect(result.results[0].result).toContain("15 m");
-      expect(result.results[1].result).toContain("5 kg");
-      expect(result.results[2].result).toContain("20 J");
+      expect(result.results[0].result).toContain("15 m");
+      expect(result.results[1].result).toContain("5 kg");
+      expect(result.results[2].result).toContain("20 J");
     });
   });
 });

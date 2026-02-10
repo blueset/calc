@@ -23,9 +23,9 @@ describe("Integration Tests - Date/Time Property Extraction", () => {
       const result = calculator.calculate(`1970 Jan 01 to year
 1970 Jan 01 14:00 UTC to year
 2023 Dec 25 to year`);
-      expect(result.results[0].result).toBe("1 970");
-      expect(result.results[1].result).toBe("1 970");
-      expect(result.results[2].result).toBe("2 023");
+      expect(result.results[0].result).toBe("1 970");
+      expect(result.results[1].result).toBe("1 970");
+      expect(result.results[2].result).toBe("2 023");
     });
 
     it("should extract month from date/time values", () => {
@@ -127,10 +127,10 @@ describe("Integration Tests - Date/Time Property Extraction", () => {
 1970 Jan 01 14:00 UTC+5 to offset
 1970 Jan 01 14:00 UTC-330 to offset
 1970 Jan 01 14:00 UTC+0 to offset`);
-      expect(result.results[0].result).toBe("0 min");
+      expect(result.results[0].result).toBe("0 min");
       expect(result.results[1].result).toBe("5 h");
       expect(result.results[2].result).toBe("-3 h -30 min");
-      expect(result.results[3].result).toBe("0 min");
+      expect(result.results[3].result).toBe("0 min");
     });
 
     it("should extract offset from named timezone zoned date times", () => {
@@ -153,7 +153,7 @@ date to day
 date to hour
 date to minute
 date to second`);
-      expect(result.results[1].result).toBe("1 970");
+      expect(result.results[1].result).toBe("1 970");
       expect(result.results[2].result).toBe("1");
       expect(result.results[3].result).toBe("15");
       expect(result.results[4].result).toBe("14");
@@ -165,7 +165,7 @@ date to second`);
       const result = calculator.calculate(`(1970 Jan 01 to year) + 50
 (2023 Dec 25 to month) * 2
 (14:30 to hour) + (14:30 to minute)`);
-      expect(result.results[0].result).toBe("2 020");
+      expect(result.results[0].result).toBe("2 020");
       expect(result.results[1].result).toBe("24");
       expect(result.results[2].result).toBe("44");
     });
@@ -181,12 +181,12 @@ tomorrow - now in minute
 tomorrow - now in min`);
       expect(result.results[0].result).toBe("35");
       expect(result.results[1].result).toBe("35");
-      expect(result.results[2].result).toBe("6 000 min");
-      expect(result.results[3].result).toBe("6 060 min");
-      expect(result.results[4].result).toBe("1 440 min"); // duration implicitly converted to compound value or value with unit.
-      expect(result.results[5].result).toBe("6 000 min");
-      expect(result.results[6].result).toBe("6 060 min");
-      expect(result.results[7].result).toBe("1 440 min");
+      expect(result.results[2].result).toBe("6 000 min");
+      expect(result.results[3].result).toBe("6 060 min");
+      expect(result.results[4].result).toBe("1 440 min"); // duration implicitly converted to compound value or value with unit.
+      expect(result.results[5].result).toBe("6 000 min");
+      expect(result.results[6].result).toBe("6 060 min");
+      expect(result.results[7].result).toBe("1 440 min");
     });
 
     it("should handle ambiguity of property extraction and unit conversion with variables", () => {
@@ -195,7 +195,7 @@ dur = 12.59 GiB / 100 Mbps
 time in minute
 dur in minute`);
       expect(result.results[2].result).toBe("30");
-      expect(result.results[3].result).toMatch(/18.02\d+ min/);
+      expect(result.results[3].result).toMatch(/18.02\d+ min/);
     });
   });
 });

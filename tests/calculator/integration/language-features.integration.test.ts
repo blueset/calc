@@ -67,7 +67,7 @@ distância = 50
   describe("Conditional Expressions", () => {
     it("should handle simple conditional", () => {
       const result = calculator.calculate("if 5 > 3 then 10 m else 20 m");
-      expect(result.results[0].result).toBe("10 m");
+      expect(result.results[0].result).toBe("10 m");
     });
 
     it("should handle conditional with false condition", () => {
@@ -79,7 +79,7 @@ distância = 50
       const result = calculator.calculate(
         "100 * (if 5 > 3 then (if 2 < 1 then 10 else 20) else 30) + 1",
       );
-      expect(result.results[0].result).toBe("2 001");
+      expect(result.results[0].result).toBe("2 001");
     });
 
     it("should handle conditional with variables", () => {
@@ -92,7 +92,7 @@ result = if x > 5 then 100 else 50`;
     it("should handle conditional with units", () => {
       // Conditionals with units should ensure type consistency
       const result = calculator.calculate("if true then 5 m else 10 m");
-      expect(result.results[0].result).toBe("5 m");
+      expect(result.results[0].result).toBe("5 m");
     });
 
     it("should handle conditional with currency", () => {

@@ -119,7 +119,7 @@ describe("Integration Tests - Value Type Processing Gaps", () => {
         "d = 1970 Jan 2 14:30 - 1970 Jan 2 10:00\nd to hours minutes",
       );
       // 4 hours 30 minutes
-      expect(result.results[1].result).toBe("4 h 30 min");
+      expect(result.results[1].result).toBe("4 h 30 min");
     });
 
     it("should convert duration to single time unit", () => {
@@ -127,7 +127,7 @@ describe("Integration Tests - Value Type Processing Gaps", () => {
         "d = 1970 Jan 3 - 1970 Jan 1\nd to hours",
       );
       // 2 days = 48 hours
-      expect(result.results[1].result).toBe("48 h");
+      expect(result.results[1].result).toBe("48 h");
     });
 
     it("should convert duration to days hours minutes", () => {
@@ -135,7 +135,7 @@ describe("Integration Tests - Value Type Processing Gaps", () => {
         "d = 1970 Jan 2 14:30 - 1970 Jan 1 10:00\nd to days hours minutes",
       );
       // 1 day 4 h 30 min
-      expect(result.results[1].result).toBe("1 day 4 h 30 min");
+      expect(result.results[1].result).toBe("1 day 4 h 30 min");
     });
   });
 
@@ -186,46 +186,46 @@ describe("Integration Tests - Value Type Processing Gaps", () => {
     it("should apply round to composite unit value", () => {
       // 5 ft 6.7 in = 66.7 in → round → 67 in → 5 ft 7 in
       const result = calculator.calculate("round(5 ft 6.7 in)");
-      expect(result.results[0].result).toBe("5 ft 7 in");
+      expect(result.results[0].result).toBe("5 ft 7 in");
     });
 
     it("should apply floor to composite unit value", () => {
       // 5 ft 6.7 in = 66.7 in → floor → 66 in → 5 ft 6 in
       const result = calculator.calculate("floor(5 ft 6.7 in)");
-      expect(result.results[0].result).toBe("5 ft 6 in");
+      expect(result.results[0].result).toBe("5 ft 6 in");
     });
 
     it("should apply ceil to composite unit value", () => {
       // 5 ft 6.3 in = 66.3 in → ceil → 67 in → 5 ft 7 in
       const result = calculator.calculate("ceil(5 ft 6.3 in)");
-      expect(result.results[0].result).toBe("5 ft 7 in");
+      expect(result.results[0].result).toBe("5 ft 7 in");
     });
 
     it("should apply abs to composite unit value", () => {
       const result = calculator.calculate("abs(-(5 ft 6 in))");
-      expect(result.results[0].result).toBe("5 ft 6 in");
+      expect(result.results[0].result).toBe("5 ft 6 in");
     });
 
     it("should apply trunc to composite unit value", () => {
       // 5 ft 6.9 in = 66.9 in → trunc → 66 in → 5 ft 6 in
       const result = calculator.calculate("trunc(5 ft 6.9 in)");
-      expect(result.results[0].result).toBe("5 ft 6 in");
+      expect(result.results[0].result).toBe("5 ft 6 in");
     });
 
     it("should apply round to duration (all fields)", () => {
       const result = calculator.calculate("round(2.7 hours)");
       // 2.7 hours rounds to 3 hours
-      expect(result.results[0].result).toBe("3 h");
+      expect(result.results[0].result).toBe("3 h");
     });
 
     it("should apply floor to duration", () => {
       const result = calculator.calculate("floor(2.7 hours)");
-      expect(result.results[0].result).toBe("2 h");
+      expect(result.results[0].result).toBe("2 h");
     });
 
     it("should apply ceil to duration", () => {
       const result = calculator.calculate("ceil(2.3 hours)");
-      expect(result.results[0].result).toBe("3 h");
+      expect(result.results[0].result).toBe("3 h");
     });
 
     it("should apply trunc to duration value from date subtraction", () => {
@@ -233,7 +233,7 @@ describe("Integration Tests - Value Type Processing Gaps", () => {
         "d = 1970 Jan 2 14:30:45 - 1970 Jan 2 10:00\ntrunc(d)",
       );
       // 4 h 30 min 45 sec → truncate each component → 4 h 30 min 45 sec (all are integers)
-      expect(result.results[1].result).toBe("4 h 30 min 45 s");
+      expect(result.results[1].result).toBe("4 h 30 min 45 s");
     });
   });
 });

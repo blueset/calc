@@ -70,7 +70,7 @@ CA$100
     it("should add same currencies", () => {
       const result = calculator.calculate("100 USD + 50 USD");
       // With currency-specific formatting, USD shows 2 decimal places
-      expect(result.results[0].result).toBe("150.00 USD");
+      expect(result.results[0].result).toBe("150.00 USD");
     });
 
     it("should add different currencies with automatic conversion", () => {
@@ -79,7 +79,7 @@ CA$100
       expect(result.errors.runtime.length).toBe(0);
       // Rate: 1 USD = 0.85 EUR, so 1 EUR = 1/0.85 ≈ 1.176 USD
       // 50 EUR ≈ 58.82 USD, so 100 + 58.82 ≈ 158.82 USD
-      expect(result.results[0].result).toBe("158.82 USD");
+      expect(result.results[0].result).toBe("158.82 USD");
     });
 
     it("should allow same ambiguous currency arithmetic", () => {
@@ -100,47 +100,47 @@ CA$100
     it("should convert between currencies", () => {
       const result = calculator.calculate("100 USD to EUR");
       // 100 USD * 0.85 = 85 EUR
-      expect(result.results[0].result).toBe("85.00 EUR");
+      expect(result.results[0].result).toBe("85.00 EUR");
     });
 
     it("should convert from EUR to USD", () => {
       const result = calculator.calculate("100 EUR to USD");
       // 100 EUR / 0.85 ≈ 117.65 USD
-      expect(result.results[0].result).toBe("117.65 USD");
+      expect(result.results[0].result).toBe("117.65 USD");
     });
 
     it("should handle zero amount conversion", () => {
       const result = calculator.calculate("0 USD to EUR");
-      expect(result.results[0].result).toBe("0.00 EUR");
+      expect(result.results[0].result).toBe("0.00 EUR");
     });
 
     it("should handle negative currency conversion", () => {
       const result = calculator.calculate("-50 USD to EUR");
-      expect(result.results[0].result).toBe("-42.50 EUR");
+      expect(result.results[0].result).toBe("-42.50 EUR");
     });
 
     it("should convert through base currency", () => {
       const result = calculator.calculate("100 EUR to GBP");
       // EUR→USD→GBP: 100/0.85*0.73 ≈ 85.88 GBP
-      expect(result.results[0].result).toBe("85.88 GBP");
+      expect(result.results[0].result).toBe("85.88 GBP");
     });
 
     it("should convert JPY with 0 decimals", () => {
       const result = calculator.calculate("1000 USD to JPY");
       // 1000 USD * 110 = 110000 JPY (0 decimals - no decimal point shown)
-      expect(result.results[0].result).toBe("110 000 JPY");
+      expect(result.results[0].result).toBe("110 000 JPY");
     });
 
     it("should convert to JPY and round to integer", () => {
       const result = calculator.calculate("10.5 USD to JPY");
       // 10.5 USD * 110 = 1155 JPY (rounded to integer)
-      expect(result.results[0].result).toBe("1 155 JPY");
+      expect(result.results[0].result).toBe("1 155 JPY");
     });
 
     it("should handle JPY (0 decimals) formatting", () => {
       const result = calculator.calculate("1000 JPY");
       // JPY has 0 decimal places - no decimal point shown
-      expect(result.results[0].result).toBe("1 000 JPY");
+      expect(result.results[0].result).toBe("1 000 JPY");
       expect(result.results[0].result).not.toContain(".");
     });
   });
@@ -171,55 +171,55 @@ CA$100
     it("should handle KWD with 3 decimal places", () => {
       // Kuwaiti Dinar: 3 decimal places
       const result = calculator.calculate("10 KWD");
-      expect(result.results[0].result).toBe("10.000 KWD");
+      expect(result.results[0].result).toBe("10.000 KWD");
     });
 
     it("should handle BHD with 3 decimal places", () => {
       // Bahraini Dinar: 3 decimal places
       const result = calculator.calculate("10 BHD");
-      expect(result.results[0].result).toBe("10.000 BHD");
+      expect(result.results[0].result).toBe("10.000 BHD");
     });
 
     it("should handle OMR with 3 decimal places", () => {
       // Omani Rial: 3 decimal places
       const result = calculator.calculate("10 OMR");
-      expect(result.results[0].result).toBe("10.000 OMR");
+      expect(result.results[0].result).toBe("10.000 OMR");
     });
 
     it("should handle TND with 3 decimal places", () => {
       // Tunisian Dinar: 3 decimal places
       const result = calculator.calculate("10 TND");
-      expect(result.results[0].result).toBe("10.000 TND");
+      expect(result.results[0].result).toBe("10.000 TND");
     });
 
     it("should convert to KWD and maintain 3 decimal precision", () => {
       const result = calculator.calculate("100 USD to KWD");
       // 100 USD * 0.30 = 30 KWD
-      expect(result.results[0].result).toBe("30.000 KWD");
+      expect(result.results[0].result).toBe("30.000 KWD");
     });
 
     it("should convert fractional amounts to 3-decimal currencies", () => {
       const result = calculator.calculate("10.5 USD to BHD");
       // 10.5 USD * 0.38 = 3.99 BHD → 3.990 BHD
-      expect(result.results[0].result).toBe("3.990 BHD");
+      expect(result.results[0].result).toBe("3.990 BHD");
     });
 
     it("should handle KRW with 0 decimal places", () => {
       // South Korean Won: 0 decimal places
       const result = calculator.calculate("10000 KRW");
-      expect(result.results[0].result).toBe("10 000 KRW");
+      expect(result.results[0].result).toBe("10 000 KRW");
     });
 
     it("should handle VND with 0 decimal places", () => {
       // Vietnamese Dong: 0 decimal places
       const result = calculator.calculate("100000 VND");
-      expect(result.results[0].result).toBe("100 000 VND");
+      expect(result.results[0].result).toBe("100 000 VND");
     });
 
     it("should convert to KRW and round to integer", () => {
       const result = calculator.calculate("10 USD to KRW");
       // 10 USD * 1200 = 12000 KRW (0 decimals)
-      expect(result.results[0].result).toBe("12 000 KRW");
+      expect(result.results[0].result).toBe("12 000 KRW");
     });
 
     // Ambiguous Currency Errors
@@ -242,21 +242,21 @@ CA$100
     // Derived Units with Currencies
     it("should handle currency in derived units", () => {
       const result = calculator.calculate("50 USD/hour");
-      expect(result.results[0].result).toBe("50.00 USD/h");
+      expect(result.results[0].result).toBe("50.00 USD/h");
     });
 
     it("should convert derived units with currencies", () => {
       const result = calculator.calculate("50 USD/hour to EUR/day");
       // 50 USD/hour = 50*0.85 EUR/hour = 42.50 EUR/hour
       // 42.50 EUR/hour = 42.5*24 EUR/day = 1020 EUR/day
-      expect(result.results[0].result).toBe("1 020.00 EUR/day");
+      expect(result.results[0].result).toBe("1 020.00 EUR/day");
     });
 
     it("should convert currency per area", () => {
       const result = calculator.calculate("100 USD/m^2 to EUR/ft^2");
       // Converts both currency and area
       // 100 USD/m² → 85 EUR/m² → 7.90 EUR/ft²
-      expect(result.results[0].result).toBe("7.90 EUR/ft²");
+      expect(result.results[0].result).toBe("7.90 EUR/ft²");
     });
 
     it("should error on ambiguous currency in derived units", () => {
@@ -271,58 +271,58 @@ CA$100
     it("should handle currency arithmetic then conversion", () => {
       const result = calculator.calculate("(100 USD + 50 USD) to EUR");
       // 150 USD * 0.85 = 127.5 EUR
-      expect(result.results[0].result).toBe("127.50 EUR");
+      expect(result.results[0].result).toBe("127.50 EUR");
     });
 
     it("should handle mixed currency arithmetic with conversion", () => {
       const result = calculator.calculate("100 USD + 50 EUR to GBP");
       // 100 USD + 50 EUR = 100 USD + 58.82 USD = 158.82 USD
       // 158.82 USD * 0.73 = 115.94 GBP
-      expect(result.results[0].result).toBe("115.94 GBP");
+      expect(result.results[0].result).toBe("115.94 GBP");
     });
 
     it("should handle currency multiplication", () => {
       const result = calculator.calculate("50 USD * 2 to EUR");
       // 100 USD * 0.85 = 85 EUR
-      expect(result.results[0].result).toBe("85.00 EUR");
+      expect(result.results[0].result).toBe("85.00 EUR");
     });
 
     it("should handle large currency amounts", () => {
       const result = calculator.calculate("1000000000 USD to EUR");
-      expect(result.results[0].result).toBe("850 000 000.00 EUR");
+      expect(result.results[0].result).toBe("850 000 000.00 EUR");
     });
 
     it("should handle very small currency amounts", () => {
       const result = calculator.calculate("0.01 USD to JPY");
       // 0.01 USD * 110 = 1.1 JPY → rounds to 1 or 2 JPY (0 decimals)
-      expect(result.results[0].result).toBe("1 JPY");
+      expect(result.results[0].result).toBe("1 JPY");
     });
 
     it("should handle currency division", () => {
       const result = calculator.calculate("100 USD / 2");
-      expect(result.results[0].result).toBe("50.00 USD");
+      expect(result.results[0].result).toBe("50.00 USD");
     });
 
     it("should handle complex currency expression", () => {
       const result = calculator.calculate("(100 USD + 50 USD) * 2 - 200 USD");
       // (150) * 2 - 200 = 300 - 200 = 100
-      expect(result.results[0].result).toBe("100.00 USD");
+      expect(result.results[0].result).toBe("100.00 USD");
     });
 
     it("should maintain precision in currency chain conversion", () => {
       const result = calculator.calculate("100 USD to EUR to GBP to USD");
-      expect(result.results[0].result).toBe("100.00 USD");
+      expect(result.results[0].result).toBe("100.00 USD");
     });
 
     it("should handle currency with percentage", () => {
       const result = calculator.calculate("100 USD * 20%");
-      expect(result.results[0].result).toBe("20.00 USD");
+      expect(result.results[0].result).toBe("20.00 USD");
     });
 
     it("should convert currency with percentage calculation", () => {
       const result = calculator.calculate("(100 USD * 1.15) to EUR");
       // 115 USD * 0.85 = 97.75 EUR
-      expect(result.results[0].result).toBe("97.75 EUR");
+      expect(result.results[0].result).toBe("97.75 EUR");
     });
   });
 });

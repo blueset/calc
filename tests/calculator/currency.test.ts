@@ -357,17 +357,17 @@ describe("Currency Formatting Tests", () => {
   describe("Currency-Specific Decimal Places", () => {
     it("should format USD with 2 decimals when precision=-1", () => {
       const result = calculator.calculate("123.456 USD");
-      expect(result.results[0].result).toBe("123.46 USD");
+      expect(result.results[0].result).toBe("123.46 USD");
     });
 
     it("should format JPY with 0 decimals when precision=-1", () => {
       const result = calculator.calculate("123.456 JPY");
-      expect(result.results[0].result).toBe("123 JPY");
+      expect(result.results[0].result).toBe("123 JPY");
     });
 
     it("should format EUR with 2 decimals when precision=-1", () => {
       const result = calculator.calculate("99.999 EUR");
-      expect(result.results[0].result).toBe("100.00 EUR");
+      expect(result.results[0].result).toBe("100.00 EUR");
     });
 
     it("should honor user precision over currency minorUnits", () => {
@@ -377,7 +377,7 @@ describe("Currency Formatting Tests", () => {
         usd: { eur: 0.85, jpy: 110.0 },
       });
       const result = calcWithPrecision.calculate("123.456789 USD");
-      expect(result.results[0].result).toBe("123.4568 USD");
+      expect(result.results[0].result).toBe("123.4568 USD");
     });
 
     it("should display ambiguous symbol not dimension", () => {
@@ -389,57 +389,57 @@ describe("Currency Formatting Tests", () => {
     it("should format currency in derived units", () => {
       const result = calculator.calculate("50.123 USD/hour");
       // USD has 2 decimals, so should show 50.12 USD/h
-      expect(result.results[0].result).toBe("50.12 USD/h");
+      expect(result.results[0].result).toBe("50.12 USD/h");
     });
 
     it("should round JPY in arithmetic", () => {
       const result = calculator.calculate("100.7 JPY + 50.3 JPY");
       // JPY rounds to 0 decimals, result should be around 151
-      expect(result.results[0].result).toBe("151 JPY");
+      expect(result.results[0].result).toBe("151 JPY");
     });
 
     it("should handle very small amounts rounding to zero", () => {
       const result = calculator.calculate("0.001 USD");
       // 0.001 rounds to 0.00 with 2 decimals
-      expect(result.results[0].result).toBe("0.00 USD");
+      expect(result.results[0].result).toBe("0.00 USD");
     });
 
     it("should handle currency names with correct formatting", () => {
       const result = calculator.calculate("100.567 euros");
-      expect(result.results[0].result).toBe("100.57 EUR");
+      expect(result.results[0].result).toBe("100.57 EUR");
     });
 
     it("should handle multi-word currency names with formatting", () => {
       const result = calculator.calculate("123.456 US Dollars");
-      expect(result.results[0].result).toBe("123.46 USD");
+      expect(result.results[0].result).toBe("123.46 USD");
     });
   });
 
   describe("Currency Edge Cases", () => {
     it("should handle decimal currency conversion", () => {
       const result = calculator.calculate("0.5 USD to EUR");
-      expect(result.results[0].result).toBe("0.42 EUR");
+      expect(result.results[0].result).toBe("0.42 EUR");
     });
 
     it("should handle currency raised to power 1", () => {
       const result = calculator.calculate("100 USD^1");
-      expect(result.results[0].result).toBe("100.00 USD");
+      expect(result.results[0].result).toBe("100.00 USD");
     });
 
     it("should handle currency raised to power 2", () => {
       const result = calculator.calculate("100 USD^2");
-      expect(result.results[0].result).toBe("100.00 USD²");
+      expect(result.results[0].result).toBe("100.00 USD²");
     });
 
     it("should handle currency in complex derived unit", () => {
       const result = calculator.calculate("1000 USD/sq m/month");
-      expect(result.results[0].result).toBe("1 000.00 USD/(m² mo)");
+      expect(result.results[0].result).toBe("1 000.00 USD/(m² mo)");
     });
 
     it("should handle multiple currency conversions in one line", () => {
       const result = calculator.calculate("100 USD to EUR\n50 GBP to USD");
-      expect(result.results[0].result).toBe("85.00 EUR");
-      expect(result.results[1].result).toBe("68.49 USD");
+      expect(result.results[0].result).toBe("85.00 EUR");
+      expect(result.results[1].result).toBe("68.49 USD");
     });
   });
 });
