@@ -98,9 +98,9 @@ export function ResultCard({
           <div
             className={cn(
               "whitespace-pre-wrap",
+              fontFamily,
               result.hasError && "text-destructive",
             )}
-            style={{ fontFamily }}
           >
             {result.result}
           </div>
