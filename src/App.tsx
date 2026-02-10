@@ -39,6 +39,7 @@ function AppContent() {
   const [input, setInput] = useState(() => loadDocument(isInDemoMode));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [linePositions, setLinePositions] = useState<LinePosition[]>([]);
+  const [viewport, setViewport] = useState<{ from: number; to: number }>({ from: 1, to: 1 });
   const [activeLine, setActiveLine] = useState(1);
   const editorViewRef = useRef<EditorView | null>(null);
   const initialDocRef = useRef(loadDocument(isInDemoMode));
@@ -114,8 +115,9 @@ function AppContent() {
     return () => window.removeEventListener("keydown", handler);
   }, [settings.debugMode, updateSetting]);
 
-  const handleLinePositions = useCallback((positions: LinePosition[]) => {
+  const handleLinePositions = useCallback((positions: LinePosition[], vp: { from: number; to: number }) => {
     setLinePositions(positions);
+    setViewport(vp);
   }, []);
 
   const handleFocusLine = useCallback((line: number) => {
@@ -176,6 +178,7 @@ function AppContent() {
               <ResultsPanel
                 results={results}
                 linePositions={linePositions}
+                viewport={viewport}
                 activeLine={activeLine}
                 fontSize={fontSize}
                 fontFamily={settings.fontFamily}

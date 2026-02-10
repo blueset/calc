@@ -21,7 +21,10 @@ function isFolded(foldRanges: DecorationSet, line: Line): boolean {
   return folded;
 }
 
-type PositionCallback = (positions: LinePosition[]) => void;
+type PositionCallback = (
+  positions: LinePosition[],
+  viewport: { from: number; to: number },
+) => void;
 
 export function resultAlignPlugin(callback: PositionCallback) {
   return ViewPlugin.fromClass(
@@ -56,7 +59,9 @@ export function resultAlignPlugin(callback: PositionCallback) {
             height: isFolded(foldRanges, line) ? 0 : block.height,
           });
         }
-        callback(positions);
+        const vpFrom = this.view.state.doc.lineAt(this.view.viewport.from).number;
+        const vpTo = this.view.state.doc.lineAt(this.view.viewport.to).number;
+        callback(positions, { from: vpFrom, to: vpTo });
       }
     },
     {

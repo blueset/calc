@@ -37,7 +37,7 @@ import { FONT_STYLE_MAP } from "@/constants";
 interface EditorProps {
   initialDoc: string;
   onChange: (value: string) => void;
-  onLinePositions?: (positions: LinePosition[]) => void;
+  onLinePositions?: (positions: LinePosition[], viewport: { from: number; to: number }) => void;
   onActiveLine?: (line: number) => void;
   ast?: Document | null;
   results?: LineResult[];
@@ -135,8 +135,8 @@ export function Editor({
             onActiveLineRef.current?.(line);
           }
         }),
-        resultAlignPlugin((positions) => {
-          onLinePositionsRef.current?.(positions);
+        resultAlignPlugin((positions, viewport) => {
+          onLinePositionsRef.current?.(positions, viewport);
         }),
       ],
     });

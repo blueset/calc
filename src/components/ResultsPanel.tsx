@@ -6,9 +6,12 @@ import { FONT_CLASS_MAP } from "@/constants";
 import { ResultCard } from "./ResultCard";
 import { RovingFocusGroup } from "@radix-ui/react-roving-focus";
 
+const VIEWPORT_BUFFER = 10;
+
 interface ResultsPanelProps {
   results: LineResult[];
   linePositions: LinePosition[];
+  viewport: { from: number; to: number };
   activeLine?: number;
   fontSize?: number;
   fontFamily?: string;
@@ -18,6 +21,7 @@ interface ResultsPanelProps {
 export function ResultsPanel({
   results,
   linePositions,
+  viewport,
   activeLine,
   fontSize = 15,
   fontFamily = "monospace",
@@ -27,11 +31,15 @@ export function ResultsPanel({
 
   const ff = FONT_CLASS_MAP[fontFamily] || fontFamily;
 
+  const visibleFrom = viewport.from - VIEWPORT_BUFFER;
+  const visibleTo = viewport.to + VIEWPORT_BUFFER;
+
   return (
     <div className={cn(``, ff)} style={{ fontSize: `${fontSize}px` }}>
       <RovingFocusGroup asChild orientation="vertical" loop>
         <div className="relative">
           {linePositions.map((pos) => {
+            if (pos.line < visibleFrom || pos.line > visibleTo) return null;
             const result = results.find((r) => r.line === pos.line);
             if (pos.height === 0) return null;
             if (!result?.result || (!debugMode && result.hasError)) {
