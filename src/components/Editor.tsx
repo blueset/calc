@@ -24,12 +24,7 @@ import {
 import { evalTooltipExtension } from "@/codemirror/evalTooltip";
 import { resultAlignPlugin, type LinePosition } from "@/codemirror/resultAlign";
 import { foldHeadingsService } from "@/codemirror/foldHeadings";
-import {
-  lightTheme,
-  darkTheme,
-  lightHighlight,
-  darkHighlight,
-} from "@/codemirror/theme";
+import { editorTheme, editorHighlight } from "@/codemirror/theme";
 import type { Document } from "@/calculator/document";
 import type { LineResult, CalculationResult } from "@/calculator/calculator";
 import { FONT_STYLE_MAP } from "@/constants";
@@ -43,7 +38,6 @@ interface EditorProps {
   results?: LineResult[];
   errors?: CalculationResult["errors"];
   debugMode?: boolean;
-  resolvedTheme?: "light" | "dark";
   fontSize?: number;
   fontFamily?: string;
   lineWrapping?: boolean;
@@ -59,7 +53,6 @@ export function Editor({
   results,
   errors,
   debugMode,
-  resolvedTheme = "light",
   fontSize = 15,
   fontFamily = "monospace",
   lineWrapping: lineWrappingProp = false,
@@ -72,7 +65,6 @@ export function Editor({
   const onActiveLineRef = useRef(onActiveLine);
   const resultsRef = useRef<LineResult[]>([]);
   const debugCompartmentRef = useRef(new Compartment());
-  const themeCompartmentRef = useRef(new Compartment());
   const fontCompartmentRef = useRef(new Compartment());
   const wrapCompartmentRef = useRef(new Compartment());
 
@@ -97,18 +89,12 @@ export function Editor({
     if (!containerRef.current) return;
 
     const debugCompartment = debugCompartmentRef.current;
-    const themeCompartment = themeCompartmentRef.current;
     const fontCompartment = fontCompartmentRef.current;
     const wrapCompartment = wrapCompartmentRef.current;
 
     const debugExtensions = debugMode
       ? [errorLintField, evalTooltipExtension(() => resultsRef.current)]
       : [];
-
-    const currentTheme =
-      resolvedTheme === "dark"
-        ? [darkTheme, darkHighlight]
-        : [lightTheme, lightHighlight];
 
     const state = EditorState.create({
       doc: initialDoc,
@@ -123,7 +109,8 @@ export function Editor({
         debugCompartment.of(debugExtensions),
         fontCompartment.of(getFontTheme(fontSize, fontFamily)),
         wrapCompartment.of(lineWrappingProp ? EditorView.lineWrapping : []),
-        themeCompartment.of(currentTheme),
+        editorTheme,
+        editorHighlight,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChangeRef.current(update.state.doc.toString());
@@ -170,19 +157,6 @@ export function Editor({
       effects: debugCompartmentRef.current.reconfigure(debugExtensions),
     });
   }, [debugMode]);
-
-  // Switch theme dynamically
-  useEffect(() => {
-    const view = viewRef.current;
-    if (!view) return;
-    view.dispatch({
-      effects: themeCompartmentRef.current.reconfigure(
-        resolvedTheme === "dark"
-          ? [darkTheme, darkHighlight]
-          : [lightTheme, lightHighlight],
-      ),
-    });
-  }, [resolvedTheme]);
 
   // Switch font dynamically
   useEffect(() => {

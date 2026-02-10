@@ -94,8 +94,6 @@ export const markdownOverlayPlugin = ViewPlugin.fromClass(
         this.decorations = this.buildDecorations(update.view);
       } else if (update.docChanged) {
         this.decorations = this.decorations.map(update.changes);
-      } else if (themeChanged(update)) {
-        this.decorations = this.buildDecorations(update.view);
       }
     }
 
@@ -138,9 +136,3 @@ export const markdownOverlayPlugin = ViewPlugin.fromClass(
   },
 );
 
-function themeChanged(update: ViewUpdate): boolean {
-  return (
-    update.startState.facet(EditorView.darkTheme) !==
-    update.state.facet(EditorView.darkTheme)
-  );
-}

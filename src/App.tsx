@@ -162,7 +162,6 @@ function AppContent() {
                   results={results}
                   errors={errors}
                   debugMode={settings.debugMode}
-                  resolvedTheme={resolvedTheme}
                   fontSize={fontSize}
                   fontFamily={settings.fontFamily}
                   lineWrapping={settings.lineWrapping}

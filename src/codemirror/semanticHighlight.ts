@@ -52,8 +52,6 @@ export const semanticHighlightPlugin = ViewPlugin.fromClass(
       } else if (update.docChanged) {
         // Doc changed, no new tree yet → shift existing decorations
         this.decorations = this.decorations.map(update.changes);
-      } else if (themeChanged(update)) {
-        this.decorations = this.buildDecorations(update.view);
       }
     }
 
@@ -85,14 +83,6 @@ export const semanticHighlightPlugin = ViewPlugin.fromClass(
     decorations: (v) => v.decorations,
   },
 );
-
-function themeChanged(update: ViewUpdate): boolean {
-  // Detect theme/HighlightStyle reconfiguration
-  return (
-    update.startState.facet(EditorView.darkTheme) !==
-    update.state.facet(EditorView.darkTheme)
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Tree builder: AST → Lezer Tree
