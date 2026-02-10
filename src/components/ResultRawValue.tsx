@@ -27,7 +27,7 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
       return (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+            <Badge className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
               Value
             </Badge>
             {rawValue.value}
@@ -53,7 +53,7 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
       return (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300">
+            <Badge className="bg-lime-50 dark:bg-lime-950 text-lime-700 dark:text-lime-300">
               Composite
             </Badge>
           </div>
@@ -74,7 +74,7 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
       return (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
+            <Badge className="bg-fuchsia-50 dark:bg-fuchsia-950 text-fuchsia-700 dark:text-fuchsia-300">
               Presentation:{" "}
               {typeof rawValue.format === "number"
                 ? `Base ${rawValue.format}`
@@ -91,7 +91,7 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
     case "boolean": {
       return (
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+          <Badge className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
             Boolean
           </Badge>
           <Badge
