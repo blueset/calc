@@ -123,6 +123,7 @@ const highlightStyle = HighlightStyle.define([
   { tag: tags.quote, color: "var(--ed-quote)", fontStyle: "italic" },
   { tag: tags.list, color: "var(--ed-fg)" },
   { tag: tags.contentSeparator, color: "var(--ed-muted)" },
+  { tag: tags.separator, color: "var(--ed-yellow)" },
   { tag: tags.processingInstruction, color: "var(--ed-muted)" },
   { tag: tags.strikethrough, textDecoration: "line-through" },
 ]);

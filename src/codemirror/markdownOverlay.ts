@@ -7,7 +7,7 @@ import {
   ViewUpdate,
 } from "@codemirror/view";
 import { highlightingFor } from "@codemirror/language";
-import { getStyleTags } from "@lezer/highlight";
+import { getStyleTags, tags } from "@lezer/highlight";
 import { GFM, parser as mdParser } from "@lezer/markdown";
 import type { Document } from "@/calculator/document";
 
@@ -114,7 +114,11 @@ export const markdownOverlayPlugin = ViewPlugin.fromClass(
             if (node.type.isTop) return;
             const st = getStyleTags(node);
             if (!st) return;
-            const cls = highlightingFor(state, st.tags);
+            let sTags = st.tags;
+            if (node.type.name === "ListMark") {
+              sTags = [tags.separator];
+            }
+            const cls = highlightingFor(state, sTags);
             if (cls) {
               const from = region.from + node.from;
               const to = region.from + node.to;
@@ -135,4 +139,3 @@ export const markdownOverlayPlugin = ViewPlugin.fromClass(
     decorations: (v) => v.decorations,
   },
 );
-
