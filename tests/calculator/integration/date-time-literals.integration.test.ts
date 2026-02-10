@@ -98,10 +98,10 @@ describe("Integration Tests - Date and Time Literals", () => {
 05:00 UTC+3:30`);
       expect(result.results[0].result).toBe("05:00");
       expect(result.results[1].result).toMatch(/(tomorrow )?05:00 UTC/);
-      expect(result.results[2].result).toBe("1 h 30 min");
+      expect(result.results[2].result).toBe("1 h 30 min");
       expect(result.results[3].result).toMatch(/(tomorrow )?05:00 UTC-3:30/);
       expect(result.results[4].result).toMatch(
-        /(-1 day -6 h -30 min|17 h 30 min)/,
+        /(-1 day -6 h -30 min|17 h 30 min)/,
       );
       expect(result.results[5].result).toMatch(/(tomorrow )?05:00 UTC\+3:30/);
     });

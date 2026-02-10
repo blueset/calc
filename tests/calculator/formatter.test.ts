@@ -487,7 +487,7 @@ describe("Formatter", () => {
         },
       };
       expect(formatter.format(value)).toBe(
-        "1 year 2 months 3 days 4 hours 5 minutes 6 seconds",
+        "1 year 2 months 3 days 4 hours 5 minutes 6 seconds",
       );
     });
 
@@ -508,7 +508,7 @@ describe("Formatter", () => {
         },
       };
       expect(formatter.format(value)).toBe(
-        "1 week 1 day 1 hour 1 minute 1 second 1 millisecond",
+        "1 week 1 day 1 hour 1 minute 1 second 1 millisecond",
       );
     });
 

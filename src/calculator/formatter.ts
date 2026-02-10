@@ -999,44 +999,44 @@ export class Formatter {
     // Date components
     if (duration.years) {
       parts.push(
-        `${duration.years} ${this.formatUnitById("year", duration.years)}`,
+        `${duration.years}\u202F${this.formatUnitById("year", duration.years)}`,
       );
     }
     if (duration.months) {
       parts.push(
-        `${duration.months} ${this.formatUnitById("month", duration.months)}`,
+        `${duration.months}\u202F${this.formatUnitById("month", duration.months)}`,
       );
     }
     if (duration.weeks) {
       parts.push(
-        `${duration.weeks} ${this.formatUnitById("week", duration.weeks)}`,
+        `${duration.weeks}\u202F${this.formatUnitById("week", duration.weeks)}`,
       );
     }
     if (duration.days) {
       parts.push(
-        `${duration.days} ${this.formatUnitById("day", duration.days)}`,
+        `${duration.days}\u202F${this.formatUnitById("day", duration.days)}`,
       );
     }
 
     // Time components
     if (duration.hours) {
       parts.push(
-        `${duration.hours} ${this.formatUnitById("hour", duration.hours)}`,
+        `${duration.hours}\u202F${this.formatUnitById("hour", duration.hours)}`,
       );
     }
     if (duration.minutes) {
       parts.push(
-        `${duration.minutes} ${this.formatUnitById("minute", duration.minutes)}`,
+        `${duration.minutes}\u202F${this.formatUnitById("minute", duration.minutes)}`,
       );
     }
     if (duration.seconds) {
       parts.push(
-        `${duration.seconds} ${this.formatUnitById("second", duration.seconds)}`,
+        `${duration.seconds}\u202F${this.formatUnitById("second", duration.seconds)}`,
       );
     }
     if (duration.milliseconds) {
       parts.push(
-        `${duration.milliseconds} ${this.formatUnitById("millisecond", duration.milliseconds)}`,
+        `${duration.milliseconds}\u202F${this.formatUnitById("millisecond", duration.milliseconds)}`,
       );
     }
 

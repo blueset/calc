@@ -23,27 +23,21 @@ describe("Integration Tests - Value Type Processing Gaps", () => {
   describe("Gap E: Duration arithmetic (Duration * N, Duration / N)", () => {
     it("should multiply a date-subtraction duration by an integer", () => {
       // (date - date) produces a Duration; multiply by integer scales each field
-      const result = calculator.calculate(
-        "d = 1970 Jan 3 - 1970 Jan 1\nd * 3",
-      );
+      const result = calculator.calculate("d = 1970 Jan 3 - 1970 Jan 1\nd * 3");
       // 2 days * 3 = 6 days
-      expect(result.results[1].result).toBe("6 day");
+      expect(result.results[1].result).toBe("6 day");
     });
 
     it("should support N * Duration (commutative)", () => {
-      const result = calculator.calculate(
-        "d = 1970 Jan 3 - 1970 Jan 1\n2 * d",
-      );
+      const result = calculator.calculate("d = 1970 Jan 3 - 1970 Jan 1\n2 * d");
       // 2 * 2 days = 4 days
-      expect(result.results[1].result).toBe("4 day");
+      expect(result.results[1].result).toBe("4 day");
     });
 
     it("should divide a date-subtraction duration by a number", () => {
-      const result = calculator.calculate(
-        "d = 1970 Jan 3 - 1970 Jan 1\nd / 2",
-      );
+      const result = calculator.calculate("d = 1970 Jan 3 - 1970 Jan 1\nd / 2");
       // 2 days / 2 = 1 day
-      expect(result.results[1].result).toBe("1 day");
+      expect(result.results[1].result).toBe("1 day");
     });
 
     it("should handle Duration / Duration as a ratio", () => {
@@ -59,13 +53,11 @@ describe("Integration Tests - Value Type Processing Gaps", () => {
         "d = 1970 Jan 2 - 1970 Jan 1\nd * 0.5",
       );
       // 1 day * 0.5 = 12 hours
-      expect(result.results[1].result).toBe("12 h");
+      expect(result.results[1].result).toBe("12 h");
     });
 
     it("should return division by zero error", () => {
-      const result = calculator.calculate(
-        "d = 1970 Jan 3 - 1970 Jan 1\nd / 0",
-      );
+      const result = calculator.calculate("d = 1970 Jan 3 - 1970 Jan 1\nd / 0");
       expect(result.results[1].result).toContain("Error");
     });
   });

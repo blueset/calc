@@ -228,26 +228,26 @@ describe("Integration Tests - Date/Time Edge Cases", () => {
         const result = calculator.calculate(`2023 Jan 20 - 2023 Jan 15
 2023 Feb 1 - 2023 Jan 1
 2024 Jan 1 - 2023 Jan 1`);
-        expect(result.results[0].result).toBe("5 day");
-        expect(result.results[1].result).toBe("1 mo");
-        expect(result.results[2].result).toBe("1 yr");
+        expect(result.results[0].result).toBe("5 day");
+        expect(result.results[1].result).toBe("1 mo");
+        expect(result.results[2].result).toBe("1 yr");
       });
 
       it("should subtract times to get duration", () => {
         const result = calculator.calculate(`15:30 - 14:00
 14:00 - 15:30
 23:59 - 00:01`);
-        expect(result.results[0].result).toBe("1 h 30 min");
-        expect(result.results[1].result).toBe("-1 h -30 min");
-        expect(result.results[2].result).toBe("23 h 58 min");
+        expect(result.results[0].result).toBe("1 h 30 min");
+        expect(result.results[1].result).toBe("-1 h -30 min");
+        expect(result.results[2].result).toBe("23 h 58 min");
       });
 
       it("should subtract datetimes to get duration", () => {
         const result =
           calculator.calculate(`2023 Jan 15 14:30 - 2023 Jan 15 12:00
 2023 Jan 20 14:30 - 2023 Jan 15 12:00`);
-        expect(result.results[0].result).toContain("2 h 30 min");
-        expect(result.results[1].result).toBe("5 day 2 h 30 min");
+        expect(result.results[0].result).toContain("2 h 30 min");
+        expect(result.results[1].result).toBe("5 day 2 h 30 min");
       });
     });
 
@@ -355,7 +355,7 @@ date + 3 months`);
     it("should create negative durations from subtraction", () => {
       const result = calculator.calculate(`2023 Jan 1 - 2023 Jan 15
 abs(2023 Jan 1 - 2023 Jan 15)`);
-      expect(result.results[0].result).toContain("-14 day");
+      expect(result.results[0].result).toContain("-14 day");
       expect(result.results[1].result).toContain("14 day"); // Duration should be implicitly converted to NumberWithUnit or CompositeValue
     });
   });

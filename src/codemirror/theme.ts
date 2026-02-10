@@ -41,7 +41,7 @@ export const editorTheme = EditorView.theme({
 const highlightStyle = HighlightStyle.define([
   {
     tag: tags.heading1,
-    fontWeight: "900",
+    fontWeight: "700",
     color: "var(--ed-red)",
     textDecoration: "underline",
     textDecorationColor: "var(--ed-muted)",
@@ -50,7 +50,7 @@ const highlightStyle = HighlightStyle.define([
   },
   {
     tag: tags.heading2,
-    fontWeight: "700",
+    fontWeight: "600",
     color: "var(--ed-red)",
     textDecoration: "underline",
     textDecorationColor: "var(--ed-muted)",
@@ -59,7 +59,7 @@ const highlightStyle = HighlightStyle.define([
   },
   {
     tag: tags.heading3,
-    fontWeight: "600",
+    fontWeight: "500",
     color: "var(--ed-red)",
     textDecoration: "underline",
     textDecorationColor: "var(--ed-muted)",

@@ -128,8 +128,8 @@ describe("Integration Tests - Date/Time Property Extraction", () => {
 1970 Jan 01 14:00 UTC-330 to offset
 1970 Jan 01 14:00 UTC+0 to offset`);
       expect(result.results[0].result).toBe("0 min");
-      expect(result.results[1].result).toBe("5 h");
-      expect(result.results[2].result).toBe("-3 h -30 min");
+      expect(result.results[1].result).toBe("5 h");
+      expect(result.results[2].result).toBe("-3 h -30 min");
       expect(result.results[3].result).toBe("0 min");
     });
 
@@ -138,9 +138,9 @@ describe("Integration Tests - Date/Time Property Extraction", () => {
         calculator.calculate(`1970 Jan 01 14:00 America/New_York to offset
 1970 Jun 01 14:00 America/New_York to offset
 1970 Jan 01 14:00 Tokyo to offset`);
-      expect(result.results[0].result).toBe("-5 h"); // EST
-      expect(result.results[1].result).toBe("-4 h"); // EDT
-      expect(result.results[2].result).toBe("9 h"); // JST
+      expect(result.results[0].result).toBe("-5 h"); // EST
+      expect(result.results[1].result).toBe("-4 h"); // EDT
+      expect(result.results[2].result).toBe("9 h"); // JST
     });
   });
 

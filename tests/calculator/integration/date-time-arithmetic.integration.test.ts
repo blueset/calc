@@ -25,7 +25,7 @@ describe("Integration Tests - Date and Time Arithmetic", () => {
 
     it("should subtract dates", () => {
       const result = calculator.calculate("2023 Jan 10 - 2023 Jan 1");
-      expect(result.results[0].result).toBe("9 day");
+      expect(result.results[0].result).toBe("9 day");
     });
 
     it("should add duration to date", () => {
@@ -145,7 +145,7 @@ describe("Integration Tests - Date and Time Arithmetic", () => {
     it("should subtract dates to get duration", () => {
       // Plain date - plain date → duration
       const result = calculator.calculate("1970 Jan 10 - 1970 Jan 5");
-      expect(result.results[0].result).toBe("5 day");
+      expect(result.results[0].result).toBe("5 day");
     });
 
     it("should subtract date times to get duration", () => {
@@ -154,14 +154,14 @@ describe("Integration Tests - Date and Time Arithmetic", () => {
         "1970 Jan 2 14:30 - 1970 Jan 1 10:00",
       );
       // 1 day 4 hours 30 minutes = 28.5 hours = 1 day 4 h 30 min
-      expect(result.results[0].result).toBe("1 day 4 h 30 min");
+      expect(result.results[0].result).toBe("1 day 4 h 30 min");
     });
 
     it("should handle date time - date (implicit time 00:00)", () => {
       // Plain date time - plain date (treated as midnight)
       const result = calculator.calculate("1970 Jan 2 14:30 - 1970 Jan 1");
       // 1 day 14 hours 30 minutes
-      expect(result.results[0].result).toBe("1 day 14 h 30 min");
+      expect(result.results[0].result).toBe("1 day 14 h 30 min");
     });
 
     it("should handle duration + duration arithmetic", () => {
