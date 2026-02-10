@@ -334,6 +334,21 @@ ValueWithUnits -> CompositeValue {% id %}
                     (data, location) => ({ type: 'Value', value: data[0], unit: data[2], offset: data[0].offset })
                   %}
                 | CurrencyWithPrefix {% id %}
+                | %lparen _ Expression _ %rparen _ Units {%
+                    (data, location) => ({
+                      type: 'BinaryExpression',
+                      subType: 'implicitUnitMultiply',
+                      operator: 'times',
+                      left: data[2],
+                      right: {
+                        type: 'Value',
+                        value: { type: 'NumberLiteral', subType: 'DecimalNumber', base: 10, value: '1', offset: data[6].offset, sourceLength: 0 },
+                        unit: data[6],
+                        offset: data[6].offset
+                      },
+                      offset: data[0].offset
+                    })
+                  %}
 
 # Require unit on first component to disambiguate from arithmetic (e.g., "5 ft 3 in" vs "2 + 3")
 NumberWithRequiredUnit -> NumericalValue _ Units {%

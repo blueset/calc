@@ -93,8 +93,8 @@ Infinity
 ## Functions
 ### Trigonometry
 sin(30 deg)
-cos(60 deg)
-tan(45 deg)
+cos((pi / 3) rad)
+tan(45)  # default unit follows settings
 asin(0.5)
 acos(0.5)
 atan(1)
@@ -124,7 +124,7 @@ sign(-10)
 Round to the nearest multiple:
 
 round(12, 5)
-round(6200 m, 5 km)
+round(6.7 km, 500 m)
 floor(7, 3)
 ceil(7, 3)
 trunc(-4.7, 0.5)

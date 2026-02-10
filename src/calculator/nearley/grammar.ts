@@ -459,6 +459,21 @@ const grammar: Grammar = {
         (data, location) => ({ type: 'Value', value: data[0], unit: data[2], offset: data[0].offset })
                           },
     {"name": "ValueWithUnits", "symbols": ["CurrencyWithPrefix"], "postprocess": id},
+    {"name": "ValueWithUnits", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", "Expression", "_", (lexer.has("rparen") ? {type: "rparen"} : rparen), "_", "Units"], "postprocess": 
+        (data, location) => ({
+          type: 'BinaryExpression',
+          subType: 'implicitUnitMultiply',
+          operator: 'times',
+          left: data[2],
+          right: {
+            type: 'Value',
+            value: { type: 'NumberLiteral', subType: 'DecimalNumber', base: 10, value: '1', offset: data[6].offset, sourceLength: 0 },
+            unit: data[6],
+            offset: data[6].offset
+          },
+          offset: data[0].offset
+        })
+                          },
     {"name": "NumberWithRequiredUnit", "symbols": ["NumericalValue", "_", "Units"], "postprocess": 
         (data, location) => ({ type: 'Value', value: data[0], unit: data[2], offset: data[0].offset })
         },

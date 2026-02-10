@@ -598,6 +598,48 @@ describe("Integration Tests - Basic Units", () => {
     });
   });
 
+  describe("Parenthesized Expression with Units", () => {
+    it("should handle basic arithmetic with unit", () => {
+      const result = calculator.calculate("(2+3) kg");
+      expect(result.results[0].result).toBe("5 kg");
+    });
+
+    it("should handle trivial parens with unit", () => {
+      const result = calculator.calculate("(10) m");
+      expect(result.results[0].result).toBe("10 m");
+    });
+
+    it("should handle function call in parens with unit", () => {
+      const result = calculator.calculate("(sqrt(9)) km");
+      expect(result.results[0].result).toBe("3 km");
+    });
+
+    it("should handle nested arithmetic with unit", () => {
+      const result = calculator.calculate("(2 * 3) N");
+      expect(result.results[0].result).toBe("6 N");
+    });
+
+    it("should handle derived units with slash", () => {
+      const result = calculator.calculate("(10 s + 5 s) kg/s");
+      expect(result.results[0].result).toBe("15 kg");
+    });
+
+    it("should handle unit with exponent", () => {
+      const result = calculator.calculate("(3) m^2");
+      expect(result.results[0].result).toBe("3 m²");
+    });
+
+    it("should handle conversion chaining", () => {
+      const result = calculator.calculate("(5) m to ft");
+      expect(result.results[0].result).toMatch(/ft/);
+    });
+
+    it("should handle variable in parens with unit", () => {
+      const result = calculator.calculate("x = 5\n(x) kg");
+      expect(result.results[1].result).toBe("5 kg");
+    });
+  });
+
   describe("Frequency Units", () => {
     it("should handle cycles", () => {
       const result = calculator.calculate("60 cycles");
