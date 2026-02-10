@@ -62,7 +62,9 @@ export function ResultCard({
               result.hasError
                 ? "text-destructive"
                 : "text-foreground dark:text-muted-foreground",
-              isActive && !isCopied && "bg-secondary hover:bg-secondary",
+              isActive &&
+                !isCopied &&
+                "bg-muted dark:bg-muted/50 hover:bg-secondary",
               {
                 "bg-primary hover:bg-primary/75 dark:hover:bg-primary/75 text-primary-foreground font-medium":
                   isCopied === true,

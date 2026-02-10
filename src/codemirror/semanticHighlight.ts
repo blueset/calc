@@ -147,14 +147,14 @@ export function buildSemanticTree(ast: Document, docText: string): Tree {
       node.type !== "Heading"
     ) {
       // Add span for comments
-      const sharpIndex = lines[lineIndex].indexOf("#");
+      const sharpIndex = lines[lineIndex]?.indexOf("#") ?? -1;
       if (sharpIndex !== -1) {
         const from = toAbsolute(lineNum, sharpIndex);
         addSpan(NodeID.Comment, from, lines[lineIndex].length - sharpIndex);
       }
 
       // Add spans for brackets
-      lines[lineIndex].matchAll(/[()[\]]/g).forEach((match) => {
+      lines[lineIndex]?.matchAll(/[()[\]]/g).forEach((match) => {
         const from = toAbsolute(lineNum, match.index);
         addSpan(NodeID.Bracket, from, 1);
       });

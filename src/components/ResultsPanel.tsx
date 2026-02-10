@@ -48,7 +48,7 @@ export function ResultsPanel({
                   key={pos.line}
                   className={cn(
                     "right-0 left-0 absolute",
-                    pos.line === activeLine && "bg-accent dark:bg-accent/40",
+                    pos.line === activeLine && "bg-muted dark:bg-muted/50",
                   )}
                   style={{
                     top: pos.top + 4,

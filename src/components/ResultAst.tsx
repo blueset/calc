@@ -57,7 +57,7 @@ function AstNode({ node }: { node: Node }) {
       return (
         <div className="space-y-1">
           <div className="flex flex-row flex-wrap gap-2">
-            <Badge className="bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
+            <Badge className="bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300">
               Variable Assignment
             </Badge>
             {variableAssignmentNode.name}{" "}
@@ -73,7 +73,7 @@ function AstNode({ node }: { node: Node }) {
       const conditionalExprNode = node as unknown as ConditionalExprNode;
       return (
         <div className="space-y-1">
-          <Badge className="bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300">
+          <Badge className="bg-pink-50 dark:bg-pink-950 text-pink-700 dark:text-pink-300">
             Conditional
           </Badge>
           <span className="text-muted-foreground text-xs">(</span>
@@ -121,7 +121,7 @@ function AstNode({ node }: { node: Node }) {
       const binaryExprNode = node as unknown as BinaryExpressionNode;
       return (
         <div className="space-y-1">
-          <Badge className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300">
+          <Badge className="bg-pink-50 dark:bg-pink-950 text-pink-700 dark:text-pink-300">
             {binaryExprNode.operator}
           </Badge>
           <span className="text-muted-foreground text-xs">(</span>
@@ -171,7 +171,7 @@ function AstNode({ node }: { node: Node }) {
       const valueNode = node as unknown as ValueNode;
       return (
         <div className="flex flex-row flex-wrap gap-2">
-          <Badge className="bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
+          <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
             Value
           </Badge>
           <AstNode node={valueNode.value} />
@@ -199,7 +199,7 @@ function AstNode({ node }: { node: Node }) {
       return (
         <div className="space-y-1">
           <div className="flex flex-row flex-wrap gap-2">
-            <Badge className="bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300">
+            <Badge className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300">
               Function
             </Badge>
             <span className="font-semibold">{funcCallNode.name}</span>
@@ -223,7 +223,7 @@ function AstNode({ node }: { node: Node }) {
       const boolNode = node as unknown as BooleanLiteralNode;
       return (
         <div className="flex flex-row flex-wrap gap-2">
-          <Badge className="bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300">
+          <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
             Boolean
           </Badge>
           <Badge
@@ -242,7 +242,7 @@ function AstNode({ node }: { node: Node }) {
       const varNode = node as unknown as VariableNode;
       return (
         <div className="flex flex-row flex-wrap gap-2">
-          <Badge className="bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+          <Badge className="bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300">
             Variable
           </Badge>
           <span>{varNode.name}</span>
@@ -253,7 +253,7 @@ function AstNode({ node }: { node: Node }) {
       const constNode = node as unknown as ConstantNode;
       return (
         <div className="flex flex-row flex-wrap gap-2">
-          <Badge className="bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
+          <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
             Constant
           </Badge>
           <span>{constNode.name}</span>
@@ -303,7 +303,7 @@ function AstNode({ node }: { node: Node }) {
           </Badge>
           <div className="flex flex-row flex-wrap gap-2 pl-4 border-l border-l-border">
             <AstNode node={relNode.amount} />
-            <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+            <Badge className="bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
               {relNode.unit}
             </Badge>
             <span className="text-muted-foreground">{relNode.direction}</span>
@@ -401,7 +401,7 @@ function AstNode({ node }: { node: Node }) {
       }
       return (
         <div className="flex flex-row flex-wrap gap-2">
-          <Badge className="bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+          <Badge className="bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
             Presentation: {formatLabel}
           </Badge>
         </div>
@@ -411,7 +411,7 @@ function AstNode({ node }: { node: Node }) {
       const propNode = node as unknown as PropertyTargetNode;
       return (
         <div className="flex flex-row flex-wrap gap-2">
-          <Badge className="bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+          <Badge className="bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
             Property
           </Badge>
           <span>{propNode.property}</span>
@@ -447,7 +447,7 @@ function AstNode({ node }: { node: Node }) {
           <div className="flex flex-row flex-wrap gap-2">
             {numberLiteralNode.value}
             {numberLiteralNode.base !== 10 && (
-              <Badge className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300">
+              <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
                 Base {numberLiteralNode.base}
               </Badge>
             )}
@@ -459,7 +459,7 @@ function AstNode({ node }: { node: Node }) {
       const pctNode = node as unknown as PercentageLiteralNode;
       return (
         <div className="flex flex-row flex-wrap gap-2">
-          <Badge className="bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
+          <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
             {pctNode.symbol === "percent" ? "Percentage" : "Permille"}
           </Badge>
           <span>
@@ -484,7 +484,7 @@ function AstNode({ node }: { node: Node }) {
     case "UnitWithExponent": {
       const unitWithExponentNode = node as unknown as UnitWithExponentNode;
       return (
-        <Badge className="gap-0 bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+        <Badge className="gap-0 bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
           {unitWithExponentNode.unit.name}
           {unitWithExponentNode.exponent !== 1 && (
             <sup>{unitWithExponentNode.exponent}</sup>
@@ -496,7 +496,7 @@ function AstNode({ node }: { node: Node }) {
     case "Unit": {
       const unitNode = node as unknown as UnitNode;
       return (
-        <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+        <Badge className="bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
           {unitNode.name}
           <span className="ml-1 text-muted-foreground text-xs">
             ({unitNode.matched})

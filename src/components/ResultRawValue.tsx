@@ -27,12 +27,12 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
       return (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
+            <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
               Value
             </Badge>
             {rawValue.value}
             {rawValue.terms.map((term) => (
-              <Badge className="gap-0 bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
+              <Badge className="gap-0 bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
                 {term.unit.displayName.singular}
                 {term.exponent !== 1 && <sup>{term.exponent}</sup>}
                 {term.unit.id.startsWith("currency_symbol_")
@@ -74,7 +74,7 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
       return (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+            <Badge className="bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
               Presentation:{" "}
               {typeof rawValue.format === "number"
                 ? `Base ${rawValue.format}`
@@ -91,7 +91,7 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
     case "boolean": {
       return (
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300">
+          <Badge className="bg-violet-50 dark:bg-violet-950 text-violet-700 dark:text-violet-300">
             Boolean
           </Badge>
           <Badge
@@ -196,7 +196,7 @@ function RawValueInfo({ rawValue }: { rawValue: Value }) {
     case "duration": {
       return (
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className="bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300">
+          <Badge className="bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300">
             Duration
           </Badge>
           P{rawValue.duration.years > 0 && `${rawValue.duration.years}Y`}
