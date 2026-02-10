@@ -19,6 +19,7 @@ import {
   FONT_SIZE_MAP,
 } from "@/constants";
 import type { LinePosition } from "@/codemirror/resultAlign";
+import { ScrollArea } from "./components/ui/scroll-area";
 
 function loadDocument(demoMode: boolean): string {
   if (demoMode) return DEMO_DOCUMENT;
@@ -38,8 +39,6 @@ function AppContent() {
   const [input, setInput] = useState(() => loadDocument(isInDemoMode));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [linePositions, setLinePositions] = useState<LinePosition[]>([]);
-  const [contentHeight, setContentHeight] = useState(0);
-  const [scrollTop, setScrollTop] = useState(0);
   const [activeLine, setActiveLine] = useState(1);
   const editorViewRef = useRef<EditorView | null>(null);
   const initialDocRef = useRef(loadDocument(isInDemoMode));
@@ -115,26 +114,17 @@ function AppContent() {
     return () => window.removeEventListener("keydown", handler);
   }, [settings.debugMode, updateSetting]);
 
-  const handleLinePositions = useCallback(
-    (positions: LinePosition[], height: number) => {
-      setLinePositions(positions);
-      setContentHeight(height);
-    },
-    [],
-  );
+  const handleLinePositions = useCallback((positions: LinePosition[]) => {
+    setLinePositions(positions);
+  }, []);
 
   const handleFocusLine = useCallback((line: number) => {
     const view = editorViewRef.current;
     if (!view) return;
     const pos = view.state.doc.line(line).from;
-    const rect = view.scrollDOM.getBoundingClientRect();
-    const lineTop = view.coordsAtPos(pos)?.top ?? 0;
-    const lineBottom = view.coordsAtPos(pos)?.bottom ?? 0;
-    if (lineTop < rect.top || lineBottom > rect.bottom) {
-      view.dispatch({
-        effects: EditorView.scrollIntoView(pos, { y: "center" }),
-      });
-    }
+    view.dispatch({
+      selection: { anchor: pos },
+    });
   }, []);
 
   const handleThemeToggle = useCallback(() => {
@@ -156,45 +146,44 @@ function AppContent() {
         onExitDemoMode={exitDemoMode}
       />
       <div className="flex flex-col flex-1 mx-auto w-full max-w-4xl min-h-0">
-        <div className="flex flex-row flex-1 h-0 min-h-0">
-          <div className="flex flex-col flex-1 min-w-0 min-h-0">
-            {isReady ? (
-              <Editor
-                key={editorKey}
-                initialDoc={initialDocRef.current}
-                onChange={setInput}
-                onLinePositions={handleLinePositions}
-                onScroll={setScrollTop}
-                onActiveLine={setActiveLine}
-                ast={ast}
+        <ScrollArea className="flex-1 h-0 min-h-0 size-container">
+          <div className="flex flex-row min-h-full">
+            <div className="flex flex-col flex-1 min-w-0">
+              {isReady ? (
+                <Editor
+                  key={editorKey}
+                  initialDoc={initialDocRef.current}
+                  onChange={setInput}
+                  onLinePositions={handleLinePositions}
+                  onActiveLine={setActiveLine}
+                  ast={ast}
+                  results={results}
+                  errors={errors}
+                  debugMode={settings.debugMode}
+                  resolvedTheme={resolvedTheme}
+                  fontSize={fontSize}
+                  fontFamily={settings.fontFamily}
+                  lineWrapping={settings.lineWrapping}
+                  editorViewRef={editorViewRef}
+                />
+              ) : (
+                <div className="flex justify-center items-center h-full text-muted-foreground">
+                  Loading...
+                </div>
+              )}
+            </div>
+            <div className="border-border border-t md:border-t-0 md:border-l w-1/3 max-w-60 shrink-0">
+              <ResultsPanel
                 results={results}
-                errors={errors}
-                debugMode={settings.debugMode}
-                resolvedTheme={resolvedTheme}
+                linePositions={linePositions}
+                activeLine={activeLine}
                 fontSize={fontSize}
                 fontFamily={settings.fontFamily}
-                lineWrapping={settings.lineWrapping}
-                editorViewRef={editorViewRef}
+                onFocusLine={handleFocusLine}
               />
-            ) : (
-              <div className="flex justify-center items-center h-full text-muted-foreground">
-                Loading...
-              </div>
-            )}
+            </div>
           </div>
-          <div className="border-border border-t md:border-t-0 md:border-l w-1/3 max-w-60 h-auto shrink-0">
-            <ResultsPanel
-              results={results}
-              linePositions={linePositions}
-              contentHeight={contentHeight}
-              scrollTop={scrollTop}
-              activeLine={activeLine}
-              fontSize={fontSize}
-              fontFamily={settings.fontFamily}
-              onFocusLine={handleFocusLine}
-            />
-          </div>
-        </div>
+        </ScrollArea>
         {settings.debugMode && (
           // <div className="h-[250px] shrink-0">
           <DebugPanel ast={ast} errors={errors} />

@@ -1,4 +1,3 @@
-import { useRef, useEffect } from "react";
 import type { LineResult } from "@/calculator/calculator";
 import type { LinePosition } from "@/codemirror/resultAlign";
 import { useSettings } from "@/hooks/useSettings";
@@ -10,8 +9,6 @@ import { RovingFocusGroup } from "@radix-ui/react-roving-focus";
 interface ResultsPanelProps {
   results: LineResult[];
   linePositions: LinePosition[];
-  contentHeight: number;
-  scrollTop: number;
   activeLine?: number;
   fontSize?: number;
   fontFamily?: string;
@@ -21,33 +18,19 @@ interface ResultsPanelProps {
 export function ResultsPanel({
   results,
   linePositions,
-  contentHeight,
-  scrollTop,
   activeLine,
   fontSize = 15,
   fontFamily = "monospace",
   onFocusLine,
 }: ResultsPanelProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { debugMode } = useSettings().settings;
-
-  // Sync scroll position from editor
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollTop;
-    }
-  }, [scrollTop]);
 
   const ff = FONT_CLASS_MAP[fontFamily] || fontFamily;
 
   return (
-    <div
-      ref={scrollRef}
-      className={cn(`h-full overflow-hidden`, ff)}
-      style={{ fontSize: `${fontSize}px` }}
-    >
+    <div className={cn(``, ff)} style={{ fontSize: `${fontSize}px` }}>
       <RovingFocusGroup asChild orientation="vertical" loop>
-        <div className="relative" style={{ height: contentHeight || "auto" }}>
+        <div className="relative">
           {linePositions.map((pos) => {
             const result = results.find((r) => r.line === pos.line);
             if (pos.height === 0) return null;

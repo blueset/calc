@@ -1,4 +1,9 @@
-import { ViewPlugin, ViewUpdate, EditorView, DecorationSet } from "@codemirror/view";
+import {
+  ViewPlugin,
+  ViewUpdate,
+  EditorView,
+  DecorationSet,
+} from "@codemirror/view";
 import { foldedRanges } from "@codemirror/language";
 import { Line } from "@codemirror/state";
 
@@ -16,10 +21,7 @@ function isFolded(foldRanges: DecorationSet, line: Line): boolean {
   return folded;
 }
 
-type PositionCallback = (
-  positions: LinePosition[],
-  contentHeight: number,
-) => void;
+type PositionCallback = (positions: LinePosition[]) => void;
 
 export function resultAlignPlugin(callback: PositionCallback) {
   return ViewPlugin.fromClass(
@@ -54,9 +56,7 @@ export function resultAlignPlugin(callback: PositionCallback) {
             height: isFolded(foldRanges, line) ? 0 : block.height,
           });
         }
-
-        const contentHeight = this.view.contentDOM.offsetHeight;
-        callback(positions, contentHeight);
+        callback(positions);
       }
     },
     {

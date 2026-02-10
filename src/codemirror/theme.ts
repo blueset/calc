@@ -5,7 +5,7 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 export const lightTheme = EditorView.theme(
   {
     "&": {
-      height: "100%",
+      minHeight: "100cqh",
       backgroundColor: "#ffffff",
       color: "#1a1a1a",
     },
@@ -126,7 +126,7 @@ export const lightHighlight = syntaxHighlighting(lightHighlightStyle);
 export const darkTheme = EditorView.theme(
   {
     "&": {
-      height: "100%",
+      minHeight: "100cqh",
       backgroundColor: "#1a1a1a",
       color: "#e0e0e0",
     },

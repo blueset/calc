@@ -37,8 +37,7 @@ import { FONT_STYLE_MAP } from "@/constants";
 interface EditorProps {
   initialDoc: string;
   onChange: (value: string) => void;
-  onLinePositions?: (positions: LinePosition[], contentHeight: number) => void;
-  onScroll?: (scrollTop: number) => void;
+  onLinePositions?: (positions: LinePosition[]) => void;
   onActiveLine?: (line: number) => void;
   ast?: Document | null;
   results?: LineResult[];
@@ -55,7 +54,6 @@ export function Editor({
   initialDoc,
   onChange,
   onLinePositions,
-  onScroll,
   onActiveLine,
   ast,
   results,
@@ -71,7 +69,6 @@ export function Editor({
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
   const onLinePositionsRef = useRef(onLinePositions);
-  const onScrollRef = useRef(onScroll);
   const onActiveLineRef = useRef(onActiveLine);
   const resultsRef = useRef<LineResult[]>([]);
   const debugCompartmentRef = useRef(new Compartment());
@@ -81,7 +78,6 @@ export function Editor({
 
   onChangeRef.current = onChange;
   onLinePositionsRef.current = onLinePositions;
-  onScrollRef.current = onScroll;
   onActiveLineRef.current = onActiveLine;
   resultsRef.current = results ?? [];
 
@@ -139,8 +135,8 @@ export function Editor({
             onActiveLineRef.current?.(line);
           }
         }),
-        resultAlignPlugin((positions, contentHeight) => {
-          onLinePositionsRef.current?.(positions, contentHeight);
+        resultAlignPlugin((positions) => {
+          onLinePositionsRef.current?.(positions);
         }),
       ],
     });
@@ -148,10 +144,6 @@ export function Editor({
     const view = new EditorView({ state, parent: containerRef.current });
     viewRef.current = view;
     if (editorViewRef) editorViewRef.current = view;
-
-    view.scrollDOM.addEventListener("scroll", () => {
-      onScrollRef.current?.(view.scrollDOM.scrollTop);
-    });
 
     return view;
     // Note: debugMode, resolvedTheme, fontSize, fontFamily are intentionally omitted.
@@ -236,5 +228,11 @@ export function Editor({
     });
   }, [errors, debugMode]);
 
-  return <div key="editor-container" ref={containerRef} className="h-full" />;
+  return (
+    <div
+      key="editor-container"
+      ref={containerRef}
+      className="h-auto min-h-full"
+    />
+  );
 }

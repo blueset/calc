@@ -144,6 +144,10 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+@utility size-container {
+  container-type: size;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
