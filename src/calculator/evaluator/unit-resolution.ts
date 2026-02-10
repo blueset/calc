@@ -3,6 +3,7 @@ import type { Unit } from "../types/types";
 import { isDegreeUnit, UnitResolutionContext } from "../ast-helpers";
 export type { UnitResolutionContext } from "../ast-helpers";
 import { SUPERSCRIPTS } from "@/constants";
+import { getConstant } from "../constants";
 import type { EvaluatorDeps } from "./eval-helpers";
 import { createError } from "./eval-helpers";
 import {
@@ -16,11 +17,18 @@ import pluralize from "pluralize";
 // ── Numeric parsing ─────────────────────────────────────────────────
 
 /**
- * Parse a numerical value node (NumberLiteral or PercentageLiteral) to a number or error
+ * Parse a numerical value node (NumberLiteral, PercentageLiteral, or ConstantNode) to a number or error
  */
 export function parseNumericalValue(
   node: NearleyAST.NumericalValueNode,
 ): number | ErrorValue {
+  if (node.type === "Constant") {
+    const constantValue = getConstant((node as NearleyAST.ConstantNode).name);
+    if (constantValue === undefined) {
+      return createError(`Unknown constant: ${(node as NearleyAST.ConstantNode).name}`);
+    }
+    return constantValue;
+  }
   if (node.type === "NumberLiteral") {
     const cleaned = node.value.replaceAll("_", "");
     // Validate base range

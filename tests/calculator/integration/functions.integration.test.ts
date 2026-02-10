@@ -47,6 +47,13 @@ sin(180 deg)`);
       expect(result.results[2].result).toMatch(/0|\d\.\d*e-1\d/); // ~0 or scientific notation near 0
     });
 
+    it("should handle sin at radian boundary values", () => {
+      const result = calculator.calculate(`sin(0 rad)
+sin(π rad)`);
+      expect(result.results[0].result).toMatch(/0|\d\.\d*e-1\d/); // ~0 or scientific notation near 0
+      expect(result.results[1].result).toMatch(/0|\d\.\d*e-1\d/); // ~0 or scientific notation near 0
+    });
+
     it("should handle cos at boundary values", () => {
       const result = calculator.calculate(`cos(0 deg)
 cos(90 deg)

@@ -13,7 +13,6 @@ import {
   evaluateValue,
   evaluateCompositeValue,
   evaluateVariable,
-  evaluateConstant,
   evaluatePlainDate,
   evaluatePlainTime,
   evaluatePlainDateTime,
@@ -234,9 +233,6 @@ export class Evaluator {
 
       case "Variable":
         return evaluateVariable(this.deps, expr as NearleyAST.VariableNode, context);
-
-      case "Constant":
-        return evaluateConstant(expr as NearleyAST.ConstantNode);
 
       case "Value":
         return evaluateValue(this.deps, expr as NearleyAST.ValueNode);

@@ -3,7 +3,6 @@ import {
   hasDegreeInUnits,
   UnitResolutionContext,
 } from "../ast-helpers";
-import { getConstant } from "../constants";
 import { Temporal } from "@js-temporal/polyfill";
 import type { EvaluatorDeps } from "./eval-helpers";
 import { createError } from "./eval-helpers";
@@ -162,17 +161,6 @@ export function evaluateVariable(
   }
 
   return createError(`Undefined variable: ${expr.name}`);
-}
-
-/**
- * Evaluate a Constant node
- */
-export function evaluateConstant(expr: NearleyAST.ConstantNode): Value {
-  const constantValue = getConstant(expr.name);
-  if (constantValue === undefined) {
-    return createError(`Unknown constant: ${expr.name}`);
-  }
-  return numVal(constantValue);
 }
 
 /**

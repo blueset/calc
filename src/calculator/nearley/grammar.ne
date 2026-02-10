@@ -307,8 +307,7 @@ PostfixExpr -> UnitlessPrimary ( %bang ):? {%
 
 ### Primary Expressions
 
-UnitlessPrimary -> Constant {% id %}
-                 | Variable {% id %}
+UnitlessPrimary -> Variable {% id %}
                  | FunctionCall {% id %}
                  | %lparen _ Expression _ %rparen {% (data) => data[2] %}
                  | BooleanLiteral {% id %}
@@ -519,6 +518,7 @@ NumericalValue -> %hexNumber {% (data, location) => ({
                  | PercentageNumber {% id %}
                  | ArbitraryBaseNumberWithBase {% id %}
                  | DecimalNumber {% id %}
+                 | Constant {% id %}
 
 PercentageNumber -> NumberSymbol:? %decimalDigits ( %dot %decimalDigits ):? _ ( %percent | %permille ) {%
   (data, location) => {

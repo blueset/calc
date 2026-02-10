@@ -433,7 +433,6 @@ const grammar: Grammar = {
             })
           : data[0]
                        },
-    {"name": "UnitlessPrimary", "symbols": ["Constant"], "postprocess": id},
     {"name": "UnitlessPrimary", "symbols": ["Variable"], "postprocess": id},
     {"name": "UnitlessPrimary", "symbols": ["FunctionCall"], "postprocess": id},
     {"name": "UnitlessPrimary", "symbols": [(lexer.has("lparen") ? {type: "lparen"} : lparen), "_", "Expression", "_", (lexer.has("rparen") ? {type: "rparen"} : rparen)], "postprocess": (data) => data[2]},
@@ -667,6 +666,7 @@ const grammar: Grammar = {
     {"name": "NumericalValue", "symbols": ["PercentageNumber"], "postprocess": id},
     {"name": "NumericalValue", "symbols": ["ArbitraryBaseNumberWithBase"], "postprocess": id},
     {"name": "NumericalValue", "symbols": ["DecimalNumber"], "postprocess": id},
+    {"name": "NumericalValue", "symbols": ["Constant"], "postprocess": id},
     {"name": "PercentageNumber$ebnf$1", "symbols": ["NumberSymbol"], "postprocess": id},
     {"name": "PercentageNumber$ebnf$1", "symbols": [], "postprocess": () => null},
     {"name": "PercentageNumber$ebnf$2$subexpression$1", "symbols": [(lexer.has("dot") ? {type: "dot"} : dot), (lexer.has("decimalDigits") ? {type: "decimalDigits"} : decimalDigits)]},

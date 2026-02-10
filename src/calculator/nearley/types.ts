@@ -184,7 +184,7 @@ interface PercentageLiteralNode extends Node {
   readonly sourceLength?: number;
 }
 
-type NumericalValueNode = NumberLiteralNode | PercentageLiteralNode;
+type NumericalValueNode = NumberLiteralNode | PercentageLiteralNode | ConstantNode;
 
 // ============================================================================
 // Unit Nodes
