@@ -132,27 +132,8 @@ export function buildSemanticTree(ast: Document, docText: string): Tree {
     if (!node || typeof node !== "object" || !("type" in node)) return;
 
     const lineNum = lineIndex + 1;
-    const lineStart = lineStarts[lineIndex] ?? 0;
 
     switch (node.type) {
-      case "Heading": {
-        const from = lineStart;
-        const to = lineStart + (lines[lineIndex]?.length ?? 0);
-        if (from < to) {
-          const match = lines[lineIndex]?.match(/^(#+)\s/);
-          const level = match ? Math.min(match[1].length, 6) : 1;
-          const headingNodeIds = [
-            NodeID.Heading1,
-            NodeID.Heading2,
-            NodeID.Heading3,
-            NodeID.Heading4,
-            NodeID.Heading5,
-            NodeID.Heading6,
-          ];
-          spans.push({ typeId: headingNodeIds[level - 1], from, to });
-        }
-        break;
-      }
       case "VariableAssignment": {
         const loc: { line: number; column: number } = (node as any).location;
         if (loc && typeof loc === "object" && "line" in loc) {
@@ -161,13 +142,32 @@ export function buildSemanticTree(ast: Document, docText: string): Tree {
             addSpan(NodeID.VariableDefinition, from, node.name.length);
         }
         if ("value" in node && node.value) {
-          walkExpression(node.value as any, lineNum);
+          walkExpression(node.value, lineNum);
         }
         break;
       }
       default: {
-        walkExpression(node as any, lineNum);
+        walkExpression(node, lineNum);
       }
+    }
+
+    if (
+      node.type !== "EmptyLine" &&
+      node.type !== "PlainText" &&
+      node.type !== "Heading"
+    ) {
+      // Add span for comments
+      const sharpIndex = lines[lineIndex].indexOf("#");
+      if (sharpIndex !== -1) {
+        const from = toAbsolute(lineNum, sharpIndex);
+        addSpan(NodeID.Comment, from, lines[lineIndex].length - sharpIndex);
+      }
+
+      // Add spans for brackets
+      lines[lineIndex].matchAll(/[()[\]]/g).forEach((match) => {
+        const from = toAbsolute(lineNum, match.index);
+        addSpan(NodeID.Bracket, from, 1);
+      });
     }
   }
 

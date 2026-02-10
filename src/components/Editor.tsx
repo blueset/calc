@@ -4,7 +4,6 @@ import { EditorState, Compartment } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, historyKeymap } from "@codemirror/commands";
 import { foldKeymap } from "@codemirror/language";
-import { calcLanguage } from "@/codemirror/language";
 import {
   semanticTreeField,
   semanticHighlightPlugin,
@@ -33,7 +32,7 @@ import {
 } from "@/codemirror/theme";
 import type { Document } from "@/calculator/document";
 import type { LineResult, CalculationResult } from "@/calculator/calculator";
-import { FONT_FAMILY_MAP, FONT_FEATURE_SETTINGS_MAP } from "@/constants";
+import { FONT_STYLE_MAP } from "@/constants";
 
 interface EditorProps {
   initialDoc: string;
@@ -87,16 +86,14 @@ export function Editor({
   resultsRef.current = results ?? [];
 
   const getFontTheme = useCallback((size: number, family: string) => {
-    const ff = FONT_FAMILY_MAP[family] || family;
-    const ffs = FONT_FEATURE_SETTINGS_MAP[family] || "normal";
+    const ff = FONT_STYLE_MAP[family] || {};
     return EditorView.theme({
       ".cm-content": {
-        fontFamily: ff,
-        fontFeatureSettings: ffs,
+        ...ff,
         fontSize: `${size}px`,
         lineHeight: "1.6",
       },
-      ".cm-gutters": { fontFamily: ff, fontSize: `${size}px` },
+      ".cm-gutters": { ...ff, fontSize: `${size}px` },
     });
   }, []);
 
@@ -123,7 +120,6 @@ export function Editor({
         basicSetup,
         keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
         foldHeadingsService,
-        calcLanguage,
         semanticTreeField,
         semanticHighlightPlugin,
         markdownRegionsField,

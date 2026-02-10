@@ -59,7 +59,11 @@ export function extractMarkdownRegions(
 
   for (let i = 0; i < ast.lines.length; i++) {
     const line = ast.lines[i];
-    if (line?.type === "PlainText" || line?.type === "EmptyLine") {
+    if (
+      line?.type === "PlainText" ||
+      line?.type === "EmptyLine" ||
+      line?.type === "Heading"
+    ) {
       const from = lineStarts[i];
       const to = lineStarts[i] + (lines[i]?.length ?? 0);
       if (to > from) {

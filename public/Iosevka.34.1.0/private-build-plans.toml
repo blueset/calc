@@ -1,0 +1,79 @@
+[buildPlans.IosevkaHolpxay]
+family = "Iosevka Holpxay"
+spacing = "normal"
+serifs = "sans"
+noCvSs = true
+exportGlyphNames = false
+
+[buildPlans.IosevkaHolpxay.variants.design]
+three = "flat-top-serifless"
+capital-g = "toothless-rounded-serifless-hooked"
+capital-j = "serifless"
+f = "flat-hook-serifless-crossbar-at-x-height"
+g = "single-storey-flat-hook-serifless"
+j = "flat-hook-serifed"
+l = "serifed-flat-tailed"
+r = "hookless-serifless"
+t = "flat-hook"
+long-s = "flat-hook-serifless"
+eszet = "traditional-flat-hook-serifless"
+lower-delta = "flat-top"
+asterisk = "penta-low"
+underscore = "low"
+brace = "curly-flat-boundary"
+guillemet = "straight"
+number-sign = "slanted-tall"
+ampersand = "upper-open"
+at = "compact"
+dollar = "interrupted"
+lig-ltgteq = "slanted"
+
+[buildPlans.IosevkaHolpxay.variants.italic]
+three = "flat-top-serifless"
+f = "flat-hook-diagonal-tailed-crossbar-at-x-height"
+i = "serifed-diagonal-tailed"
+j = "diagonal-tailed-serifed"
+k = "diagonal-tailed-cursive-top-left-serifed"
+l = "serifed-diagonal-tailed"
+r = "hookless-serifless"
+t = "diagonal-tailed"
+v = "cursive-serifless"
+w = "cursive-serifless"
+x = "cursive"
+y = "cursive-flat-hook-serifless"
+z = "cursive"
+long-s = "flat-hook-diagonal-tailed"
+eszet = "traditional-flat-hook-serifless"
+lower-theta = "cursive"
+lower-iota = "serifed-diagonal-tailed"
+lower-tau = "diagonal-tailed"
+cyrl-ef = "split-diagonal-tailed-cursive"
+asterisk = "penta-low"
+underscore = "low"
+
+[buildPlans.IosevkaHolpxay.widths.Normal]
+shape = 500
+menu = 5
+css = "normal"
+
+[buildPlans.IosevkaHolpxay.widths.Condensed]
+shape = 416
+menu = 3
+css = "condensed"
+
+[buildPlans.IosevkaHolpxay.widths.SemiCondensed]
+shape = 456
+menu = 4
+css = "semi-condensed"
+
+[buildPlans.IosevkaHolpxay.slopes.Upright]
+angle = 0
+shape = "upright"
+menu = "upright"
+css = "normal"
+
+[buildPlans.IosevkaHolpxay.slopes.Italic]
+angle = 9.4
+shape = "italic"
+menu = "italic"
+css = "italic"

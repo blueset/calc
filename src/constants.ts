@@ -1,3 +1,5 @@
+import { CSSProperties } from "react";
+
 // Also change in index.html.
 export const APP_NAME = import.meta.env.VITE_APP_TITLE || "Calc";
 
@@ -527,16 +529,20 @@ export const FONT_SIZE_MAP = {
   large: 18,
 } as const;
 
-export const FONT_FAMILY_MAP: Record<string, string> = {
-  monospace: "var(--font-mono)",
-  "sans-serif": "var(--font-sans)",
-  serif: "var(--font-serif)",
-};
-
-export const FONT_FEATURE_SETTINGS_MAP: Record<string, string> = {
-  monospace: "var(--font-mono-feature-settings)",
-  "sans-serif": "var(--font-sans-feature-settings)",
-  serif: "var(--font-serif-feature-settings)",
+export const FONT_STYLE_MAP: Record<string, CSSProperties> = {
+  monospace: {
+    fontFamily: "var(--font-mono)",
+    fontFeatureSettings: "var(--font-mono-feature-settings)",
+    fontStretch: "var(--font-mono-stretch)",
+  },
+  "sans-serif": {
+    fontFamily: "var(--font-sans)",
+    fontFeatureSettings: "var(--font-sans-feature-settings)",
+  },
+  serif: {
+    fontFamily: "var(--font-serif)",
+    fontFeatureSettings: "var(--font-serif-feature-settings)",
+  },
 };
 
 export const FONT_CLASS_MAP: Record<string, string> = {

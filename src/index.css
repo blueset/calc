@@ -43,8 +43,9 @@
   --font-sans-feature-settings:
     "liga" 1, "calt" 1, "ss01" 1, "ss02" 1, "ss03" 1, "tnum" 1;
   --font-mono:
-    "Iosevka Web", Iosevka, ui-monospace, SFMono-Regular, "SF Mono", Menlo,
-    Consolas, "Liberation Mono", monospace;
+    "Iosevka Holpxay Web", Iosevka, ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+  --font-mono-stretch: semi-condensed;
   --font-mono-feature-settings: "liga" 1, "calt" 1, "cv03" 1, "tnum" 1;
   --font-serif:
     "Noto Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
@@ -152,5 +153,9 @@
   }
   html {
     @apply font-sans;
+  }
+
+  .font-mono {
+    font-stretch: var(--font-mono-stretch);
   }
 }

@@ -79,16 +79,6 @@ area = width * height
     const tree = buildSemanticTree(ast, DOCUMENT);
     const nodes = collectNodes(tree);
 
-    // Check headings
-    const headings = nodes.filter((n) => n.name.startsWith("Heading"));
-    expect(headings.map((n) => nodeText(n, DOCUMENT))).toEqual([
-      "# Arithmetic",
-      "# Units",
-      "# Conversions",
-      "# Variables",
-      "# Date/time",
-    ]);
-
     // Check units
     const units = nodes.filter((n) => n.name === "Unit");
     const unitTexts = units.map((n) => nodeText(n, DOCUMENT));
