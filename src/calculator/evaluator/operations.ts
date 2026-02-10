@@ -5,7 +5,6 @@ import {
   createError,
   toBoolean,
   isDateTimeValue,
-  getDurationMathFunc,
   isTrigFunction,
   isInverseTrigFunction,
   degreesToRadians,
@@ -15,7 +14,6 @@ import type {
   Value,
   NumericValue,
   CompositeUnitValue,
-  DurationValue,
   EvaluationContext,
 } from "./values";
 import {
@@ -780,10 +778,9 @@ export function evaluateFunctionCall(
   // Evaluate all arguments
   const args: number[] = [];
   let firstArgUnit: Unit | undefined;
+  let firstArgTerms: Array<{ unit: Unit; exponent: number }> | undefined;
   let secondArgUnit: Unit | undefined;
 
-  // Special handling for duration arguments with preservesUnits functions
-  let durationArg: DurationValue | undefined;
   // Special handling for composite unit arguments with preservesUnits functions
   let compositeArg: CompositeUnitValue | undefined;
 
@@ -793,10 +790,20 @@ export function evaluateFunctionCall(
     const argValue = evalExpr(argExpr, context);
     if (argValue.kind === "error") return argValue;
 
-    // For round, floor, ceil, abs, trunc, frac on duration: handle directly
+    // For round, floor, ceil, abs, trunc, frac on duration: convert to composite/numeric
     if (preservesUnits && i === 0 && argValue.kind === "duration") {
-      durationArg = argValue;
-      break;
+      const converted = durationToValue(deps, argValue.duration);
+      if (converted.kind === "error") return converted;
+      if (converted.kind === "composite") {
+        compositeArg = converted;
+        break; // handled by composite block below
+      }
+      // Single-field duration → NumericValue, fall through to normal numeric handling
+      firstArgUnit = getUnit(converted);
+      firstArgTerms =
+        converted.terms.length > 0 ? converted.terms : undefined;
+      args.push(converted.value);
+      continue;
     }
 
     // For round, floor, ceil, abs, trunc, frac on composite: handle directly
@@ -814,6 +821,8 @@ export function evaluateFunctionCall(
     // Capture the first argument's unit if the function preserves units
     if (preservesUnits && i === 0) {
       firstArgUnit = getUnit(argValue);
+      firstArgTerms =
+        argValue.terms.length > 0 ? argValue.terms : undefined;
     }
 
     // For functions with "nearest" parameter (round, floor, ceil, trunc),
@@ -849,38 +858,50 @@ export function evaluateFunctionCall(
     }
   }
 
-  // Handle duration argument — apply function to each component
-  if (durationArg) {
-    const funcName = expr.name.toLowerCase();
-    const mathFunc = getDurationMathFunc(funcName);
-    if (!mathFunc) {
-      return createError(
-        `Function ${expr.name} does not support duration arguments`,
+  // Handle composite unit argument — flatten to smallest unit, apply function, re-composite
+  if (compositeArg) {
+    // Convert to smallest (last) component's unit for correct rounding/truncation
+    const targetUnit =
+      compositeArg.components[compositeArg.components.length - 1].unit;
+    let totalValue = 0;
+    for (const component of compositeArg.components) {
+      totalValue += deps.unitConverter.convert(
+        component.value,
+        component.unit,
+        targetUnit,
       );
     }
-    return {
-      kind: "duration",
-      duration: deps.dateTimeEngine.createDuration({
-        years: mathFunc(durationArg.duration.years),
-        months: mathFunc(durationArg.duration.months),
-        weeks: mathFunc(durationArg.duration.weeks),
-        days: mathFunc(durationArg.duration.days),
-        hours: mathFunc(durationArg.duration.hours),
-        minutes: mathFunc(durationArg.duration.minutes),
-        seconds: mathFunc(durationArg.duration.seconds),
-        milliseconds: mathFunc(durationArg.duration.milliseconds),
-      }),
-    };
-  }
 
-  // Handle composite unit argument — flatten, apply function, re-composite
-  if (compositeArg) {
-    const converted = convertCompositeToSingleUnit(deps, compositeArg);
-    if (converted.kind === "error") return converted;
-    const funcResult = deps.mathFunctions.execute(expr.name, [converted.value]);
+    const execArgs: number[] = [totalValue];
+
+    // Process remaining arguments (e.g. nearest parameter) from original expr args
+    for (let i = 1; i < funcArgs.length; i++) {
+      const argValue = evalExpr(funcArgs[i], context);
+      if (argValue.kind === "error") return argValue;
+      if (argValue.kind !== "value")
+        return createError(
+          `Function argument must be a number, got ${argValue.kind}`,
+        );
+      const argUnit = getUnit(argValue);
+      if (argUnit) {
+        try {
+          execArgs.push(
+            deps.unitConverter.convert(argValue.value, argUnit, targetUnit),
+          );
+        } catch {
+          return createError(
+            `Cannot convert ${argUnit.displayName.singular} to ${targetUnit.displayName.singular} in function call`,
+          );
+        }
+      } else {
+        execArgs.push(argValue.value);
+      }
+    }
+
+    const funcResult = deps.mathFunctions.execute(expr.name, execArgs);
     if (funcResult.error) return createError(funcResult.error);
-    // Re-composite into the original units
-    const resultAsSimple = numValUnit(funcResult.value, getUnit(converted)!);
+
+    const resultAsSimple = numValUnit(funcResult.value, targetUnit);
     const targetUnits = compositeArg.components.map((c) => c.unit);
     return convertToCompositeUnitResolved(deps, resultAsSimple, targetUnits);
   }
@@ -929,6 +950,11 @@ export function evaluateFunctionCall(
       }
     }
     return numValUnit(result.value, firstArgUnit);
+  }
+
+  // Preserve derived unit terms (m/s, m^2, etc.) where getUnit() returns undefined
+  if (firstArgTerms) {
+    return numValTerms(result.value, firstArgTerms);
   }
 
   return numVal(result.value);

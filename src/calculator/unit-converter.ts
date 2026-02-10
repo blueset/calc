@@ -197,7 +197,10 @@ export class UnitConverter {
         remaining = 0;
       } else {
         // Not last unit: take integer part only
-        const integerPart = Math.floor(valueInTargetUnit);
+        // Snap near-integer values before flooring to avoid floating-point
+        // errors from base-unit roundtrip (e.g. 33.0 ft → 32.9999... → 32)
+        const snapped = Math.round(valueInTargetUnit * 1e14) / 1e14;
+        const integerPart = Math.floor(snapped);
         result.components.push({
           value: integerPart,
           unitId: targetUnit.id,
@@ -206,6 +209,8 @@ export class UnitConverter {
         // Update remaining by converting integer part back to base and subtracting
         const usedInBaseUnit = this.toBaseUnit(integerPart, targetUnit);
         remaining -= usedInBaseUnit;
+        // Clamp near-zero residuals from floating-point subtraction
+        if (Math.abs(remaining) < 1e-10) remaining = 0;
       }
     }
 

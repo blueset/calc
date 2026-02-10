@@ -184,21 +184,21 @@ describe("Integration Tests - Value Type Processing Gaps", () => {
 
   describe("Gap B: Unit-preserving functions for CompositeUnitValue", () => {
     it("should apply round to composite unit value", () => {
-      // 5 ft 6.7 in = 5.5583... ft → round → 6 ft → 6 ft 0 in
+      // 5 ft 6.7 in = 66.7 in → round → 67 in → 5 ft 7 in
       const result = calculator.calculate("round(5 ft 6.7 in)");
-      expect(result.results[0].result).toBe("6 ft 0 in");
+      expect(result.results[0].result).toBe("5 ft 7 in");
     });
 
     it("should apply floor to composite unit value", () => {
-      // 5 ft 6.7 in = 5.5583... ft → floor → 5 ft → 5 ft 0 in
+      // 5 ft 6.7 in = 66.7 in → floor → 66 in → 5 ft 6 in
       const result = calculator.calculate("floor(5 ft 6.7 in)");
-      expect(result.results[0].result).toBe("5 ft 0 in");
+      expect(result.results[0].result).toBe("5 ft 6 in");
     });
 
     it("should apply ceil to composite unit value", () => {
-      // 5 ft 6.3 in = 5.525 ft → ceil → 6 ft → 6 ft 0 in
+      // 5 ft 6.3 in = 66.3 in → ceil → 67 in → 5 ft 7 in
       const result = calculator.calculate("ceil(5 ft 6.3 in)");
-      expect(result.results[0].result).toBe("6 ft 0 in");
+      expect(result.results[0].result).toBe("5 ft 7 in");
     });
 
     it("should apply abs to composite unit value", () => {
@@ -207,9 +207,9 @@ describe("Integration Tests - Value Type Processing Gaps", () => {
     });
 
     it("should apply trunc to composite unit value", () => {
-      // 5 ft 6.9 in = 5.575 ft → trunc → 5 ft → 5 ft 0 in
+      // 5 ft 6.9 in = 66.9 in → trunc → 66 in → 5 ft 6 in
       const result = calculator.calculate("trunc(5 ft 6.9 in)");
-      expect(result.results[0].result).toBe("5 ft 0 in");
+      expect(result.results[0].result).toBe("5 ft 6 in");
     });
 
     it("should apply round to duration (all fields)", () => {
