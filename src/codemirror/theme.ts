@@ -36,6 +36,25 @@ export const editorTheme = EditorView.theme({
     textDecoration: "underline wavy var(--ed-error)",
     textDecorationSkipInk: "none",
   },
+  // Search panel
+  ".cm-panels": {
+    backgroundColor: "var(--popover)",
+    color: "var(--popover-foreground)",
+  },
+  ".cm-panels-bottom": {
+    borderTopColor: "var(--border)",
+  },
+  ".cm-textfield": {
+    backgroundColor: "color-mix(var(--input) 30%, transparent)",
+    borderColor: "var(--input)",
+    borderRadius: "var(--radius-sm)",
+  },
+  ".cm-button": {
+    backgroundColor: "color-mix(var(--input) 30%, transparent)",
+    backgroundImage: "none",
+    borderColor: "var(--border)",
+    borderRadius: "var(--radius-sm)",
+  },
 });
 
 const highlightStyle = HighlightStyle.define([
