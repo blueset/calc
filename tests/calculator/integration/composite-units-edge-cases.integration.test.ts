@@ -102,5 +102,12 @@ describe("Integration Tests - Composite Units Edge Cases", () => {
       // 100 cm ≈ 3 ft 3.37 in
       expect(result.results[0].result).toMatch(/3 ft 3\.37\d* in/);
     });
+
+    it("should convert duration to composite time units implicitly", () => {
+      const result = calculator.calculate(
+        "dur = 2038-01-19 - 1970-01-01\n100 yr - dur",
+      );
+      expect(result.results[1].result).toMatch(/31.950\d* yr/);
+    });
   });
 });

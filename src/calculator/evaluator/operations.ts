@@ -352,18 +352,34 @@ export function evaluateArithmetic(
 
   // Handle date/time arithmetic
   if (isDateTimeValue(convertedLeft) || isDateTimeValue(convertedRight)) {
-    return evaluateDateTimeArithmetic(deps, op, convertedLeft, convertedRight);
+    const dateTimeResult = evaluateDateTimeArithmetic(
+      deps,
+      op,
+      convertedLeft,
+      convertedRight,
+    );
+    if (dateTimeResult.kind !== "error") {
+      return dateTimeResult;
+    }
+  }
+
+  // Date/time arithmetic cannot handle this combination, try converting date/time to duration for numeric arithmetic
+  if (convertedLeft.kind === "duration") {
+    convertedLeft = durationToValue(deps, convertedLeft.duration);
+  }
+  if (convertedRight.kind === "duration") {
+    convertedRight = durationToValue(deps, convertedRight.duration);
   }
 
   // Convert composite units to single units for arithmetic
-  if (left.kind === "composite") {
-    convertedLeft = convertCompositeToSingleUnit(deps, left);
+  if (convertedLeft.kind === "composite") {
+    convertedLeft = convertCompositeToSingleUnit(deps, convertedLeft);
     if (convertedLeft.kind === "error") {
       return convertedLeft;
     }
   }
-  if (right.kind === "composite") {
-    convertedRight = convertCompositeToSingleUnit(deps, right);
+  if (convertedRight.kind === "composite") {
+    convertedRight = convertCompositeToSingleUnit(deps, convertedRight);
     if (convertedRight.kind === "error") {
       return convertedRight;
     }
@@ -800,8 +816,7 @@ export function evaluateFunctionCall(
       }
       // Single-field duration → NumericValue, fall through to normal numeric handling
       firstArgUnit = getUnit(converted);
-      firstArgTerms =
-        converted.terms.length > 0 ? converted.terms : undefined;
+      firstArgTerms = converted.terms.length > 0 ? converted.terms : undefined;
       args.push(converted.value);
       continue;
     }
@@ -821,8 +836,7 @@ export function evaluateFunctionCall(
     // Capture the first argument's unit if the function preserves units
     if (preservesUnits && i === 0) {
       firstArgUnit = getUnit(argValue);
-      firstArgTerms =
-        argValue.terms.length > 0 ? argValue.terms : undefined;
+      firstArgTerms = argValue.terms.length > 0 ? argValue.terms : undefined;
     }
 
     // For functions with "nearest" parameter (round, floor, ceil, trunc),
