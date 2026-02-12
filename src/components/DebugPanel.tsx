@@ -17,7 +17,7 @@ interface DebugPanelProps {
 }
 
 function AstNode({ node, depth = 0 }: { node: any; depth?: number }) {
-  const [expanded, setExpanded] = useState(depth < 2);
+  const [expanded, setExpanded] = useState(depth < 1);
 
   if (node === null || node === undefined) {
     return <span className="text-muted-foreground italic">null</span>;
