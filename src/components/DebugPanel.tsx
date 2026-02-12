@@ -10,14 +10,39 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
+import { Button } from "./ui/button";
 
 interface DebugPanelProps {
   ast: Document | null;
   errors: CalculationResult["errors"];
 }
 
+function ErrorMessage({ message }: { message: string }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="flex items-baseline gap-0.5 text-destructive">
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        className="size-[1lh]"
+        onClick={() => setExpanded(!expanded)}
+      >
+        {expanded ? (
+          <ChevronDown className="size-3" />
+        ) : (
+          <ChevronRight className="size-3" />
+        )}
+      </Button>
+      <span className={expanded ? "whitespace-pre-wrap" : "truncate"}>
+        {message}
+      </span>
+    </div>
+  );
+}
+
 function AstNode({ node, depth = 0 }: { node: any; depth?: number }) {
-  const [expanded, setExpanded] = useState(depth < 1);
+  const [expanded, setExpanded] = useState(false);
 
   if (node === null || node === undefined) {
     return <span className="text-muted-foreground italic">null</span>;
@@ -117,21 +142,16 @@ export function DebugPanel({ ast, errors }: DebugPanelProps) {
                       Errors
                     </h4>
                     {errors.parser.map((e, i) => (
-                      <div
+                      <ErrorMessage
                         key={`p${i}`}
-                        className="text-destructive whitespace-pre-wrap"
-                      >
-                        Line {e.line}: {e.error.message}
-                      </div>
+                        message={`Line ${e.line}: ${e.error.message}`}
+                      />
                     ))}
                     {errors.runtime.map((e, i) => (
-                      <div
+                      <ErrorMessage
                         key={`r${i}`}
-                        className="text-destructive whitespace-pre-wrap"
-                      >
-                        {e.location ? `Line ${e.location.line}:` : ""}{" "}
-                        {e.message}
-                      </div>
+                        message={`${e.location ? `Line ${e.location.line}: ` : ""}${e.message}`}
+                      />
                     ))}
                   </div>
                 )}
