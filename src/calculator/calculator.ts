@@ -1,6 +1,6 @@
 import { NearleyParser } from "./nearley/nearley-parser";
 import { DataLoader } from "./data-loader";
-import { LexerError, RuntimeError, LineError } from "./error-handling";
+import { RuntimeError, LineError } from "./error-handling";
 import { Document, ParsedLine } from "./document";
 import { Evaluator, Value, ErrorValue } from "./evaluator";
 import { Formatter } from "./formatter";
@@ -27,7 +27,6 @@ export interface CalculationResult {
   results: LineResult[];
   ast: Document;
   errors: {
-    lexer: LexerError[];
     parser: LineError[];
     runtime: RuntimeError[];
   };
@@ -134,7 +133,6 @@ export class Calculator {
           results,
           ast,
           errors: {
-            lexer: [],
             parser: parserErrors,
             runtime: runtimeErrors,
           },
@@ -200,7 +198,6 @@ export class Calculator {
       results,
       ast,
       errors: {
-        lexer: [],
         parser: parserErrors,
         runtime: runtimeErrors,
       },
@@ -214,7 +211,6 @@ export class Calculator {
   parse(input: string): {
     ast: Document;
     errors: {
-      lexer: LexerError[];
       parser: LineError[];
     };
   } {
@@ -222,7 +218,6 @@ export class Calculator {
     return {
       ast: result.ast as any as Document,
       errors: {
-        lexer: [],
         parser: result.errors,
       },
     };

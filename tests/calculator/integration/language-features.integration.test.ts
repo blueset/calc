@@ -157,13 +157,11 @@ distance to m`;
     it("should handle empty input", () => {
       const result = calculator.calculate("");
       expect(result.results.length).toBe(1);
-      expect(result.errors.lexer.length).toBe(0);
       expect(result.errors.runtime.length).toBe(0);
     });
 
     it("should handle whitespace-only input", () => {
       const result = calculator.calculate("   \n  \n   ");
-      expect(result.errors.lexer.length).toBe(0);
       expect(result.errors.runtime.length).toBe(0);
     });
 

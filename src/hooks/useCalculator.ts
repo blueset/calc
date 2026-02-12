@@ -43,7 +43,6 @@ export function useCalculator(
 ): UseCalculatorReturn {
   const [results, setResults] = useState<LineResult[]>([]);
   const [errors, setErrors] = useState<CalculationResult["errors"]>({
-    lexer: [],
     parser: [],
     runtime: [],
   });

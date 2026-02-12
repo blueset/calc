@@ -14,6 +14,7 @@ export interface SourceLocation {
   line: number;
   column: number;
   offset: number;
+  length?: number;
 }
 
 /**

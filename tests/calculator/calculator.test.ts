@@ -141,7 +141,6 @@ $$$
       const result = calculator.parse(input);
 
       // Should have no errors
-      expect(result.errors.lexer.length).toBe(0);
       expect(result.errors.parser.length).toBe(0);
 
       // Should parse all expressions
@@ -153,7 +152,6 @@ $$$
     it("should handle empty input", () => {
       const result = calculator.parse("");
 
-      expect(result.errors.lexer.length).toBe(0);
       expect(result.errors.parser.length).toBe(0);
       expect(result.ast.type).toBe("Document");
     });
@@ -161,7 +159,6 @@ $$$
     it("should handle whitespace-only input", () => {
       const result = calculator.parse("   \n  \n   ");
 
-      expect(result.errors.lexer.length).toBe(0);
       expect(result.errors.parser.length).toBe(0);
     });
 
@@ -212,7 +209,6 @@ describe("Calculator - Full Calculation Pipeline", () => {
       expect(result.results[0].result).toBe("4");
       expect(result.results[1].result).toBe("15");
       expect(result.results[2].result).toBe("5");
-      expect(result.errors.lexer.length).toBe(0);
       expect(result.errors.parser.length).toBe(0);
       expect(result.errors.runtime.length).toBe(0);
     });

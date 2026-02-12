@@ -115,8 +115,7 @@ function AstNode({ node, depth = 0 }: { node: any; depth?: number }) {
 }
 
 export function DebugPanel({ ast, errors }: DebugPanelProps) {
-  const totalErrors =
-    errors.lexer.length + errors.parser.length + errors.runtime.length;
+  const totalErrors = errors.parser.length + errors.runtime.length;
 
   return (
     <Accordion defaultValue={["debug"]}>

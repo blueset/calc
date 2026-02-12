@@ -1,5 +1,5 @@
-import type { SourceLocation, Document, ParsedLine } from './document';
-import type { Value } from './evaluator';
+import type { SourceLocation, Document, ParsedLine } from "./document";
+import type { Value } from "./evaluator";
 
 /**
  * Base error class for all language errors
@@ -8,7 +8,7 @@ export abstract class LanguageError extends Error {
   constructor(
     message: string,
     public readonly location: SourceLocation,
-    public readonly errorType: string
+    public readonly errorType: string,
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -23,20 +23,11 @@ export abstract class LanguageError extends Error {
 }
 
 /**
- * Lexer errors - problems during tokenization
- */
-export class LexerError extends LanguageError {
-  constructor(message: string, location: SourceLocation) {
-    super(message, location, 'Lexer Error');
-  }
-}
-
-/**
  * Parser errors - problems during syntactic analysis
  */
 export class ParserError extends LanguageError {
   constructor(message: string, location: SourceLocation) {
-    super(message, location, 'Parser Error');
+    super(message, location, "Parser Error");
   }
 }
 
@@ -45,7 +36,7 @@ export class ParserError extends LanguageError {
  */
 export class RuntimeError extends LanguageError {
   constructor(message: string, location: SourceLocation) {
-    super(message, location, 'Runtime Error');
+    super(message, location, "Runtime Error");
   }
 }
 
@@ -53,9 +44,9 @@ export class RuntimeError extends LanguageError {
  * Line error information for error recording
  */
 export interface LineError {
-  line: number;           // Which line (1-indexed)
-  error: LanguageError;   // The error details
-  rawText: string;        // Original text of the line
+  line: number; // Which line (1-indexed)
+  error: LanguageError; // The error details
+  rawText: string; // Original text of the line
 }
 
 /**

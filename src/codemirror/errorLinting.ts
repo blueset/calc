@@ -5,6 +5,7 @@ import type { CalculationResult } from "@/calculator/calculator";
 export interface ErrorDiagnostic {
   line: number;
   column?: number;
+  length?: number;
   message: string;
 }
 
@@ -23,7 +24,10 @@ export const errorLintField = StateField.define<DecorationSet>({
           const docLine = tr.state.doc.line(diag.line);
           const from =
             diag.column != null ? docLine.from + diag.column : docLine.from;
-          const to = docLine.to;
+          const to =
+            diag.length != null
+              ? Math.min(from + diag.length, docLine.to)
+              : docLine.to;
           if (from >= to) continue;
           decos.push(
             Decoration.mark({
@@ -50,6 +54,8 @@ export function extractErrorDiagnostics(
   for (const e of errors.parser) {
     diagnostics.push({
       line: e.line,
+      column: e.error.location.column || undefined,
+      length: e.error.location.length,
       message: e.error.message,
     });
   }

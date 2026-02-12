@@ -21,7 +21,6 @@ describe("Integration Tests - Numbers and Bases", () => {
     it("should handle integer numbers", () => {
       const result = calculator.calculate("0");
       expect(result.results[0].result).toBe("0");
-      expect(result.errors.lexer.length).toBe(0);
       expect(result.errors.runtime.length).toBe(0);
     });
 

@@ -37,7 +37,14 @@ export class NearleyParser {
   private definedVariables: Set<string> = new Set();
   private parseCache = new Map<
     string,
-    { candidates: NearleyAST.LineNode[]; parseError: string | null }
+    {
+      candidates: NearleyAST.LineNode[];
+      parseError: {
+        message: string;
+        tokenOffset?: number;
+        tokenLength?: number;
+      } | null;
+    }
   >();
 
   constructor(dataLoader: DataLoader) {
@@ -149,9 +156,17 @@ export class NearleyParser {
 
       if (candidates.length === 0) {
         // No valid parse - return as plain text with error
-        const loc: SourceLocation = { line: lineNumber, column: 0, offset: 0 };
+        const parseError = parseResult.parseError;
+        const tokenOffset = parseError?.tokenOffset;
+        const tokenLength = parseError?.tokenLength;
+        const loc: SourceLocation = {
+          line: lineNumber,
+          column: tokenOffset ?? 0,
+          offset: tokenOffset ?? 0,
+          length: tokenLength,
+        };
         const errorMessage =
-          parseResult.parseError ||
+          parseError?.message ||
           "Unable to parse expression, unexpected end of input.";
         return {
           line: createPlainText(originalText, loc),
@@ -332,7 +347,11 @@ export class NearleyParser {
     accessedCacheKeys?: Set<string>,
   ): {
     candidates: NearleyAST.LineNode[];
-    parseError: string | null;
+    parseError: {
+      message: string;
+      tokenOffset?: number;
+      tokenLength?: number;
+    } | null;
   } {
     accessedCacheKeys?.add(content);
 
@@ -355,9 +374,17 @@ export class NearleyParser {
       // Parse error - return empty array with error message
       const errorMessage =
         error instanceof Error ? error.message : String(error);
+      // Extract token offset and length from nearley/moo error for precise error location
+      const token = (error as any)?.token;
+      const tokenOffset: number | undefined = token?.offset;
+      const tokenLength: number | undefined = token?.value?.length;
       const result = {
         candidates: [] as NearleyAST.LineNode[],
-        parseError: errorMessage,
+        parseError: {
+          message: errorMessage,
+          tokenOffset,
+          tokenLength,
+        },
       };
       this.parseCache.set(content, result);
       return result;
