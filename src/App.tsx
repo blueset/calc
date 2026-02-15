@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback, useEffect } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect, useSyncExternalStore, useEffectEvent } from "react";
 import { EditorView } from "@codemirror/view";
 import { Toolbar } from "@/components/Toolbar";
 import { Editor } from "@/components/Editor";
@@ -32,10 +32,18 @@ function loadDocument(demoMode: boolean): string {
   return DEFAULT_DOCUMENT;
 }
 
+function subscribeToHash(callback: () => void) {
+  window.addEventListener("hashchange", callback);
+  return () => window.removeEventListener("hashchange", callback);
+}
+function getHashSnapshot() {
+  return window.location.hash;
+}
+
 function AppContent() {
-  const [isInDemoMode, setIsInDemoMode] = useState(
-    () => window.location.hash === "#demo",
-  );
+  const hash = useSyncExternalStore(subscribeToHash, getHashSnapshot);
+  const isInDemoMode = hash === "#demo";
+
   const [input, setInput] = useState(() => loadDocument(isInDemoMode));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [linePositions, setLinePositions] = useState<LinePosition[]>([]);
@@ -44,6 +52,7 @@ function AppContent() {
   const editorViewRef = useRef<EditorView | null>(null);
   const initialDocRef = useRef(loadDocument(isInDemoMode));
   const [editorKey, setEditorKey] = useState(0);
+  const prevDemoModeRef = useRef(isInDemoMode);
 
   const { settings, updateSetting } = useSettings();
   const resolvedTheme = useTheme(settings.theme);
@@ -54,26 +63,19 @@ function AppContent() {
 
   const exitDemoMode = useCallback(() => {
     history.pushState(null, "", location.pathname + location.search);
-    setIsInDemoMode(false);
-    const doc = loadDocument(false);
+    // pushState doesn't fire hashchange, so we need to manually dispatch it
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  }, []);
+
+  // React to demo mode changes (triggered by useSyncExternalStore)
+  useEffect(() => {
+    if (prevDemoModeRef.current === isInDemoMode) return;
+    prevDemoModeRef.current = isInDemoMode;
+    const doc = loadDocument(isInDemoMode);
     setInput(doc);
     initialDocRef.current = doc;
     setEditorKey((k) => k + 1);
-  }, []);
-
-  // Sync demo mode state with URL hash (handles back/forward + direct URL access)
-  useEffect(() => {
-    const handler = () => {
-      const demo = window.location.hash === "#demo";
-      setIsInDemoMode(demo);
-      const doc = loadDocument(demo);
-      setInput(doc);
-      initialDocRef.current = doc;
-      setEditorKey((k) => k + 1);
-    };
-    window.addEventListener("hashchange", handler);
-    return () => window.removeEventListener("hashchange", handler);
-  }, []);
+  }, [isInDemoMode]);
 
   const calcSettings = useMemo(() => {
     const { debugMode, debounce, ...rest } = settings;
@@ -100,20 +102,21 @@ function AppContent() {
   }, [input, isInDemoMode]);
 
   // Keyboard shortcuts
+  const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === ",") {
+      e.preventDefault();
+      setSettingsOpen((prev) => !prev);
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === "d") {
+      e.preventDefault();
+      updateSetting("debugMode", !settings.debugMode);
+    }
+  });
+
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === ",") {
-        e.preventDefault();
-        setSettingsOpen((prev) => !prev);
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === "d") {
-        e.preventDefault();
-        updateSetting("debugMode", !settings.debugMode);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [settings.debugMode, updateSetting]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleLinePositions = useCallback((positions: LinePosition[], vp: { from: number; to: number }) => {
     setLinePositions(positions);

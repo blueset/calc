@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useDeferredValue } from "react";
 import { DataLoader } from "@/calculator/data-loader";
 import { Calculator } from "@/calculator/calculator";
 import type { LineResult, CalculationResult } from "@/calculator/calculator";
@@ -52,8 +52,10 @@ export function useCalculator(
 
   const dataLoaderRef = useRef<DataLoader | null>(null);
   const calculatorRef = useRef<Calculator | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const exchangeRatesRef = useRef<ExchangeRatesDatabase | null>(null);
+
+  const deferredInput = useDeferredValue(input);
+  const effectiveInput = debounce ? deferredInput : input;
 
   // Initialize DataLoader + load cached exchange rates synchronously
   useEffect(() => {
@@ -109,19 +111,8 @@ export function useCalculator(
 
   useEffect(() => {
     if (!isReady) return;
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    if (debounce) {
-      timerRef.current = setTimeout(() => calculate(input), 150);
-    } else {
-      calculate(input);
-    }
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [input, isReady, calculate, settings, debounce, exchangeRatesVersion]);
+    calculate(effectiveInput);
+  }, [effectiveInput, isReady, calculate, settings, exchangeRatesVersion]);
 
   return { results, errors, ast, isReady, exchangeRatesVersion };
 }
