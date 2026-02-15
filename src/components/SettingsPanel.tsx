@@ -21,6 +21,8 @@ import { Temporal, Intl as TemporalIntl } from "@js-temporal/polyfill";
 import FluentComma20Regular from "~icons/fluent/comma-20-regular";
 import FluentCircleSmall20Filled from "~icons/fluent/circle-small-20-filled";
 import { Separator } from "./ui/separator";
+import { Kbd, KbdGroup } from "./ui/kbd";
+import { CmdCtrl } from "./ui/cmd-ctrl";
 
 interface SettingsPanelProps {
   open: boolean;
@@ -31,7 +33,7 @@ function SettingRow({
   label,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -452,7 +454,17 @@ export function SettingsPanel({ open, onOpenChange }: SettingsPanelProps) {
             Developer
           </h3>
 
-          <SettingRow label="Debug Mode">
+          <SettingRow
+            label={
+              <span>
+                Debug Mode{" "}
+                <KbdGroup>
+                  <CmdCtrl />
+                  <Kbd>D</Kbd>
+                </KbdGroup>
+              </span>
+            }
+          >
             <Switch
               checked={settings.debugMode}
               onCheckedChange={(checked) => updateSetting("debugMode", checked)}

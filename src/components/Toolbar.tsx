@@ -1,8 +1,16 @@
 import { Settings, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AboutDialog } from "./AboutDialog";
 import { APP_NAME } from "@/constants";
 import { DemoModeBadge } from "./DemoModeBadge";
+import { Kbd, KbdGroup } from "./ui/kbd";
+import { CmdCtrl } from "./ui/cmd-ctrl";
 
 interface ToolbarProps {
   onSettingsClick: () => void;
@@ -33,17 +41,47 @@ export function Toolbar({
           {isInDemoMode && <DemoModeBadge onExitDemoMode={onExitDemoMode} />}
         </div>
         <div className="flex items-center gap-1">
-          <AboutDialog exchangeRatesVersion={exchangeRatesVersion} onEnterDemoMode={onEnterDemoMode} />
-          <Button variant="ghost" size="icon" onClick={onThemeToggle}>
-            {theme === "dark" ? (
-              <Sun className="size-4" />
-            ) : (
-              <Moon className="size-4" />
-            )}
-          </Button>
-          <Button variant="ghost" size="icon" onClick={onSettingsClick}>
-            <Settings className="size-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <AboutDialog
+                    exchangeRatesVersion={exchangeRatesVersion}
+                    onEnterDemoMode={onEnterDemoMode}
+                  />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>About</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" onClick={onThemeToggle}>
+                  {theme === "dark" ? (
+                    <Sun className="size-4" />
+                  ) : (
+                    <Moon className="size-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {theme === "dark" ? "Light mode" : "Dark mode"}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" onClick={onSettingsClick}>
+                  <Settings className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Settings{" "}
+                <KbdGroup>
+                  <CmdCtrl />
+                  <Kbd>,</Kbd>
+                </KbdGroup>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
     </div>

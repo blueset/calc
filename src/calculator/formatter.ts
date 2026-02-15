@@ -999,44 +999,44 @@ export class Formatter {
     // Date components
     if (duration.years) {
       parts.push(
-        `${duration.years}\u202F${this.formatUnitById("year", duration.years)}`,
+        `${this.formatNumber(duration.years)}\u202F${this.formatUnitById("year", duration.years)}`,
       );
     }
     if (duration.months) {
       parts.push(
-        `${duration.months}\u202F${this.formatUnitById("month", duration.months)}`,
+        `${this.formatNumber(duration.months)}\u202F${this.formatUnitById("month", duration.months)}`,
       );
     }
     if (duration.weeks) {
       parts.push(
-        `${duration.weeks}\u202F${this.formatUnitById("week", duration.weeks)}`,
+        `${this.formatNumber(duration.weeks)}\u202F${this.formatUnitById("week", duration.weeks)}`,
       );
     }
     if (duration.days) {
       parts.push(
-        `${duration.days}\u202F${this.formatUnitById("day", duration.days)}`,
+        `${this.formatNumber(duration.days)}\u202F${this.formatUnitById("day", duration.days)}`,
       );
     }
 
     // Time components
     if (duration.hours) {
       parts.push(
-        `${duration.hours}\u202F${this.formatUnitById("hour", duration.hours)}`,
+        `${this.formatNumber(duration.hours)}\u202F${this.formatUnitById("hour", duration.hours)}`,
       );
     }
     if (duration.minutes) {
       parts.push(
-        `${duration.minutes}\u202F${this.formatUnitById("minute", duration.minutes)}`,
+        `${this.formatNumber(duration.minutes)}\u202F${this.formatUnitById("minute", duration.minutes)}`,
       );
     }
     if (duration.seconds) {
       parts.push(
-        `${duration.seconds}\u202F${this.formatUnitById("second", duration.seconds)}`,
+        `${this.formatNumber(duration.seconds)}\u202F${this.formatUnitById("second", duration.seconds)}`,
       );
     }
     if (duration.milliseconds) {
       parts.push(
-        `${duration.milliseconds}\u202F${this.formatUnitById("millisecond", duration.milliseconds)}`,
+        `${this.formatNumber(duration.milliseconds)}\u202F${this.formatUnitById("millisecond", duration.milliseconds)}`,
       );
     }
 
@@ -1062,14 +1062,16 @@ export class Formatter {
       if (duration.milliseconds !== undefined)
         definedFields.push({ field: "milliseconds", unit: "millisecond" });
 
+      const zero = this.formatNumber(0);
+
       // Use the smallest (last) defined field
       if (definedFields.length > 0) {
         const smallestField = definedFields[definedFields.length - 1];
-        return `0 ${this.formatUnitById(smallestField.unit, 0)}`;
+        return `${zero}\u202F${this.formatUnitById(smallestField.unit, 0)}`;
       }
 
       // Default to second if no fields are defined
-      return `0 ${this.formatUnitById("second", 0)}`;
+      return `${zero}\u202F${this.formatUnitById("second", 0)}`;
     }
 
     return parts.join(" ");
