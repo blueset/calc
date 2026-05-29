@@ -1,4 +1,12 @@
-import { useState, useRef, useMemo, useCallback, useEffect, useSyncExternalStore, useEffectEvent } from "react";
+import {
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+  useEffect,
+  useSyncExternalStore,
+  useEffectEvent,
+} from "react";
 import { EditorView } from "@codemirror/view";
 import { Toolbar } from "@/components/Toolbar";
 import { Editor } from "@/components/Editor";
@@ -53,7 +61,10 @@ function loadDocument(demoMode: boolean): string {
 }
 
 function AppContent() {
-  const hash = useSyncExternalStore(routeStore.subscribe, routeStore.getSnapshot);
+  const hash = useSyncExternalStore(
+    routeStore.subscribe,
+    routeStore.getSnapshot,
+  );
   const { mode, payload } = useMemo(() => parseHash(hash), [hash]);
 
   const initRef = useRef<{ mode: AppMode; doc: string } | null>(null);
@@ -72,7 +83,10 @@ function AppContent() {
   const [invalidLink, setInvalidLink] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [linePositions, setLinePositions] = useState<LinePosition[]>([]);
-  const [viewport, setViewport] = useState<{ from: number; to: number }>({ from: 1, to: 1 });
+  const [viewport, setViewport] = useState<{ from: number; to: number }>({
+    from: 1,
+    to: 1,
+  });
   const [activeLine, setActiveLine] = useState(1);
   const editorViewRef = useRef<EditorView | null>(null);
   const initialDocRef = useRef(initialDoc);
@@ -92,7 +106,7 @@ function AppContent() {
   const pendingImportRef = useRef<string>("");
 
   const { settings, updateSetting } = useSettings();
-  const resolvedTheme = useTheme(settings.theme);
+  useTheme(settings.theme);
 
   const applyDocument = useCallback((text: string) => {
     setInput(text);
@@ -143,8 +157,14 @@ function AppContent() {
     return rest;
   }, [settings]);
 
-  const { results, ast, errors, isReady, exchangeRatesVersion, runCalculation } =
-    useCalculator(input, calcSettings, settings.debounce);
+  const {
+    results,
+    ast,
+    errors,
+    isReady,
+    exchangeRatesVersion,
+    runCalculation,
+  } = useCalculator(input, calcSettings, settings.debounce);
 
   // Persist document to localStorage (default mode only).
   useEffect(() => {
@@ -236,7 +256,10 @@ function AppContent() {
     try {
       const existing = localStorage.getItem(DOCUMENT_STORAGE_KEY);
       if (existing) {
-        downloadTextFile(makeWorksheetFilename("calc-worksheet-backup"), existing);
+        downloadTextFile(
+          makeWorksheetFilename("calc-worksheet-backup"),
+          existing,
+        );
       }
       localStorage.setItem(DOCUMENT_STORAGE_KEY, input);
     } catch {
@@ -271,10 +294,13 @@ function AppContent() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const handleLinePositions = useCallback((positions: LinePosition[], vp: { from: number; to: number }) => {
-    setLinePositions(positions);
-    setViewport(vp);
-  }, []);
+  const handleLinePositions = useCallback(
+    (positions: LinePosition[], vp: { from: number; to: number }) => {
+      setLinePositions(positions);
+      setViewport(vp);
+    },
+    [],
+  );
 
   const handleFocusLine = useCallback((line: number) => {
     const view = editorViewRef.current;
@@ -285,11 +311,6 @@ function AppContent() {
     });
   }, []);
 
-  const handleThemeToggle = useCallback(() => {
-    const next = resolvedTheme === "light" ? "dark" : "light";
-    updateSetting("theme", next);
-  }, [resolvedTheme, updateSetting]);
-
   const fontSize = FONT_SIZE_MAP[settings.fontSize];
 
   return (
@@ -297,8 +318,6 @@ function AppContent() {
       <Toolbar
         mode={mode}
         onSettingsClick={() => setSettingsOpen(true)}
-        theme={resolvedTheme}
-        onThemeToggle={handleThemeToggle}
         exchangeRatesVersion={exchangeRatesVersion}
         onShare={handleShare}
         onImport={handleImport}

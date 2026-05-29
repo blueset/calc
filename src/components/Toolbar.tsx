@@ -3,6 +3,7 @@ import {
   Settings,
   Sun,
   Moon,
+  Monitor,
   Share2,
   EllipsisVertical,
   Download,
@@ -20,12 +21,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { CmdCtrl } from "@/components/ui/cmd-ctrl";
+import { useSettings } from "@/hooks/useSettings";
+import type { SettingsState } from "@/hooks/useSettings";
 import { AboutDialog } from "./AboutDialog";
 import { APP_NAME } from "@/constants";
 import { DemoModeBadge } from "./DemoModeBadge";
@@ -35,8 +43,6 @@ import type { AppMode } from "@/lib/share";
 interface ToolbarProps {
   mode: AppMode;
   onSettingsClick: () => void;
-  theme: "light" | "dark";
-  onThemeToggle: () => void;
   exchangeRatesVersion?: string;
   onShare: () => void;
   onImport: () => void;
@@ -51,8 +57,6 @@ interface ToolbarProps {
 export function Toolbar({
   mode,
   onSettingsClick,
-  theme,
-  onThemeToggle,
   exchangeRatesVersion,
   onShare,
   onImport,
@@ -63,6 +67,7 @@ export function Toolbar({
   onPreviewBackupOverwrite,
   onPreviewOverwrite,
 }: ToolbarProps) {
+  const { settings, updateSetting } = useSettings();
   const [aboutOpen, setAboutOpen] = useState(false);
   const isDemo = mode === "demo";
 
@@ -135,17 +140,48 @@ export function Toolbar({
                   <Info className="size-4" />
                   About
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onThemeToggle}>
-                  {theme === "dark" ? (
-                    <Sun className="size-4" />
-                  ) : (
-                    <Moon className="size-4" />
-                  )}
-                  {theme === "dark" ? "Light mode" : "Dark mode"}
-                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    {settings.theme === "dark" ? (
+                      <Moon className="size-4" />
+                    ) : settings.theme === "light" ? (
+                      <Sun className="size-4" />
+                    ) : (
+                      <Monitor className="size-4" />
+                    )}
+                    Theme
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-40">
+                    <DropdownMenuRadioGroup
+                      value={settings.theme}
+                      onValueChange={(val) =>
+                        updateSetting("theme", val as SettingsState["theme"])
+                      }
+                    >
+                      <DropdownMenuRadioItem value="light">
+                        <Sun className="size-4" />
+                        Light
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="dark">
+                        <Moon className="size-4" />
+                        Dark
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="system">
+                        <Monitor className="size-4" />
+                        System
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 <DropdownMenuItem onClick={onSettingsClick}>
                   <Settings className="size-4" />
                   Settings
+                  <DropdownMenuShortcut>
+                    <KbdGroup>
+                      <CmdCtrl />
+                      <Kbd>,</Kbd>
+                    </KbdGroup>
+                  </DropdownMenuShortcut>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
