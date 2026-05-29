@@ -1,4 +1,4 @@
-import { CircleQuestionMark, ExternalLink, Info } from "lucide-react";
+import { CircleQuestionMark, ExternalLink } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -7,27 +7,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { APP_NAME } from "@/constants";
 import SimpleIconsGithub from "~icons/simple-icons/github";
 
 export interface AboutDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   exchangeRatesVersion?: string;
   onEnterDemoMode?: () => void;
 }
 
-export function AboutDialog({ exchangeRatesVersion, onEnterDemoMode }: AboutDialogProps) {
+export function AboutDialog({
+  open,
+  onOpenChange,
+  exchangeRatesVersion,
+  onEnterDemoMode,
+}: AboutDialogProps) {
   return (
-    <Dialog>
-      <DialogTrigger
-        render={
-          <Button variant="ghost" size="icon">
-            <Info />
-          </Button>
-        }
-      />
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false}>
         <DialogHeader className="gap-4 pt-4">
           <DialogTitle className="text-center">{APP_NAME}</DialogTitle>
