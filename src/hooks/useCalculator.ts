@@ -34,6 +34,12 @@ export interface UseCalculatorReturn {
   ast: Document | null;
   isReady: boolean;
   exchangeRatesVersion: string;
+  /**
+   * Pure evaluation that returns the per-line results without mutating any
+   * React state. Returns null if the calculator is not ready yet. Used for
+   * import validation; never call it to drive the live UI.
+   */
+  runCalculation: (text: string) => LineResult[] | null;
 }
 
 export function useCalculator(
@@ -114,5 +120,13 @@ export function useCalculator(
     calculate(effectiveInput);
   }, [effectiveInput, isReady, calculate, settings, exchangeRatesVersion]);
 
-  return { results, errors, ast, isReady, exchangeRatesVersion };
+  const runCalculation = useCallback(
+    (text: string): LineResult[] | null => {
+      if (!calculatorRef.current) return null;
+      return calculatorRef.current.calculate(text).results;
+    },
+    [],
+  );
+
+  return { results, errors, ast, isReady, exchangeRatesVersion, runCalculation };
 }

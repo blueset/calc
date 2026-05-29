@@ -5,6 +5,9 @@ import { Editor } from "@/components/Editor";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { DebugPanel } from "@/components/DebugPanel";
+import { ShareDialog } from "@/components/ShareDialog";
+import { ImportConflictDialog } from "@/components/ImportConflictDialog";
+import { Button } from "@/components/ui/button";
 import { useCalculator } from "@/hooks/useCalculator";
 import {
   SettingsContext,
@@ -13,11 +16,28 @@ import {
 } from "@/hooks/useSettings";
 import { useTheme } from "@/hooks/useTheme";
 import {
+  APP_NAME,
   DEFAULT_DOCUMENT,
   DEMO_DOCUMENT,
   DOCUMENT_STORAGE_KEY,
   FONT_SIZE_MAP,
 } from "@/constants";
+import { routeStore } from "@/lib/route-store";
+import {
+  parseHash,
+  decodeSharePayload,
+  buildShareUrl,
+  buildPreviewHash,
+  DEMO_HASH,
+  type AppMode,
+} from "@/lib/share";
+import {
+  exportMarkdown,
+  importMarkdown,
+  downloadTextFile,
+  triggerFileOpen,
+  makeWorksheetFilename,
+} from "@/lib/worksheet-io";
 import type { LinePosition } from "@/codemirror/resultAlign";
 import { ScrollArea } from "./components/ui/scroll-area";
 
@@ -32,65 +52,103 @@ function loadDocument(demoMode: boolean): string {
   return DEFAULT_DOCUMENT;
 }
 
-function subscribeToHash(callback: () => void) {
-  window.addEventListener("hashchange", callback);
-  return () => window.removeEventListener("hashchange", callback);
-}
-function getHashSnapshot() {
-  return window.location.hash;
-}
-
 function AppContent() {
-  const hash = useSyncExternalStore(subscribeToHash, getHashSnapshot);
-  const isInDemoMode = hash === "#demo";
+  const hash = useSyncExternalStore(routeStore.subscribe, routeStore.getSnapshot);
+  const { mode, payload } = useMemo(() => parseHash(hash), [hash]);
 
-  const [input, setInput] = useState(() => loadDocument(isInDemoMode));
+  const initRef = useRef<{ mode: AppMode; doc: string } | null>(null);
+  if (initRef.current === null) {
+    const m = parseHash(routeStore.getSnapshot()).mode;
+    initRef.current = {
+      mode: m,
+      doc: m === "preview" ? "" : loadDocument(m === "demo"),
+    };
+  }
+  const initialMode = initRef.current.mode;
+  const initialDoc = initRef.current.doc;
+
+  const [input, setInput] = useState(initialDoc);
+  const [docReady, setDocReady] = useState(initialMode !== "preview");
+  const [invalidLink, setInvalidLink] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [linePositions, setLinePositions] = useState<LinePosition[]>([]);
   const [viewport, setViewport] = useState<{ from: number; to: number }>({ from: 1, to: 1 });
   const [activeLine, setActiveLine] = useState(1);
   const editorViewRef = useRef<EditorView | null>(null);
-  const initialDocRef = useRef(loadDocument(isInDemoMode));
+  const initialDocRef = useRef(initialDoc);
   const [editorKey, setEditorKey] = useState(0);
-  const prevDemoModeRef = useRef(isInDemoMode);
+
+  // Routing / async-race bookkeeping.
+  const loadedHashRef = useRef<string | null>(
+    initialMode === "preview" ? null : routeStore.getSnapshot(),
+  );
+  const decodeSeqRef = useRef(0);
+  const encodeSeqRef = useRef(0);
+
+  // Share / import dialog state.
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [importConflictOpen, setImportConflictOpen] = useState(false);
+  const pendingImportRef = useRef<string>("");
 
   const { settings, updateSetting } = useSettings();
   const resolvedTheme = useTheme(settings.theme);
 
+  const applyDocument = useCallback((text: string) => {
+    setInput(text);
+    initialDocRef.current = text;
+    setEditorKey((k) => k + 1);
+  }, []);
+
   const enterDemoMode = useCallback(() => {
-    window.location.hash = "#demo";
+    routeStore.navigate(DEMO_HASH);
   }, []);
 
   const exitDemoMode = useCallback(() => {
-    history.pushState(null, "", location.pathname + location.search);
-    // pushState doesn't fire hashchange, so we need to manually dispatch it
-    window.dispatchEvent(new HashChangeEvent("hashchange"));
+    routeStore.navigate("");
   }, []);
 
-  // React to demo mode changes (triggered by useSyncExternalStore)
+  // Load the document whenever the route changes.
   useEffect(() => {
-    if (prevDemoModeRef.current === isInDemoMode) return;
-    prevDemoModeRef.current = isInDemoMode;
-    const doc = loadDocument(isInDemoMode);
-    setInput(doc);
-    initialDocRef.current = doc;
-    setEditorKey((k) => k + 1);
-  }, [isInDemoMode]);
+    if (loadedHashRef.current === hash) return;
+    loadedHashRef.current = hash;
+
+    if (mode === "preview") {
+      const seq = ++decodeSeqRef.current;
+      setDocReady(false);
+      setInvalidLink(false);
+      decodeSharePayload(payload ?? "")
+        .then((text) => {
+          if (decodeSeqRef.current !== seq) return;
+          applyDocument(text);
+          setDocReady(true);
+        })
+        .catch(() => {
+          if (decodeSeqRef.current !== seq) return;
+          setInvalidLink(true);
+          setDocReady(true);
+        });
+      return;
+    }
+
+    // default / demo: load synchronously and invalidate any pending decode.
+    decodeSeqRef.current++;
+    applyDocument(loadDocument(mode === "demo"));
+    setInvalidLink(false);
+    setDocReady(true);
+  }, [hash, mode, payload, applyDocument]);
 
   const calcSettings = useMemo(() => {
     const { debugMode, debounce, ...rest } = settings;
     return rest;
   }, [settings]);
 
-  const { results, ast, errors, isReady, exchangeRatesVersion } = useCalculator(
-    input,
-    calcSettings,
-    settings.debounce,
-  );
+  const { results, ast, errors, isReady, exchangeRatesVersion, runCalculation } =
+    useCalculator(input, calcSettings, settings.debounce);
 
-  // Persist document to localStorage
+  // Persist document to localStorage (default mode only).
   useEffect(() => {
-    if (isInDemoMode) return;
+    if (mode !== "default" || !docReady) return;
     const timer = setTimeout(() => {
       try {
         localStorage.setItem(DOCUMENT_STORAGE_KEY, input);
@@ -99,7 +157,102 @@ function AppContent() {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [input, isInDemoMode]);
+  }, [input, mode, docReady]);
+
+  // Keep the preview share URL in sync with edits, without history entries.
+  useEffect(() => {
+    if (mode !== "preview" || !docReady) return;
+    const seq = ++encodeSeqRef.current;
+    const timer = setTimeout(() => {
+      buildPreviewHash(input)
+        .then((previewHash) => {
+          if (encodeSeqRef.current !== seq) return;
+          routeStore.replacePreviewHash(previewHash);
+        })
+        .catch(() => {
+          /* ignore encode failures */
+        });
+    }, 500);
+    return () => {
+      clearTimeout(timer);
+      encodeSeqRef.current++;
+    };
+  }, [input, mode, docReady]);
+
+  const handleShare = useCallback(async () => {
+    setShareUrl(null);
+    setShareDialogOpen(true);
+    try {
+      setShareUrl(await buildShareUrl(input));
+    } catch {
+      setShareUrl(null);
+    }
+  }, [input]);
+
+  const handleExport = useCallback(
+    (withResults: boolean) => {
+      const markdown = exportMarkdown(input, results, withResults);
+      downloadTextFile(makeWorksheetFilename(), markdown);
+    },
+    [input, results],
+  );
+
+  const handleImport = useCallback(async () => {
+    const fileText = await triggerFileOpen();
+    if (fileText == null) return;
+    const transformed = importMarkdown(fileText, runCalculation);
+    if (input.trim().length > 0) {
+      pendingImportRef.current = transformed;
+      setImportConflictOpen(true);
+    } else {
+      applyDocument(transformed);
+    }
+  }, [input, runCalculation, applyDocument]);
+
+  const handleImportKeep = useCallback(() => {
+    pendingImportRef.current = "";
+    setImportConflictOpen(false);
+  }, []);
+
+  const handleImportBackupOverwrite = useCallback(() => {
+    downloadTextFile(makeWorksheetFilename("calc-worksheet-backup"), input);
+    applyDocument(pendingImportRef.current);
+    pendingImportRef.current = "";
+    setImportConflictOpen(false);
+  }, [input, applyDocument]);
+
+  const handleImportOverwrite = useCallback(() => {
+    applyDocument(pendingImportRef.current);
+    pendingImportRef.current = "";
+    setImportConflictOpen(false);
+  }, [applyDocument]);
+
+  // Preview popover actions.
+  const handlePreviewReturn = useCallback(() => {
+    routeStore.navigate("");
+  }, []);
+
+  const handlePreviewBackupOverwrite = useCallback(() => {
+    try {
+      const existing = localStorage.getItem(DOCUMENT_STORAGE_KEY);
+      if (existing) {
+        downloadTextFile(makeWorksheetFilename("calc-worksheet-backup"), existing);
+      }
+      localStorage.setItem(DOCUMENT_STORAGE_KEY, input);
+    } catch {
+      /* ignore */
+    }
+    routeStore.navigate("");
+  }, [input]);
+
+  const handlePreviewOverwrite = useCallback(() => {
+    try {
+      localStorage.setItem(DOCUMENT_STORAGE_KEY, input);
+    } catch {
+      /* ignore */
+    }
+    routeStore.navigate("");
+  }, [input]);
 
   // Keyboard shortcuts
   const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
@@ -142,19 +295,32 @@ function AppContent() {
   return (
     <div className="flex flex-col bg-background h-svh text-foreground">
       <Toolbar
+        mode={mode}
         onSettingsClick={() => setSettingsOpen(true)}
         theme={resolvedTheme}
         onThemeToggle={handleThemeToggle}
         exchangeRatesVersion={exchangeRatesVersion}
-        isInDemoMode={isInDemoMode}
+        onShare={handleShare}
+        onImport={handleImport}
+        onExport={handleExport}
         onEnterDemoMode={enterDemoMode}
         onExitDemoMode={exitDemoMode}
+        onPreviewReturn={handlePreviewReturn}
+        onPreviewBackupOverwrite={handlePreviewBackupOverwrite}
+        onPreviewOverwrite={handlePreviewOverwrite}
       />
       <div className="flex flex-col flex-1 mx-auto w-full max-w-4xl min-h-0">
         <ScrollArea className="flex-1 h-0 min-h-0 size-container">
           <div className="flex flex-row min-h-full">
             <div className="flex flex-col flex-1 min-w-0">
-              {isReady ? (
+              {invalidLink ? (
+                <div className="flex flex-col justify-center items-center gap-4 h-full text-muted-foreground">
+                  <p>This shared link is invalid or could not be opened.</p>
+                  <Button variant="outline" onClick={handlePreviewReturn}>
+                    Return to {APP_NAME}
+                  </Button>
+                </div>
+              ) : isReady && docReady ? (
                 <Editor
                   key={editorKey}
                   initialDoc={initialDocRef.current}
@@ -196,6 +362,18 @@ function AppContent() {
         )}
       </div>
       <SettingsPanel open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <ShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        url={shareUrl}
+      />
+      <ImportConflictDialog
+        open={importConflictOpen}
+        onOpenChange={setImportConflictOpen}
+        onKeepExisting={handleImportKeep}
+        onBackupOverwrite={handleImportBackupOverwrite}
+        onOverwrite={handleImportOverwrite}
+      />
     </div>
   );
 }
