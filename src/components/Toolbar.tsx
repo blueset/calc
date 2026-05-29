@@ -9,6 +9,7 @@ import {
   Download,
   Upload,
   Info,
+  CircleQuestionMark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -139,6 +140,10 @@ export function Toolbar({
                 <DropdownMenuItem onClick={() => setAboutOpen(true)}>
                   <Info className="size-4" />
                   About
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onEnterDemoMode}>
+                  <CircleQuestionMark className="size-4" />
+                  Learn more…
                 </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
