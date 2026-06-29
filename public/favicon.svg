@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    :root {
+      --favicon-bg: #fafafa;
+      --favicon-stroke: #986801;
+      --favicon-mark: #4078f2;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --favicon-bg: #16191d;
+        --favicon-stroke: #d19a66;
+        --favicon-mark: #61afef;
+      }
+    }
+  </style>
+  <rect
+    x="6"
+    y="6"
+    width="52"
+    height="52"
+    rx="12"
+    fill="var(--favicon-bg)"
+    stroke="var(--favicon-stroke)"
+    stroke-width="5"
+  />
+  <rect x="19" y="25" width="26" height="5" rx="2.5" fill="var(--favicon-mark)" />
+  <rect x="19" y="34" width="26" height="5" rx="2.5" fill="var(--favicon-mark)" />
+</svg>
