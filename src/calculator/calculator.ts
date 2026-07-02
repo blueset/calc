@@ -4,6 +4,7 @@ import { RuntimeError, LineError } from "./error-handling";
 import { Document, ParsedLine } from "./document";
 import { Evaluator, Value, ErrorValue } from "./evaluator";
 import { Formatter } from "./formatter";
+import { parsableSettings } from "./parsable-serializer";
 import { Settings, createSettings } from "./settings";
 import { SourceLocation } from "./document";
 import { ExchangeRatesDatabase } from "./types/types";
@@ -15,6 +16,7 @@ export interface LineResult {
   line: number;
   type: string;
   result: string | null; // Formatted result, or null for non-expressions
+  parsableResult?: string | null; // Machine-parsable serialization for copy/paste (issue #2)
   hasError: boolean; // True if this line had an error
   rawValue?: Value | null; // The raw evaluated value (for tooltips/debugging), optional
   ast?: ParsedLine | null; // The AST node for this line, optional
@@ -58,6 +60,7 @@ export class Calculator {
   private evaluator: Evaluator;
   private formatter: Formatter;
   private nearleyParser: NearleyParser;
+  private parsableFormatter: Formatter;
 
   constructor(dataLoader: DataLoader, settings: Partial<Settings> = {}) {
     this.dataLoader = dataLoader;
@@ -67,6 +70,10 @@ export class Calculator {
       angleUnit: mergedSettings.angleUnit,
     });
     this.formatter = new Formatter(mergedSettings, dataLoader);
+    this.parsableFormatter = new Formatter(
+      parsableSettings(mergedSettings),
+      dataLoader,
+    );
     this.nearleyParser = new NearleyParser(dataLoader);
   }
 
@@ -147,6 +154,7 @@ export class Calculator {
       const value = lineValues.get(line);
 
       let lineResult: string | null = null;
+      let parsableResult: string | null = null;
       let hasError = false;
 
       // Check if this line has parser errors
@@ -179,6 +187,16 @@ export class Calculator {
           );
           lineResult = `Formatting Error: ${errorMessage}`;
         }
+
+        // Parsable serialization is best-effort: a failure here must not
+        // affect the displayed result or mark the line as errored.
+        if (!hasError) {
+          try {
+            parsableResult = this.parsableFormatter.formatParsable(value);
+          } catch {
+            parsableResult = null;
+          }
+        }
       }
 
       results.push({
@@ -188,6 +206,7 @@ export class Calculator {
             ? (line as any).type
             : "unknown",
         result: lineResult,
+        parsableResult,
         rawValue: value,
         ast: line,
         hasError,

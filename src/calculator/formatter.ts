@@ -20,6 +20,7 @@ import { Temporal, Intl as TemporalIntl } from "@js-temporal/polyfill";
 import {
   Duration,
   ZonedDateTime,
+  Instant,
   toTemporalZonedDateTime,
   toTemporalPlainDateTime,
   toTemporalPlainDate,
@@ -87,6 +88,226 @@ export class Formatter {
         return String(_exhaustive);
       }
     }
+  }
+
+  /**
+   * Serialize a value to a grammar-parsable string (issue #2).
+   *
+   * The round-trip principle: the produced string, when parsed and evaluated,
+   * yields the same underlying value. This must be called on a Formatter whose
+   * settings are canonicalized for parsability (decimal separator ".", digit
+   * grouping separator "_", date format "YYYY-MM-DD") — see
+   * {@link parsableSettings}. Style aspects that ARE respected (grouping size,
+   * base, units, fractions, timezone, precision, time format, date-time order,
+   * unit style) come from the remaining settings and the value itself.
+   */
+  formatParsable(value: Value): string {
+    switch (value.kind) {
+      case "presentation":
+        return this.formatParsablePresentation(value);
+      case "instant":
+        return this.formatParsableInstant(value.instant);
+      case "zonedDateTime":
+        return this.formatParsableZoned(value.zonedDateTime);
+      default:
+        // Numeric, composite, boolean, error, plain date/time/datetime, and
+        // duration are already parsable under canonical settings. (Duration is
+        // interchangeable with composite/time-unit values on evaluation.)
+        return this.format(value);
+    }
+  }
+
+  /** Serialize a presentation-wrapped value to parsable form. */
+  private formatParsablePresentation(value: PresentationValue): string {
+    const format = value.format;
+
+    if (typeof format === "number") {
+      // 0b/0o/0x (and base 10) are already parsable via the display formatter.
+      if (format === 2 || format === 8 || format === 16 || format === 10) {
+        return this.format(value);
+      }
+      return this.formatParsableStyled(value.innerValue, {
+        kind: "base",
+        base: format,
+      });
+    }
+
+    switch (format) {
+      case "decimal":
+      case "dec":
+        return this.formatParsable(value.innerValue);
+      // Already parsable literal forms.
+      case "binary":
+      case "bin":
+      case "octal":
+      case "oct":
+      case "hex":
+      case "hexadecimal":
+      case "scientific":
+      case "percentage":
+        return this.format(value);
+      case "fraction":
+        return this.formatParsableStyled(value.innerValue, { kind: "fraction" });
+      // Ordinals and full date/time presentation formats are IGNORED per the
+      // spec: serialize the underlying value canonically.
+      case "ordinal":
+      case "ISO 8601":
+      case "RFC 9557":
+      case "RFC 2822":
+      case "unix":
+      case "unixMilliseconds":
+        return this.formatParsable(value.innerValue);
+      default: {
+        const _exhaustive: never = format;
+        return String(_exhaustive);
+      }
+    }
+  }
+
+  /**
+   * Render a numeric or composite value with a per-scalar presentation style
+   * (arbitrary base or fraction) using parsable syntax, preserving units.
+   */
+  private formatParsableStyled(
+    inner: Value,
+    style: { kind: "base"; base: number } | { kind: "fraction" },
+  ): string {
+    if (inner.kind === "value") {
+      const numStr = this.parsableStyledNumber(inner.value, style);
+      return this.combineNumberAndUnit(numStr, inner, getUnit(inner));
+    }
+
+    if (inner.kind === "composite") {
+      return inner.components
+        .map((comp) => {
+          const numStr = this.parsableStyledNumber(comp.value, style);
+          const unitStr = this.formatUnit(
+            comp.unit,
+            this.shouldPluralize(comp.value),
+          );
+          return `${numStr}${this.getUnitSeparator(unitStr)}${unitStr}`;
+        })
+        .join(" ");
+    }
+
+    // Non-numeric inner value: fall back to canonical serialization.
+    return this.formatParsable(inner);
+  }
+
+  /** Render a single number in the given parsable presentation style. */
+  private parsableStyledNumber(
+    num: number,
+    style: { kind: "base"; base: number } | { kind: "fraction" },
+  ): string {
+    if (style.kind === "base") {
+      // Grammar form: "<digits> base <N>" (negatives keep the leading sign).
+      return `${num.toString(style.base).toUpperCase()} base ${style.base}`;
+    }
+    return this.formatParsableFractionNumber(num);
+  }
+
+  /**
+   * Render a number as a parsable fraction: "a / b" (pure) or "n + a / b"
+   * (mixed), using real "/" and "+"/"-" so it re-evaluates to the same number.
+   */
+  private formatParsableFractionNumber(value: number): string {
+    if (!isFinite(value)) return this.formatNumber(value);
+    if (value === 0) return "0";
+
+    const negative = value < 0;
+    const absValue = Math.abs(value);
+    const intPart = Math.floor(absValue);
+    const fracPart = absValue - intPart;
+
+    if (fracPart < 1e-10) {
+      return (negative ? "-" : "") + String(intPart);
+    }
+
+    const { numerator, denominator } = this.approximateFraction(fracPart, 1000);
+
+    if (intPart === 0) {
+      return `${negative ? "-" : ""}${numerator} / ${denominator}`;
+    }
+
+    // Mixed number: keep signs aligned so the sum has the right magnitude.
+    return negative
+      ? `-${intPart} - ${numerator} / ${denominator}`
+      : `${intPart} + ${numerator} / ${denominator}`;
+  }
+
+  /** Serialize an Instant as "<date> <time> UTC±offset" (respecting order). */
+  private formatParsableInstant(instant: Instant): string {
+    const temporalInstant = Temporal.Instant.fromEpochMilliseconds(
+      instant.timestamp,
+    );
+    const zdt = temporalInstant.toZonedDateTimeISO(Temporal.Now.timeZoneId());
+    const dateStr = this.formatPlainDate(zdt.year, zdt.month, zdt.day);
+    const timeStr = this.formatPlainTime(
+      zdt.hour,
+      zdt.minute,
+      zdt.second,
+      zdt.millisecond,
+    );
+    const offset = this.formatUtcOffsetFromNs(zdt.offsetNanoseconds);
+    return `${this.formatDateTime(dateStr, timeStr)} ${offset}`;
+  }
+
+  /** Serialize a ZonedDateTime as "<date> <time> <IANA name>" (full date). */
+  private formatParsableZoned(zonedDateTime: ZonedDateTime): string {
+    const { dateTime, timezone } = zonedDateTime;
+    const time = dateTime.time;
+    const timeStr = this.formatPlainTime(
+      time.hour,
+      time.minute,
+      time.second,
+      time.millisecond,
+    );
+
+    let dateTimeStr: string;
+    if (dateTime.date) {
+      const dateStr = this.formatPlainDate(
+        dateTime.date.year,
+        dateTime.date.month,
+        dateTime.date.day,
+      );
+      dateTimeStr = this.formatDateTime(dateStr, timeStr);
+    } else {
+      // Zoned plain-time value: anchor to today's date in that timezone.
+      const today = Temporal.Now.zonedDateTimeISO(timezone);
+      const dateStr = this.formatPlainDate(today.year, today.month, today.day);
+      dateTimeStr = this.formatDateTime(dateStr, timeStr);
+    }
+
+    return `${dateTimeStr} ${this.formatParsableZoneLabel(timezone)}`;
+  }
+
+  /**
+   * Render a timezone label for parsable output: an IANA name is emitted as-is,
+   * while a bare offset (e.g. "-07:00", "+05:30") is normalized to a parsable
+   * "UTC±H[:MM]" form.
+   */
+  private formatParsableZoneLabel(timezone: string): string {
+    const offsetMatch = timezone.match(/^([+-])(\d{2}):(\d{2})$/);
+    if (!offsetMatch) return timezone;
+    const sign = offsetMatch[1];
+    const hours = parseInt(offsetMatch[2], 10);
+    const mins = parseInt(offsetMatch[3], 10);
+    return mins === 0
+      ? `UTC${sign}${hours}`
+      : `UTC${sign}${hours}:${String(mins).padStart(2, "0")}`;
+  }
+
+  /** Format a UTC offset (in nanoseconds) as "UTC", "UTC±H", or "UTC±H:MM". */
+  private formatUtcOffsetFromNs(offsetNs: number): string {
+    const offsetSeconds = Math.trunc(offsetNs / 1e9);
+    if (offsetSeconds === 0) return "UTC";
+    const sign = offsetSeconds >= 0 ? "+" : "-";
+    const absMinutes = Math.abs(offsetSeconds) / 60;
+    const hours = Math.floor(absMinutes / 60);
+    const mins = Math.round(absMinutes % 60);
+    return mins === 0
+      ? `UTC${sign}${hours}`
+      : `UTC${sign}${hours}:${String(mins).padStart(2, "0")}`;
   }
 
   /**

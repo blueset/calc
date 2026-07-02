@@ -24,6 +24,7 @@ import {
 import { evalTooltipExtension } from "@/codemirror/evalTooltip";
 import { resultAlignPlugin, type LinePosition } from "@/codemirror/resultAlign";
 import { foldHeadingsService } from "@/codemirror/foldHeadings";
+import { parsablePasteHandler } from "@/codemirror/parsablePaste";
 import { editorTheme, editorHighlight } from "@/codemirror/theme";
 import type { Document } from "@/calculator/document";
 import type { LineResult, CalculationResult } from "@/calculator/calculator";
@@ -101,6 +102,7 @@ export function Editor({
       extensions: [
         basicSetup,
         keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
+        parsablePasteHandler,
         foldHeadingsService,
         semanticTreeField,
         semanticHighlightPlugin,

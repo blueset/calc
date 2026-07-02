@@ -1,5 +1,6 @@
 import { LineResult } from "@/calculator/calculator";
 import { cn } from "@/lib/utils";
+import { writeParsableClipboard } from "@/lib/clipboard";
 import { useCallback, useState } from "react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { Copy } from "lucide-react";
@@ -31,21 +32,23 @@ export function ResultCard({
   const [isCopied, setIsCopied] = useState<boolean | null>(null);
   const canCopy = !!navigator.clipboard?.writeText;
 
-  const handleCopy = useCallback((result?: string | null) => {
-    if (!result) return;
-    navigator.clipboard
-      ?.writeText(result)
-      .then(() => {
-        setIsCopied(true);
-      })
-      .catch((ex) => {
-        console.error("Failed to copy text: ", ex);
-        setIsCopied(false);
-      })
-      .finally(() => {
-        setTimeout(() => setIsCopied(null), 1500);
-      });
-  }, []);
+  const handleCopy = useCallback(
+    (formatted?: string | null, parsable?: string | null) => {
+      if (!formatted) return;
+      writeParsableClipboard(formatted, parsable ?? null)
+        .then(() => {
+          setIsCopied(true);
+        })
+        .catch((ex) => {
+          console.error("Failed to copy text: ", ex);
+          setIsCopied(false);
+        })
+        .finally(() => {
+          setTimeout(() => setIsCopied(null), 1500);
+        });
+    },
+    [],
+  );
 
   return (
     <HoverCard openDelay={100} closeDelay={debugMode ? undefined : 0}>
@@ -77,7 +80,7 @@ export function ResultCard({
               height: height,
             }}
             onFocus={() => onFocusLine?.(result.line)}
-            onClick={() => handleCopy(result.result)}
+            onClick={() => handleCopy(result.result, result.parsableResult)}
           >
             <span className="truncate">
               {isCopied
@@ -110,7 +113,7 @@ export function ResultCard({
             variant="ghost"
             size="sm"
             className="-mx-2 -mt-2 last:-mb-2"
-            onClick={() => handleCopy(result.result)}
+            onClick={() => handleCopy(result.result, result.parsableResult)}
           >
             {isCopied === true ? (
               <span className="text-green-700 dark:text-green-400 text-xs">

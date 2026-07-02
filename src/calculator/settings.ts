@@ -55,8 +55,9 @@ export interface Settings {
    * - ',': Comma separator (1,234,567)
    * - '.': Dot separator (1.234.567)
    * - '′': Prime symbol separator (1′234′567)
+   * - '_': Underscore separator (1_234_567) — used for parsable serialization
    */
-  digitGroupingSeparator: "" | "\u202F" | "," | "." | "′";
+  digitGroupingSeparator: "" | "\u202F" | "," | "." | "′" | "_";
 
   /**
    * Digit grouping size (default: '3')
