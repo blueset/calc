@@ -209,6 +209,16 @@ export function Editor({
       key="editor-container"
       ref={containerRef}
       className="h-auto min-h-full"
+      onClick={(event) => {
+        const view = viewRef.current;
+        if (
+          view &&
+          (event.target === event.currentTarget || event.target === view.dom) &&
+          event.clientY >= view.scrollDOM.getBoundingClientRect().bottom
+        ) {
+          view.focus();
+        }
+      }}
     />
   );
 }
